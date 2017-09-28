@@ -72,3 +72,46 @@ public:
 
 SerializerRegister<FType::Int> _reg_Int;
 SerializerRegister<FType::String> _reg_String;
+
+	int SSS(const std::string& fieldName, SerializerInterface::SerializeReq& req, SerializerInterface* serializerInterface)
+	{
+		rapidjson::GenericStringRef<char> fieldNameRef =
+				rapidjson::StringRef(fieldName.c_str(), fieldName.length());
+		rapidjson::Value fieldNameVal;
+		fieldNameVal.SetString(fieldNameRef);
+
+		// Try add field when need
+		StoreType* pNewElem = IJSTI_NULL;
+		bool hasAllocMember = false;
+		{
+			rapidjson::Value::MemberIterator itMember = req.buffer.FindMember(fieldNameVal);
+			if (itMember == req.buffer.MemberEnd()) {
+				// Add member, field name is not need copy
+				req.buffer.AddMember(
+						rapidjson::Value().SetString(fieldNameRef),
+						rapidjson::Value(rapidjson::kNullType).Move(),
+						req.allocator
+				);
+				// Why rapidjson AddMember function do not return newly create member
+				pNewElem = &req.buffer[fieldNameVal];
+				hasAllocMember = true;
+			}
+			else {
+				pNewElem = &(itMember->value);
+			}
+		}
+
+		SerializerInterface::SerializeReq elemSerializeReq(
+				*pNewElem, req.allocator, req.field, req.pushAllField, req.tryInPlace);
+
+		SerializerInterface::SerializeResp elemSerializeResp;
+		int ret = serializerInterface->Serialize(elemSerializeReq, elemSerializeResp);
+		if (ret != 0) {
+			if (hasAllocMember) {
+				req.buffer.RemoveMember(fieldNameVal);
+			}
+			return ret;
+		}
+		assert(&(req.buffer[fieldNameVal]) == &elemSerializeReq.buffer);
+		return 0;
+	}

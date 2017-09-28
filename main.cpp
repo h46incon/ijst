@@ -3,6 +3,8 @@
 #include <string>
 #include <map>
 #include <cstddef>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include "ijst/ijst.h"
 
 
@@ -20,7 +22,7 @@ private:
 	friend MetaInfoT;
 public:
 	StTestI() :
-			_(&(MetaInfoS::GetInstance()->metaClass), this), name(), age(), int_vec(), int_map()
+			_(&(MetaInfoS::GetInstance()->metaClass)), name(), age(), int_vec(), int_map()
 	{
 	}
 
@@ -37,6 +39,7 @@ private:
 		cout << "InitMetaInfo StTestI" << endl;
 		metaInfo->metaClass.tag = "StTest";
 		metaInfo->metaClass.metaFields.reserve(4);
+		metaInfo->metaClass.accessorOffset = offsetof(StTestI, _);
 		metaInfo->metaClass.PushMetaField("name", offsetof(StTestI, name), 0, IJSTI_FSERIALIZER_INS(IJST_TPRI(String)));
 		metaInfo->metaClass.PushMetaField("age", offsetof(StTestI, age), 0, IJSTI_FSERIALIZER_INS(IJST_TPRI(Int)));
 		metaInfo->metaClass.PushMetaField("int_vec", offsetof(StTestI, int_vec), 0, IJSTI_FSERIALIZER_INS(IJST_TVEC(IJST_TPRI(Int))));
@@ -51,7 +54,7 @@ class StTest{
 private:
 	typedef ijst::detail::Singleton<ijst::detail::MetaInfo<StTest> > MetaInfoS;
 public:
-	StTest(): _(&(MetaInfoS::GetInstance()->metaClass), this), name(), age(), st_test(), int_vec(), int_map() { }
+	StTest(): _(&(MetaInfoS::GetInstance()->metaClass)), name(), age(), st_test(), int_vec(), int_map() { }
 
 	ijst::detail::Accessor _;
 	ijst::detail::FSerializer<IJST_TPRI(String)>::VarType name;
@@ -69,12 +72,13 @@ MetaInfo<StTest>::MetaInfo()
 	cout << "private init" << endl;
 	this->metaClass.tag = "StTest";
 	this->metaClass.metaFields.reserve(4);
+	this->metaClass.accessorOffset = offsetof(FieldType, _);
 	this->metaClass.PushMetaField("name", offsetof(FieldType, name), 0, IJSTI_FSERIALIZER_INS(IJST_TPRI(String)));
 	this->metaClass.PushMetaField("age", offsetof(FieldType, age), 0, IJSTI_FSERIALIZER_INS(IJST_TPRI(Int)));
 	this->metaClass.PushMetaField("st_test", offsetof(FieldType, st_test), 0, IJSTI_FSERIALIZER_INS(IJST_TVEC(IJST_TOBJ(nstest::StTestI))));
 	this->metaClass.PushMetaField("int_vec", offsetof(FieldType, int_vec), 0, IJSTI_FSERIALIZER_INS(IJST_TVEC(IJST_TPRI(Int))));
 	this->metaClass.PushMetaField("int_map", offsetof(FieldType, int_map), 0, IJSTI_FSERIALIZER_INS(IJST_TMAP(IJST_TPRI(Int))));
-//	this->metaClass.PushMetaField("int_map", offsetof(FieldType, int_map), ijst::FDesc::Map, IJSTI_FSERIALIZER_INS(int));
+//	this->m_metaClass.PushMetaField("int_map", offsetof(FieldType, int_map), ijst::FDesc::Map, IJSTI_FSERIALIZER_INS(int));
 	this->metaClass.InitMap();
 }
 }
@@ -145,9 +149,15 @@ int main()
 //	stTest._.ShowTag();
 
 	int ret;
-	ret = stTest._.SerializeInplace(false);
+	ret = stTest._.SerializeInplace(true);
+	rapidjson::StringBuffer buffer;
 
-	cout << "Serializer: " << endl << stTest._.InnerStream().toStyledString();
+	buffer.Clear();
+
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	stTest._.InnerStream().Accept(writer);
+
+	cout << "Serializer: " << endl << buffer.GetString() << endl;
 }
 
 
