@@ -5,6 +5,8 @@
 #ifndef _IJST_HPP_INCLUDE_
 #define _IJST_HPP_INCLUDE_
 
+#include "rapidjson/document.h"
+
 #include <string>
 #include <vector>
 #include <iostream>
@@ -12,7 +14,6 @@
 #include <map>
 #include <assert.h>
 #include <sstream>
-#include "rapidjson/document.h"
 
 /**	========================================================================================
  *				Public Interface
@@ -64,6 +65,7 @@ public:
 struct Err {
 	static const int kSucc = 					0x00000000;
 	static const int kParseValueTypeError = 	0x00001001;
+	static const int kParseValueElemError = 	0x00001002;
 };
 /**	========================================================================================
  *				Inner Interface
@@ -172,32 +174,47 @@ public:
 	struct DeserializeReq {
 		StoreType& stream;
 		AllocatorType& allocator;
-		void* pField;
+		void* pFieldBuffer;
 
 		DeserializeReq(StoreType &_stream, AllocatorType &_allocator, void *_pField) :
 				stream(_stream),
 				allocator(_allocator),
-				pField(_pField)
+				pFieldBuffer(_pField)
 		{ }
 	};
 
 	struct DeserializeResp {
 		FStatus::_E fStatus;
-		size_t fieldSize;
-		std::string *pErrMsg;
+		size_t fieldCount;
+		const bool needErrMsg;
+		std::string errMsg;
 
-		DeserializeResp(std::string *_pErrMsg = IJSTI_NULL) :
+		DeserializeResp(bool _needErrMsg = false) :
 				fStatus(FStatus::Null),
-				fieldSize(0),
-				pErrMsg(_pErrMsg)
+				fieldCount(0),
+				needErrMsg(_needErrMsg)
 		{ }
 
 		template<typename _T>
-		void SetErrMsg(const _T &errMsg)
+		bool SetErrMsg(const _T &_errMsg)
 		{
-			if (pErrMsg != IJSTI_NULL) {
-				*pErrMsg = errMsg;
+			if (!needErrMsg) {
+				return false;
 			}
+			errMsg = _errMsg;
+			return true;
+		}
+
+		template<typename _T>
+		bool CombineErrMsg(const _T & errMsg, const DeserializeResp& childResp)
+		{
+			if (!needErrMsg) {
+				return false;
+			}
+
+			std::stringstream oss;
+			oss << errMsg << "[" << childResp.errMsg << "]";
+			return true;
 		}
 	};
 
@@ -244,7 +261,7 @@ public:
 
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
-		_T *ptr = (_T *) req.pField;
+		_T *ptr = (_T *) req.pFieldBuffer;
 		return ptr->_.Deserialize(req, resp);
 	}
 };
@@ -272,12 +289,13 @@ public:
 			);
 			StoreType &newElem = req.buffer[req.buffer.Size() - 1];
 
-			SerializeReq elemSerializeReq(
+			SerializeReq elemReq(
 					newElem, req.allocator, &(*itera), req.pushAllField, req.tryInPlace);
 
-			SerializeResp elemSerializeResp;
-			int ret = interface->Serialize(elemSerializeReq, elemSerializeResp);
-			if (IJSTI_UNLIKELY(ret != 0)) {
+			SerializeResp elemResp;
+			int ret = interface->Serialize(elemReq, elemResp);
+			if (IJSTI_UNLIKELY(ret != 0))
+			{
 				req.buffer.PopBack();
 				return ret;
 			}
@@ -289,17 +307,43 @@ public:
 	{
 		if (!req.stream.IsArray()) {
 			resp.fStatus = FStatus::ParseFailed;
-			resp.SetErrMsg("Value is not a array");
+			resp.SetErrMsg("Value is not a Array");
 			return Err::kParseValueTypeError;
 		}
 
-		VarType *pBufferT = static_cast<VarType *>(req.pField);
+		VarType *pBufferT = static_cast<VarType *>(req.pFieldBuffer);
 		pBufferT->clear();
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
+		// pBufferT->shrink_to_fit();
+		pBufferT->reserve(req.stream.Size());
+		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
 
-		if (!srcStream.IsArray()) {
-			return FStatus::ParseFailed;
+		for (rapidjson::Value::ValueIterator itVal = req.stream.Begin();
+			 itVal != req.stream.End(); ++itVal)
+		{
+			// Alloc buffer
+			// Use resize() instead of push_back() to avoid copy constructor in C++11
+			pBufferT->resize(pBufferT->size() + 1);
+			DeserializeReq elemReq(*itVal, req.allocator, &pBufferT->back());
+
+			// Deserialize
+			DeserializeResp elemResp(resp.needErrMsg);
+			int ret = serializerInterface->Deserialize(elemReq, elemResp);
+			if (IJSTI_UNLIKELY(ret != 0))
+			{
+				pBufferT->pop_back();
+				if (resp.needErrMsg)
+				{
+					std::stringstream oss;
+					oss << "Deserialize elem error. index: " << pBufferT->size() << ", err: ";
+					resp.CombineErrMsg(oss.str(), elemResp);
+				}
+				return ret;
+			}
+			resp.fStatus = FStatus::ParseFailed;
+			++resp.fieldCount;
 		}
+		resp.fStatus = FStatus::Valid;
+		return 0;
 	}
 };
 
@@ -322,8 +366,8 @@ public:
 			req.buffer.SetObject();
 		}
 
-		for (typename VarType::const_iterator itFieldMember = ptr->begin(); itFieldMember != ptr->end(); ++itFieldMember) {
-
+		for (typename VarType::const_iterator itFieldMember = ptr->begin(); itFieldMember != ptr->end(); ++itFieldMember)
+		{
 			// Init
 			const void* pFieldValue = &itFieldMember->second;
 			rapidjson::GenericStringRef<char> fileNameRef =
@@ -351,25 +395,69 @@ public:
 				}
 			}
 
-			SerializeReq elemSerializeReq(
+			SerializeReq elemReq(
 					*pNewElem, req.allocator, pFieldValue, req.pushAllField, req.tryInPlace);
 
-			SerializeResp elemSerializeResp;
-			int ret = interface->Serialize(elemSerializeReq, elemSerializeResp);
+			SerializeResp elemResp;
+			int ret = interface->Serialize(elemReq, elemResp);
 			if (IJSTI_UNLIKELY(ret != 0)) {
 				if (hasAllocMember) {
 					req.buffer.RemoveMember(fieldNameVal);
 				}
 				return ret;
 			}
-			assert(&(req.buffer[fieldNameVal]) == &elemSerializeReq.buffer);
+			assert(&(req.buffer[fieldNameVal]) == &elemReq.buffer);
 		}
 		return 0;
 	}
 
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
-		// TODO: return 0
+		if (!req.stream.IsObject()) {
+			resp.fStatus = FStatus::ParseFailed;
+			resp.SetErrMsg("Value is not a Object");
+			return Err::kParseValueTypeError;
+		}
+
+		VarType *pBufferT = static_cast<VarType *>(req.pFieldBuffer);
+		pBufferT->clear();
+		// pBufferT->shrink_to_fit();
+		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
+
+		for (rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
+			 itMember != req.stream.MemberEnd(); ++itMember)
+		{
+			// Get information
+			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
+			bool hasAlloc = false;
+			if (pBufferT->find(fieldName) == pBufferT->end()) {
+				hasAlloc = true;
+			}
+
+			// Alloc buffer
+			ElemVarType &elemBuffer = (*pBufferT)[fieldName];
+			DeserializeReq elemReq(itMember->value, req.allocator, &elemBuffer);
+
+			// Deserialize
+			DeserializeResp elemResp(resp.needErrMsg);
+			int ret = serializerInterface->Deserialize(elemReq, elemResp);
+			if (IJSTI_UNLIKELY(ret != 0))
+			{
+				if (hasAlloc)
+				{
+					pBufferT->erase(fieldName);
+				}
+				resp.needErrMsg &&
+					resp.CombineErrMsg("Deserialize elem error. key: " + fieldName + ", err: ",
+								   elemResp
+				);
+				resp.fStatus = FStatus::ParseFailed;
+				return ret;
+			}
+			++resp.fieldCount;
+		}
+		resp.fStatus = FStatus::Valid;
+		return 0;
 	}
 };
 
@@ -391,6 +479,15 @@ public:
 
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
+		if (!req.stream.IsInt())
+		{
+			resp.fStatus = FStatus::ParseFailed;
+			resp.SetErrMsg("Value is not a Int");
+			return Err::kParseValueTypeError;
+		}
+
+		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
+		*pBuffer = req.stream.GetInt();
 		return FStatus::Valid;
 	}
 
@@ -410,6 +507,15 @@ public:
 
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
+		if (!req.stream.IsString())
+		{
+			resp.fStatus = FStatus::ParseFailed;
+			resp.SetErrMsg("Value is not a String");
+			return Err::kParseValueTypeError;
+		}
+
+		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
+		*pBuffer = std::string(req.stream.GetString(), req.stream.GetStringLength());
 		return FStatus::Valid;
 	}
 };
@@ -739,7 +845,7 @@ private:
 	 */
 	int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp& resp)
 	{
-		assert(req.pField == IJSTI_NULL || req.pField == this);
+		assert(req.pFieldBuffer == IJSTI_NULL || req.pFieldBuffer == this);
 
 		if (!req.stream.IsObject())
 		{
@@ -755,7 +861,7 @@ private:
 			 itMember != req.stream.MemberEnd(); ++itMember) {
 
 			// TODO: Performance issue?
-			std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
+			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
 			IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator itMetaField =
 					m_metaClass->mapName.find(fieldName);
 			if (itMetaField == m_metaClass->mapName.end()) {
@@ -766,20 +872,16 @@ private:
 			const MetaField *metaField = itMetaField->second;
 			void *pField = GetFieldByOffset(metaField->offset);
 			DeserializeReq elemReq(itMember->value, req.allocator, pField);
-			DeserializeResp elemResp(resp.pErrMsg);
-			FStatus::_E ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
-			m_fieldStatus[metaField->offset] = FStatus::ParseFailed;
-			if (ret != FStatus::Valid) {
-				if (resp.pErrMsg != IJSTI_NULL) {
-					std::stringstream oss;
-					oss << "Error in deserialize field. [name: " << metaField->name
-						<< ", err: " << *resp.pErrMsg << " ]";
-					oss >> *resp.pErrMsg;
-				}
+			DeserializeResp elemResp(resp.needErrMsg);
+			int ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
+			if (ret != 0) {
+				resp.needErrMsg &&
+						resp.CombineErrMsg("Deserialize field error. name: " + metaField->name + ", err: ", elemResp);
+				m_fieldStatus[metaField->offset] = FStatus::ParseFailed;
 				return ret;
 			}
 			// TODO: Check member state
-			++resp.fieldSize;
+			++resp.fieldCount;
 		}
 		return 0;
 	}
