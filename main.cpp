@@ -78,21 +78,12 @@ MetaInfo<StTest>::MetaInfo()
 	this->metaClass.PushMetaField("st_test", offsetof(FieldType, st_test), 0, IJSTI_FSERIALIZER_INS(IJST_TVEC(IJST_TOBJ(nstest::StTestI))));
 	this->metaClass.PushMetaField("int_vec", offsetof(FieldType, int_vec), 0, IJSTI_FSERIALIZER_INS(IJST_TVEC(IJST_TPRI(Int))));
 	this->metaClass.PushMetaField("int_map", offsetof(FieldType, int_map), 0, IJSTI_FSERIALIZER_INS(IJST_TMAP(IJST_TPRI(Int))));
-//	this->m_metaClass.PushMetaField("int_map", offsetof(FieldType, int_map), ijst::FDesc::Map, IJSTI_FSERIALIZER_INS(int));
 	this->metaClass.InitMap();
 }
 }
 }
 
 namespace dummyNS {
-//IJST_DEFINE_STRUCT(
-IJSTI_DEFINE_STRUCT_IMPL_4(
-		Person,
-		(IJST_TPRI(Int), age, "jAge", 0),
-		(IJST_TPRI(String), name, "jName", ijst::FDesc::Optional),
-		(IJST_TVEC(IJST_TPRI(Int)), avec, "jVec", 0),
-		(IJST_TMAP(IJST_TPRI(Int)), amap, "jMap", 0)
-)
 }
 
 //int main(int argc, char **argv)
@@ -120,6 +111,14 @@ IJSTI_DEFINE_STRUCT_IMPL_4(
 
 int main()
 {
+//IJST_DEFINE_STRUCT(
+	IJSTI_DEFINE_STRUCT_IMPL_4(
+			Person2,
+			(IJST_TPRI(Int), age, "jAge", 0),
+			(IJST_TPRI(String), name, "jName", ijst::FDesc::Optional),
+			(IJST_TVEC(IJST_TPRI(Int)), avec, "jVec", 0),
+			(IJST_TMAP(IJST_TPRI(Int)), amap, "jMap", 0)
+	)
 	std::cout << "main()" << endl;
 	StTest stTest;
 	stTest._.SetStrict(stTest.name, string("NewName"));

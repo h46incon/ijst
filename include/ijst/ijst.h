@@ -29,6 +29,7 @@ typedef rapidjson::Value StoreType;
 #define IJST_SET(obj, field, val)				obj._.Set(obj.field, val)
 #define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict(obj.field, val)
 #define IJST_MAKE_VALID(obj, field)				obj._.MakeValid(obj.field)
+#define IJST_GET_STATUS(obj, field)				obj._.GetStatus(obj.field)
 
 #define IJST_DEFINE_STRUCT(...) \
     IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), __VA_ARGS__)
@@ -695,9 +696,6 @@ public:
 	void MakeValid(_T &field)
 	{
 		const std::size_t offset = GetFieldOffset(&field);
-		// TODO: remove it:
-		std::string name = (m_metaClass->mapOffset).find(offset)->second->name;
-		std::cout << "offset: " << offset << ", name: " << name << std::endl;
 		if (IJSTI_UNLIKELY(m_metaClass->mapOffset.find(offset) == m_metaClass->mapOffset.end())) {
 			throw std::runtime_error("could not find field with expected offset: " + offset);
 		}
