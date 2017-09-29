@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <map>
 #include <assert.h>
+#include <sstream>
 #include "rapidjson/document.h"
 
 /**	========================================================================================
@@ -60,7 +61,10 @@ public:
 	};
 };
 
-
+struct Err {
+	static const int kSucc = 					0x00000000;
+	static const int kParseValueTypeError = 	0x00001001;
+};
 /**	========================================================================================
  *				Inner Interface
  */
@@ -79,12 +83,12 @@ typedef rapidjson::MemoryPoolAllocator<> 	AllocatorType;
 #endif
 
 #define IJSTI_MAP_TYPE    			std::map
-#define IJSTI_STORE_MOVE(dest, src)			\
-	do {                                    \
-        if (&dest != &src) {                \
-            /*RapidJson's assigment behaviour is move */ \
-            (dest) = (src);                 \
-        }                                   \
+#define IJSTI_STORE_MOVE(dest, src)							\
+	do {                                    				\
+        if (IJSTI_UNLIKELY(&dest != &src)) {                \
+            /*RapidJson's assigment behaviour is move */ 	\
+            (dest) = (src);                 				\
+        }                                   				\
     } while (false)
 
 
@@ -146,34 +150,63 @@ template<typename _T> void *Singleton<_T>::initInstanceTag = Singleton<_T>::GetI
 class SerializerInterface {
 public:
 	struct SerializeReq {
-		const void* field;
+		const void* pField;
 		bool pushAllField;
 		bool tryInPlace;
 		StoreType& buffer;
 		AllocatorType& allocator;
 
 		SerializeReq(StoreType &_buffer, AllocatorType &_allocator,
-					 const void *_field, bool _pushAllfield, bool _tryInPlace) :
+					 const void *_pField, bool _pushAllfield, bool _tryInPlace) :
 				buffer(_buffer),
 				allocator(_allocator),
-				field(_field),
+				pField(_pField),
 				pushAllField(_pushAllfield),
 				tryInPlace(_tryInPlace)
-		{
-
-		}
+		{ }
 	};
 
 	struct SerializeResp {
 	};
 
-	virtual int Serialize(SerializeReq &req, SerializeResp &resp)= 0;
+	struct DeserializeReq {
+		StoreType& stream;
+		AllocatorType& allocator;
+		void* pField;
 
-	virtual FStatus::_E Deserialize(const StoreType &srcStream, void *pBuffer)= 0;
+		DeserializeReq(StoreType &_stream, AllocatorType &_allocator, void *_pField) :
+				stream(_stream),
+				allocator(_allocator),
+				pField(_pField)
+		{ }
+	};
+
+	struct DeserializeResp {
+		FStatus::_E fStatus;
+		size_t fieldSize;
+		std::string *pErrMsg;
+
+		DeserializeResp(std::string *_pErrMsg = IJSTI_NULL) :
+				fStatus(FStatus::Null),
+				fieldSize(0),
+				pErrMsg(_pErrMsg)
+		{ }
+
+		template<typename _T>
+		void SetErrMsg(const _T &errMsg)
+		{
+			if (pErrMsg != IJSTI_NULL) {
+				*pErrMsg = errMsg;
+			}
+		}
+	};
+
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)= 0;
+
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)= 0;
 
 	virtual ~SerializerInterface()
-	{
-	}
+	{ }
 };
 
 /**
@@ -187,9 +220,9 @@ public:
 	typedef void VarType;
 
 	virtual int
-	Serialize(SerializeReq &req, SerializeResp &resp) = 0;
+	Serialize(const SerializeReq &req, SerializeResp &resp) = 0;
 
-	virtual FStatus::_E Deserialize(const StoreType &srcStream, void *pBuffer) = 0;
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) = 0;
 };
 #define IJSTI_FSERIALIZER_INS(_T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< _T> >::GetInstance()
 
@@ -202,16 +235,17 @@ class FSerializer<TypeClassObj<_T> > : public SerializerInterface {
 public:
 	typedef _T VarType;
 
-	virtual int Serialize(SerializeReq &req, SerializeResp &resp)
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
 	{
-		_T *ptr = (_T *) req.field;
+		_T *ptr = (_T *) req.pField;
 		int ret = ptr->_.DoSerialize(req.pushAllField, req.tryInPlace, req.buffer, req.allocator);
 		return ret;
 	}
 
-	virtual FStatus::_E Deserialize(const StoreType &srcStream, void *pBuffer)
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
-
+		_T *ptr = (_T *) req.pField;
+		return ptr->_.Deserialize(req, resp);
 	}
 };
 
@@ -226,9 +260,9 @@ private:
 public:
 	typedef std::vector<ElemVarType> VarType;
 
-	virtual int Serialize(SerializeReq &req, SerializeResp &resp)
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
 	{
-		const VarType *ptr = static_cast<const VarType *>(req.field);
+		const VarType *ptr = static_cast<const VarType *>(req.pField);
 		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 		req.buffer.SetArray();
 		for (typename VarType::const_iterator itera = ptr->begin(); itera != ptr->end(); ++itera) {
@@ -243,7 +277,7 @@ public:
 
 			SerializeResp elemSerializeResp;
 			int ret = interface->Serialize(elemSerializeReq, elemSerializeResp);
-			if (ret != 0) {
+			if (IJSTI_UNLIKELY(ret != 0)) {
 				req.buffer.PopBack();
 				return ret;
 			}
@@ -251,16 +285,21 @@ public:
 		return 0;
 	}
 
-	virtual FStatus::_E Deserialize(const StoreType &srcStream, void *pBuffer)
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
-		VarType *pBufferT = static_cast<VarType *>(pBuffer);
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
+		if (!req.stream.IsArray()) {
+			resp.fStatus = FStatus::ParseFailed;
+			resp.SetErrMsg("Value is not a array");
+			return Err::kParseValueTypeError;
+		}
+
+		VarType *pBufferT = static_cast<VarType *>(req.pField);
 		pBufferT->clear();
+		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 
 		if (!srcStream.IsArray()) {
 			return FStatus::ParseFailed;
 		}
-		return FStatus::Valid;
 	}
 };
 
@@ -275,9 +314,9 @@ private:
 public:
 	typedef std::map<std::string, ElemVarType> VarType;
 
-	virtual int Serialize(SerializeReq &req, SerializeResp &resp)
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
 	{
-		const VarType *ptr = static_cast<const VarType *>(req.field);
+		const VarType *ptr = static_cast<const VarType *>(req.pField);
 		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 		if (!req.buffer.IsObject()) {
 			req.buffer.SetObject();
@@ -317,7 +356,7 @@ public:
 
 			SerializeResp elemSerializeResp;
 			int ret = interface->Serialize(elemSerializeReq, elemSerializeResp);
-			if (ret != 0) {
+			if (IJSTI_UNLIKELY(ret != 0)) {
 				if (hasAllocMember) {
 					req.buffer.RemoveMember(fieldNameVal);
 				}
@@ -328,7 +367,7 @@ public:
 		return 0;
 	}
 
-	virtual FStatus::_E Deserialize(const StoreType &srcStream, void *pBuffer)
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
 		// TODO: return 0
 	}
@@ -343,14 +382,14 @@ class FSerializer<TypeClassPrim<FType::Int> > : public SerializerInterface {
 public:
 	typedef int VarType;
 
-	virtual int Serialize(SerializeReq &req, SerializeResp &resp)
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
 	{
-		const VarType *fieldI = static_cast<const VarType *>(req.field);
+		const VarType *fieldI = static_cast<const VarType *>(req.pField);
 		req.buffer.SetInt(*fieldI);
 		return 0;
 	}
 
-	virtual FStatus::_E Deserialize(const StoreType &srcStream, void *pBuffer)
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
 		return FStatus::Valid;
 	}
@@ -362,14 +401,14 @@ class FSerializer<TypeClassPrim<FType::String> > : public SerializerInterface {
 public:
 	typedef std::string VarType;
 
-	virtual int Serialize(SerializeReq &req, SerializeResp &resp)
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
 	{
-		const VarType *filedV = static_cast<const VarType *>(req.field);
+		const VarType *filedV = static_cast<const VarType *>(req.pField);
 		req.buffer.SetString(filedV->c_str(), filedV->length(), req.allocator);
 		return 0;
 	}
 
-	virtual FStatus::_E Deserialize(const StoreType &srcStream, void *pBuffer)
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
 		return FStatus::Valid;
 	}
@@ -404,17 +443,17 @@ public:
 
 	void InitMap()
 	{
-		if (mapInited) {
+		if (IJSTI_UNLIKELY(mapInited)) {
 			throw std::runtime_error("MetaClass's map has inited before");
 		}
 
 		for (size_t i = 0; i < metaFields.size(); ++i) {
 			const MetaField *ptrMetaField = &(metaFields[i]);
 			// Check key exist
-			if (mapName.find(ptrMetaField->name) != mapName.end()) {
+			if (IJSTI_UNLIKELY(mapName.find(ptrMetaField->name) != mapName.end())) {
 				throw std::runtime_error("MetaClass's name conflict:" + ptrMetaField->name);
 			}
-			if (mapOffset.find(ptrMetaField->offset) != mapOffset.end()) {
+			if (IJSTI_UNLIKELY(mapOffset.find(ptrMetaField->offset) != mapOffset.end())) {
 				throw std::runtime_error("MetaClass's offset conflict:" + ptrMetaField->offset);
 			}
 
@@ -553,7 +592,7 @@ public:
 		// TODO: remove it:
 		std::string name = (m_metaClass->mapOffset).find(offset)->second->name;
 		std::cout << "offset: " << offset << ", name: " << name << std::endl;
-		if (m_metaClass->mapOffset.find(offset) == m_metaClass->mapOffset.end()) {
+		if (IJSTI_UNLIKELY(m_metaClass->mapOffset.find(offset) == m_metaClass->mapOffset.end())) {
 			throw std::runtime_error("could not find field with expected offset: " + offset);
 		}
 
@@ -587,7 +626,7 @@ public:
 	{
 		Accessor* pAccessor = const_cast<Accessor *>(this);
 		int ret = pAccessor->DoSerialize(pushAllField, /*tryInPlace=*/false, docOutput, docOutput.GetAllocator());
-		if (ret != 0) {
+		if (IJSTI_UNLIKELY(ret != 0)) {
 			return ret;
 		}
 	}
@@ -602,16 +641,17 @@ public:
 		}
 	}
 
-//	template <class _T>
-//	friend class FSerializer<TypeClassObj<_T> >;
+private:
+	typedef SerializerInterface::SerializeReq SerializeReq;
+	typedef SerializerInterface::SerializeResp SerializeResp;
+	typedef SerializerInterface::DeserializeReq DeserializeReq;
+	typedef SerializerInterface::DeserializeResp DeserializeResp;
 
-public:
 	inline void InitParentPtr()
 	{
 		m_parentPtr = reinterpret_cast<const unsigned char *>(this - m_metaClass->accessorOffset);
 	}
 
-	// TODO make it private
 	int DoSerialize(bool pushAllField, bool tryInPlace, StoreType& buffer, AllocatorType& allocator)
 	{
 		if (tryInPlace) {
@@ -649,6 +689,7 @@ public:
 					break;
 			}
 
+			// Init
 			const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
 			rapidjson::GenericStringRef<char> fieldNameRef =
 					rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
@@ -677,12 +718,12 @@ public:
 			}
 
 			// Serialize field
-			SerializerInterface::SerializeReq elemSerializeReq(
+			SerializeReq elemSerializeReq(
 					*pNewElem, allocator, pFieldValue, pushAllField, tryInPlace);
 
-			SerializerInterface::SerializeResp elemSerializeResp;
+			SerializeResp elemSerializeResp;
 			int ret = itMetaField->serializerInterface->Serialize(elemSerializeReq, elemSerializeResp);
-			if (ret != 0) {
+			if (IJSTI_UNLIKELY(ret != 0)) {
 				if (hasAllocMember) {
 					buffer.RemoveMember(fieldNameVal);
 				}
@@ -696,9 +737,50 @@ public:
 	/*
 	 * Deserialize by stream
 	 */
-	int Deserialize(StoreType &stream)
+	int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp& resp)
 	{
+		assert(req.pField == IJSTI_NULL || req.pField == this);
+
+		if (!req.stream.IsObject())
+		{
+			return Err::kParseValueTypeError;
+		}
+
+		// Store ptr
 		resetInnerStream();
+		setInnerStream(&req.stream, &req.allocator);
+
+		// For each member
+		for (rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
+			 itMember != req.stream.MemberEnd(); ++itMember) {
+
+			// TODO: Performance issue?
+			std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
+			IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator itMetaField =
+					m_metaClass->mapName.find(fieldName);
+			if (itMetaField == m_metaClass->mapName.end()) {
+				// Not a field in struct
+				continue;
+			}
+
+			const MetaField *metaField = itMetaField->second;
+			void *pField = GetFieldByOffset(metaField->offset);
+			DeserializeReq elemReq(itMember->value, req.allocator, pField);
+			DeserializeResp elemResp(resp.pErrMsg);
+			FStatus::_E ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
+			m_fieldStatus[metaField->offset] = FStatus::ParseFailed;
+			if (ret != FStatus::Valid) {
+				if (resp.pErrMsg != IJSTI_NULL) {
+					std::stringstream oss;
+					oss << "Error in deserialize field. [name: " << metaField->name
+						<< ", err: " << *resp.pErrMsg << " ]";
+					oss >> *resp.pErrMsg;
+				}
+				return ret;
+			}
+			// TODO: Check member state
+			++resp.fieldSize;
+		}
 		return 0;
 	}
 
@@ -735,12 +817,15 @@ public:
 			return itera->second;
 		}
 
-		if (m_metaClass->mapOffset.find(offset) != m_metaClass->mapOffset.end()) {
+		if (IJSTI_LIKELY(m_metaClass->mapOffset.find(offset) != m_metaClass->mapOffset.end())) {
 			return FStatus::Null;
 		}
 
 		return FStatus::NotAField;
 	}
+
+	template <class _T>
+	friend class FSerializer;
 
 	typedef IJSTI_MAP_TYPE<std::size_t, FStatus::_E> FieldStatusType;
 	FieldStatusType m_fieldStatus;
