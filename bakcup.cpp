@@ -115,3 +115,19 @@ SerializerRegister<FType::String> _reg_String;
 		assert(&(req.buffer[fieldNameVal]) == &elemSerializeReq.buffer);
 		return 0;
 	}
+
+TEST(Serialize, Complicate)
+{
+	Complicate st;
+	// Init
+	// vvi
+	vector<int> v1;
+	v1.push_back(1);
+	vector<int> v2;
+	v1.push_back(2);
+	v1.push_back(3);
+	st.vvi.push_back(v1);
+	st.vvi.push_back(v2);
+	// vms
+
+}

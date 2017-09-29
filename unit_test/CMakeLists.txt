@@ -10,6 +10,7 @@ include_directories(${gtest_SOURCE_DIR}/include)
 
 set(TEST_OUTPUT unit_test)
 set(TEST_SRC
+        basic_api_test.cpp
         serialize_test.cpp
         )
 # NOTE: Please check output target here
