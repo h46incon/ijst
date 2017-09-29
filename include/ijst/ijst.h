@@ -9,7 +9,6 @@
 
 #include <string>
 #include <vector>
-#include <iostream>
 #include <stdexcept>
 #include <map>
 #include <assert.h>
@@ -18,7 +17,6 @@
 /**	========================================================================================
  *				Public Interface
  */
-typedef rapidjson::Value StoreType;
 
 #define IJST_OUT
 
@@ -37,6 +35,10 @@ typedef rapidjson::Value StoreType;
 
 
 namespace ijst {
+
+typedef rapidjson::Value StoreType;
+//typedef rapidjson::GenericDocument::AllocatorType 	AllocatorType;
+typedef rapidjson::MemoryPoolAllocator<> 	AllocatorType;
 
 struct FType {
 public:
@@ -73,8 +75,6 @@ struct Err {
  */
 namespace detail {
 
-//typedef rapidjson::GenericDocument::AllocatorType 	AllocatorType;
-typedef rapidjson::MemoryPoolAllocator<> 	AllocatorType;
 
 // LIKELY and UNLIKELY
 #if defined(__GNUC__) || defined(__clang__)
@@ -622,28 +622,38 @@ public:
 
 	~Accessor()
 	{
-		resetInnerStream();
 		if (m_pDummyDoc != IJSTI_NULL) {
 			delete m_pDummyDoc;
 		}
 		m_pDummyDoc = IJSTI_NULL;
 	}
 
-	static void swap(Accessor &lhs, Accessor &rhs)
+	void Steal(Accessor &rhs)
 	{
-		if (IJSTI_UNLIKELY(&lhs == &rhs)) {
+		if (IJSTI_UNLIKELY(this == &rhs)) {
 			return;
 		}
-		// Swap pointer
-		using std::swap;
-		swap(lhs.m_metaClass, rhs.m_metaClass);
-		swap(lhs.m_pDummyDoc, rhs.m_pDummyDoc);
-		swap(lhs.m_useDummyDoc, rhs.m_useDummyDoc);
-		swap(lhs.m_pAllocator, rhs.m_pAllocator);
-		swap(lhs.m_pInnerStream, rhs.m_pInnerStream);
-		swap(lhs.m_fieldStatus, rhs.m_fieldStatus);
-		lhs.InitParentPtr();
-		rhs.InitParentPtr();
+
+		// Handler m_pDummyDoc
+		if (m_pDummyDoc != IJSTI_NULL)
+		{
+			delete m_pDummyDoc;
+			m_pDummyDoc = IJSTI_NULL;
+		}
+		m_pDummyDoc = rhs.m_pDummyDoc;
+		rhs.m_pDummyDoc = IJSTI_NULL;
+
+		// other simple field
+		m_metaClass = rhs.m_metaClass;
+		rhs.m_metaClass = IJSTI_NULL;
+		m_pAllocator = rhs.m_pAllocator;
+		rhs.m_pAllocator = IJSTI_NULL;
+		m_pInnerStream = rhs.m_pInnerStream;
+		rhs.m_pInnerStream = IJSTI_NULL;
+		m_useDummyDoc = rhs.m_useDummyDoc;
+
+		m_fieldStatus = IJSTI_MOVE(rhs.m_fieldStatus);
+		InitParentPtr();
 	}
 
 	Accessor(const Accessor &rhs) :
@@ -669,13 +679,13 @@ public:
 	Accessor(Accessor &&rhs)
 	{
 		m_pDummyDoc = IJSTI_NULL;
-		swap(*this, rhs);
+		Steal(rhs);
 	}
 #endif
 
 	Accessor &operator=(Accessor rhs)
 	{
-		swap(*this, rhs);
+		Steal(rhs);
 		return *this;
 	}
 
@@ -720,6 +730,16 @@ public:
 		return *m_pInnerStream;
 	}
 
+	inline AllocatorType &InnerAllocator( )
+	{
+		return *m_pAllocator;
+	}
+
+	inline const AllocatorType &InnerAllocator( ) const
+	{
+		return *m_pAllocator;
+	}
+
 	int SerializeInplace(bool pushAllField)
 	{
 		int ret = DoSerialize(pushAllField, /*tryInPlace=*/true, *m_pInnerStream, *m_pAllocator);
@@ -735,15 +755,15 @@ public:
 		}
 	}
 
-	void ShowTag() const
-	{
-		std::cout << "tag:" << m_metaClass->tag << std::endl;
-		const size_t count = m_metaClass->metaFields.size();
-		for (size_t i = 0; i < count; ++i) {
-			std::cout << "name:" << m_metaClass->metaFields[i].name << std::endl
-					  << "offset:" << m_metaClass->metaFields[i].offset << std::endl;
-		}
-	}
+//	void ShowTag() const
+//	{
+//		std::cout << "tag:" << m_metaClass->tag << std::endl;
+//		const size_t count = m_metaClass->metaFields.size();
+//		for (size_t i = 0; i < count; ++i) {
+//			std::cout << "name:" << m_metaClass->metaFields[i].name << std::endl
+//					  << "offset:" << m_metaClass->metaFields[i].offset << std::endl;
+//		}
+//	}
 
 private:
 	typedef SerializerInterface::SerializeReq SerializeReq;
@@ -776,7 +796,6 @@ private:
 		for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
 			 itMetaField != m_metaClass->metaFields.end(); ++itMetaField) {
 
-			std::cout << "Serialize field: " << itMetaField->name << std::endl;
 			// Check field state
 			FStatus::_E fstatus = GetStatusByOffset(itMetaField->offset);
 			switch (fstatus) {

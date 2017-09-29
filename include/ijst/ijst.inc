@@ -30,7 +30,6 @@
 		static void InitMetaInfo(MetaInfoT* metaInfo)										\
 		{																					\
 			MetaInfoS::InitInstanceBeforeMain();											\
-			std::cout << "InitMetaInfo: "  << #stName << std::endl;							\
 			metaInfo->metaClass.tag = #stName;												\
 			metaInfo->metaClass.accessorOffset = offsetof(stName, _);						\
 			metaInfo->metaClass.metaFields.reserve(N);
