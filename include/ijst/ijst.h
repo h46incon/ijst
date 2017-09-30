@@ -13,6 +13,8 @@
 #include <map>
 #include <assert.h>
 #include <sstream>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 /**	========================================================================================
  *				Public Interface
@@ -753,6 +755,19 @@ public:
 		if (IJSTI_UNLIKELY(ret != 0)) {
 			return ret;
 		}
+	}
+
+	bool WriteInnerStream(IJST_OUT std::string& strOutput)
+	{
+		rapidjson::StringBuffer buffer;
+		buffer.Clear();
+		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+		bool bSucc = m_pInnerStream->Accept(writer);
+		if (bSucc)
+		{
+			strOutput = std::string(buffer.GetString(), buffer.GetSize());
+		}
+		return bSucc;
 	}
 
 //	void ShowTag() const
