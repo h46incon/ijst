@@ -11,7 +11,7 @@
 #include <vector>
 #include <stdexcept>
 #include <map>
-#include <assert.h>
+#include <cassert>
 #include <sstream>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -26,10 +26,10 @@
 #define IJST_TVEC(_T)	::ijst::detail::TypeClassVec< _T>
 #define IJST_TMAP(_T)	::ijst::detail::TypeClassMap< _T>
 #define IJST_TOBJ(_T)	::ijst::detail::TypeClassObj< _T>
-#define IJST_SET(obj, field, val)				obj._.Set(obj.field, val)
-#define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict(obj.field, val)
-#define IJST_MAKE_VALID(obj, field)				obj._.MakeValid(obj.field)
-#define IJST_GET_STATUS(obj, field)				obj._.GetStatus(obj.field)
+#define IJST_SET(obj, field, val)				obj._.Set((obj).field, (val))
+#define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
+#define IJST_MAKE_VALID(obj, field)				obj._.MakeValid((obj).field)
+#define IJST_GET_STATUS(obj, field)				obj._.GetStatus((obj).field)
 
 #define IJST_DEFINE_STRUCT(...) \
     IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), __VA_ARGS__)
@@ -90,7 +90,7 @@ namespace detail {
 #define IJSTI_MAP_TYPE    			std::map
 #define IJSTI_STORE_MOVE(dest, src)							\
 	do {                                    				\
-        if (IJSTI_UNLIKELY(&dest != &src)) {                \
+        if (IJSTI_UNLIKELY(&(dest) != &(src))) {            \
             /*RapidJson's assigment behaviour is move */ 	\
             (dest) = (src);                 				\
         }                                   				\
@@ -192,7 +192,7 @@ public:
 		const bool needErrMsg;
 		std::string errMsg;
 
-		DeserializeResp(bool _needErrMsg = false) :
+		explicit DeserializeResp(bool _needErrMsg = false) :
 				fStatus(FStatus::Null),
 				fieldCount(0),
 				needErrMsg(_needErrMsg)
@@ -536,7 +536,7 @@ struct MetaField { // NOLINT
 
 class MetaClass {
 public:
-	MetaClass() : mapInited(false) { }
+	MetaClass() : mapInited(false), accessorOffset(0) { }
 
 	void PushMetaField(const std::string &name, std::size_t offset,
 					   unsigned int desc, SerializerInterface *serializerInterface)
@@ -748,7 +748,7 @@ public:
 		return ret;
 	}
 
-	bool Serialize(bool pushAllField, IJST_OUT rapidjson::Document& docOutput) const
+	int Serialize(bool pushAllField, IJST_OUT rapidjson::Document& docOutput) const
 	{
 		Accessor* pAccessor = const_cast<Accessor *>(this);
 		int ret = pAccessor->DoSerialize(pushAllField, /*tryInPlace=*/false, docOutput, docOutput.GetAllocator());
