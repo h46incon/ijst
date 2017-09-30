@@ -15,12 +15,14 @@
 #include <sstream>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include <rapidjson/error/en.h>
 
 /**	========================================================================================
  *				Public Interface
  */
 
 #define IJST_OUT
+#define IJST_INOUT
 
 #define IJST_TPRI(_T)	::ijst::detail::TypeClassPrim< ::ijst::FType::_T>
 #define IJST_TVEC(_T)	::ijst::detail::TypeClassVec< _T>
@@ -68,9 +70,11 @@ public:
 };
 
 struct Err {
-	static const int kSucc = 					0x00000000;
-	static const int kParseValueTypeError = 	0x00001001;
-	static const int kParseValueElemError = 	0x00001002;
+	static const int kSucc 							= 0x00000000;
+	static const int kDeserializeValueTypeError 	= 0x00001001;
+	static const int kDeserializeValueElemError 	= 0x00001002;
+	static const int kDeserializeSomeFiledsInvalid 	= 0x00001003;
+	static const int kParseFaild 					= 0x00001003;
 };
 /**	========================================================================================
  *				Inner Interface
@@ -265,7 +269,7 @@ public:
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
 		_T *ptr = (_T *) req.pFieldBuffer;
-		return ptr->_.Deserialize(req, resp);
+		return ptr->_.DoDeserialize(req, resp);
 	}
 };
 
@@ -311,7 +315,7 @@ public:
 		if (!req.stream.IsArray()) {
 			resp.fStatus = FStatus::ParseFailed;
 			resp.SetErrMsg("Value is not a Array");
-			return Err::kParseValueTypeError;
+			return Err::kDeserializeValueTypeError;
 		}
 
 		VarType *pBufferT = static_cast<VarType *>(req.pFieldBuffer);
@@ -419,7 +423,7 @@ public:
 		if (!req.stream.IsObject()) {
 			resp.fStatus = FStatus::ParseFailed;
 			resp.SetErrMsg("Value is not a Object");
-			return Err::kParseValueTypeError;
+			return Err::kDeserializeValueTypeError;
 		}
 
 		VarType *pBufferT = static_cast<VarType *>(req.pFieldBuffer);
@@ -486,7 +490,7 @@ public:
 		{
 			resp.fStatus = FStatus::ParseFailed;
 			resp.SetErrMsg("Value is not a Int");
-			return Err::kParseValueTypeError;
+			return Err::kDeserializeValueTypeError;
 		}
 
 		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
@@ -514,7 +518,7 @@ public:
 		{
 			resp.fStatus = FStatus::ParseFailed;
 			resp.SetErrMsg("Value is not a String");
-			return Err::kParseValueTypeError;
+			return Err::kDeserializeValueTypeError;
 		}
 
 		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
@@ -614,12 +618,49 @@ private:
 
 class Accessor {
 public:
+	/*
+	 * Constructor
+	 */
 	Accessor(const MetaClass *_metaClass) :
 			m_metaClass(_metaClass)
 	{
 		InitParentPtr();
 		m_pDummyDoc = new rapidjson::Document(rapidjson::kObjectType);
 		resetInnerStream();
+	}
+
+	Accessor(const Accessor &rhs) :
+			m_fieldStatus(rhs.m_fieldStatus)
+	{
+		assert(this != &rhs);
+
+		m_metaClass = rhs.m_metaClass;
+		InitParentPtr();
+		m_pDummyDoc = new rapidjson::Document(rapidjson::kNullType);
+		m_pDummyDoc->CopyFrom(*rhs.m_pDummyDoc, m_pDummyDoc->GetAllocator());
+		m_useDummyDoc = rhs.m_useDummyDoc;
+		if (m_useDummyDoc) {
+			m_pInnerStream = m_pDummyDoc;
+			m_pAllocator = &m_pDummyDoc->GetAllocator();
+		}
+		else {
+			m_pInnerStream = rhs.m_pInnerStream;
+			m_pAllocator = rhs.m_pAllocator;
+		}
+	}
+
+#if __cplusplus >= 201103L
+	Accessor(Accessor &&rhs)
+	{
+		m_pDummyDoc = IJSTI_NULL;
+		Steal(rhs);
+	}
+#endif
+
+	Accessor &operator=(Accessor rhs)
+	{
+		Steal(rhs);
+		return *this;
 	}
 
 	~Accessor()
@@ -658,39 +699,10 @@ public:
 		InitParentPtr();
 	}
 
-	Accessor(const Accessor &rhs) :
-			m_metaClass(rhs.m_metaClass),
-			m_fieldStatus(rhs.m_fieldStatus)
-	{
-		InitParentPtr();
-		assert(this != &rhs);
-		m_pDummyDoc = new rapidjson::Document(rapidjson::kNullType);
-		m_pDummyDoc->CopyFrom(*rhs.m_pDummyDoc, m_pDummyDoc->GetAllocator());
-		m_useDummyDoc = rhs.m_useDummyDoc;
-		if (m_useDummyDoc) {
-			m_pInnerStream = m_pDummyDoc;
-			m_pAllocator = &m_pDummyDoc->GetAllocator();
-		}
-		else {
-			m_pInnerStream = rhs.m_pInnerStream;
-			m_pAllocator = rhs.m_pAllocator;
-		}
-	}
 
-#if __cplusplus >= 201103L
-	Accessor(Accessor &&rhs)
-	{
-		m_pDummyDoc = IJSTI_NULL;
-		Steal(rhs);
-	}
-#endif
-
-	Accessor &operator=(Accessor rhs)
-	{
-		Steal(rhs);
-		return *this;
-	}
-
+	/*
+	 * Field accessor
+	 */
 	template<typename _T1, typename _T2>
 	inline void Set(_T1 &field, const _T2 &value)
 	{
@@ -722,6 +734,9 @@ public:
 		return GetStatusByOffset(offset);
 	}
 
+	/*
+	 * InnerStream or allocator
+	 */
 	inline StoreType &InnerStream( )
 	{
 		return *m_pInnerStream;
@@ -742,7 +757,10 @@ public:
 		return *m_pAllocator;
 	}
 
-	int SerializeInplace(bool pushAllField)
+	/*
+	 * Serialize
+	 */
+	inline int SerializeInplace(bool pushAllField)
 	{
 		int ret = DoSerialize(pushAllField, /*tryInPlace=*/true, *m_pInnerStream, *m_pAllocator);
 		return ret;
@@ -757,13 +775,54 @@ public:
 		}
 	}
 
+	/**
+	 * Deserialize
+	 * @param errMsg. Output of error message, null if cancel error output
+	 */
+	inline int DeserializeMoveFrom(rapidjson::Document& srcDocStolen, IJST_INOUT std::string* errMsg)
+	{
+		resetInnerStream();
+		m_pDummyDoc->Swap(srcDocStolen);
+		return DeserializeInInnerstream(errMsg);
+	}
+
+	inline int Deserialize(const rapidjson::Document& srcDoc, IJST_INOUT std::string* errMsg)
+	{
+		resetInnerStream();
+		m_pDummyDoc->CopyFrom(srcDoc, m_pDummyDoc->GetAllocator());
+		return DeserializeInInnerstream(errMsg);
+	}
+
+	int Deserialize(const char* str, std::size_t length, IJST_INOUT std::string* errMsg)
+	{
+		resetInnerStream();
+		m_pDummyDoc->Parse(str, length);
+		if (IJSTI_UNLIKELY(m_pDummyDoc->HasParseError()))
+		{
+			if (errMsg != IJSTI_NULL)
+			{
+				*errMsg = IJSTI_MOVE(std::string(
+						rapidjson::GetParseError_En(m_pDummyDoc->GetParseError())
+				));
+			}
+			return Err::kParseFaild;
+		}
+		return DeserializeInInnerstream(errMsg);
+	}
+
+	inline int Deserialize(const std::string& input, IJST_INOUT std::string* errMsg)
+	{
+		return Deserialize(input.c_str(), input.length(), errMsg);
+	}
+
+
 	bool WriteInnerStream(IJST_OUT std::string& strOutput)
 	{
 		rapidjson::StringBuffer buffer;
 		buffer.Clear();
 		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 		bool bSucc = m_pInnerStream->Accept(writer);
-		if (bSucc)
+		if (IJSTI_LIKELY(bSucc))
 		{
 			strOutput = std::string(buffer.GetString(), buffer.GetSize());
 		}
@@ -872,16 +931,29 @@ private:
 
 		return 0;
 	}
+
+	int DeserializeInInnerstream(IJST_INOUT std::string* errMsg)
+	{
+		DeserializeReq req(*m_pInnerStream, *m_pAllocator, this);
+		bool needErrMessage = (errMsg != IJSTI_NULL);
+		DeserializeResp resp(needErrMessage);
+		int ret = DoDeserialize(req, resp);
+		if (needErrMessage) {
+			*errMsg = IJSTI_MOVE(resp.errMsg);
+		}
+		return ret;
+
+	}
 	/*
 	 * Deserialize by stream
 	 */
-	int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp& resp)
+	int DoDeserialize(const DeserializeReq &req, IJST_OUT DeserializeResp& resp)
 	{
 		assert(req.pFieldBuffer == IJSTI_NULL || req.pFieldBuffer == this);
 
 		if (!req.stream.IsObject())
 		{
-			return Err::kParseValueTypeError;
+			return Err::kDeserializeValueTypeError;
 		}
 
 		// Store ptr
@@ -914,6 +986,33 @@ private:
 			}
 			// TODO: Check member state
 			++resp.fieldCount;
+		}
+
+		// Check status
+		std::stringstream invalidNameOss;
+		bool hasErr = false;
+		for (std::vector<MetaField>::const_iterator itField = m_metaClass->metaFields.begin();
+			 itField != m_metaClass->metaFields.end(); ++itField)
+		{
+			if ((itField->desc & FDesc::Optional) != 0)
+			{
+				// Optional
+				continue;
+			}
+			if (GetStatusByOffset(itField->offset) != FStatus::Valid)
+			{
+				hasErr = true;
+				if (resp.needErrMsg)
+				{
+					invalidNameOss << itField->name << ", ";
+				}
+			}
+		}
+		if (hasErr)
+		{
+			resp.needErrMsg &&
+					resp.SetErrMsg("Some fields are invalid: " + invalidNameOss.str());
+			return Err::kDeserializeSomeFiledsInvalid;
 		}
 		return 0;
 	}
