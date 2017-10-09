@@ -495,7 +495,7 @@ public:
 
 		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
 		*pBuffer = req.stream.GetInt();
-		return FStatus::Valid;
+		return 0;
 	}
 
 };
@@ -523,7 +523,7 @@ public:
 
 		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
 		*pBuffer = std::string(req.stream.GetString(), req.stream.GetStringLength());
-		return FStatus::Valid;
+		return 0;
 	}
 };
 
@@ -850,6 +850,17 @@ private:
 		m_parentPtr = reinterpret_cast<const unsigned char *>(this - m_metaClass->accessorOffset);
 	}
 
+	inline int DeserializeInInnerstream(IJST_INOUT std::string* errMsg)
+	{
+		bool needErrMessage = (errMsg != IJSTI_NULL);
+		DeserializeResp resp(needErrMessage);
+		int ret = DoDeserializeInInnerstream(resp);
+		if (needErrMessage) {
+			*errMsg = IJSTI_MOVE(resp.errMsg);
+		}
+		return ret;
+	}
+
 	int DoSerialize(bool pushAllField, bool tryInPlace, StoreType& buffer, AllocatorType& allocator)
 	{
 		if (tryInPlace) {
@@ -932,18 +943,6 @@ private:
 		return 0;
 	}
 
-	int DeserializeInInnerstream(IJST_INOUT std::string* errMsg)
-	{
-		DeserializeReq req(*m_pInnerStream, *m_pAllocator, this);
-		bool needErrMessage = (errMsg != IJSTI_NULL);
-		DeserializeResp resp(needErrMessage);
-		int ret = DoDeserialize(req, resp);
-		if (needErrMessage) {
-			*errMsg = IJSTI_MOVE(resp.errMsg);
-		}
-		return ret;
-
-	}
 	/*
 	 * Deserialize by stream
 	 */
@@ -951,18 +950,23 @@ private:
 	{
 		assert(req.pFieldBuffer == IJSTI_NULL || req.pFieldBuffer == this);
 
-		if (!req.stream.IsObject())
-		{
-			return Err::kDeserializeValueTypeError;
-		}
-
 		// Store ptr
 		resetInnerStream();
 		setInnerStream(&req.stream, &req.allocator);
 
+		return DoDeserializeInInnerstream(resp);
+	}
+
+	int DoDeserializeInInnerstream(IJST_OUT DeserializeResp& resp)
+	{
+		if (!m_pInnerStream->IsObject())
+		{
+			return Err::kDeserializeValueTypeError;
+		}
+
 		// For each member
-		for (rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
-			 itMember != req.stream.MemberEnd(); ++itMember) {
+		for (rapidjson::Value::MemberIterator itMember = m_pInnerStream->MemberBegin();
+			 itMember != m_pInnerStream->MemberEnd(); ++itMember) {
 
 			// TODO: Performance issue?
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
@@ -975,20 +979,21 @@ private:
 
 			const MetaField *metaField = itMetaField->second;
 			void *pField = GetFieldByOffset(metaField->offset);
-			DeserializeReq elemReq(itMember->value, req.allocator, pField);
+			DeserializeReq elemReq(itMember->value, *m_pAllocator, pField);
 			DeserializeResp elemResp(resp.needErrMsg);
 			int ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
 			if (ret != 0) {
 				resp.needErrMsg &&
-						resp.CombineErrMsg("Deserialize field error. name: " + metaField->name + ", err: ", elemResp);
+					resp.CombineErrMsg("Deserialize field error. name: " + metaField->name + ", err: ", elemResp);
 				m_fieldStatus[metaField->offset] = FStatus::ParseFailed;
 				return ret;
 			}
 			// TODO: Check member state
+			m_fieldStatus[metaField->offset] = FStatus::Valid;
 			++resp.fieldCount;
 		}
 
-		// Check status
+		// Check all required field status
 		std::stringstream invalidNameOss;
 		bool hasErr = false;
 		for (std::vector<MetaField>::const_iterator itField = m_metaClass->metaFields.begin();
@@ -1011,7 +1016,7 @@ private:
 		if (hasErr)
 		{
 			resp.needErrMsg &&
-					resp.SetErrMsg("Some fields are invalid: " + invalidNameOss.str());
+				resp.SetErrMsg("Some fields are invalid: " + invalidNameOss.str());
 			return Err::kDeserializeSomeFiledsInvalid;
 		}
 		return 0;
