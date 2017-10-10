@@ -131,3 +131,12 @@ TEST(Serialize, Complicate)
 	// vms
 
 }
+
+
+#include <boost/preprocessor/control/expr_if.hpp>
+#define IJSTM_BR() // TODO
+//#define IJSTM_BR_PRE(n, c) BOOST_PP_EXPR_IF(BOOST_PP_EQUAL(BOOST_PP_MOD(n, c), BOOST_PP_DEC(c)), IJSTM_BR())
+#define IJSTM_BR_PRE(n, c)
+#define IJSTM_METAINFO_ADD(z, n, f) IJSTI_METAINFO_ADD(stName, f##n); IJSTM_BR_PRE(n, 5)
+#define IJSTM_FIELD_INIT(z, n, f)	,IJSTI_IDL_FNAME f##n ()  IJSTM_BR_PRE(n, 5)
+#define IJSTM_DEFINE_FIELD(z, n, f) IJSTI_DEFINE_FIELD(f##n); IJSTM_BR_PRE(n, 5)

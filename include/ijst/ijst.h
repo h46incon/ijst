@@ -1076,10 +1076,49 @@ private:
 	const unsigned char *m_parentPtr;
 };
 
+#define IJSTI_DEFINE_STRUCT_IMPL(N, ...) \
+    IJSTI_PP_CONCAT(IJSTI_DEFINE_STRUCT_IMPL_, N)(__VA_ARGS__)
+
+// Expands to the concatenation of its two arguments.
+#define IJSTI_PP_CONCAT(x, y) IJSTI_PP_CONCAT_PRIMITIVE(x, y)
+#define IJSTI_PP_CONCAT_PRIMITIVE(x, y) x ## y
+
+#define IJSTI_IDL_FTYPE(fType, fName, sName, desc)		fType
+#define IJSTI_IDL_FNAME(fType, fName, sName, desc)		fName
+#define IJSTI_IDL_SNAME(fType, fName, sName, desc)		sName
+#define IJSTI_IDL_DESC(fType, fName, sName, desc)		desc
+
+#define IJSTI_DEFINE_FIELD(fDef) 							\
+        ::ijst::detail::FSerializer<IJSTI_IDL_FTYPE fDef>::VarType IJSTI_IDL_FNAME fDef
+
+#define IJSTI_METAINFO_ADD(stName, fDef)  					\
+		metaInfo->metaClass.PushMetaField(					\
+			IJSTI_IDL_SNAME fDef, 							\
+			offsetof(stName, IJSTI_IDL_FNAME fDef),			\
+			IJSTI_IDL_DESC fDef, 							\
+			IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef)		\
+		)
+
+#define IJSTI_METAINFO_DEFINE_START(stName, N)												\
+	private:																				\
+		typedef ::ijst::detail::MetaInfo<stName> MetaInfoT;									\
+		typedef ::ijst::detail::Singleton<MetaInfoT> MetaInfoS;								\
+		friend MetaInfoT;																	\
+		static void InitMetaInfo(MetaInfoT* metaInfo)										\
+		{																					\
+			MetaInfoS::InitInstanceBeforeMain();											\
+			metaInfo->metaClass.tag = #stName;												\
+			metaInfo->metaClass.accessorOffset = offsetof(stName, _);						\
+			metaInfo->metaClass.metaFields.reserve(N);
+
+#define IJSTI_METAINFO_DEFINE_END()															\
+			metaInfo->metaClass.InitMap();													\
+		}
+
 }	// namespace detail
 
 }	// namespace ijst
 
-#include "ijst.inc"
+#include "ijst_repeat_def.inc"
 
 #endif //_IJST_HPP_INCLUDE_
