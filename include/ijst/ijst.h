@@ -46,6 +46,7 @@ struct FType {
 public:
 	enum _E {
 		Raw,
+		Bool,
 		Int,
 		String,
 	};
@@ -247,6 +248,7 @@ public:
 };
 #define IJSTI_FSERIALIZER_INS(_T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< _T> >::GetInstance()
 
+#include "ijst_serialize.inc"
 /**	========================================================================================
  *				Private
  */
@@ -1063,7 +1065,6 @@ private:
 
 }	// namespace ijst
 
-#include "ijst_serialize.inc"
 #include "ijst_repeat_def.inc"
 
 #endif //_IJST_HPP_INCLUDE_

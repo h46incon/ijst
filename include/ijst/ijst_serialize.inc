@@ -5,8 +5,35 @@
 // Including "ijst.h" is not necessary of compiler, but it will make life easier when coding in IDE
 #include "ijst.h"
 
-namespace ijst{
-namespace detail {
+//namespace ijst{
+//namespace detail {
+
+template<>
+class FSerializer<TypeClassPrim<FType::Bool> > : public SerializerInterface {
+public:
+	typedef bool VarType;
+
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
+	{
+		const VarType *fieldI = static_cast<const VarType *>(req.pField);
+		req.buffer.SetBool(*fieldI);
+		return 0;
+	}
+
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
+	{
+		if (!req.stream.IsBool()) {
+			resp.fStatus = FStatus::ParseFailed;
+			resp.SetErrMsg("Value is not Bool");
+			return Err::kDeserializeValueTypeError;
+		}
+
+		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
+		*pBuffer = req.stream.GetBool();
+		return 0;
+	}
+
+};
 
 template<>
 class FSerializer<TypeClassPrim<FType::Int> > : public SerializerInterface {
@@ -24,7 +51,7 @@ public:
 	{
 		if (!req.stream.IsInt()) {
 			resp.fStatus = FStatus::ParseFailed;
-			resp.SetErrMsg("Value is not a Int");
+			resp.SetErrMsg("Value is not Int");
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -51,7 +78,7 @@ public:
 	{
 		if (!req.stream.IsString()) {
 			resp.fStatus = FStatus::ParseFailed;
-			resp.SetErrMsg("Value is not a String");
+			resp.SetErrMsg("Value is not String");
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -61,5 +88,5 @@ public:
 	}
 };
 
-}	//namespace detail
-}	//namespace ijst
+//}	//namespace detail
+//}	//namespace ijst
