@@ -247,65 +247,6 @@ public:
 };
 #define IJSTI_FSERIALIZER_INS(_T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< _T> >::GetInstance()
 
-/**
- *				Serialization implementation of Primitive types
- */
-
-template<>
-class FSerializer<TypeClassPrim<FType::Int> > : public SerializerInterface {
-public:
-	typedef int VarType;
-
-	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
-	{
-		const VarType *fieldI = static_cast<const VarType *>(req.pField);
-		req.buffer.SetInt(*fieldI);
-		return 0;
-	}
-
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
-	{
-		if (!req.stream.IsInt())
-		{
-			resp.fStatus = FStatus::ParseFailed;
-			resp.SetErrMsg("Value is not a Int");
-			return Err::kDeserializeValueTypeError;
-		}
-
-		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
-		*pBuffer = req.stream.GetInt();
-		return 0;
-	}
-
-};
-
-template<>
-class FSerializer<TypeClassPrim<FType::String> > : public SerializerInterface {
-public:
-	typedef std::string VarType;
-
-	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
-	{
-		const VarType *filedV = static_cast<const VarType *>(req.pField);
-		req.buffer.SetString(filedV->c_str(), filedV->length(), req.allocator);
-		return 0;
-	}
-
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
-	{
-		if (!req.stream.IsString())
-		{
-			resp.fStatus = FStatus::ParseFailed;
-			resp.SetErrMsg("Value is not a String");
-			return Err::kDeserializeValueTypeError;
-		}
-
-		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
-		*pBuffer = std::string(req.stream.GetString(), req.stream.GetStringLength());
-		return 0;
-	}
-};
-
 /**	========================================================================================
  *				Private
  */
@@ -1094,14 +1035,6 @@ private:
 #define IJSTI_DEFINE_FIELD(fDef) 							\
         ::ijst::detail::FSerializer<IJSTI_IDL_FTYPE fDef>::VarType IJSTI_IDL_FNAME fDef
 
-#define IJSTI_METAINFO_ADD(stName, fDef)  					\
-		metaInfo->metaClass.PushMetaField(					\
-			IJSTI_IDL_SNAME fDef, 							\
-			offsetof(stName, IJSTI_IDL_FNAME fDef),			\
-			IJSTI_IDL_DESC fDef, 							\
-			IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef)		\
-		)
-
 #define IJSTI_METAINFO_DEFINE_START(stName, N)												\
 	private:																				\
 		typedef ::ijst::detail::MetaInfo<stName> MetaInfoT;									\
@@ -1114,6 +1047,14 @@ private:
 			metaInfo->metaClass.accessorOffset = offsetof(stName, _);						\
 			metaInfo->metaClass.metaFields.reserve(N);
 
+#define IJSTI_METAINFO_ADD(stName, fDef)  					\
+		metaInfo->metaClass.PushMetaField(					\
+			IJSTI_IDL_SNAME fDef, 							\
+			offsetof(stName, IJSTI_IDL_FNAME fDef),			\
+			IJSTI_IDL_DESC fDef, 							\
+			IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef)		\
+		)
+
 #define IJSTI_METAINFO_DEFINE_END()															\
 			metaInfo->metaClass.InitMap();													\
 		}
@@ -1122,6 +1063,7 @@ private:
 
 }	// namespace ijst
 
+#include "ijst_serialize.inc"
 #include "ijst_repeat_def.inc"
 
 #endif //_IJST_HPP_INCLUDE_
