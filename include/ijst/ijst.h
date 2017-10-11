@@ -60,11 +60,11 @@ struct FDesc {
 struct FStatus {
 public:
 	enum _E {
-		NotAField,
-		Null,
-		ParseFailed,
-		Valid,
-		Removed,
+		kNotAField,
+		kMissing,
+		kParseFailed,
+		kValid,
+		kRemoved,
 	};
 };
 
@@ -195,7 +195,7 @@ public:
 		std::string errMsg;
 
 		explicit DeserializeResp(bool _needErrMsg = false) :
-				fStatus(FStatus::Null),
+				fStatus(FStatus::kMissing),
 				fieldCount(0),
 				needErrMsg(_needErrMsg)
 		{ }
@@ -316,7 +316,7 @@ public:
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
 		if (!req.stream.IsArray()) {
-			resp.fStatus = FStatus::ParseFailed;
+			resp.fStatus = FStatus::kParseFailed;
 			resp.SetErrMsg("Value is not a Array");
 			return Err::kDeserializeValueTypeError;
 		}
@@ -349,10 +349,10 @@ public:
 				}
 				return ret;
 			}
-			resp.fStatus = FStatus::ParseFailed;
+			resp.fStatus = FStatus::kParseFailed;
 			++resp.fieldCount;
 		}
-		resp.fStatus = FStatus::Valid;
+		resp.fStatus = FStatus::kValid;
 		return 0;
 	}
 };
@@ -424,7 +424,7 @@ public:
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
 		if (!req.stream.IsObject()) {
-			resp.fStatus = FStatus::ParseFailed;
+			resp.fStatus = FStatus::kParseFailed;
 			resp.SetErrMsg("Value is not a Object");
 			return Err::kDeserializeValueTypeError;
 		}
@@ -461,12 +461,12 @@ public:
 					resp.CombineErrMsg("Deserialize elem error. key: " + fieldName + ", err: ",
 								   elemResp
 				);
-				resp.fStatus = FStatus::ParseFailed;
+				resp.fStatus = FStatus::kParseFailed;
 				return ret;
 			}
 			++resp.fieldCount;
 		}
-		resp.fStatus = FStatus::Valid;
+		resp.fStatus = FStatus::kValid;
 		return 0;
 	}
 };
@@ -664,7 +664,7 @@ public:
 			throw std::runtime_error("could not find field with expected offset: " + offset);
 		}
 
-		m_fieldStatus[offset] = FStatus::Valid;
+		m_fieldStatus[offset] = FStatus::kValid;
 	}
 
 	template<typename _T>
@@ -823,9 +823,9 @@ private:
 			// Check field state
 			FStatus::_E fstatus = GetStatusByOffset(itMetaField->offset);
 			switch (fstatus) {
-				case FStatus::NotAField:
+				case FStatus::kNotAField:
 					return -1;
-				case FStatus::Valid:
+				case FStatus::kValid:
 					// continue processing
 					break;
 					// TODO: add remove
@@ -923,11 +923,11 @@ private:
 			if (ret != 0) {
 				resp.needErrMsg &&
 					resp.CombineErrMsg("Deserialize field error. name: " + metaField->name + ", err: ", elemResp);
-				m_fieldStatus[metaField->offset] = FStatus::ParseFailed;
+				m_fieldStatus[metaField->offset] = FStatus::kParseFailed;
 				return ret;
 			}
 			// TODO: Check member state
-			m_fieldStatus[metaField->offset] = FStatus::Valid;
+			m_fieldStatus[metaField->offset] = FStatus::kValid;
 			++resp.fieldCount;
 		}
 
@@ -942,7 +942,7 @@ private:
 				// Optional
 				continue;
 			}
-			if (GetStatusByOffset(itField->offset) != FStatus::Valid)
+			if (GetStatusByOffset(itField->offset) != FStatus::kValid)
 			{
 				hasErr = true;
 				if (resp.needErrMsg)
@@ -1002,10 +1002,10 @@ private:
 		}
 
 		if (IJSTI_LIKELY(m_metaClass->mapOffset.find(offset) != m_metaClass->mapOffset.end())) {
-			return FStatus::Null;
+			return FStatus::kMissing;
 		}
 
-		return FStatus::NotAField;
+		return FStatus::kNotAField;
 	}
 
 	template <class _T>

@@ -23,7 +23,7 @@ public:
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
 		if (!req.stream.IsBool()) {
-			resp.fStatus = FStatus::ParseFailed;
+			resp.fStatus = FStatus::kParseFailed;
 			resp.SetErrMsg("Value is not Bool");
 			return Err::kDeserializeValueTypeError;
 		}
@@ -50,7 +50,7 @@ public:
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
 		if (!req.stream.IsInt()) {
-			resp.fStatus = FStatus::ParseFailed;
+			resp.fStatus = FStatus::kParseFailed;
 			resp.SetErrMsg("Value is not Int");
 			return Err::kDeserializeValueTypeError;
 		}
@@ -77,7 +77,7 @@ public:
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
 		if (!req.stream.IsString()) {
-			resp.fStatus = FStatus::ParseFailed;
+			resp.fStatus = FStatus::kParseFailed;
 			resp.SetErrMsg("Value is not String");
 			return Err::kDeserializeValueTypeError;
 		}

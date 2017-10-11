@@ -25,6 +25,11 @@ TEST(Deserialize, Empty)
 	ASSERT_EQ(ret, retExpected);
 }
 
+TEST(Deserialize, Null)
+{
+	// TODO
+}
+
 TEST(Deserialize, ParseError)
 {
 	string errJson = "{withoutQuote:1}";
@@ -50,8 +55,8 @@ TEST(Deserialize, RequiredFields)
 	int ret = st._.Deserialize(validJson, 0);
 	ASSERT_EQ(ret, 0);
 
-	ASSERT_EQ(IJST_GET_STATUS(st, int_1), ijst::FStatus::Null);
-	ASSERT_EQ(IJST_GET_STATUS(st, str_1), ijst::FStatus::Null);
+	ASSERT_EQ(IJST_GET_STATUS(st, int_1), ijst::FStatus::kMissing);
+	ASSERT_EQ(IJST_GET_STATUS(st, str_1), ijst::FStatus::kMissing);
 	ASSERT_EQ(st.int_2, 1);
 	ASSERT_STREQ(st.str_2.c_str(), "str2");
 }
@@ -63,8 +68,8 @@ TEST(Deserialize, AdditionalFields)
 	int ret = st._.Deserialize(validJson, 0);
 	ASSERT_EQ(ret, 0);
 
-	ASSERT_EQ(IJST_GET_STATUS(st, int_1), ijst::FStatus::Valid);
-	ASSERT_EQ(IJST_GET_STATUS(st, str_1), ijst::FStatus::Null);
+	ASSERT_EQ(IJST_GET_STATUS(st, int_1), ijst::FStatus::kValid);
+	ASSERT_EQ(IJST_GET_STATUS(st, str_1), ijst::FStatus::kMissing);
 	ASSERT_EQ(st.int_1, 1);
 	ASSERT_EQ(st.int_2, 2);
 	ASSERT_STREQ(st.str_2.c_str(), "str2");
