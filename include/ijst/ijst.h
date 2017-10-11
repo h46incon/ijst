@@ -33,7 +33,8 @@
 
 #define IJST_SET(obj, field, val)				obj._.Set((obj).field, (val))
 #define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
-#define IJST_MAKE_VALID(obj, field)				obj._.MakeValid((obj).field)
+#define IJST_MARK_VALID(obj, field)				obj._.MarkValid((obj).field)
+#define IJST_MARK_NULL(obj, field)				obj._.MarkNull((obj).field)
 #define IJST_GET_STATUS(obj, field)				obj._.GetStatus((obj).field)
 
 namespace ijst {
@@ -53,8 +54,10 @@ public:
 };
 
 struct FDesc {
-	static const unsigned int _MaskDesc 	= 0x000000FF;
-	static const unsigned int Optional 		= 0x00000001;
+	static const unsigned int _MaskDesc 		= 0x000000FF;
+	static const unsigned int Optional 			= 0x00000001;
+	static const unsigned int Nullable 			= 0x00000002;
+	// Element nullable is hard to represent, has not plan to implement it
 };
 
 struct FStatus {
@@ -62,19 +65,21 @@ public:
 	enum _E {
 		kNotAField,
 		kMissing,
+		kNull,
 		kParseFailed,
 		kValid,
-		kRemoved,
+//		kRemoved,
 	};
 };
 
 struct Err {
 	static const int kSucc 							= 0x00000000;
 	static const int kDeserializeValueTypeError 	= 0x00001001;
-	static const int kDeserializeValueElemError 	= 0x00001002;
-	static const int kDeserializeSomeFiledsInvalid 	= 0x00001003;
+	static const int kDeserializeSomeFiledsInvalid 	= 0x00001002;
 	static const int kParseFaild 					= 0x00001003;
+	static const int kInnerError 					= 0x00002001;
 };
+
 /**	========================================================================================
  *				Inner Interface
  */
@@ -646,7 +651,7 @@ public:
 	template<typename _T1, typename _T2>
 	inline void Set(_T1 &field, const _T2 &value)
 	{
-		MakeValid(field);
+		MarkValid(field);
 		field = value;
 	}
 
@@ -657,7 +662,7 @@ public:
 	}
 
 	template<typename _T>
-	void MakeValid(_T &field)
+	void MarkValid(_T &field)
 	{
 		const std::size_t offset = GetFieldOffset(&field);
 		if (IJSTI_UNLIKELY(m_metaClass->mapOffset.find(offset) == m_metaClass->mapOffset.end())) {
@@ -665,6 +670,17 @@ public:
 		}
 
 		m_fieldStatus[offset] = FStatus::kValid;
+	}
+
+	template<typename _T>
+	void MarkNull(_T &field)
+	{
+		const std::size_t offset = GetFieldOffset(&field);
+		if (IJSTI_UNLIKELY(m_metaClass->mapOffset.find(offset) == m_metaClass->mapOffset.end())) {
+			throw std::runtime_error("could not find field with expected offset: " + offset);
+		}
+
+		m_fieldStatus[offset] = FStatus::kNull;
 	}
 
 	template<typename _T>
@@ -823,60 +839,117 @@ private:
 			// Check field state
 			FStatus::_E fstatus = GetStatusByOffset(itMetaField->offset);
 			switch (fstatus) {
-				case FStatus::kNotAField:
-					return -1;
 				case FStatus::kValid:
-					// continue processing
+				{
+					int ret = SerializeField(itMetaField, pushAllField, tryInPlace, buffer, allocator);
+					if (ret != 0) {
+						return ret;
+					}
+				}
 					break;
-					// TODO: add remove
-				default:
+
+				case FStatus::kNull:
+				{
+					int ret = SerializeNullField(itMetaField, buffer, allocator);
+					if (ret != 0) {
+						return ret;
+					}
+				}
+					break;
+
+				case FStatus::kMissing:
+				case FStatus::kParseFailed:
+				{
 					if (!pushAllField) {
 						continue;
 					}
+					int ret = SerializeField(itMetaField, pushAllField, tryInPlace, buffer, allocator);
+					if (ret != 0) {
+						return ret;
+					}
+				}
 					break;
+
+				case FStatus::kNotAField:
+				default:
+					// Error occurs
+					assert(false);
+					return Err::kInnerError;
 			}
 
-			// Init
-			const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
-			rapidjson::GenericStringRef<char> fieldNameRef =
-					rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
-			rapidjson::Value fieldNameVal;
-			fieldNameVal.SetString(fieldNameRef);
+		}
 
-			// Try add field when need
-			StoreType* pNewElem = IJSTI_NULL;
-			bool hasAllocMember = false;
-			{
-				rapidjson::Value::MemberIterator itMember = buffer.FindMember(fieldNameVal);
-				if (itMember == buffer.MemberEnd()) {
-					// Add member, field name is not need copy
-					buffer.AddMember(
-							rapidjson::Value().SetString(fieldNameRef),
-							rapidjson::Value(rapidjson::kNullType).Move(),
-							allocator
-					);
-					// Why rapidjson AddMember function do not return newly create member
-					pNewElem = &buffer[fieldNameVal];
-					hasAllocMember = true;
-				}
-				else {
-					pNewElem = &(itMember->value);
-				}
+		return 0;
+	}
+
+	int SerializeField(const std::vector<MetaField>::const_iterator& itMetaField,
+					   bool pushAllField, bool tryInPlace, StoreType& buffer, AllocatorType& allocator)
+	{
+		// Init
+		const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
+		rapidjson::GenericStringRef<char> fieldNameRef =
+				rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
+		rapidjson::Value fieldNameVal;
+		fieldNameVal.SetString(fieldNameRef);
+
+		// Try allocate new element buffer when need
+		StoreType* pNewElem = IJSTI_NULL;
+		bool hasAllocMember = false;
+		{
+			rapidjson::Value::MemberIterator itMember = buffer.FindMember(fieldNameVal);
+			if (itMember == buffer.MemberEnd()) {
+				// Add member, field name is not need deep copy
+				buffer.AddMember(
+						rapidjson::Value().SetString(fieldNameRef),
+						rapidjson::Value(rapidjson::kNullType).Move(),
+						allocator
+				);
+				// Why rapidjson AddMember function do not return newly create member
+				pNewElem = &buffer[fieldNameVal];
+				hasAllocMember = true;
 			}
-
-			// Serialize field
-			SerializeReq elemSerializeReq(
-					*pNewElem, allocator, pFieldValue, pushAllField, tryInPlace);
-
-			SerializeResp elemSerializeResp;
-			int ret = itMetaField->serializerInterface->Serialize(elemSerializeReq, elemSerializeResp);
-			if (IJSTI_UNLIKELY(ret != 0)) {
-				if (hasAllocMember) {
-					buffer.RemoveMember(fieldNameVal);
-				}
-				return ret;
+			else {
+				pNewElem = &(itMember->value);
 			}
-			assert(&(buffer[fieldNameVal]) == &elemSerializeReq.buffer);
+		}
+
+		// Serialize field
+		SerializeReq elemSerializeReq(
+				*pNewElem, allocator, pFieldValue, pushAllField, tryInPlace);
+
+		SerializeResp elemSerializeResp;
+		int ret = itMetaField->serializerInterface->Serialize(elemSerializeReq, elemSerializeResp);
+		if (IJSTI_UNLIKELY(ret != 0)) {
+			if (hasAllocMember) {
+				buffer.RemoveMember(fieldNameVal);
+			}
+			return ret;
+		}
+		assert(&(buffer[fieldNameVal]) == &elemSerializeReq.buffer);
+		return 0;
+	}
+
+	int SerializeNullField(const std::vector<MetaField>::const_iterator& itMetaField,
+					   StoreType& buffer, AllocatorType& allocator)
+	{
+		// Init
+		const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
+		rapidjson::GenericStringRef<char> fieldNameRef =
+				rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
+		rapidjson::Value fieldNameVal;
+		fieldNameVal.SetString(fieldNameRef);
+
+		rapidjson::Value::MemberIterator itMember = buffer.FindMember(fieldNameVal);
+		if (itMember == buffer.MemberEnd()) {
+			// Add member, field name is not need deep copy
+			buffer.AddMember(
+					rapidjson::Value().SetString(fieldNameRef),
+					rapidjson::Value(rapidjson::kNullType).Move(),
+					allocator
+			);
+		}
+		else {
+			itMember->value.SetNull();
 		}
 
 		return 0;
@@ -916,18 +989,29 @@ private:
 			}
 
 			const MetaField *metaField = itMetaField->second;
-			void *pField = GetFieldByOffset(metaField->offset);
-			DeserializeReq elemReq(itMember->value, *m_pAllocator, pField);
-			DeserializeResp elemResp(resp.needErrMsg);
-			int ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
-			if (ret != 0) {
-				resp.needErrMsg &&
-					resp.CombineErrMsg("Deserialize field error. name: " + metaField->name + ", err: ", elemResp);
-				m_fieldStatus[metaField->offset] = FStatus::kParseFailed;
-				return ret;
+
+			// Check nullable
+			if (isBitSet(metaField->desc, FDesc::Nullable)
+					&& itMember->value.IsNull())
+			{
+				m_fieldStatus[metaField->offset] = FStatus::kNull;
 			}
-			// TODO: Check member state
-			m_fieldStatus[metaField->offset] = FStatus::kValid;
+			else
+			{
+				void *pField = GetFieldByOffset(metaField->offset);
+				DeserializeReq elemReq(itMember->value, *m_pAllocator, pField);
+				DeserializeResp elemResp(resp.needErrMsg);
+				int ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
+				if (ret != 0) {
+					m_fieldStatus[metaField->offset] = FStatus::kParseFailed;
+					resp.needErrMsg &&
+						resp.CombineErrMsg("Deserialize field error. name: " + metaField->name + ", err: ", elemResp);
+					return ret;
+				}
+				// TODO: Check member state
+				m_fieldStatus[metaField->offset] = FStatus::kValid;
+			}
+
 			++resp.fieldCount;
 		}
 
@@ -937,18 +1021,25 @@ private:
 		for (std::vector<MetaField>::const_iterator itField = m_metaClass->metaFields.begin();
 			 itField != m_metaClass->metaFields.end(); ++itField)
 		{
-			if ((itField->desc & FDesc::Optional) != 0)
+			if (isBitSet(itField->desc, FDesc::Optional))
 			{
 				// Optional
 				continue;
 			}
-			if (GetStatusByOffset(itField->offset) != FStatus::kValid)
+
+			FStatus::_E fStatus = GetStatusByOffset(itField->offset);
+			if (fStatus == FStatus::kValid
+					|| fStatus == FStatus::kNull)
 			{
-				hasErr = true;
-				if (resp.needErrMsg)
-				{
-					invalidNameOss << itField->name << ", ";
-				}
+				// Correct
+				continue;
+			}
+
+			// Has error
+			hasErr = true;
+			if (resp.needErrMsg)
+			{
+				invalidNameOss << itField->name << ", ";
 			}
 		}
 		if (hasErr)
@@ -1006,6 +1097,11 @@ private:
 		}
 
 		return FStatus::kNotAField;
+	}
+
+	inline bool isBitSet(unsigned int val, unsigned int bit)
+	{
+		return (val & bit) != 0;
 	}
 
 	template <class _T>

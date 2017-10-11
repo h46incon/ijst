@@ -41,8 +41,8 @@ TEST(Serialize, EmptyStruct)
 TEST(Serialize, EmptyStruct_PushAllField)
 {
 	NestSt nestSt;
-
 	// Empty struct
+
 	int ret = nestSt._.SerializeInplace(true);
 	ASSERT_EQ(ret, 0);
 	ijst::StoreType &jVal = nestSt._.InnerStream();
@@ -74,6 +74,22 @@ TEST(Serialize, UseOuterBuffer)
 
 	ASSERT_EQ(nestSt._.InnerStream().MemberCount(), 0);
 	ASSERT_EQ(nestSt.inner_1._.InnerStream().MemberCount(), 0);
+}
+
+TEST(Serialize, NullValue)
+{
+	Inner innerSt;
+	IJST_SET(innerSt, int_1, 1);
+	IJST_SET(innerSt, int_2, 2);
+	IJST_MARK_NULL(innerSt, int_2);
+
+	int ret = innerSt._.SerializeInplace(true);
+	ASSERT_EQ(ret, 0);
+	ijst::StoreType &jVal = innerSt._.InnerStream();
+
+	ASSERT_EQ(IJST_GET_STATUS(innerSt, int_2), ijst::FStatus::kNull);
+	ASSERT_EQ(jVal["int_val_1"].GetInt(), 1);
+	ASSERT_TRUE(jVal["int_val_2"].IsNull());
 }
 
 IJST_DEFINE_STRUCT(

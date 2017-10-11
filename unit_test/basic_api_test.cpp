@@ -33,7 +33,7 @@ TEST(BasicAPI, FieldStatus)
 	// Make valid
 	simpleSt.int_2 = 0xA5A5;
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), ijst::FStatus::kMissing);
-	IJST_MAKE_VALID(simpleSt, int_2);
+	IJST_MARK_VALID(simpleSt, int_2);
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), ijst::FStatus::kValid);
 }
 
@@ -76,7 +76,7 @@ TEST(BasicAPI, Constructor4LValue)
 		IJST_SET(temp1, int_2, 0xA5A5);
 		ASSERT_EQ(IJST_GET_STATUS(st1, int_2), ijst::FStatus::kMissing);
 		// Avoid make temp1 become rvalue before
-		temp1._.MakeValid(temp1.int_1);
+		temp1._.MarkValid(temp1.int_1);
 	}
 
 
@@ -102,7 +102,7 @@ TEST(BasicAPI, Constructor4LValue)
 		IJST_SET(temp2, int_2, 0xA5A5);
 		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), ijst::FStatus::kMissing);
 		// Avoid make temp2 become rvalue
-		temp2._.MakeValid(temp2.int_1);
+		temp2._.MarkValid(temp2.int_1);
 	}
 
 
