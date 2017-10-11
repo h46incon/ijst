@@ -12,7 +12,9 @@ set(TEST_OUTPUT unit_test)
 set(TEST_SRC
         basic_api_test.cpp
         serialize_test.cpp
-        deserialize_test.cpp)
+        deserialize_test.cpp
+        primitive_test.cpp
+        )
 # NOTE: Please check output target here
 # if target is executable:
 add_executable(${TEST_OUTPUT} ${TEST_SRC})
