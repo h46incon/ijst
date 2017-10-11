@@ -37,7 +37,7 @@ TEST(BasicAPI, FieldStatus)
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), ijst::FStatus::Valid);
 }
 
-TEST(BaseAPI, FieldValue)
+TEST(BasicAPI, FieldValue)
 {
 	SimpleSt simpleSt;
 
@@ -54,7 +54,7 @@ TEST(BaseAPI, FieldValue)
 	ASSERT_STREQ(simpleSt.str_2.c_str(), "str2");
 }
 
-TEST(BaseAPI, Constructor4Lvalue)
+TEST(BasicAPI, Constructor4LValue)
 {
 	// copy
 	{
@@ -110,7 +110,7 @@ TEST(BaseAPI, Constructor4Lvalue)
 }
 
 #if __cplusplus >= 201103L
-TEST(BasicAPI, Constructor4Rvalue)
+TEST(BasicAPI, Constructor4RValue)
 {
 	// copy
 	{
