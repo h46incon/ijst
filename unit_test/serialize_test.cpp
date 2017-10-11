@@ -64,7 +64,7 @@ TEST(Serialize, EmptyStruct_PushAllField)
 	ASSERT_TRUE(jVal["vec_val_2"].Empty());
 }
 
-TEST(Serialize, UseOutterBuffer)
+TEST(Serialize, UseOuterBuffer)
 {
 	NestSt nestSt;
 	rapidjson::Document doc;
@@ -102,6 +102,46 @@ TEST(Serialize, ObjRef)
 	ASSERT_EQ(&jVal["inner_m_val"]["k"], &st.inner_m["k"]._.InnerStream());
 	ASSERT_EQ(&jVal["inner_m_val"]["k2"], &st.inner_m["k2"]._.InnerStream());
 	ASSERT_EQ(&jVal["inner_mv_val"]["k"][0], &st.inner_mv["k"][0]._.InnerStream());
+}
+
+TEST(Serialize, AdditionalJsonField)
+{
+	ObjRefSt st;
+
+	st._.InnerStream().AddMember("addi_o1", rapidjson::Value().SetString("str_o1").Move(), st._.InnerAllocator());
+	st.inner._.InnerStream().AddMember("addi_i1", rapidjson::Value().SetString("str_i1").Move(), st.inner._.InnerAllocator());
+	IJST_SET(st.inner, int_2, 11);
+
+	int ret;
+	// Serialize in outer buffer
+	rapidjson::Document doc;
+	ret = st._.Serialize(true, doc);
+	ASSERT_EQ(ret, 0);
+	ijst::StoreType &jVal = doc;
+	ASSERT_EQ(jVal["inner_val"]["int_val_2"].GetInt(), 11);
+	ASSERT_FALSE(jVal.HasMember("addi_o1"));
+	ASSERT_FALSE(jVal["inner_val"].HasMember("addi_o1"));
+
+	// Serialize in place
+	ret = st._.SerializeInplace(true);
+	ASSERT_EQ(ret, 0);
+	ijst::StoreType &jVal2 = st._.InnerStream();
+	ASSERT_STREQ(jVal2["addi_o1"].GetString(), "str_o1");
+	ASSERT_STREQ(jVal2["inner_val"]["addi_i1"].GetString(), "str_i1");
+	ASSERT_EQ(jVal2["inner_val"]["int_val_2"].GetInt(), 11);
+
+	// Serialize again to check the behavior of holding outer stream in inner object
+	jVal2.AddMember("addi_o2", rapidjson::Value().SetString("str_o2").Move(), st._.InnerAllocator());
+	jVal2["inner_val"].AddMember("addi_i2", rapidjson::Value().SetString("str_i2").Move(), st._.InnerAllocator());
+	ret = st._.SerializeInplace(true);
+	ASSERT_EQ(ret, 0);
+	ijst::StoreType &jVal3 = st._.InnerStream();
+	ASSERT_STREQ(jVal2["addi_o1"].GetString(), "str_o1");
+	ASSERT_STREQ(jVal2["inner_val"]["addi_i1"].GetString(), "str_i1");
+	ASSERT_EQ(jVal2["inner_val"]["int_val_2"].GetInt(), 11);
+	// Check new value
+	ASSERT_STREQ(jVal2["addi_o2"].GetString(), "str_o2");
+	ASSERT_STREQ(jVal2["inner_val"]["addi_i2"].GetString(), "str_i2");
 }
 
 IJST_DEFINE_STRUCT(
@@ -195,5 +235,83 @@ TEST(Serialize, Complicate)
 	ASSERT_EQ(&jVal["mmo_v"]["om1"]["im2"], &st.mmo["om1"]["im2"]._.InnerStream());
 	ASSERT_EQ(&jVal["mmo_v"]["om2"]["im1"], &st.mmo["om2"]["im1"]._.InnerStream());
 	ASSERT_EQ(&jVal["mmo_v"]["om2"]["im3"], &st.mmo["om2"]["im3"]._.InnerStream());
+}
+
+IJST_DEFINE_STRUCT(
+		Complicate3,
+		(IJST_TPRI(Int), i1, "i1_v", 0),
+		(IJST_TPRI(Int), i2, "i2_v", 0),
+		(IJST_TPRI(Int), i3, "i3_v", 0),
+		(IJST_TPRI(Int), i4, "i4_v", 0),
+		(IJST_TPRI(Int), i5, "i5_v", 0),
+		(IJST_TPRI(Int), i6, "i6_v", 0),
+		(IJST_TPRI(Int), i7, "i7_v", 0),
+		(IJST_TPRI(Int), i8, "i8_v", 0),
+		(IJST_TPRI(Int), i9, "i9_v", 0),
+		(IJST_TPRI(Int), i10, "i10_v", 0),
+		(IJST_TPRI(Int), i11, "i11_v", 0),
+		(IJST_TPRI(Int), i12, "i12_v", 0),
+		(IJST_TPRI(Int), i13, "i13_v", 0),
+		(IJST_TPRI(Int), i14, "i14_v", 0),
+		(IJST_TPRI(Int), i15, "i15_v", 0),
+		(IJST_TPRI(Int), i16, "i16_v", 0),
+		(IJST_TPRI(Int), i17, "i17_v", 0),
+		(IJST_TPRI(Int), i18, "i18_v", 0),
+		(IJST_TPRI(Int), i19, "i19_v", 0),
+		(IJST_TPRI(Int), i20, "i20_v", 0),
+		(IJST_TPRI(Int), i21, "i21_v", 0),
+		(IJST_TPRI(Int), i22, "i22_v", 0),
+		(IJST_TPRI(Int), i23, "i23_v", 0),
+		(IJST_TPRI(Int), i24, "i24_v", 0),
+		(IJST_TPRI(Int), i25, "i25_v", 0),
+		(IJST_TPRI(Int), i26, "i26_v", 0),
+		(IJST_TPRI(Int), i27, "i27_v", 0),
+		(IJST_TPRI(Int), i28, "i28_v", 0),
+		(IJST_TPRI(Int), i29, "i29_v", 0),
+		(IJST_TPRI(Int), i30, "i30_v", 0),
+		(IJST_TPRI(Int), i31, "i31_v", 0),
+		(IJST_TPRI(Int), i32, "i32_v", 0),
+		(IJST_TPRI(Int), i33, "i33_v", 0),
+		(IJST_TPRI(Int), i34, "i34_v", 0),
+		(IJST_TPRI(Int), i35, "i35_v", 0),
+		(IJST_TPRI(Int), i36, "i36_v", 0),
+		(IJST_TPRI(Int), i37, "i37_v", 0),
+		(IJST_TPRI(Int), i38, "i38_v", 0),
+		(IJST_TPRI(Int), i39, "i39_v", 0),
+		(IJST_TPRI(Int), i40, "i40_v", 0),
+		(IJST_TPRI(Int), i41, "i41_v", 0),
+		(IJST_TPRI(Int), i42, "i42_v", 0),
+		(IJST_TPRI(Int), i43, "i43_v", 0),
+		(IJST_TPRI(Int), i44, "i44_v", 0),
+		(IJST_TPRI(Int), i45, "i45_v", 0),
+		(IJST_TPRI(Int), i46, "i46_v", 0),
+		(IJST_TPRI(Int), i47, "i47_v", 0),
+		(IJST_TPRI(Int), i48, "i48_v", 0),
+		(IJST_TPRI(Int), i49, "i49_v", 0),
+		(IJST_TPRI(Int), i50, "i50_v", 0),
+		(IJST_TPRI(Int), i51, "i51_v", 0),
+		(IJST_TPRI(Int), i52, "i52_v", 0),
+		(IJST_TPRI(Int), i53, "i53_v", 0),
+		(IJST_TPRI(Int), i54, "i54_v", 0),
+		(IJST_TPRI(Int), i55, "i55_v", 0),
+		(IJST_TPRI(Int), i56, "i56_v", 0),
+		(IJST_TPRI(Int), i57, "i57_v", 0),
+		(IJST_TPRI(Int), i58, "i58_v", 0),
+		(IJST_TPRI(Int), i59, "i59_v", 0),
+		(IJST_TPRI(Int), i60, "i60_v", 0),
+		(IJST_TPRI(Int), i61, "i61_v", 0),
+		(IJST_TPRI(Int), i62, "i62_v", 0),
+		(IJST_TPRI(Int), i63, "i63_v", 0),
+		(IJST_TPRI(Int), i64, "i64_v", 0)
+)
+
+TEST(Serialize, BigStruct)
+{
+	Complicate3 st;
+	int ret = st._.SerializeInplace(true);
+	ASSERT_EQ(ret, 0);
+	rapidjson::Value &jVal = st._.InnerStream();
+	ASSERT_EQ(jVal["i1_v"].GetInt(), 0);
+	ASSERT_EQ(jVal["i64_v"].GetInt(), 0);
 }
 

@@ -28,15 +28,13 @@
 #define IJST_TVEC(_T)	::ijst::detail::TypeClassVec< _T>
 #define IJST_TMAP(_T)	::ijst::detail::TypeClassMap< _T>
 #define IJST_TOBJ(_T)	::ijst::detail::TypeClassObj< _T>
+#define IJST_DEFINE_STRUCT(...) \
+    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), __VA_ARGS__)
+
 #define IJST_SET(obj, field, val)				obj._.Set((obj).field, (val))
 #define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
 #define IJST_MAKE_VALID(obj, field)				obj._.MakeValid((obj).field)
 #define IJST_GET_STATUS(obj, field)				obj._.GetStatus((obj).field)
-
-#define IJST_DEFINE_STRUCT(...) \
-    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), __VA_ARGS__)
-
-
 
 namespace ijst {
 
@@ -80,7 +78,6 @@ struct Err {
  *				Inner Interface
  */
 namespace detail {
-
 
 // LIKELY and UNLIKELY
 #if defined(__GNUC__) || defined(__clang__)
@@ -249,6 +246,69 @@ public:
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) = 0;
 };
 #define IJSTI_FSERIALIZER_INS(_T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< _T> >::GetInstance()
+
+/**
+ *				Serialization implementation of Primitive types
+ */
+
+template<>
+class FSerializer<TypeClassPrim<FType::Int> > : public SerializerInterface {
+public:
+	typedef int VarType;
+
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
+	{
+		const VarType *fieldI = static_cast<const VarType *>(req.pField);
+		req.buffer.SetInt(*fieldI);
+		return 0;
+	}
+
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
+	{
+		if (!req.stream.IsInt())
+		{
+			resp.fStatus = FStatus::ParseFailed;
+			resp.SetErrMsg("Value is not a Int");
+			return Err::kDeserializeValueTypeError;
+		}
+
+		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
+		*pBuffer = req.stream.GetInt();
+		return 0;
+	}
+
+};
+
+template<>
+class FSerializer<TypeClassPrim<FType::String> > : public SerializerInterface {
+public:
+	typedef std::string VarType;
+
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
+	{
+		const VarType *filedV = static_cast<const VarType *>(req.pField);
+		req.buffer.SetString(filedV->c_str(), filedV->length(), req.allocator);
+		return 0;
+	}
+
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
+	{
+		if (!req.stream.IsString())
+		{
+			resp.fStatus = FStatus::ParseFailed;
+			resp.SetErrMsg("Value is not a String");
+			return Err::kDeserializeValueTypeError;
+		}
+
+		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
+		*pBuffer = std::string(req.stream.GetString(), req.stream.GetStringLength());
+		return 0;
+	}
+};
+
+/**	========================================================================================
+ *				Private
+ */
 
 /**
  * Serialization class of Object types
@@ -467,69 +527,6 @@ public:
 		return 0;
 	}
 };
-
-/**
- *				Serialization implementation of Primitive types
- */
-
-template<>
-class FSerializer<TypeClassPrim<FType::Int> > : public SerializerInterface {
-public:
-	typedef int VarType;
-
-	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
-	{
-		const VarType *fieldI = static_cast<const VarType *>(req.pField);
-		req.buffer.SetInt(*fieldI);
-		return 0;
-	}
-
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
-	{
-		if (!req.stream.IsInt())
-		{
-			resp.fStatus = FStatus::ParseFailed;
-			resp.SetErrMsg("Value is not a Int");
-			return Err::kDeserializeValueTypeError;
-		}
-
-		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
-		*pBuffer = req.stream.GetInt();
-		return 0;
-	}
-
-};
-
-template<>
-class FSerializer<TypeClassPrim<FType::String> > : public SerializerInterface {
-public:
-	typedef std::string VarType;
-
-	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
-	{
-		const VarType *filedV = static_cast<const VarType *>(req.pField);
-		req.buffer.SetString(filedV->c_str(), filedV->length(), req.allocator);
-		return 0;
-	}
-
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
-	{
-		if (!req.stream.IsString())
-		{
-			resp.fStatus = FStatus::ParseFailed;
-			resp.SetErrMsg("Value is not a String");
-			return Err::kDeserializeValueTypeError;
-		}
-
-		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
-		*pBuffer = std::string(req.stream.GetString(), req.stream.GetStringLength());
-		return 0;
-	}
-};
-
-/**	========================================================================================
- *				Private
- */
 
 struct MetaField { // NOLINT
 	std::string name;
@@ -870,7 +867,6 @@ private:
 			} else {
 				buffer.CopyFrom(*m_pInnerStream, allocator);
 			}
-			resetInnerStream();
 			setInnerStream(&buffer, &allocator);
 		}
 
@@ -951,7 +947,6 @@ private:
 		assert(req.pFieldBuffer == IJSTI_NULL || req.pFieldBuffer == this);
 
 		// Store ptr
-		resetInnerStream();
 		setInnerStream(&req.stream, &req.allocator);
 
 		return DoDeserializeInInnerstream(resp);
@@ -1033,6 +1028,10 @@ private:
 		return (void *) (m_parentPtr + offset);
 	}
 
+	/**
+	 * Reset inner buffer
+	 * NOTE: it will clear m_pDummyDoc. Make sure that the content of m_pDummyDoc is not used in other place
+	 */
 	inline void resetInnerStream()
 	{
 		m_pDummyDoc->SetObject();	// Clear object
@@ -1046,6 +1045,10 @@ private:
 		m_pInnerStream = stream;
 		m_pAllocator = allocator;
 		m_useDummyDoc = false;
+		if (m_pDummyDoc != m_pInnerStream)
+		{
+			m_pDummyDoc->SetObject();	// Clear object
+		}
 	}
 
 	FStatus::_E GetStatusByOffset(const size_t offset) const
