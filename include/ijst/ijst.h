@@ -16,6 +16,7 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/error/en.h>
+#include <w32api/tchar.h>
 
 /**	========================================================================================
  *				Public Interface
@@ -33,9 +34,10 @@
 
 #define IJST_SET(obj, field, val)				obj._.Set((obj).field, (val))
 #define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
-#define IJST_MARK_VALID(obj, field)				obj._.MarkValid((obj).field)
-#define IJST_MARK_NULL(obj, field)				obj._.MarkNull((obj).field)
-#define IJST_GET_STATUS(obj, field)				obj._.GetStatus((obj).field)
+#define IJST_MARK_VALID(obj, field)				obj._.MarkValid(& ((obj).field))
+#define IJST_MARK_NULL(obj, field)				obj._.MarkNull(& ((obj).field))
+#define IJST_MARK_REMOVED(obj, field)			obj._.MarkRemoved(& ((obj).field))
+#define IJST_GET_STATUS(obj, field)				obj._.GetStatus(& ((obj).field))
 
 namespace ijst {
 
@@ -46,7 +48,6 @@ typedef rapidjson::MemoryPoolAllocator<> 	AllocatorType;
 struct FType {
 public:
 	enum _E {
-		Raw,
 		Bool,
 		Int,
 		String,
@@ -68,7 +69,7 @@ public:
 		kNull,
 		kParseFailed,
 		kValid,
-//		kRemoved,
+		kRemoved,
 	};
 };
 
@@ -651,7 +652,7 @@ public:
 	template<typename _T1, typename _T2>
 	inline void Set(_T1 &field, const _T2 &value)
 	{
-		MarkValid(field);
+		MarkValid(&field);
 		field = value;
 	}
 
@@ -661,32 +662,24 @@ public:
 		Set(field, value);
 	}
 
-	template<typename _T>
-	void MarkValid(_T &field)
+	inline void MarkValid(const void* fieldPtr)
 	{
-		const std::size_t offset = GetFieldOffset(&field);
-		if (IJSTI_UNLIKELY(m_metaClass->mapOffset.find(offset) == m_metaClass->mapOffset.end())) {
-			throw std::runtime_error("could not find field with expected offset: " + offset);
-		}
-
-		m_fieldStatus[offset] = FStatus::kValid;
+		MarkFieldStatus(fieldPtr, FStatus::kValid);
 	}
 
-	template<typename _T>
-	void MarkNull(_T &field)
+	inline void MarkNull(const void* fieldPtr)
 	{
-		const std::size_t offset = GetFieldOffset(&field);
-		if (IJSTI_UNLIKELY(m_metaClass->mapOffset.find(offset) == m_metaClass->mapOffset.end())) {
-			throw std::runtime_error("could not find field with expected offset: " + offset);
-		}
-
-		m_fieldStatus[offset] = FStatus::kNull;
+		MarkFieldStatus(fieldPtr, FStatus::kNull);
 	}
 
-	template<typename _T>
-	inline FStatus::_E GetStatus(const _T &field) const
+	inline void MarkRemoved(const void* fieldPtr)
 	{
-		const size_t offset = GetFieldOffset(&field);
+		MarkFieldStatus(fieldPtr, FStatus::kRemoved);
+	}
+
+	inline FStatus::_E GetStatus(const void *fieldptr) const
+	{
+		const size_t offset = GetFieldOffset(fieldptr);
 		return GetStatusByOffset(offset);
 	}
 
@@ -804,6 +797,16 @@ private:
 	inline void InitParentPtr()
 	{
 		m_parentPtr = reinterpret_cast<const unsigned char *>(this - m_metaClass->accessorOffset);
+	}
+
+	void MarkFieldStatus(const void* field, FStatus::_E fStatus)
+	{
+		const std::size_t offset = GetFieldOffset(field);
+		if (IJSTI_UNLIKELY(m_metaClass->mapOffset.find(offset) == m_metaClass->mapOffset.end())) {
+			throw std::runtime_error("could not find field with expected offset: " + offset);
+		}
+
+		m_fieldStatus[offset] = fStatus;
 	}
 
 	inline int DeserializeInInnerstream(IJST_INOUT std::string* errMsg)

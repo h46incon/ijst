@@ -19,10 +19,10 @@ TEST(BasicAPI, FieldStatus)
 	SimpleSt simpleSt;
 
 	// Accessor
-	ASSERT_EQ(simpleSt._.GetStatus(simpleSt.int_1), ijst::FStatus::kMissing);
+	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), ijst::FStatus::kMissing);
 	simpleSt._.SetStrict(simpleSt.int_1, 0x5A5A);
 	ASSERT_EQ(simpleSt.int_1, 0x5A5A);
-	ASSERT_EQ(simpleSt._.GetStatus(simpleSt.int_1), ijst::FStatus::kValid);
+	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), ijst::FStatus::kValid);
 
 	// IJST_* macro
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), ijst::FStatus::kMissing);
@@ -76,7 +76,7 @@ TEST(BasicAPI, Constructor4LValue)
 		IJST_SET(temp1, int_2, 0xA5A5);
 		ASSERT_EQ(IJST_GET_STATUS(st1, int_2), ijst::FStatus::kMissing);
 		// Avoid make temp1 become rvalue before
-		temp1._.MarkValid(temp1.int_1);
+		temp1._.MarkValid(&temp1.int_1);
 	}
 
 
@@ -102,7 +102,7 @@ TEST(BasicAPI, Constructor4LValue)
 		IJST_SET(temp2, int_2, 0xA5A5);
 		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), ijst::FStatus::kMissing);
 		// Avoid make temp2 become rvalue
-		temp2._.MarkValid(temp2.int_1);
+		temp2._.MarkValid(&temp2.int_1);
 	}
 
 
