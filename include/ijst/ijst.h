@@ -233,6 +233,8 @@ public:
 
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)= 0;
 
+	virtual int Reset(void *pField)= 0;
+
 	virtual ~SerializerInterface()
 	{ }
 };
@@ -251,6 +253,8 @@ public:
 	Serialize(const SerializeReq &req, SerializeResp &resp) = 0;
 
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) = 0;
+
+	virtual int Reset(void *pField) = 0;
 };
 #define IJSTI_FSERIALIZER_INS(_T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< _T> >::GetInstance()
 
@@ -280,6 +284,12 @@ public:
 		_T *ptr = (_T *) req.pFieldBuffer;
 		return ptr->_.DoDeserialize(req, resp);
 	}
+
+	virtual int Reset(void* pField)
+	{
+		_T *ptr = (_T *) pField;
+		return ptr->_.Reset();
+	}
 };
 
 /**
@@ -298,6 +308,8 @@ public:
 		const VarType *ptr = static_cast<const VarType *>(req.pField);
 		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 		req.buffer.SetArray();
+		// Reserve first to make sure rapidjson will not reallocate buffer
+		req.buffer.Reserve(ptr->size(), req.allocator);
 		for (typename VarType::const_iterator itera = ptr->begin(); itera != ptr->end(); ++itera) {
 			req.buffer.PushBack(
 					rapidjson::Value(rapidjson::kNullType).Move(),
@@ -359,6 +371,26 @@ public:
 			++resp.fieldCount;
 		}
 		resp.fStatus = FStatus::kValid;
+		return 0;
+	}
+
+	virtual int Reset(void* pField)
+	{
+		VarType *ptr = static_cast<VarType *>(pField);
+		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
+
+		// Reset member
+		for (typename VarType::iterator itera = ptr->begin(); itera != ptr->end(); ++itera)
+		{
+			int ret = interface->Reset(&(*itera));
+			if (IJSTI_UNLIKELY(ret != 0))
+			{
+				return ret;
+			}
+		}
+
+		// Clear
+		ptr->clear();
 		return 0;
 	}
 };
@@ -473,6 +505,26 @@ public:
 			++resp.fieldCount;
 		}
 		resp.fStatus = FStatus::kValid;
+		return 0;
+	}
+
+	virtual int Reset(void* pField)
+	{
+		VarType *ptr = static_cast<VarType *>(pField);
+		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
+
+		// Reset member
+		for (typename VarType::iterator itera = ptr->begin(); itera != ptr->end(); ++itera)
+		{
+			int ret = interface->Reset(&(itera->second));
+			if (IJSTI_UNLIKELY(ret != 0))
+			{
+				return ret;
+			}
+		}
+
+		// Clear
+		ptr->clear();
 		return 0;
 	}
 };
@@ -645,6 +697,23 @@ public:
 		InitParentPtr();
 	}
 
+	int Reset()
+	{
+		// Reset member
+		for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
+			 itMetaField != m_metaClass->metaFields.end(); ++itMetaField) {
+
+			void *pField = GetFieldByOffset(itMetaField->offset);
+			int ret = itMetaField->serializerInterface->Reset(pField);
+			if (IJSTI_UNLIKELY(ret != 0)){
+				return ret;
+			}
+		}
+
+		resetInnerStream();
+		m_fieldStatus.clear();
+		return 0;
+	}
 
 	/*
 	 * Field accessor
@@ -860,6 +929,10 @@ private:
 				}
 					break;
 
+				case FStatus::kRemoved:
+					RemoveField(itMetaField, buffer);
+					break;
+
 				case FStatus::kMissing:
 				case FStatus::kParseFailed:
 				{
@@ -956,6 +1029,23 @@ private:
 		}
 
 		return 0;
+	}
+
+	int RemoveField(const std::vector<MetaField>::const_iterator &itMetaField, StoreType &buffer)
+	{
+		// Reset field
+		void* pField = GetFieldByOffset(itMetaField->offset);
+		int ret = itMetaField->serializerInterface->Reset(pField);
+		if (IJSTI_UNLIKELY(ret != 0)) {
+			return ret;
+		}
+
+		// Remove member in buffer
+		rapidjson::GenericStringRef<char> fieldNameRef =
+				rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
+		rapidjson::Value fieldNameVal;
+		fieldNameVal.SetString(fieldNameRef);
+		return buffer.RemoveMember(fieldNameVal);
 	}
 
 	/*
@@ -1077,10 +1167,10 @@ private:
 		m_useDummyDoc = true;
 	}
 
-	inline void setInnerStream(StoreType* stream, AllocatorType* allocator)
+	inline void setInnerStream(StoreType* pStream, AllocatorType* pAllocator)
 	{
-		m_pInnerStream = stream;
-		m_pAllocator = allocator;
+		m_pInnerStream = pStream;
+		m_pAllocator = pAllocator;
 		m_useDummyDoc = false;
 		if (m_pDummyDoc != m_pInnerStream)
 		{

@@ -10,6 +10,7 @@
 
 template<>
 class FSerializer<TypeClassPrim<FType::Bool> > : public SerializerInterface {
+	typedef SerializeReq unused_type_def;
 public:
 	// Could not use bool type because std::vector<bool> is not a container!
 	typedef unsigned char VarType;
@@ -34,6 +35,12 @@ public:
 		return 0;
 	}
 
+	virtual int Reset(void *pField)
+	{
+		VarType &field = *static_cast<VarType *>(pField);
+		field = 0;
+		return 0;
+	}
 };
 
 template<>
@@ -61,6 +68,12 @@ public:
 		return 0;
 	}
 
+	virtual int Reset(void *pField)
+	{
+		VarType &field = *static_cast<VarType *>(pField);
+		field = 0;
+		return 0;
+	}
 };
 
 template<>
@@ -85,6 +98,13 @@ public:
 
 		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
 		*pBuffer = std::string(req.stream.GetString(), req.stream.GetStringLength());
+		return 0;
+	}
+
+	virtual int Reset(void *pField)
+	{
+		VarType &field = *static_cast<VarType *>(pField);
+		field.clear();
 		return 0;
 	}
 };
