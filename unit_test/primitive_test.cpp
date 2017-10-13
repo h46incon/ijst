@@ -54,7 +54,7 @@ TEST(Primitive, Int)
 
 		ret = st._.SerializeInplace(false);
 		ASSERT_EQ(ret, 0);
-		rapidjson::Value& jVal = st._.InnerStream();
+		rapidjson::Value& jVal = st._.InnerBuffer();
 		ASSERT_EQ(jVal["f_v"].GetInt(), 100);
 		ASSERT_EQ(jVal["f_vec"][0].GetInt(), -100);
 		ASSERT_EQ(jVal["f_vec"][1].GetInt(), 1);
@@ -69,7 +69,7 @@ TEST(Primitive, Int)
 		IJST_SET(st, v, 1);
 		int ret = st._.Reset();
 		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(st._.InnerStream().MemberCount(), 0);
+		ASSERT_EQ(st._.InnerBuffer().MemberCount(), 0);
 		ASSERT_EQ(st.v, 0);
 	}
 }
@@ -118,7 +118,7 @@ TEST(Primitive, Bool)
 
 		ret = st._.SerializeInplace(false);
 		ASSERT_EQ(ret, 0);
-		rapidjson::Value& jVal = st._.InnerStream();
+		rapidjson::Value& jVal = st._.InnerBuffer();
 		ASSERT_EQ(jVal["f_v"].GetBool(), false);
 		ASSERT_EQ(jVal["f_vec"][0].GetBool(), false);
 		ASSERT_EQ(jVal["f_vec"][1].GetBool(), false);
@@ -133,7 +133,7 @@ TEST(Primitive, Bool)
 		IJST_SET(st, v, 1);
 		int ret = st._.Reset();
 		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(st._.InnerStream().MemberCount(), 0);
+		ASSERT_EQ(st._.InnerBuffer().MemberCount(), 0);
 		ASSERT_EQ(st.v, 0);
 	}
 }
@@ -182,7 +182,7 @@ TEST(Primitive, String)
 
 		ret = st._.SerializeInplace(false);
 		ASSERT_EQ(ret, 0);
-		rapidjson::Value& jVal = st._.InnerStream();
+		rapidjson::Value& jVal = st._.InnerBuffer();
 		ASSERT_STREQ(jVal["f_v"].GetString(), "v0");
 		ASSERT_STREQ(jVal["f_vec"][0].GetString(), "v01");
 		ASSERT_STREQ(jVal["f_vec"][1].GetString(), "v2");
@@ -197,7 +197,7 @@ TEST(Primitive, String)
 		IJST_SET(st, v, "v");
 		int ret = st._.Reset();
 		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(st._.InnerStream().MemberCount(), 0);
+		ASSERT_EQ(st._.InnerBuffer().MemberCount(), 0);
 		ASSERT_TRUE(st.v.empty());
 	}
 }

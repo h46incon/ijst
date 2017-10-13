@@ -69,7 +69,7 @@ TEST(Deserialize, AdditionalFields)
 	ASSERT_EQ(st.int_2, 2);
 	ASSERT_STREQ(st.str_2.c_str(), "str2");
 
-	ASSERT_STREQ(st._.InnerStream()["additional_field"].GetString(), "a_field");
+	ASSERT_STREQ(st._.InnerBuffer()["additional_field"].GetString(), "a_field");
 }
 
 IJST_DEFINE_STRUCT(

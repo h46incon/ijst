@@ -624,7 +624,7 @@ public:
 	{
 		InitParentPtr();
 		m_pDummyDoc = new rapidjson::Document(rapidjson::kObjectType);
-		resetInnerStream();
+		resetInnerBuffer();
 	}
 
 	Accessor(const Accessor &rhs) :
@@ -638,11 +638,11 @@ public:
 		m_pDummyDoc->CopyFrom(*rhs.m_pDummyDoc, m_pDummyDoc->GetAllocator());
 		m_useDummyDoc = rhs.m_useDummyDoc;
 		if (m_useDummyDoc) {
-			m_pInnerStream = m_pDummyDoc;
+			m_pInnerBuffer = m_pDummyDoc;
 			m_pAllocator = &m_pDummyDoc->GetAllocator();
 		}
 		else {
-			m_pInnerStream = rhs.m_pInnerStream;
+			m_pInnerBuffer = rhs.m_pInnerBuffer;
 			m_pAllocator = rhs.m_pAllocator;
 		}
 	}
@@ -689,8 +689,8 @@ public:
 		rhs.m_metaClass = IJSTI_NULL;
 		m_pAllocator = rhs.m_pAllocator;
 		rhs.m_pAllocator = IJSTI_NULL;
-		m_pInnerStream = rhs.m_pInnerStream;
-		rhs.m_pInnerStream = IJSTI_NULL;
+		m_pInnerBuffer = rhs.m_pInnerBuffer;
+		rhs.m_pInnerBuffer = IJSTI_NULL;
 		m_useDummyDoc = rhs.m_useDummyDoc;
 
 		m_fieldStatus = IJSTI_MOVE(rhs.m_fieldStatus);
@@ -710,7 +710,7 @@ public:
 			}
 		}
 
-		resetInnerStream();
+		resetInnerBuffer();
 		m_fieldStatus.clear();
 		return 0;
 	}
@@ -753,16 +753,16 @@ public:
 	}
 
 	/*
-	 * InnerStream or allocator
+	 * Inner buffer or allocator
 	 */
-	inline StoreType &InnerStream( )
+	inline StoreType &InnerBuffer()
 	{
-		return *m_pInnerStream;
+		return *m_pInnerBuffer;
 	}
 
-	inline const StoreType &InnerStream( ) const
+	inline const StoreType &InnerBuffer() const
 	{
-		return *m_pInnerStream;
+		return *m_pInnerBuffer;
 	}
 
 	inline AllocatorType &InnerAllocator( )
@@ -780,7 +780,7 @@ public:
 	 */
 	inline int SerializeInplace(bool pushAllField)
 	{
-		int ret = DoSerialize(pushAllField, /*tryInPlace=*/true, *m_pInnerStream, *m_pAllocator);
+		int ret = DoSerialize(pushAllField, /*tryInPlace=*/true, *m_pInnerBuffer, *m_pAllocator);
 		return ret;
 	}
 
@@ -799,21 +799,21 @@ public:
 	 */
 	inline int DeserializeMoveFrom(rapidjson::Document& srcDocStolen, IJST_INOUT std::string* errMsg)
 	{
-		resetInnerStream();
+		resetInnerBuffer();
 		m_pDummyDoc->Swap(srcDocStolen);
-		return DeserializeInInnerstream(errMsg);
+		return DeserializeInInnerBuffer(errMsg);
 	}
 
 	inline int Deserialize(const rapidjson::Document& srcDoc, IJST_INOUT std::string* errMsg)
 	{
-		resetInnerStream();
+		resetInnerBuffer();
 		m_pDummyDoc->CopyFrom(srcDoc, m_pDummyDoc->GetAllocator());
-		return DeserializeInInnerstream(errMsg);
+		return DeserializeInInnerBuffer(errMsg);
 	}
 
 	int Deserialize(const char* str, std::size_t length, IJST_INOUT std::string* errMsg)
 	{
-		resetInnerStream();
+		resetInnerBuffer();
 		m_pDummyDoc->Parse(str, length);
 		if (IJSTI_UNLIKELY(m_pDummyDoc->HasParseError()))
 		{
@@ -825,7 +825,7 @@ public:
 			}
 			return Err::kParseFaild;
 		}
-		return DeserializeInInnerstream(errMsg);
+		return DeserializeInInnerBuffer(errMsg);
 	}
 
 	inline int Deserialize(const std::string& input, IJST_INOUT std::string* errMsg)
@@ -834,12 +834,12 @@ public:
 	}
 
 
-	bool WriteInnerStream(IJST_OUT std::string& strOutput)
+	bool WriteInnerBuffer(IJST_OUT std::string &strOutput)
 	{
 		rapidjson::StringBuffer buffer;
 		buffer.Clear();
 		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-		bool bSucc = m_pInnerStream->Accept(writer);
+		bool bSucc = m_pInnerBuffer->Accept(writer);
 		if (IJSTI_LIKELY(bSucc))
 		{
 			strOutput = std::string(buffer.GetString(), buffer.GetSize());
@@ -878,11 +878,11 @@ private:
 		m_fieldStatus[offset] = fStatus;
 	}
 
-	inline int DeserializeInInnerstream(IJST_INOUT std::string* errMsg)
+	inline int DeserializeInInnerBuffer(IJST_INOUT std::string *errMsg)
 	{
 		bool needErrMessage = (errMsg != IJSTI_NULL);
 		DeserializeResp resp(needErrMessage);
-		int ret = DoDeserializeInInnerstream(resp);
+		int ret = DoDeserializeInInnerBuffer(resp);
 		if (needErrMessage) {
 			*errMsg = IJSTI_MOVE(resp.errMsg);
 		}
@@ -894,11 +894,11 @@ private:
 		if (tryInPlace) {
 			// copy inner data to buffer
 			if (&allocator == m_pAllocator) {
-				IJSTI_STORE_MOVE(buffer, *m_pInnerStream);
+				IJSTI_STORE_MOVE(buffer, *m_pInnerBuffer);
 			} else {
-				buffer.CopyFrom(*m_pInnerStream, allocator);
+				buffer.CopyFrom(*m_pInnerBuffer, allocator);
 			}
-			setInnerStream(&buffer, &allocator);
+			setInnerBuffer(&buffer, &allocator);
 		}
 
 		if (!buffer.IsObject()) {
@@ -1056,21 +1056,21 @@ private:
 		assert(req.pFieldBuffer == IJSTI_NULL || req.pFieldBuffer == this);
 
 		// Store ptr
-		setInnerStream(&req.stream, &req.allocator);
+		setInnerBuffer(&req.stream, &req.allocator);
 
-		return DoDeserializeInInnerstream(resp);
+		return DoDeserializeInInnerBuffer(resp);
 	}
 
-	int DoDeserializeInInnerstream(IJST_OUT DeserializeResp& resp)
+	int DoDeserializeInInnerBuffer(IJST_OUT DeserializeResp &resp)
 	{
-		if (!m_pInnerStream->IsObject())
+		if (!m_pInnerBuffer->IsObject())
 		{
 			return Err::kDeserializeValueTypeError;
 		}
 
 		// For each member
-		for (rapidjson::Value::MemberIterator itMember = m_pInnerStream->MemberBegin();
-			 itMember != m_pInnerStream->MemberEnd(); ++itMember) {
+		for (rapidjson::Value::MemberIterator itMember = m_pInnerBuffer->MemberBegin();
+			 itMember != m_pInnerBuffer->MemberEnd(); ++itMember) {
 
 			// TODO: Performance issue?
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
@@ -1159,20 +1159,20 @@ private:
 	 * Reset inner buffer
 	 * NOTE: it will clear m_pDummyDoc. Make sure that the content of m_pDummyDoc is not used in other place
 	 */
-	inline void resetInnerStream()
+	inline void resetInnerBuffer()
 	{
 		m_pDummyDoc->SetObject();	// Clear object
 		m_pAllocator = &m_pDummyDoc->GetAllocator();
-		m_pInnerStream = m_pDummyDoc;
+		m_pInnerBuffer = m_pDummyDoc;
 		m_useDummyDoc = true;
 	}
 
-	inline void setInnerStream(StoreType* pStream, AllocatorType* pAllocator)
+	inline void setInnerBuffer(StoreType *pBuffer, AllocatorType *pAllocator)
 	{
-		m_pInnerStream = pStream;
+		m_pInnerBuffer = pBuffer;
 		m_pAllocator = pAllocator;
 		m_useDummyDoc = false;
-		if (m_pDummyDoc != m_pInnerStream)
+		if (m_pDummyDoc != m_pInnerBuffer)
 		{
 			m_pDummyDoc->SetObject();	// Clear object
 		}
@@ -1206,7 +1206,7 @@ private:
 
 	rapidjson::Document* m_pDummyDoc;		// Must be a pointer to make class Accessor be a standard-layout type struct
 	AllocatorType *m_pAllocator;
-	StoreType *m_pInnerStream;
+	StoreType *m_pInnerBuffer;
 	bool m_useDummyDoc;
 	const unsigned char *m_parentPtr;
 };

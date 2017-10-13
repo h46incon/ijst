@@ -60,7 +60,7 @@ TEST(BasicAPI, Constructor4LValue)
 	{
 		SimpleSt temp1;
 		IJST_SET(temp1, int_1, 0x5A5A);
-		temp1._.InnerStream().AddMember("k", rapidjson::Value().SetInt(0xA5A5).Move(), temp1._.InnerAllocator());
+		temp1._.InnerBuffer().AddMember("k", rapidjson::Value().SetInt(0xA5A5).Move(), temp1._.InnerAllocator());
 
 		// copy
 		SimpleSt st1(temp1);
@@ -68,10 +68,10 @@ TEST(BasicAPI, Constructor4LValue)
 		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), ijst::FStatus::kValid);
 		ASSERT_EQ(st1.int_1, 0x5A5A);
 		// copy inner stream
-		ASSERT_EQ(st1._.InnerStream()["k"].GetInt(), 0xA5A5);
+		ASSERT_EQ(st1._.InnerBuffer()["k"].GetInt(), 0xA5A5);
 		// new inner stream and allocator
 		ASSERT_NE(&st1._.InnerAllocator(), &temp1._.InnerAllocator());
-		ASSERT_NE(&st1._.InnerStream(), &temp1._.InnerStream());
+		ASSERT_NE(&st1._.InnerBuffer(), &temp1._.InnerBuffer());
 		// new metaField
 		IJST_SET(temp1, int_2, 0xA5A5);
 		ASSERT_EQ(IJST_GET_STATUS(st1, int_2), ijst::FStatus::kMissing);
@@ -84,7 +84,7 @@ TEST(BasicAPI, Constructor4LValue)
 	{
 		SimpleSt temp2;
 		IJST_SET(temp2, int_1, 0x5A5A);
-		temp2._.InnerStream().AddMember("k", rapidjson::Value().SetInt(0xA5A5).Move(), temp2._.InnerAllocator());
+		temp2._.InnerBuffer().AddMember("k", rapidjson::Value().SetInt(0xA5A5).Move(), temp2._.InnerAllocator());
 
 		SimpleSt st2;
 		IJST_SET(st2, int_2, 0x5A5A);
@@ -94,10 +94,10 @@ TEST(BasicAPI, Constructor4LValue)
 		ASSERT_EQ(st2.int_1, 0x5A5A);
 		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), ijst::FStatus::kMissing);
 		// copy inner stream
-		ASSERT_EQ(st2._.InnerStream()["k"].GetInt(), 0xA5A5);
+		ASSERT_EQ(st2._.InnerBuffer()["k"].GetInt(), 0xA5A5);
 		// new inner stream and allocator
 		ASSERT_NE(&st2._.InnerAllocator(), &temp2._.InnerAllocator());
-		ASSERT_NE(&st2._.InnerStream(), &temp2._.InnerStream());
+		ASSERT_NE(&st2._.InnerBuffer(), &temp2._.InnerBuffer());
 		// new metaField
 		IJST_SET(temp2, int_2, 0xA5A5);
 		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), ijst::FStatus::kMissing);
@@ -116,7 +116,7 @@ TEST(BasicAPI, Constructor4RValue)
 	{
 		SimpleSt temp1;
 		IJST_SET(temp1, int_1, 0x5A5A);
-		void* streamTemp1 = &temp1._.InnerStream();
+		void* streamTemp1 = &temp1._.InnerBuffer();
 		void* allocatorTemp1 = &temp1._.InnerAllocator();
 
 		SimpleSt st1(std::move(temp1));
@@ -124,16 +124,16 @@ TEST(BasicAPI, Constructor4RValue)
 		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), ijst::FStatus::kValid);
 		ASSERT_EQ(st1.int_1, 0x5A5A);
 		// inner stream
-		ASSERT_EQ(&st1._.InnerStream(), streamTemp1);
+		ASSERT_EQ(&st1._.InnerBuffer(), streamTemp1);
 		ASSERT_EQ(&st1._.InnerAllocator(), allocatorTemp1);
-		//	ASSERT_ANY_THROW(temp3._.InnerStream());
+		//	ASSERT_ANY_THROW(temp3._.InnerBuffer());
 	}
 
 	// assign
 	{
 		SimpleSt temp2;
 		IJST_SET(temp2, int_1, 0x5A5A);
-		void* streamTemp2 = &temp2._.InnerStream();
+		void* streamTemp2 = &temp2._.InnerBuffer();
 		void* allocatorTemp2 = &temp2._.InnerAllocator();
 
 		SimpleSt st2;
@@ -142,9 +142,9 @@ TEST(BasicAPI, Constructor4RValue)
 		ASSERT_EQ(IJST_GET_STATUS(st2, int_1), ijst::FStatus::kValid);
 		ASSERT_EQ(st2.int_1, 0x5A5A);
 		// inner stream
-		ASSERT_EQ(&st2._.InnerStream(), streamTemp2);
+		ASSERT_EQ(&st2._.InnerBuffer(), streamTemp2);
 		ASSERT_EQ(&st2._.InnerAllocator(), allocatorTemp2);
-		//	ASSERT_ANY_THROW(temp3._.InnerStream());
+		//	ASSERT_ANY_THROW(temp3._.InnerBuffer());
 	}
 }
 
