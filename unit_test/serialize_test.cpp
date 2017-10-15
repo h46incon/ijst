@@ -279,7 +279,7 @@ TEST(Serialize, Complicate)
 	ASSERT_EQ(ret, 0);
 	rapidjson::Value &jVal = st._.InnerBuffer();
 //	string ser;
-//	st._.WriteInnerBuffer(ser);
+//	st._.WriteUsedBuffer(ser);
 //	std::cout << ser << std::endl;
 	// c1
 	ASSERT_EQ(jVal["c1_v"]["i1_v"]["int_val_1"].GetInt(), 1);
