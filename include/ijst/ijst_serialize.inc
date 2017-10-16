@@ -10,7 +10,6 @@
 
 template<>
 class FSerializer<TypeClassPrim<FType::Bool> > : public SerializerInterface {
-	typedef SerializeReq unused_type_def;
 public:
 	// Could not use bool type because std::vector<bool> is not a container!
 	typedef unsigned char VarType;

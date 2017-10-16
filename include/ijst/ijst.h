@@ -84,13 +84,19 @@ struct Err {
 };
 
 struct BufferInfo {
-	BufferInfo(): BufferInfo(0, 0, true) {}
-	BufferInfo(StoreType* _pBuffer, AllocatorType* _pAllocator, bool _useReferenceBuffer)
-			: pBuffer(_pBuffer), pAllocator(_pAllocator), useReferenceBuffer(_useReferenceBuffer){}
+	enum BufferType {
+		kInner,
+		kCached,
+		kReference
+	};
+
+	BufferInfo(): BufferInfo(0, 0, kInner) {}
+	BufferInfo(StoreType* _pBuffer, AllocatorType* _pAllocator, BufferType _bufferType)
+			: pBuffer(_pBuffer), pAllocator(_pAllocator), bufferType(_bufferType){}
 
 	StoreType* pBuffer;
 	AllocatorType* pAllocator;
-	bool useReferenceBuffer;
+	BufferType bufferType;
 };
 /**	========================================================================================
  *				Inner Interface
@@ -173,26 +179,44 @@ template<typename _T> void *Singleton<_T>::initInstanceTag = Singleton<_T>::GetI
 
 class BufferFinder {
 public:
-	explicit BufferFinder(BufferInfo& _bufferInfo)
+	explicit BufferFinder(const BufferInfo& _bufferInfo)
 	{
 		SetBuffer(_bufferInfo);
 	}
 
-	BufferFinder(BufferFinder* _parent, const std::string& _key)
+	BufferFinder(const BufferFinder* _parent, const std::string& _key)
 	{
 		SetParent(_parent, _key);
 	}
 
-	void SetParent(BufferFinder *_parent, const std::string& _key)
+	static BufferFinder EmptyInstance()
+	{
+		return BufferFinder(IJSTI_NULL, "");
+	}
+
+	/**
+	 * @return NULL if parent is NULL, valid BufferFinder pointer (pointer to buffer) otherwise
+	 */
+	static BufferFinder* InitBufferWhenParentNotNull(BufferFinder *parent, const std::string &key,
+													 IJST_OUT BufferFinder buffer)
+	{
+		if (parent == IJSTI_NULL) {
+			return IJSTI_NULL;
+		}
+		buffer.SetParent(parent, key);
+		return &buffer;
+	}
+
+	void SetParent(const BufferFinder *_parent, const std::string& _key)
 	{
 		parentInfo.parent = _parent;
 		parentInfo.key = _key;
 		hasParent = true;
 	}
 
-	void SetBuffer(BufferInfo& _bufferInfo)
+	void SetBuffer(const BufferInfo& _bufferInfo)
 	{
-		assert(!_bufferInfo.useReferenceBuffer);
+		assert(_bufferInfo.bufferType != BufferInfo::kReference);
 		bufferInfo = _bufferInfo;
 		hasParent = false;
 	}
@@ -200,7 +224,7 @@ public:
 	bool FindBuffer(IJST_OUT BufferInfo& out) const
 	{
 		if (!hasParent) {
-			assert(!bufferInfo.useReferenceBuffer);
+			assert(bufferInfo.bufferType != BufferInfo::kReference);
 			out = bufferInfo;
 			return true;
 		}
@@ -220,13 +244,13 @@ public:
 
 		out.pBuffer = &(itMember->value);
 		out.pAllocator = parentBuffer.pAllocator;
-		out.useReferenceBuffer = true;
+		out.bufferType = BufferInfo::kReference;
 		return true;
 	}
 
 private:
 	struct ParentInfo {
-		BufferFinder* parent;
+		const BufferFinder* parent;
 		std::string key;
 	};
 	union {
@@ -374,13 +398,13 @@ public:
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
 	{
 		_T *ptr = (_T *) req.pField;
-		return ptr->_.DoSerialize(req);
+		return ptr->_.Serialize(req);
 	}
 
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
 		_T *ptr = (_T *) req.pFieldBuffer;
-		return ptr->_.DoDeserialize(req, resp);
+		return ptr->_.Deserialize(req, resp);
 	}
 
 	virtual int Reset(void* pField)
@@ -541,13 +565,12 @@ public:
 				}
 			}
 
-			BufferFinder *pElemBufferFinder = IJSTI_NULL;
-			if (req.pBufferFinder != IJSTI_NULL) {
-				pElemBufferFinder = new BufferFinder(
-						req.pBufferFinder,
-						std::string(itFieldMember->first.c_str(), itFieldMember->first.length())
-						);
-			}
+			BufferFinder buffer = BufferFinder::EmptyInstance();
+			BufferFinder *pElemBufferFinder = BufferFinder::InitBufferWhenParentNotNull(
+					req.pBufferFinder,
+					std::string(itFieldMember->first.c_str(), itFieldMember->first.length()),
+					buffer
+			);
 			SerializeReq elemReq(
 					*pNewElem, req.allocator, pFieldValue, req.pushAllField, req.useInnerBuffer, pElemBufferFinder);
 
@@ -595,12 +618,9 @@ public:
 			}
 
 			// Alloc buffer
-			BufferFinder *pElemBufferFinder = IJSTI_NULL;
-			BufferFinder elemBufferFinder(req.pBufferFinder, fieldName);
-			if (req.pBufferFinder != IJSTI_NULL) {
-				// Do not declare elemBufferFinder, otherwise it will be destroy after if() statement
-				pElemBufferFinder = &elemBufferFinder;
-			}
+			BufferFinder buffer = BufferFinder::EmptyInstance();
+			BufferFinder *pElemBufferFinder =
+					BufferFinder::InitBufferWhenParentNotNull(req.pBufferFinder, fieldName, buffer);
 			ElemVarType &elemBuffer = (*pBufferT)[fieldName];
 			DeserializeReq elemReq(itMember->value, req.allocator, &elemBuffer, pElemBufferFinder);
 
@@ -907,7 +927,7 @@ public:
 	{
 		BufferInfo usedBufferInfo = FindUsedBuffer();
 		SerializeReq req(*usedBufferInfo.pBuffer, *usedBufferInfo.pAllocator, this, pushAllField, /*useInnerBuffer=*/true, IJSTI_NULL);
-		return DoSerialize(req, &usedBufferInfo);
+		return Serialize(req, &usedBufferInfo);
 	}
 
 	int Serialize(bool pushAllField, IJST_INOUT rapidjson::Document& docOutput) const
@@ -924,14 +944,14 @@ public:
 	{
 		ResetInnerBuffer();
 		m_pDummyDoc->Swap(srcDocStolen);
-		return DeserializeInInnerBuffer(errMsg);
+		return DoDeserializeWraper(errMsg);
 	}
 
 	inline int Deserialize(const rapidjson::Document& srcDoc, IJST_INOUT std::string* errMsg)
 	{
 		ResetInnerBuffer();
 		m_pDummyDoc->CopyFrom(srcDoc, m_pDummyDoc->GetAllocator());
-		return DeserializeInInnerBuffer(errMsg);
+		return DoDeserializeWraper(errMsg);
 	}
 
 	int Deserialize(const char* str, std::size_t length, IJST_INOUT std::string* errMsg)
@@ -948,7 +968,7 @@ public:
 			}
 			return Err::kParseFaild;
 		}
-		return DeserializeInInnerBuffer(errMsg);
+		return DoDeserializeWraper(errMsg);
 	}
 
 	inline int Deserialize(const std::string& input, IJST_INOUT std::string* errMsg)
@@ -1002,11 +1022,15 @@ private:
 		m_fieldStatus[offset] = fStatus;
 	}
 
-	inline int DeserializeInInnerBuffer(IJST_INOUT std::string *errMsg)
+	inline int DoDeserializeWraper(IJST_INOUT std::string *errMsg)
 	{
 		bool needErrMessage = (errMsg != IJSTI_NULL);
+		BufferFinder bufferFinder(
+				BufferInfo(m_pDummyDoc, &m_pDummyDoc->GetAllocator(), false)
+		);
+		DeserializeReq req(*m_pDummyDoc, m_pDummyDoc->GetAllocator(), this, &bufferFinder);
 		DeserializeResp resp(needErrMessage);
-		int ret = DoDeserializeInInnerBuffer(resp);
+		int ret = Deserialize(req, resp);
 		if (needErrMessage) {
 			*errMsg = IJSTI_MOVE(resp.errMsg);
 		}
@@ -1019,7 +1043,7 @@ private:
 	 * @param pUsedBuffer 	cached result return from FindUsedBuffer(). NULL if not specify the cache
 	 * @return
 	 */
-	int DoSerialize(const SerializeReq& req, BufferInfo* pUsedBuffer = IJSTI_NULL)
+	int Serialize(const SerializeReq &req, BufferInfo *pUsedBuffer = IJSTI_NULL)
 	{
 		assert(req.pField == this || req.pField == IJSTI_NULL);
 		if (req.useInnerBuffer) {
@@ -1135,12 +1159,12 @@ private:
 		}
 
 		// Serialize field
-		BufferFinder* pElemBufferFinder = IJSTI_NULL;
-		BufferFinder elemBufferFinder(req.pBufferFinder, itMetaField->name);
-		if (req.pBufferFinder == IJSTI_NULL) {
-			// elemBufferFinder could not declared here, otherwise it will be destory after if() statement
-			pElemBufferFinder = &elemBufferFinder;
-		}
+		BufferFinder buffer = BufferFinder::EmptyInstance();
+		BufferFinder *pElemBufferFinder = BufferFinder::InitBufferWhenParentNotNull(
+				req.pBufferFinder,
+				itMetaField->name,
+				buffer
+		);
 		SerializeReq elemSerializeReq(
 				*pNewElem, req.allocator, pFieldValue, req.pushAllField, req.useInnerBuffer, pElemBufferFinder);
 
@@ -1157,7 +1181,7 @@ private:
 	}
 
 	int SerializeNullField(const std::vector<MetaField>::const_iterator& itMetaField,
-					   StoreType& buffer, AllocatorType& allocator) const
+					   IJST_INOUT StoreType& buffer, AllocatorType& allocator) const
 	{
 		// Init
 		const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
@@ -1182,7 +1206,7 @@ private:
 		return 0;
 	}
 
-	int RemoveFieldInBuffer(const std::vector<MetaField>::const_iterator &itMetaField, StoreType &buffer) const
+	int RemoveFieldInBuffer(const std::vector<MetaField>::const_iterator &itMetaField, IJST_INOUT StoreType &buffer) const
 	{
 		// Reset field
 		void* pField = GetFieldByOffset(itMetaField->offset);
@@ -1202,7 +1226,7 @@ private:
 	/*
 	 * Deserialize by stream
 	 */
-	int DoDeserialize(const DeserializeReq &req, IJST_OUT DeserializeResp& resp)
+	int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp& resp)
 	{
 		assert(req.pFieldBuffer == IJSTI_NULL || req.pFieldBuffer == this);
 
@@ -1210,24 +1234,24 @@ private:
 		if (req.pBufferFinder != IJSTI_NULL) {
 			SetBufferFinder(*req.pBufferFinder);
 		}
+		return DoDeserialize(req, resp);
 
-		return DoDeserializeInInnerBuffer(resp);
 	}
 
-	int DoDeserializeInInnerBuffer(IJST_OUT DeserializeResp &resp)
-	{
-		if (!m_pInnerBuffer->IsObject())
+	int DoDeserialize(const DeserializeReq &req, IJST_INOUT DeserializeResp &resp)
+	{// Deserialize
+		if (!req.stream.IsObject())
 		{
 			return Err::kDeserializeValueTypeError;
 		}
 
 		// For each member
-		for (rapidjson::Value::MemberIterator itMember = m_pInnerBuffer->MemberBegin();
-			 itMember != m_pInnerBuffer->MemberEnd(); ++itMember) {
+		for (rapidjson::GenericValue::MemberIterator itMember = req.stream.MemberBegin();
+			 itMember != req.stream.MemberEnd(); ++itMember) {
 
 			// TODO: Performance issue?
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-			IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator itMetaField =
+			std::map::const_iterator itMetaField =
 					m_metaClass->mapName.find(fieldName);
 			if (itMetaField == m_metaClass->mapName.end()) {
 				// Not a field in struct
@@ -1238,14 +1262,21 @@ private:
 
 			// Check nullable
 			if (isBitSet(metaField->desc, FDesc::Nullable)
-					&& itMember->value.IsNull())
+				&& itMember->value.IsNull())
 			{
 				m_fieldStatus[metaField->offset] = FStatus::kNull;
 			}
 			else
 			{
 				void *pField = GetFieldByOffset(metaField->offset);
-				DeserializeReq elemReq(itMember->value, *m_pAllocator, pField);
+				// TODO BufferFinder
+				BufferFinder buffer = BufferFinder::EmptyInstance();
+				BufferFinder *pElemBufferFinder = BufferFinder::InitBufferWhenParentNotNull(
+						req.pBufferFinder,
+						fieldName,
+						buffer
+				);
+				DeserializeReq elemReq(itMember->value, req.allocator, pField, pElemBufferFinder);
 				DeserializeResp elemResp(resp.needErrMsg);
 				int ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
 				if (ret != 0) {
@@ -1264,7 +1295,7 @@ private:
 		// Check all required field status
 		std::stringstream invalidNameOss;
 		bool hasErr = false;
-		for (std::vector<MetaField>::const_iterator itField = m_metaClass->metaFields.begin();
+		for (std::vector::const_iterator itField = m_metaClass->metaFields.begin();
 			 itField != m_metaClass->metaFields.end(); ++itField)
 		{
 			if (isBitSet(itField->desc, FDesc::Optional))

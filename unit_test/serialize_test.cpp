@@ -33,7 +33,7 @@ TEST(Serialize, EmptyStruct)
 	// Empty struct
 	int ret = nestSt._.SerializeInplace(false);
 	ASSERT_EQ(ret, 0);
-	ijst::StoreType &jVal = nestSt._.InnerBuffer();
+	ijst::StoreType &jVal = *nestSt._.FindUsedBuffer().pBuffer;
 	ASSERT_TRUE(jVal.IsObject());
 	ASSERT_TRUE(jVal.MemberCount() == 0);
 }
@@ -45,7 +45,7 @@ TEST(Serialize, EmptyStruct_PushAllField)
 
 	int ret = nestSt._.SerializeInplace(true);
 	ASSERT_EQ(ret, 0);
-	ijst::StoreType &jVal = nestSt._.InnerBuffer();
+	ijst::StoreType &jVal = *nestSt._.FindUsedBuffer().pBuffer;
 
 	// Check
 	ASSERT_TRUE(jVal["vec_val_1"].IsArray());
@@ -72,8 +72,8 @@ TEST(Serialize, UseOuterBuffer)
 	ASSERT_EQ(ret, 0);
 	ASSERT_GT(doc.MemberCount(), 0);
 
-	ASSERT_EQ(nestSt._.InnerBuffer().MemberCount(), 0);
-	ASSERT_EQ(nestSt.inner_1._.InnerBuffer().MemberCount(), 0);
+	ASSERT_EQ(nestSt._.FindUsedBuffer().pBuffer->MemberCount(), 0);
+	ASSERT_EQ(nestSt.inner_1._.FindUsedBuffer().pBuffer->MemberCount(), 0);
 }
 
 TEST(Serialize, NullValue)
@@ -85,7 +85,7 @@ TEST(Serialize, NullValue)
 
 	int ret = innerSt._.SerializeInplace(true);
 	ASSERT_EQ(ret, 0);
-	ijst::StoreType &jVal = innerSt._.InnerBuffer();
+	ijst::StoreType &jVal = *innerSt._.FindUsedBuffer().pBuffer;
 
 	ASSERT_EQ(IJST_GET_STATUS(innerSt, int_2), ijst::FStatus::kNull);
 	ASSERT_EQ(jVal["int_val_1"].GetInt(), 1);
@@ -96,7 +96,8 @@ TEST(Serialize, RemovedField)
 {
 	NestSt st;
 	// Add field
-	st._.InnerBuffer().AddMember("vec_val_2", rapidjson::Value().SetInt(1).Move(), st._.InnerAllocator());
+	ijst::BufferInfo bufferInfo = st._.FindUsedBuffer();
+	bufferInfo.pBuffer->AddMember("vec_val_2", rapidjson::Value().SetInt(1).Move(), *bufferInfo.pAllocator);
 	st.vec_1.push_back(1);
 	st.map_1["k"] = "v";
 	IJST_MARK_VALID(st, vec_1);
@@ -112,7 +113,7 @@ TEST(Serialize, RemovedField)
 	ASSERT_TRUE(st.vec_1.empty());
 	ASSERT_TRUE(st.map_1.empty());
 	// Check stream
-	rapidjson::Value& jVal = st._.InnerBuffer();
+	rapidjson::Value &jVal = *st._.FindUsedBuffer().pBuffer;
 	ASSERT_FALSE(jVal.HasMember("vec_val_1"));
 	ASSERT_FALSE(jVal.HasMember("vec_val_2"));
 	ASSERT_FALSE(jVal.HasMember("map_val_1"));
@@ -144,8 +145,8 @@ IJST_DEFINE_STRUCT(
 TEST(Serialize, ObjRef)
 {
 	ObjRefSt st;
-	ijst::StoreType& innerStream = st._.InnerBuffer();
-	ijst::AllocatorType& innerAllocate = st._.InnerAllocator();
+	ijst::StoreType &innerStream = *st._.FindUsedBuffer().pBuffer;
+	ijst::AllocatorType &innerAllocate = *st._.FindUsedBuffer().pAllocator;
 
 	// inner
 	innerStream.AddMember("inner_val", rapidjson::Value().SetNull().Move(), innerAllocate);
@@ -165,14 +166,14 @@ TEST(Serialize, ObjRef)
 	// Serialize
 	int ret = st._.SerializeInplace(true);
 	ASSERT_EQ(ret, 0);
-	ijst::StoreType &jVal = st._.InnerBuffer();
+	ijst::StoreType &jVal = *st._.FindUsedBuffer().pBuffer;
 
 	// Check value
 	// inner
-	ASSERT_EQ(&jVal["inner_val"], &st.inner._.InnerBuffer());
+	ASSERT_EQ(&jVal["inner_val"], st.inner._.FindUsedBuffer().pBuffer);
 	// inner_v
 	ASSERT_EQ(jVal["inner_v_val"].Size(), 1);		// array type will reinit when serialize
-	ASSERT_EQ(&jVal["inner_v_val"][0], &st.inner_v.front()._.InnerBuffer());
+	ASSERT_EQ(&jVal["inner_v_val"][0], st.inner_v.front()._.InnerBuffer());
 	// inner_m
 	ASSERT_EQ(jVal["inner_m_val"].MemberCount(), 3);	// object type will keep old element when serialize
 	ASSERT_EQ(jVal["inner_m_val"]["addi_k"].GetInt(), 0x5A5A);			// old element
