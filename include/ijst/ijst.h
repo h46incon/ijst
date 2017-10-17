@@ -170,20 +170,16 @@ public:
 		// true if need serialize all field, false if serialize only valid field
 		bool pushAllField;
 
-		// true if copy inner buffer to output buffer first
-		bool tryInPlace;
-
 		// Output buffer info. The instance should serialize in this object and use allocator
 		StoreType& buffer;
 		AllocatorType& allocator;
 
 		SerializeReq(StoreType &_buffer, AllocatorType &_allocator,
-					 const void *_pField, bool _pushAllfield, bool _tryInPlace) :
-				buffer(_buffer),
-				allocator(_allocator),
-				pField(_pField),
-				pushAllField(_pushAllfield),
-				tryInPlace(_tryInPlace)
+					 const void *_pField, bool _pushAllfield)
+				: buffer(_buffer)
+				, allocator(_allocator)
+				, pField(_pField)
+				, pushAllField(_pushAllfield)
 		{ }
 	};
 
@@ -200,10 +196,10 @@ public:
 		StoreType& stream;
 		AllocatorType& allocator;
 
-		DeserializeReq(StoreType &_stream, AllocatorType &_allocator, void *_pField) :
-				stream(_stream),
-				allocator(_allocator),
-				pFieldBuffer(_pField)
+		DeserializeReq(StoreType &_stream, AllocatorType &_allocator, void *_pField)
+				: stream(_stream)
+				, allocator(_allocator)
+				, pFieldBuffer(_pField)
 		{ }
 	};
 
@@ -288,7 +284,7 @@ public:
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
 	{
 		_T *ptr = (_T *) req.pField;
-		int ret = ptr->_.DoSerialize(req.pushAllField, req.tryInPlace, req.buffer, req.allocator);
+		int ret = ptr->_.DoSerialize(req.pushAllField, req.buffer, req.allocator);
 		return ret;
 	}
 
@@ -331,7 +327,7 @@ public:
 			StoreType &newElem = req.buffer[req.buffer.Size() - 1];
 
 			SerializeReq elemReq(
-					newElem, req.allocator, &(*itera), req.pushAllField, req.tryInPlace);
+					newElem, req.allocator, &(*itera), req.pushAllField);
 
 			SerializeResp elemResp;
 			int ret = interface->Serialize(elemReq, elemResp);
@@ -457,7 +453,7 @@ public:
 			}
 
 			SerializeReq elemReq(
-					*pNewElem, req.allocator, pFieldValue, req.pushAllField, req.tryInPlace);
+					*pNewElem, req.allocator, pFieldValue, req.pushAllField);
 
 			SerializeResp elemResp;
 			int ret = interface->Serialize(elemReq, elemResp);
@@ -791,16 +787,10 @@ public:
 	/*
 	 * Serialize
 	 */
-	inline int SerializeInplace(bool pushAllField)
+	int Serialize(bool pushAllField)
 	{
-		int ret = DoSerialize(pushAllField, /*tryInPlace=*/true, *m_pInnerBuffer, *m_pAllocator);
-		return ret;
-	}
-
-	int Serialize(bool pushAllField, IJST_OUT rapidjson::Document& docOutput) const
-	{
-		Accessor* pAccessor = const_cast<Accessor *>(this);
-		int ret = pAccessor->DoSerialize(pushAllField, /*tryInPlace=*/false, docOutput, docOutput.GetAllocator());
+		// TODO: how to return?
+		int ret = DoSerialize(pushAllField, *m_pInnerBuffer, *m_pAllocator);
 		if (IJSTI_UNLIKELY(ret != 0)) {
 			return ret;
 		}
@@ -902,17 +892,16 @@ private:
 		return ret;
 	}
 
-	int DoSerialize(bool pushAllField, bool tryInPlace, StoreType& buffer, AllocatorType& allocator)
+	int DoSerialize(bool pushAllField, StoreType& buffer, AllocatorType& allocator)
 	{
-		if (tryInPlace) {
-			// copy inner data to buffer
-			if (&allocator == m_pAllocator) {
-				IJSTI_STORE_MOVE(buffer, *m_pInnerBuffer);
-			} else {
-				buffer.CopyFrom(*m_pInnerBuffer, allocator);
-			}
-			SetInnerBuffer(&buffer, &allocator);
+		// TODO: Check
+		// copy inner data to buffer
+		if (&allocator == m_pAllocator) {
+			IJSTI_STORE_MOVE(buffer, *m_pInnerBuffer);
+		} else {
+			buffer.CopyFrom(*m_pInnerBuffer, allocator);
 		}
+		SetInnerBuffer(&buffer, &allocator);
 
 		if (!buffer.IsObject()) {
 			buffer.SetObject();
@@ -926,7 +915,7 @@ private:
 			switch (fstatus) {
 				case FStatus::kValid:
 				{
-					int ret = SerializeField(itMetaField, pushAllField, tryInPlace, buffer, allocator);
+					int ret = SerializeField(itMetaField, pushAllField, buffer, allocator);
 					if (ret != 0) {
 						return ret;
 					}
@@ -952,7 +941,7 @@ private:
 					if (!pushAllField) {
 						continue;
 					}
-					int ret = SerializeField(itMetaField, pushAllField, tryInPlace, buffer, allocator);
+					int ret = SerializeField(itMetaField, pushAllField, buffer, allocator);
 					if (ret != 0) {
 						return ret;
 					}
@@ -972,7 +961,7 @@ private:
 	}
 
 	int SerializeField(const std::vector<MetaField>::const_iterator& itMetaField,
-					   bool pushAllField, bool tryInPlace, StoreType& buffer, AllocatorType& allocator)
+					   bool pushAllField, StoreType& buffer, AllocatorType& allocator)
 	{
 		// Init
 		const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
@@ -1004,7 +993,7 @@ private:
 
 		// Serialize field
 		SerializeReq elemSerializeReq(
-				*pNewElem, allocator, pFieldValue, pushAllField, tryInPlace);
+				*pNewElem, allocator, pFieldValue, pushAllField);
 
 		SerializeResp elemSerializeResp;
 		int ret = itMetaField->serializerInterface->Serialize(elemSerializeReq, elemSerializeResp);
