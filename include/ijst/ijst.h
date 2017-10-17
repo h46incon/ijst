@@ -38,8 +38,6 @@
 #define IJST_MARK_REMOVED(obj, field)			obj._.MarkRemoved(& ((obj).field))
 #define IJST_SET(obj, field, val)				obj._.Set((obj).field, (val))
 #define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
-// TODO:
-#define IJST_REMOVE(obj, field)				obj._.GetStatus(& ((obj).field))
 
 namespace ijst {
 
@@ -83,21 +81,6 @@ struct Err {
 	static const int kInnerError 					= 0x00002001;
 };
 
-struct BufferInfo {
-	enum BufferType {
-		kInner,
-		kCached,
-		kReference
-	};
-
-	BufferInfo(): BufferInfo(0, 0, kInner) {}
-	BufferInfo(StoreType* _pBuffer, AllocatorType* _pAllocator, BufferType _bufferType)
-			: pBuffer(_pBuffer), pAllocator(_pAllocator), bufferType(_bufferType){}
-
-	StoreType* pBuffer;
-	AllocatorType* pAllocator;
-	BufferType bufferType;
-};
 /**	========================================================================================
  *				Inner Interface
  */
@@ -108,7 +91,7 @@ namespace detail {
 	#define IJSTI_LIKELY(x)			__builtin_expect(!!(x), 1)
 	#define IJSTI_UNLIKELY(x)		__builtin_expect(!!(x), 0)
 #else
-	#define IJSTI_LIKELY(x) 		(x)
+#define IJSTI_LIKELY(x) 		(x)
 	#define IJSTI_UNLIKELY(x)		(x)
 #endif
 
@@ -127,7 +110,7 @@ namespace detail {
 	#define IJSTI_NULL 			nullptr
 
 #else
-	#define IJSTI_MOVE(val) 	(val)
+#define IJSTI_MOVE(val) 	(val)
 	#define IJSTI_NULL 			0
 #endif
 
@@ -177,89 +160,6 @@ private:
 template<typename _T> void *Singleton<_T>::initInstanceTag = Singleton<_T>::GetInstance();
 
 
-class BufferFinder {
-public:
-	explicit BufferFinder(const BufferInfo& _bufferInfo)
-	{
-		SetBuffer(_bufferInfo);
-	}
-
-	BufferFinder(const BufferFinder* _parent, const std::string& _key)
-	{
-		SetParent(_parent, _key);
-	}
-
-	static BufferFinder EmptyInstance()
-	{
-		return BufferFinder(IJSTI_NULL, "");
-	}
-
-	/**
-	 * @return NULL if parent is NULL, valid BufferFinder pointer (pointer to buffer) otherwise
-	 */
-	static BufferFinder* InitBufferWhenParentNotNull(BufferFinder *parent, const std::string &key,
-													 IJST_OUT BufferFinder buffer)
-	{
-		if (parent == IJSTI_NULL) {
-			return IJSTI_NULL;
-		}
-		buffer.SetParent(parent, key);
-		return &buffer;
-	}
-
-	void SetParent(const BufferFinder *_parent, const std::string& _key)
-	{
-		parentInfo.parent = _parent;
-		parentInfo.key = _key;
-		hasParent = true;
-	}
-
-	void SetBuffer(const BufferInfo& _bufferInfo)
-	{
-		assert(_bufferInfo.bufferType != BufferInfo::kReference);
-		bufferInfo = _bufferInfo;
-		hasParent = false;
-	}
-
-	bool FindBuffer(IJST_OUT BufferInfo& out) const
-	{
-		if (!hasParent) {
-			assert(bufferInfo.bufferType != BufferInfo::kReference);
-			out = bufferInfo;
-			return true;
-		}
-
-		BufferInfo parentBuffer;
-		bool succ = parentInfo.parent->FindBuffer(parentBuffer);
-		if (!succ) {
-			return false;
-		}
-
-		rapidjson::GenericStringRef<char> fileNameRef =
-				rapidjson::StringRef(parentInfo.key.c_str(), parentInfo.key.length());
-		const rapidjson::Value::MemberIterator itMember = parentBuffer.pBuffer->FindMember(fileNameRef);
-		if (itMember == parentBuffer.pBuffer->MemberEnd()) {
-			return false;
-		}
-
-		out.pBuffer = &(itMember->value);
-		out.pAllocator = parentBuffer.pAllocator;
-		out.bufferType = BufferInfo::kReference;
-		return true;
-	}
-
-private:
-	struct ParentInfo {
-		const BufferFinder* parent;
-		std::string key;
-	};
-	union {
-		ParentInfo parentInfo;
-		BufferInfo bufferInfo;
-	};
-	bool hasParent;
-};
-
 class SerializerInterface {
 public:
 	struct SerializeReq {
@@ -271,24 +171,19 @@ public:
 		bool pushAllField;
 
 		// true if copy inner buffer to output buffer first
-		bool useInnerBuffer;
+		bool tryInPlace;
 
 		// Output buffer info. The instance should serialize in this object and use allocator
 		StoreType& buffer;
 		AllocatorType& allocator;
 
-		// New buffer finder information
-		// NULL if do not update buffer finder information (usually when serializing a vector, or use in outer buffer)
-		BufferFinder* pBufferFinder;
-
 		SerializeReq(StoreType &_buffer, AllocatorType &_allocator,
-					 const void *_pField, bool _pushAllfield, bool useInnerBuffer, BufferFinder* _pBufferFinder)
-				:buffer(_buffer)
-				,allocator(_allocator)
-				,pField(_pField)
-				,pushAllField(_pushAllfield)
-				,useInnerBuffer(useInnerBuffer)
-				,pBufferFinder(_pBufferFinder)
+					 const void *_pField, bool _pushAllfield, bool _tryInPlace) :
+				buffer(_buffer),
+				allocator(_allocator),
+				pField(_pField),
+				pushAllField(_pushAllfield),
+				tryInPlace(_tryInPlace)
 		{ }
 	};
 
@@ -305,15 +200,10 @@ public:
 		StoreType& stream;
 		AllocatorType& allocator;
 
-		// New buffer finder information
-		// NULL if do not update buffer finder information (usually when deserializing a array)
-		BufferFinder* pBufferFinder;
-
-		DeserializeReq(StoreType &_stream, AllocatorType &_allocator, void *_pField, BufferFinder* _pBufferFinder)
-				:stream(_stream)
-				,allocator(_allocator)
-				,pFieldBuffer(_pField)
-				,pBufferFinder(_pBufferFinder)
+		DeserializeReq(StoreType &_stream, AllocatorType &_allocator, void *_pField) :
+				stream(_stream),
+				allocator(_allocator),
+				pFieldBuffer(_pField)
 		{ }
 	};
 
@@ -398,13 +288,14 @@ public:
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
 	{
 		_T *ptr = (_T *) req.pField;
-		return ptr->_.Serialize(req);
+		int ret = ptr->_.DoSerialize(req.pushAllField, req.tryInPlace, req.buffer, req.allocator);
+		return ret;
 	}
 
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
 	{
 		_T *ptr = (_T *) req.pFieldBuffer;
-		return ptr->_.Deserialize(req, resp);
+		return ptr->_.DoDeserialize(req, resp);
 	}
 
 	virtual int Reset(void* pField)
@@ -431,7 +322,7 @@ public:
 		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 		req.buffer.SetArray();
 		// Reserve first to make sure rapidjson will not reallocate buffer
-		req.buffer.Reserve(ptr->size(), req.allocator);
+		req.buffer.Reserve(static_cast<rapidjson::SizeType>(ptr->size()), req.allocator);
 		for (typename VarType::const_iterator itera = ptr->begin(); itera != ptr->end(); ++itera) {
 			req.buffer.PushBack(
 					rapidjson::Value(rapidjson::kNullType).Move(),
@@ -440,7 +331,7 @@ public:
 			StoreType &newElem = req.buffer[req.buffer.Size() - 1];
 
 			SerializeReq elemReq(
-					newElem, req.allocator, &(*itera), req.pushAllField, req.useInnerBuffer, IJSTI_NULL);
+					newElem, req.allocator, &(*itera), req.pushAllField, req.tryInPlace);
 
 			SerializeResp elemResp;
 			int ret = interface->Serialize(elemReq, elemResp);
@@ -473,7 +364,7 @@ public:
 			// Alloc buffer
 			// Use resize() instead of push_back() to avoid copy constructor in C++11
 			pBufferT->resize(pBufferT->size() + 1);
-			DeserializeReq elemReq(*itVal, req.allocator, &pBufferT->back(), IJSTI_NULL);
+			DeserializeReq elemReq(*itVal, req.allocator, &pBufferT->back());
 
 			// Deserialize
 			DeserializeResp elemResp(resp.needErrMsg);
@@ -565,24 +456,11 @@ public:
 				}
 			}
 
-			BufferFinder buffer = BufferFinder::EmptyInstance();
-			BufferFinder *pElemBufferFinder = BufferFinder::InitBufferWhenParentNotNull(
-					req.pBufferFinder,
-					std::string(itFieldMember->first.c_str(), itFieldMember->first.length()),
-					buffer
-			);
 			SerializeReq elemReq(
-					*pNewElem, req.allocator, pFieldValue, req.pushAllField, req.useInnerBuffer, pElemBufferFinder);
+					*pNewElem, req.allocator, pFieldValue, req.pushAllField, req.tryInPlace);
 
 			SerializeResp elemResp;
 			int ret = interface->Serialize(elemReq, elemResp);
-
-			// clear new() object
-			if (pElemBufferFinder != IJSTI_NULL) {
-				delete pElemBufferFinder;
-				pElemBufferFinder = IJSTI_NULL;
-			}
-
 			if (IJSTI_UNLIKELY(ret != 0)) {
 				if (hasAllocMember) {
 					req.buffer.RemoveMember(fieldNameVal);
@@ -618,11 +496,8 @@ public:
 			}
 
 			// Alloc buffer
-			BufferFinder buffer = BufferFinder::EmptyInstance();
-			BufferFinder *pElemBufferFinder =
-					BufferFinder::InitBufferWhenParentNotNull(req.pBufferFinder, fieldName, buffer);
 			ElemVarType &elemBuffer = (*pBufferT)[fieldName];
-			DeserializeReq elemReq(itMember->value, req.allocator, &elemBuffer, pElemBufferFinder);
+			DeserializeReq elemReq(itMember->value, req.allocator, &elemBuffer);
 
 			// Deserialize
 			DeserializeResp elemResp(resp.needErrMsg);
@@ -634,7 +509,7 @@ public:
 					pBufferT->erase(fieldName);
 				}
 				resp.needErrMsg &&
-					resp.CombineErrMsg("Deserialize elem error. key: " + fieldName + ", err: ",
+				resp.CombineErrMsg("Deserialize elem error. key: " + fieldName + ", err: ",
 								   elemResp
 				);
 				resp.fStatus = FStatus::kParseFailed;
@@ -762,7 +637,6 @@ public:
 	{
 		InitParentPtr();
 		m_pDummyDoc = new rapidjson::Document(rapidjson::kObjectType);
-		m_pBufferFinder = IJSTI_NULL;
 		ResetInnerBuffer();
 	}
 
@@ -776,10 +650,13 @@ public:
 		m_pDummyDoc = new rapidjson::Document(rapidjson::kNullType);
 		m_pDummyDoc->CopyFrom(*rhs.m_pDummyDoc, m_pDummyDoc->GetAllocator());
 		m_useDummyDoc = rhs.m_useDummyDoc;
-		m_pBufferFinder = IJSTI_NULL;
-		ResetInnerBuffer();
-		if (!m_useDummyDoc) {
-			*m_pBufferFinder = *rhs.m_pBufferFinder;
+		if (m_useDummyDoc) {
+			m_pInnerBuffer = m_pDummyDoc;
+			m_pAllocator = &m_pDummyDoc->GetAllocator();
+		}
+		else {
+			m_pInnerBuffer = rhs.m_pInnerBuffer;
+			m_pAllocator = rhs.m_pAllocator;
 		}
 	}
 
@@ -799,19 +676,10 @@ public:
 
 	~Accessor()
 	{
-		clearPtr();
-	}
-
-	void clearPtr()
-	{
 		if (m_pDummyDoc != IJSTI_NULL) {
 			delete m_pDummyDoc;
-			m_pDummyDoc = IJSTI_NULL;
 		}
-		if (m_pBufferFinder != IJSTI_NULL) {
-			delete m_pBufferFinder;
-			m_pBufferFinder = IJSTI_NULL;
-		}
+		m_pDummyDoc = IJSTI_NULL;
 	}
 
 	void Steal(Accessor &rhs)
@@ -820,17 +688,22 @@ public:
 			return;
 		}
 
-		clearPtr();
-		// Handler pointer
+		// Handler m_pDummyDoc
+		if (m_pDummyDoc != IJSTI_NULL)
+		{
+			delete m_pDummyDoc;
+			m_pDummyDoc = IJSTI_NULL;
+		}
 		m_pDummyDoc = rhs.m_pDummyDoc;
 		rhs.m_pDummyDoc = IJSTI_NULL;
-		m_pBufferFinder = rhs.m_pBufferFinder;
-		rhs.m_pBufferFinder = IJSTI_NULL;
 
 		// other simple field
 		m_metaClass = rhs.m_metaClass;
 		rhs.m_metaClass = IJSTI_NULL;
-
+		m_pAllocator = rhs.m_pAllocator;
+		rhs.m_pAllocator = IJSTI_NULL;
+		m_pInnerBuffer = rhs.m_pInnerBuffer;
+		rhs.m_pInnerBuffer = IJSTI_NULL;
 		m_useDummyDoc = rhs.m_useDummyDoc;
 
 		m_fieldStatus = IJSTI_MOVE(rhs.m_fieldStatus);
@@ -892,32 +765,27 @@ public:
 		return GetStatusByOffset(offset);
 	}
 
-	/**
-	 * Find Inner Buffer used the object
-	 * Be careful: the inner buffer returned may be invalid in many case.
-	 * @return
+	/*
+	 * Inner buffer or allocator
 	 */
-	BufferInfo FindUsedBuffer()
+	inline StoreType &InnerBuffer()
 	{
-		if (m_useDummyDoc) {
-			return BufferInfo(m_pDummyDoc, &m_pDummyDoc->GetAllocator(), true);
-		}
-		else {
-			BufferInfo bufferInfo;
-			bool succ = m_pBufferFinder->FindBuffer(bufferInfo);
-			if (succ) {
-				return bufferInfo;
-			}
-			else {
-				ResetInnerBuffer();
-				return BufferInfo(m_pDummyDoc, &m_pDummyDoc->GetAllocator(), true);
-			}
-		}
+		return *m_pInnerBuffer;
 	}
 
-	void ForceUseInnerBuffer()
+	inline const StoreType &InnerBuffer() const
 	{
-		m_useDummyDoc = true;
+		return *m_pInnerBuffer;
+	}
+
+	inline AllocatorType &InnerAllocator( )
+	{
+		return *m_pAllocator;
+	}
+
+	inline const AllocatorType &InnerAllocator( ) const
+	{
+		return *m_pAllocator;
 	}
 
 	/*
@@ -925,15 +793,17 @@ public:
 	 */
 	inline int SerializeInplace(bool pushAllField)
 	{
-		BufferInfo usedBufferInfo = FindUsedBuffer();
-		SerializeReq req(*usedBufferInfo.pBuffer, *usedBufferInfo.pAllocator, this, pushAllField, /*useInnerBuffer=*/true, IJSTI_NULL);
-		return Serialize(req, &usedBufferInfo);
+		int ret = DoSerialize(pushAllField, /*tryInPlace=*/true, *m_pInnerBuffer, *m_pAllocator);
+		return ret;
 	}
 
-	int Serialize(bool pushAllField, IJST_INOUT rapidjson::Document& docOutput) const
+	int Serialize(bool pushAllField, IJST_OUT rapidjson::Document& docOutput) const
 	{
-		SerializeReq req(docOutput, docOutput.GetAllocator(), this, pushAllField, /*useInnerBuffer=*/false, IJSTI_NULL);
-		return DoSerializeConst(req);
+		Accessor* pAccessor = const_cast<Accessor *>(this);
+		int ret = pAccessor->DoSerialize(pushAllField, /*tryInPlace=*/false, docOutput, docOutput.GetAllocator());
+		if (IJSTI_UNLIKELY(ret != 0)) {
+			return ret;
+		}
 	}
 
 	/**
@@ -944,14 +814,14 @@ public:
 	{
 		ResetInnerBuffer();
 		m_pDummyDoc->Swap(srcDocStolen);
-		return DoDeserializeWraper(errMsg);
+		return DeserializeInInnerBuffer(errMsg);
 	}
 
 	inline int Deserialize(const rapidjson::Document& srcDoc, IJST_INOUT std::string* errMsg)
 	{
 		ResetInnerBuffer();
 		m_pDummyDoc->CopyFrom(srcDoc, m_pDummyDoc->GetAllocator());
-		return DoDeserializeWraper(errMsg);
+		return DeserializeInInnerBuffer(errMsg);
 	}
 
 	int Deserialize(const char* str, std::size_t length, IJST_INOUT std::string* errMsg)
@@ -968,7 +838,7 @@ public:
 			}
 			return Err::kParseFaild;
 		}
-		return DoDeserializeWraper(errMsg);
+		return DeserializeInInnerBuffer(errMsg);
 	}
 
 	inline int Deserialize(const std::string& input, IJST_INOUT std::string* errMsg)
@@ -977,13 +847,12 @@ public:
 	}
 
 
-	bool WriteUsedBuffer(IJST_OUT std::string &strOutput)
+	bool WriteInnerBuffer(IJST_OUT std::string &strOutput)
 	{
 		rapidjson::StringBuffer buffer;
 		buffer.Clear();
 		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-		BufferInfo useBufferInfo = FindUsedBuffer();
-		bool bSucc = useBufferInfo.pBuffer->Accept(writer);
+		bool bSucc = m_pInnerBuffer->Accept(writer);
 		if (IJSTI_LIKELY(bSucc))
 		{
 			strOutput = std::string(buffer.GetString(), buffer.GetSize());
@@ -1022,60 +891,34 @@ private:
 		m_fieldStatus[offset] = fStatus;
 	}
 
-	inline int DoDeserializeWraper(IJST_INOUT std::string *errMsg)
+	inline int DeserializeInInnerBuffer(IJST_INOUT std::string *errMsg)
 	{
 		bool needErrMessage = (errMsg != IJSTI_NULL);
-		BufferFinder bufferFinder(
-				BufferInfo(m_pDummyDoc, &m_pDummyDoc->GetAllocator(), false)
-		);
-		DeserializeReq req(*m_pDummyDoc, m_pDummyDoc->GetAllocator(), this, &bufferFinder);
 		DeserializeResp resp(needErrMessage);
-		int ret = Deserialize(req, resp);
+		int ret = DoDeserializeInInnerBuffer(resp);
 		if (needErrMessage) {
 			*errMsg = IJSTI_MOVE(resp.errMsg);
 		}
 		return ret;
 	}
 
-	/**
-	 * Serialize implement
-	 * @param req 			serialize req
-	 * @param pUsedBuffer 	cached result return from FindUsedBuffer(). NULL if not specify the cache
-	 * @return
-	 */
-	int Serialize(const SerializeReq &req, BufferInfo *pUsedBuffer = IJSTI_NULL)
+	int DoSerialize(bool pushAllField, bool tryInPlace, StoreType& buffer, AllocatorType& allocator)
 	{
-		assert(req.pField == this || req.pField == IJSTI_NULL);
-		if (req.useInnerBuffer) {
+		if (tryInPlace) {
 			// copy inner data to buffer
-			BufferInfo tmp;
-			if (pUsedBuffer == IJSTI_NULL) {
-				tmp = FindUsedBuffer();
-				pUsedBuffer = &tmp;
-			}
-			if (pUsedBuffer->pAllocator == &req.allocator) {
-				IJSTI_STORE_MOVE(req.buffer, *pUsedBuffer->pBuffer);
+			if (&allocator == m_pAllocator) {
+				IJSTI_STORE_MOVE(buffer, *m_pInnerBuffer);
 			} else {
-				req.buffer.CopyFrom(*pUsedBuffer->pBuffer, req.allocator);
+				buffer.CopyFrom(*m_pInnerBuffer, allocator);
 			}
+			SetInnerBuffer(&buffer, &allocator);
 		}
 
-		if (req.pBufferFinder != IJSTI_NULL) {
-			SetBufferFinder(*req.pBufferFinder);
+		if (!buffer.IsObject()) {
+			buffer.SetObject();
 		}
-
-		return DoSerializeConst(req);
-
-	}
-
-	int DoSerializeConst(const SerializeReq &req) const
-	{
-		if (!req.buffer.IsObject()) {
-			req.buffer.SetObject();
-		}
-
 		// Loop each field
-		for (std::vector::const_iterator itMetaField = m_metaClass->metaFields.begin();
+		for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
 			 itMetaField != m_metaClass->metaFields.end(); ++itMetaField) {
 
 			// Check field state
@@ -1083,8 +926,8 @@ private:
 			switch (fstatus) {
 				case FStatus::kValid:
 				{
-					int ret = SerializeField(req, itMetaField);
-					if (IJSTI_UNLIKELY(ret != 0)) {
+					int ret = SerializeField(itMetaField, pushAllField, tryInPlace, buffer, allocator);
+					if (ret != 0) {
 						return ret;
 					}
 				}
@@ -1092,25 +935,25 @@ private:
 
 				case FStatus::kNull:
 				{
-					int ret = SerializeNullField(itMetaField, req.buffer, req.allocator);
-					if (IJSTI_UNLIKELY(ret != 0)) {
+					int ret = SerializeNullField(itMetaField, buffer, allocator);
+					if (ret != 0) {
 						return ret;
 					}
 				}
 					break;
 
 				case FStatus::kRemoved:
-					RemoveFieldInBuffer(itMetaField, req.buffer);
+					RemoveField(itMetaField, buffer);
 					break;
 
 				case FStatus::kMissing:
 				case FStatus::kParseFailed:
 				{
-					if (!req.pushAllField) {
+					if (!pushAllField) {
 						continue;
 					}
-					int ret = SerializeField(req, itMetaField);
-					if (IJSTI_UNLIKELY(ret != 0)) {
+					int ret = SerializeField(itMetaField, pushAllField, tryInPlace, buffer, allocator);
+					if (ret != 0) {
 						return ret;
 					}
 				}
@@ -1128,7 +971,8 @@ private:
 		return 0;
 	}
 
-	int SerializeField(const SerializeReq &req, const std::vector<MetaField>::const_iterator &itMetaField) const
+	int SerializeField(const std::vector<MetaField>::const_iterator& itMetaField,
+					   bool pushAllField, bool tryInPlace, StoreType& buffer, AllocatorType& allocator)
 	{
 		// Init
 		const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
@@ -1138,19 +982,19 @@ private:
 		fieldNameVal.SetString(fieldNameRef);
 
 		// Try allocate new element buffer when need
-		StoreType *pNewElem = IJSTI_NULL;
+		StoreType* pNewElem = IJSTI_NULL;
 		bool hasAllocMember = false;
 		{
-			rapidjson::Value::MemberIterator itMember = req.buffer.FindMember(fieldNameVal);
-			if (itMember == req.buffer.MemberEnd()) {
+			rapidjson::Value::MemberIterator itMember = buffer.FindMember(fieldNameVal);
+			if (itMember == buffer.MemberEnd()) {
 				// Add member, field name is not need deep copy
-				req.buffer.AddMember(
+				buffer.AddMember(
 						rapidjson::Value().SetString(fieldNameRef),
 						rapidjson::Value(rapidjson::kNullType).Move(),
-						req.allocator
+						allocator
 				);
 				// Why rapidjson AddMember function do not return newly create member
-				pNewElem = &req.buffer[fieldNameVal];
+				pNewElem = &buffer[fieldNameVal];
 				hasAllocMember = true;
 			}
 			else {
@@ -1159,29 +1003,23 @@ private:
 		}
 
 		// Serialize field
-		BufferFinder buffer = BufferFinder::EmptyInstance();
-		BufferFinder *pElemBufferFinder = BufferFinder::InitBufferWhenParentNotNull(
-				req.pBufferFinder,
-				itMetaField->name,
-				buffer
-		);
 		SerializeReq elemSerializeReq(
-				*pNewElem, req.allocator, pFieldValue, req.pushAllField, req.useInnerBuffer, pElemBufferFinder);
+				*pNewElem, allocator, pFieldValue, pushAllField, tryInPlace);
 
 		SerializeResp elemSerializeResp;
 		int ret = itMetaField->serializerInterface->Serialize(elemSerializeReq, elemSerializeResp);
 		if (IJSTI_UNLIKELY(ret != 0)) {
 			if (hasAllocMember) {
-				req.buffer.RemoveMember(fieldNameVal);
+				buffer.RemoveMember(fieldNameVal);
 			}
 			return ret;
 		}
-		assert(&(req.buffer[fieldNameVal]) == &elemSerializeReq.buffer);
+		assert(&(buffer[fieldNameVal]) == &elemSerializeReq.buffer);
 		return 0;
 	}
 
 	int SerializeNullField(const std::vector<MetaField>::const_iterator& itMetaField,
-					   IJST_INOUT StoreType& buffer, AllocatorType& allocator) const
+						   StoreType& buffer, AllocatorType& allocator)
 	{
 		// Init
 		const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
@@ -1206,7 +1044,7 @@ private:
 		return 0;
 	}
 
-	int RemoveFieldInBuffer(const std::vector<MetaField>::const_iterator &itMetaField, IJST_INOUT StoreType &buffer) const
+	int RemoveField(const std::vector<MetaField>::const_iterator &itMetaField, StoreType &buffer)
 	{
 		// Reset field
 		void* pField = GetFieldByOffset(itMetaField->offset);
@@ -1226,32 +1064,30 @@ private:
 	/*
 	 * Deserialize by stream
 	 */
-	int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp& resp)
+	int DoDeserialize(const DeserializeReq &req, IJST_OUT DeserializeResp& resp)
 	{
 		assert(req.pFieldBuffer == IJSTI_NULL || req.pFieldBuffer == this);
 
-		// Store BufferFinder
-		if (req.pBufferFinder != IJSTI_NULL) {
-			SetBufferFinder(*req.pBufferFinder);
-		}
-		return DoDeserialize(req, resp);
+		// Store ptr
+		SetInnerBuffer(&req.stream, &req.allocator);
 
+		return DoDeserializeInInnerBuffer(resp);
 	}
 
-	int DoDeserialize(const DeserializeReq &req, IJST_INOUT DeserializeResp &resp)
-	{// Deserialize
-		if (!req.stream.IsObject())
+	int DoDeserializeInInnerBuffer(IJST_OUT DeserializeResp &resp)
+	{
+		if (!m_pInnerBuffer->IsObject())
 		{
 			return Err::kDeserializeValueTypeError;
 		}
 
 		// For each member
-		for (rapidjson::GenericValue::MemberIterator itMember = req.stream.MemberBegin();
-			 itMember != req.stream.MemberEnd(); ++itMember) {
+		for (rapidjson::Value::MemberIterator itMember = m_pInnerBuffer->MemberBegin();
+			 itMember != m_pInnerBuffer->MemberEnd(); ++itMember) {
 
 			// TODO: Performance issue?
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-			std::map::const_iterator itMetaField =
+			IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator itMetaField =
 					m_metaClass->mapName.find(fieldName);
 			if (itMetaField == m_metaClass->mapName.end()) {
 				// Not a field in struct
@@ -1269,20 +1105,13 @@ private:
 			else
 			{
 				void *pField = GetFieldByOffset(metaField->offset);
-				// TODO BufferFinder
-				BufferFinder buffer = BufferFinder::EmptyInstance();
-				BufferFinder *pElemBufferFinder = BufferFinder::InitBufferWhenParentNotNull(
-						req.pBufferFinder,
-						fieldName,
-						buffer
-				);
-				DeserializeReq elemReq(itMember->value, req.allocator, pField, pElemBufferFinder);
+				DeserializeReq elemReq(itMember->value, *m_pAllocator, pField);
 				DeserializeResp elemResp(resp.needErrMsg);
 				int ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
 				if (ret != 0) {
 					m_fieldStatus[metaField->offset] = FStatus::kParseFailed;
 					resp.needErrMsg &&
-						resp.CombineErrMsg("Deserialize field error. name: " + metaField->name + ", err: ", elemResp);
+					resp.CombineErrMsg("Deserialize field error. name: " + metaField->name + ", err: ", elemResp);
 					return ret;
 				}
 				// TODO: Check member state
@@ -1295,7 +1124,7 @@ private:
 		// Check all required field status
 		std::stringstream invalidNameOss;
 		bool hasErr = false;
-		for (std::vector::const_iterator itField = m_metaClass->metaFields.begin();
+		for (std::vector<MetaField>::const_iterator itField = m_metaClass->metaFields.begin();
 			 itField != m_metaClass->metaFields.end(); ++itField)
 		{
 			if (isBitSet(itField->desc, FDesc::Optional))
@@ -1306,7 +1135,7 @@ private:
 
 			FStatus::_E fStatus = GetStatusByOffset(itField->offset);
 			if (fStatus == FStatus::kValid
-					|| fStatus == FStatus::kNull)
+				|| fStatus == FStatus::kNull)
 			{
 				// Correct
 				continue;
@@ -1322,7 +1151,7 @@ private:
 		if (hasErr)
 		{
 			resp.needErrMsg &&
-				resp.SetErrMsg("Some fields are invalid: " + invalidNameOss.str());
+			resp.SetErrMsg("Some fields are invalid: " + invalidNameOss.str());
 			return Err::kDeserializeSomeFiledsInvalid;
 		}
 		return 0;
@@ -1346,20 +1175,20 @@ private:
 	inline void ResetInnerBuffer()
 	{
 		m_pDummyDoc->SetObject();	// Clear object
-		if (m_pBufferFinder != IJSTI_NULL) {
-			delete m_pBufferFinder;
-			m_pBufferFinder = IJSTI_NULL;
-		}
+		m_pAllocator = &m_pDummyDoc->GetAllocator();
+		m_pInnerBuffer = m_pDummyDoc;
 		m_useDummyDoc = true;
-		BufferInfo bufferInfo(m_pDummyDoc, &m_pDummyDoc->GetAllocator(), false);
-		m_pBufferFinder = new BufferFinder(bufferInfo);
 	}
 
-	inline void SetBufferFinder(const BufferFinder &bufferFinder)
+	inline void SetInnerBuffer(StoreType *pBuffer, AllocatorType *pAllocator)
 	{
-		*m_pBufferFinder = bufferFinder;
+		m_pInnerBuffer = pBuffer;
+		m_pAllocator = pAllocator;
 		m_useDummyDoc = false;
-		// Do not clear m_pDummyDoc because it may be use in other place
+		if (m_pDummyDoc != m_pInnerBuffer)
+		{
+			m_pDummyDoc->SetObject();	// Clear object
+		}
 	}
 
 	FStatus::_E GetStatusByOffset(const size_t offset) const
@@ -1389,7 +1218,8 @@ private:
 	const MetaClass *m_metaClass;
 
 	rapidjson::Document* m_pDummyDoc;		// Must be a pointer to make class Accessor be a standard-layout type struct
-	BufferFinder* m_pBufferFinder;			// Use pointer to make it easier to init
+	AllocatorType *m_pAllocator;
+	StoreType *m_pInnerBuffer;
 	bool m_useDummyDoc;
 	const unsigned char *m_parentPtr;
 };
