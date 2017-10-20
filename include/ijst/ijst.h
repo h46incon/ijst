@@ -5,7 +5,10 @@
 #ifndef _IJST_HPP_INCLUDE_
 #define _IJST_HPP_INCLUDE_
 
-#include "rapidjson/document.h"
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/error/en.h>
 
 #include <string>
 #include <vector>
@@ -13,10 +16,6 @@
 #include <map>
 #include <cassert>
 #include <sstream>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/error/en.h>
-#include <w32api/tchar.h>
 
 /**	========================================================================================
  *				Public Interface
@@ -35,7 +34,6 @@
 #define IJST_GET_STATUS(obj, field)				obj._.GetStatus(& ((obj).field))
 #define IJST_MARK_VALID(obj, field)				obj._.MarkValid(& ((obj).field))
 #define IJST_MARK_NULL(obj, field)				obj._.MarkNull(& ((obj).field))
-#define IJST_MARK_REMOVED(obj, field)			obj._.MarkRemoved(& ((obj).field))
 #define IJST_SET(obj, field, val)				obj._.Set((obj).field, (val))
 #define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
 
@@ -69,7 +67,6 @@ public:
 		kNull,
 		kParseFailed,
 		kValid,
-		kRemoved,
 	};
 };
 
@@ -171,7 +168,7 @@ public:
 		bool pushAllField;
 
 		// Output buffer info. The instance should serialize in this object and use allocator
-		StoreType& buffer;
+		IJST_OUT StoreType& buffer;
 		AllocatorType& allocator;
 
 		SerializeReq(StoreType &_buffer, AllocatorType &_allocator,
@@ -265,6 +262,7 @@ public:
 
 	virtual int Reset(void *pField) = 0;
 };
+
 #define IJSTI_FSERIALIZER_INS(_T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< _T> >::GetInstance()
 
 #include "ijst_serialize.inc"
@@ -632,7 +630,7 @@ public:
 			m_metaClass(_metaClass)
 	{
 		InitParentPtr();
-		m_pDummyDoc = new rapidjson::Document(rapidjson::kObjectType);
+		m_pBufferDoc = new rapidjson::Document(rapidjson::kObjectType);
 		ResetInnerBuffer();
 	}
 
@@ -643,23 +641,14 @@ public:
 
 		m_metaClass = rhs.m_metaClass;
 		InitParentPtr();
-		m_pDummyDoc = new rapidjson::Document(rapidjson::kNullType);
-		m_pDummyDoc->CopyFrom(*rhs.m_pDummyDoc, m_pDummyDoc->GetAllocator());
-		m_useDummyDoc = rhs.m_useDummyDoc;
-		if (m_useDummyDoc) {
-			m_pInnerBuffer = m_pDummyDoc;
-			m_pAllocator = &m_pDummyDoc->GetAllocator();
-		}
-		else {
-			m_pInnerBuffer = rhs.m_pInnerBuffer;
-			m_pAllocator = rhs.m_pAllocator;
-		}
+		m_pBufferDoc = new rapidjson::Document(rapidjson::kNullType);
+		m_pBufferDoc->CopyFrom(*rhs.m_pBufferDoc, m_pBufferDoc->GetAllocator());
 	}
 
 #if __cplusplus >= 201103L
 	Accessor(Accessor &&rhs)
 	{
-		m_pDummyDoc = IJSTI_NULL;
+		m_pBufferDoc = IJSTI_NULL;
 		Steal(rhs);
 	}
 #endif
@@ -672,10 +661,10 @@ public:
 
 	~Accessor()
 	{
-		if (m_pDummyDoc != IJSTI_NULL) {
-			delete m_pDummyDoc;
+		if (m_pBufferDoc != IJSTI_NULL) {
+			delete m_pBufferDoc;
 		}
-		m_pDummyDoc = IJSTI_NULL;
+		m_pBufferDoc = IJSTI_NULL;
 	}
 
 	void Steal(Accessor &rhs)
@@ -684,23 +673,14 @@ public:
 			return;
 		}
 
-		// Handler m_pDummyDoc
-		if (m_pDummyDoc != IJSTI_NULL)
-		{
-			delete m_pDummyDoc;
-			m_pDummyDoc = IJSTI_NULL;
-		}
-		m_pDummyDoc = rhs.m_pDummyDoc;
-		rhs.m_pDummyDoc = IJSTI_NULL;
+		// Handler m_pBufferDoc
+		delete m_pBufferDoc;
+		m_pBufferDoc = rhs.m_pBufferDoc;
+		rhs.m_pBufferDoc = IJSTI_NULL;
 
 		// other simple field
 		m_metaClass = rhs.m_metaClass;
 		rhs.m_metaClass = IJSTI_NULL;
-		m_pAllocator = rhs.m_pAllocator;
-		rhs.m_pAllocator = IJSTI_NULL;
-		m_pInnerBuffer = rhs.m_pInnerBuffer;
-		rhs.m_pInnerBuffer = IJSTI_NULL;
-		m_useDummyDoc = rhs.m_useDummyDoc;
 
 		m_fieldStatus = IJSTI_MOVE(rhs.m_fieldStatus);
 		InitParentPtr();
@@ -750,11 +730,6 @@ public:
 		MarkFieldStatus(fieldPtr, FStatus::kNull);
 	}
 
-	inline void MarkRemoved(const void* fieldPtr)
-	{
-		MarkFieldStatus(fieldPtr, FStatus::kRemoved);
-	}
-
 	inline FStatus::_E GetStatus(const void *fieldptr) const
 	{
 		const size_t offset = GetFieldOffset(fieldptr);
@@ -766,34 +741,46 @@ public:
 	 */
 	inline StoreType &InnerBuffer()
 	{
-		return *m_pInnerBuffer;
+		return *m_pBufferDoc;
 	}
 
 	inline const StoreType &InnerBuffer() const
 	{
-		return *m_pInnerBuffer;
+		return *m_pBufferDoc;
 	}
 
-	inline AllocatorType &InnerAllocator( )
+	inline AllocatorType &InnerAllocator()
 	{
-		return *m_pAllocator;
+		return m_pBufferDoc->GetAllocator();
 	}
 
 	inline const AllocatorType &InnerAllocator( ) const
 	{
-		return *m_pAllocator;
+		return m_pBufferDoc->GetAllocator();
 	}
 
-	/*
-	 * Serialize
+	/**
+	 * Serialize the structure.
+	 * @param pushAllField 		true if push all field, false if push only valid or null field
+	 * @param output 			the output of result
+	 * @param allocator	 		allocator. If using inner allocator, user should carefully handler the structure's life cycle
+	 * @return
 	 */
-	int Serialize(bool pushAllField)
+	int Serialize(bool pushAllField, IJST_OUT StoreType& output, AllocatorType& allocator)
 	{
-		// TODO: how to return?
-		int ret = DoSerialize(pushAllField, *m_pInnerBuffer, *m_pAllocator);
-		if (IJSTI_UNLIKELY(ret != 0)) {
-			return ret;
-		}
+		return DoSerialize(pushAllField, output, allocator);
+	}
+
+	/**
+	 * Serialize the structure with inner allocator.
+	 * User should make sure the structure's life cycle is longer than output
+	 * @param pushAllField 		true if push all field, false if push only valid or null field
+	 * @param output 			the output of result
+	 * @return
+	 */
+	int SerializeWithInnerAllocator(bool pushAllField, IJST_OUT StoreType& output)
+	{
+		return DoSerialize(pushAllField, output, m_pBufferDoc->GetAllocator());
 	}
 
 	/**
@@ -803,27 +790,27 @@ public:
 	inline int DeserializeMoveFrom(rapidjson::Document& srcDocStolen, IJST_INOUT std::string* errMsg)
 	{
 		ResetInnerBuffer();
-		m_pDummyDoc->Swap(srcDocStolen);
+		m_pBufferDoc->Swap(srcDocStolen);
 		return DeserializeInInnerBuffer(errMsg);
 	}
 
 	inline int Deserialize(const rapidjson::Document& srcDoc, IJST_INOUT std::string* errMsg)
 	{
 		ResetInnerBuffer();
-		m_pDummyDoc->CopyFrom(srcDoc, m_pDummyDoc->GetAllocator());
+		m_pBufferDoc->CopyFrom(srcDoc, m_pBufferDoc->GetAllocator());
 		return DeserializeInInnerBuffer(errMsg);
 	}
 
 	int Deserialize(const char* str, std::size_t length, IJST_INOUT std::string* errMsg)
 	{
 		ResetInnerBuffer();
-		m_pDummyDoc->Parse(str, length);
-		if (IJSTI_UNLIKELY(m_pDummyDoc->HasParseError()))
+		m_pBufferDoc->Parse(str, length);
+		if (IJSTI_UNLIKELY(m_pBufferDoc->HasParseError()))
 		{
 			if (errMsg != IJSTI_NULL)
 			{
 				*errMsg = IJSTI_MOVE(std::string(
-						rapidjson::GetParseError_En(m_pDummyDoc->GetParseError())
+						rapidjson::GetParseError_En(m_pBufferDoc->GetParseError())
 				));
 			}
 			return Err::kParseFaild;
@@ -842,7 +829,7 @@ public:
 		rapidjson::StringBuffer buffer;
 		buffer.Clear();
 		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-		bool bSucc = m_pInnerBuffer->Accept(writer);
+		bool bSucc = m_pBufferDoc->Accept(writer);
 		if (IJSTI_LIKELY(bSucc))
 		{
 			strOutput = std::string(buffer.GetString(), buffer.GetSize());
@@ -892,24 +879,44 @@ private:
 		return ret;
 	}
 
-	int DoSerialize(bool pushAllField, StoreType& buffer, AllocatorType& allocator)
+	int DoSerialize(bool pushAllField, IJST_OUT StoreType& buffer, AllocatorType& allocator)
 	{
-		// TODO: Check
-		// copy inner data to buffer
-		if (&allocator == m_pAllocator) {
-			IJSTI_STORE_MOVE(buffer, *m_pInnerBuffer);
-		} else {
-			buffer.CopyFrom(*m_pInnerBuffer, allocator);
-		}
-		SetInnerBuffer(&buffer, &allocator);
+		// Serialize fields to buffer
+		buffer.SetObject();
 
-		if (!buffer.IsObject()) {
-			buffer.SetObject();
-		}
-		// Loop each field
+		// Reserve space
+#if false
+//#if RAPIDJSON_MAJOR_VERSION >= 1 && RAPIDJSON_MINOR_VERSION >= 2
+		do {
+			const size_t maxSize = m_metaClass->metaFields.size() + m_pBufferDoc->MemberCount();
+			if (buffer.MemberCapacity() >= maxSize) {
+				break;
+			}
+
+			size_t fieldSize;
+			if (pushAllField) {
+				fieldSize = maxSize;
+			}
+			else {
+				fieldSize = m_pBufferDoc->MemberCount();
+				for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
+					 itMetaField != m_metaClass->metaFields.end(); ++itMetaField)
+				{
+					FStatus::_E fstatus = GetStatusByOffset(itMetaField->offset);
+					if (fstatus == FStatus::kValid || fstatus == FStatus::kNull) {
+						++fieldSize;
+					}
+				}
+
+			}
+			buffer.MemberReserve(fieldSize, allocator);
+		} while (false);
+#endif
+
+		std::size_t fieldSize = m_metaClass->metaFields.size();
 		for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
-			 itMetaField != m_metaClass->metaFields.end(); ++itMetaField) {
-
+			 itMetaField != m_metaClass->metaFields.end(); ++itMetaField)
+		{
 			// Check field state
 			FStatus::_E fstatus = GetStatusByOffset(itMetaField->offset);
 			switch (fstatus) {
@@ -929,10 +936,6 @@ private:
 						return ret;
 					}
 				}
-					break;
-
-				case FStatus::kRemoved:
-					RemoveField(itMetaField, buffer);
 					break;
 
 				case FStatus::kMissing:
@@ -957,11 +960,35 @@ private:
 
 		}
 
+		// append inner data to buffer
+		if (&allocator == &m_pBufferDoc->GetAllocator()) {
+			// Move
+			for (rapidjson::Value::MemberIterator itMember = m_pBufferDoc->MemberBegin();
+				 itMember != m_pBufferDoc->MemberEnd(); ++itMember)
+			{
+				buffer.AddMember(itMember->name, itMember->value, allocator);
+				// both itMember->name, itMember->value are null now
+			}
+		}
+		else {
+			// Copy
+			for (rapidjson::Value::ConstMemberIterator itMember = m_pBufferDoc->MemberBegin();
+				 itMember != m_pBufferDoc->MemberEnd(); ++itMember)
+			{
+				rapidjson::Value name;
+				rapidjson::Value val;
+				name.CopyFrom(itMember->name, allocator);
+				val.CopyFrom(itMember->value, allocator);
+				buffer.AddMember(name, val, allocator);
+			}
+		}
+		m_pBufferDoc->SetObject();
+
 		return 0;
 	}
 
-	int SerializeField(const std::vector<MetaField>::const_iterator& itMetaField,
-					   bool pushAllField, StoreType& buffer, AllocatorType& allocator)
+	int SerializeField(std::vector<MetaField>::const_iterator itMetaField, bool pushAllField,
+					   StoreType& buffer, AllocatorType& allocator) const
 	{
 		// Init
 		const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
@@ -970,45 +997,29 @@ private:
 		rapidjson::Value fieldNameVal;
 		fieldNameVal.SetString(fieldNameRef);
 
-		// Try allocate new element buffer when need
-		StoreType* pNewElem = IJSTI_NULL;
-		bool hasAllocMember = false;
-		{
-			rapidjson::Value::MemberIterator itMember = buffer.FindMember(fieldNameVal);
-			if (itMember == buffer.MemberEnd()) {
-				// Add member, field name is not need deep copy
-				buffer.AddMember(
-						rapidjson::Value().SetString(fieldNameRef),
-						rapidjson::Value(rapidjson::kNullType).Move(),
-						allocator
-				);
-				// Why rapidjson AddMember function do not return newly create member
-				pNewElem = &buffer[fieldNameVal];
-				hasAllocMember = true;
-			}
-			else {
-				pNewElem = &(itMember->value);
-			}
-		}
-
 		// Serialize field
+		StoreType elemOutput;
 		SerializeReq elemSerializeReq(
-				*pNewElem, allocator, pFieldValue, pushAllField);
+				elemOutput, allocator, pFieldValue, pushAllField);
 
 		SerializeResp elemSerializeResp;
 		int ret = itMetaField->serializerInterface->Serialize(elemSerializeReq, elemSerializeResp);
 		if (IJSTI_UNLIKELY(ret != 0)) {
-			if (hasAllocMember) {
-				buffer.RemoveMember(fieldNameVal);
-			}
 			return ret;
 		}
-		assert(&(buffer[fieldNameVal]) == &elemSerializeReq.buffer);
+
+		// Add member, field name is not need deep copy
+		// Do not check if there is a existing key, that's a feature
+		buffer.AddMember(
+				rapidjson::Value().SetString(fieldNameRef),
+				elemOutput,
+				allocator
+		);
 		return 0;
 	}
 
-	int SerializeNullField(const std::vector<MetaField>::const_iterator& itMetaField,
-						   StoreType& buffer, AllocatorType& allocator)
+	int SerializeNullField(std::vector<MetaField>::const_iterator itMetaField,
+					   StoreType& buffer, AllocatorType& allocator)
 	{
 		// Init
 		const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
@@ -1017,37 +1028,14 @@ private:
 		rapidjson::Value fieldNameVal;
 		fieldNameVal.SetString(fieldNameRef);
 
-		rapidjson::Value::MemberIterator itMember = buffer.FindMember(fieldNameVal);
-		if (itMember == buffer.MemberEnd()) {
-			// Add member, field name is not need deep copy
-			buffer.AddMember(
-					rapidjson::Value().SetString(fieldNameRef),
-					rapidjson::Value(rapidjson::kNullType).Move(),
-					allocator
-			);
-		}
-		else {
-			itMember->value.SetNull();
-		}
-
+		// Add member, field name is not need deep copy
+		// Do not check if there is a existing key, that's a feature
+		buffer.AddMember(
+				rapidjson::Value().SetString(fieldNameRef),
+				rapidjson::Value().SetNull(),
+				allocator
+		);
 		return 0;
-	}
-
-	int RemoveField(const std::vector<MetaField>::const_iterator &itMetaField, StoreType &buffer)
-	{
-		// Reset field
-		void* pField = GetFieldByOffset(itMetaField->offset);
-		int ret = itMetaField->serializerInterface->Reset(pField);
-		if (IJSTI_UNLIKELY(ret != 0)) {
-			return ret;
-		}
-
-		// Remove member in buffer
-		rapidjson::GenericStringRef<char> fieldNameRef =
-				rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
-		rapidjson::Value fieldNameVal;
-		fieldNameVal.SetString(fieldNameRef);
-		return buffer.RemoveMember(fieldNameVal);
 	}
 
 	/*
@@ -1057,44 +1045,56 @@ private:
 	{
 		assert(req.pFieldBuffer == IJSTI_NULL || req.pFieldBuffer == this);
 
-		// Store ptr
-		SetInnerBuffer(&req.stream, &req.allocator);
+		// TODO: save req's buffer and document to inner buffer
 
 		return DoDeserializeInInnerBuffer(resp);
 	}
 
 	int DoDeserializeInInnerBuffer(IJST_OUT DeserializeResp &resp)
 	{
-		if (!m_pInnerBuffer->IsObject())
+		if (!m_pBufferDoc->IsObject())
 		{
 			return Err::kDeserializeValueTypeError;
 		}
 
+		resp.fieldCount = 0;
 		// For each member
-		for (rapidjson::Value::MemberIterator itMember = m_pInnerBuffer->MemberBegin();
-			 itMember != m_pInnerBuffer->MemberEnd(); ++itMember) {
+		rapidjson::Value::MemberIterator itNextRemain = m_pBufferDoc->MemberBegin();
+		for (rapidjson::Value::MemberIterator itMember = m_pBufferDoc->MemberBegin();
+			 itMember != m_pBufferDoc->MemberEnd(); ++itMember)
+		{
 
-			// TODO: Performance issue?
+			// Get related field info
+			// TODO: Performance issue of copy string?
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
 			IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator itMetaField =
 					m_metaClass->mapName.find(fieldName);
+
 			if (itMetaField == m_metaClass->mapName.end()) {
+				// TODO: This is relay on the implementation details of rapidjson's storage, how to check?
 				// Not a field in struct
+				if (itNextRemain != itMember) {
+					*itNextRemain = *itMember;		// Move
+				}
+				++itNextRemain;
 				continue;
 			}
 
-			const MetaField *metaField = itMetaField->second;
+			// Move member out of object
+			StoreType memberStream(rapidjson::kNullType);
+			memberStream.Swap(itMember->value);
 
+			const MetaField *metaField = itMetaField->second;
 			// Check nullable
 			if (isBitSet(metaField->desc, FDesc::Nullable)
-				&& itMember->value.IsNull())
+					&& memberStream.IsNull())
 			{
 				m_fieldStatus[metaField->offset] = FStatus::kNull;
 			}
 			else
 			{
 				void *pField = GetFieldByOffset(metaField->offset);
-				DeserializeReq elemReq(itMember->value, *m_pAllocator, pField);
+				DeserializeReq elemReq(memberStream, m_pBufferDoc->GetAllocator(), pField);
 				DeserializeResp elemResp(resp.needErrMsg);
 				int ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
 				if (ret != 0) {
@@ -1109,6 +1109,9 @@ private:
 
 			++resp.fieldCount;
 		}
+
+		// Clean
+		m_pBufferDoc->EraseMember(itNextRemain, m_pBufferDoc->MemberEnd());
 
 		// Check all required field status
 		std::stringstream invalidNameOss;
@@ -1163,21 +1166,8 @@ private:
 	 */
 	inline void ResetInnerBuffer()
 	{
-		m_pDummyDoc->SetObject();	// Clear object
-		m_pAllocator = &m_pDummyDoc->GetAllocator();
-		m_pInnerBuffer = m_pDummyDoc;
-		m_useDummyDoc = true;
-	}
-
-	inline void SetInnerBuffer(StoreType *pBuffer, AllocatorType *pAllocator)
-	{
-		m_pInnerBuffer = pBuffer;
-		m_pAllocator = pAllocator;
-		m_useDummyDoc = false;
-		if (m_pDummyDoc != m_pInnerBuffer)
-		{
-			m_pDummyDoc->SetObject();	// Clear object
-		}
+		// TODO: handler allocator
+		m_pBufferDoc->SetObject();	// Clear object
 	}
 
 	FStatus::_E GetStatusByOffset(const size_t offset) const
@@ -1206,10 +1196,7 @@ private:
 	FieldStatusType m_fieldStatus;
 	const MetaClass *m_metaClass;
 
-	rapidjson::Document* m_pDummyDoc;		// Must be a pointer to make class Accessor be a standard-layout type struct
-	AllocatorType *m_pAllocator;
-	StoreType *m_pInnerBuffer;
-	bool m_useDummyDoc;
+	rapidjson::Document* m_pBufferDoc;		// Must be a pointer to make class Accessor be a standard-layout type struct
 	const unsigned char *m_parentPtr;
 };
 

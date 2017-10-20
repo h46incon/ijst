@@ -52,9 +52,9 @@ TEST(Primitive, Int)
 		st.map_v["v1"] = -200;
 		st.map_v["v3"] = 200;
 
-		ret = st._.Serialize(false);
+		rapidjson::Value jVal;
+		ret = st._.SerializeWithInnerAllocator(false, jVal);
 		ASSERT_EQ(ret, 0);
-		rapidjson::Value& jVal = st._.InnerBuffer();
 		ASSERT_EQ(jVal["f_v"].GetInt(), 100);
 		ASSERT_EQ(jVal["f_vec"][0].GetInt(), -100);
 		ASSERT_EQ(jVal["f_vec"][1].GetInt(), 1);
@@ -116,9 +116,9 @@ TEST(Primitive, Bool)
 		st.map_v["v1"] = 0;
 		st.map_v["v3"] = 1;
 
-		ret = st._.Serialize(false);
+		rapidjson::Value jVal;
+		ret = st._.SerializeWithInnerAllocator(false, jVal);
 		ASSERT_EQ(ret, 0);
-		rapidjson::Value& jVal = st._.InnerBuffer();
 		ASSERT_EQ(jVal["f_v"].GetBool(), false);
 		ASSERT_EQ(jVal["f_vec"][0].GetBool(), false);
 		ASSERT_EQ(jVal["f_vec"][1].GetBool(), false);
@@ -180,9 +180,9 @@ TEST(Primitive, String)
 		st.map_v["v1"] = "v011";
 		st.map_v["v3"] = "v033";
 
-		ret = st._.Serialize(false);
+		rapidjson::Value jVal;
+		ret = st._.SerializeWithInnerAllocator(false, jVal);
 		ASSERT_EQ(ret, 0);
-		rapidjson::Value& jVal = st._.InnerBuffer();
 		ASSERT_STREQ(jVal["f_v"].GetString(), "v0");
 		ASSERT_STREQ(jVal["f_vec"][0].GetString(), "v01");
 		ASSERT_STREQ(jVal["f_vec"][1].GetString(), "v2");
