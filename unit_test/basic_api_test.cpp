@@ -151,4 +151,8 @@ TEST(BasicAPI, Constructor4RValue)
 // TODO: Constructor for out buffer
 
 #endif
+
+struct DummySt {
+	//TODO: Define in Struct
+};
 }

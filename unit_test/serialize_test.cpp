@@ -32,7 +32,7 @@ TEST(Serialize, EmptyStruct)
 
 	// Empty struct
 	rapidjson::Value jVal;
-	int ret = nestSt._.SerializeWithInnerAllocator(false, jVal);
+	int ret = nestSt._.SerializeInInnerAlloc(false, jVal);
 	ASSERT_EQ(ret, 0);
 	ASSERT_TRUE(jVal.IsObject());
 	ASSERT_TRUE(jVal.MemberCount() == 0);
@@ -44,7 +44,7 @@ TEST(Serialize, EmptyStruct_PushAllField)
 	// Empty struct
 
 	rapidjson::Value jVal;
-	int ret = nestSt._.SerializeWithInnerAllocator(true, jVal);
+	int ret = nestSt._.SerializeInInnerAlloc(true, jVal);
 	ASSERT_EQ(ret, 0);
 	ASSERT_EQ(nestSt._.InnerBuffer().MemberCount(), 0);
 
@@ -79,7 +79,7 @@ TEST(Serialize, NullValue)
 	IJST_MARK_NULL(innerSt, int_2);
 
 	rapidjson::Value jVal;
-	int ret = innerSt._.SerializeWithInnerAllocator(true, jVal);
+	int ret = innerSt._.SerializeInInnerAlloc(true, jVal);
 	ASSERT_EQ(ret, 0);
 
 	ASSERT_EQ(IJST_GET_STATUS(innerSt, int_2), ijst::FStatus::kNull);
@@ -106,7 +106,7 @@ TEST(Serialize, AdditionalJsonField)
 	int ret;
 	// Serialize in place
 	rapidjson::Value jVal2;
-	ret = st._.SerializeWithInnerAllocator(true, jVal2);
+	ret = st._.SerializeInInnerAlloc(true, jVal2);
 	ASSERT_EQ(st._.InnerBuffer().MemberCount(), 0);
 	ASSERT_EQ(ret, 0);
 	ASSERT_STREQ(jVal2["addi_o1"].GetString(), "str_o1");
@@ -167,7 +167,7 @@ TEST(Serialize, Complicate)
 
 	// Value Check
 	rapidjson::Value jVal;
-	int ret = st._.SerializeWithInnerAllocator(true, jVal);
+	int ret = st._.SerializeInInnerAlloc(true, jVal);
 	ASSERT_EQ(ret, 0);
 	// c1
 	ASSERT_EQ(jVal["c1_v"]["i1_v"]["int_val_1"].GetInt(), 1);
@@ -263,7 +263,7 @@ TEST(Serialize, BigStruct)
 {
 	Complicate3 st;
 	rapidjson::Value jVal;
-	int ret = st._.SerializeWithInnerAllocator(true, jVal);
+	int ret = st._.SerializeInInnerAlloc(true, jVal);
 	ASSERT_EQ(ret, 0);
 	ASSERT_EQ(jVal["i1_v"].GetInt(), 0);
 	ASSERT_EQ(jVal["i64_v"].GetInt(), 0);
