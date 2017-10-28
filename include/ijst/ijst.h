@@ -628,8 +628,8 @@ public:
 			m_metaClass(_metaClass)
 	{
 		m_pBuffer = new rapidjson::Value(rapidjson::kObjectType);
-		m_pOwnAllocator = new AllocatorType();
-		m_pAllocator = m_pOwnAllocator;
+		m_pOwnDoc = new rapidjson::Document();
+		m_pAllocator = &m_pOwnDoc->GetAllocator();
 		InitParentPtr();
 	}
 
@@ -639,8 +639,8 @@ public:
 		assert(this != &rhs);
 
 		m_pBuffer = new rapidjson::Value(rapidjson::kObjectType);
-		m_pOwnAllocator = new AllocatorType();
-		m_pAllocator = m_pOwnAllocator;
+		m_pOwnDoc = new rapidjson::Document();
+		m_pAllocator = &m_pOwnDoc->GetAllocator();
 
 		m_metaClass = rhs.m_metaClass;
 		InitParentPtr();
@@ -652,7 +652,7 @@ public:
 	Accessor(Accessor &&rhs)
 	{
 		m_pBuffer = IJSTI_NULL;
-		m_pOwnAllocator = IJSTI_NULL;
+		m_pOwnDoc = IJSTI_NULL;
 		Steal(rhs);
 	}
 #endif
@@ -667,8 +667,8 @@ public:
 	{
 		delete m_pBuffer;
 		m_pBuffer = IJSTI_NULL;
-		delete m_pOwnAllocator;
-		m_pOwnAllocator = IJSTI_NULL;
+		delete m_pOwnDoc;
+		m_pOwnDoc = IJSTI_NULL;
 	}
 	//endregion
 
@@ -683,9 +683,9 @@ public:
 		m_pBuffer = rhs.m_pBuffer;
 		rhs.m_pBuffer = IJSTI_NULL;
 
-		delete m_pOwnAllocator;
-		m_pOwnAllocator = rhs.m_pOwnAllocator;
-		rhs.m_pOwnAllocator = IJSTI_NULL;
+		delete m_pOwnDoc;
+		m_pOwnDoc = rhs.m_pOwnDoc;
+		rhs.m_pOwnDoc = IJSTI_NULL;
 
 		// other simple field
 		m_metaClass = rhs.m_metaClass;
@@ -711,7 +711,7 @@ public:
 		}
 
 		m_pBuffer->SetObject();
-		m_pOwnAllocator->Clear();
+		ClearOwnAllocator(IJSTI_NULL);
 		m_fieldStatus.clear();
 		return 0;
 	}
@@ -784,26 +784,34 @@ public:
 
 	/**
 	 * Deserialize
+	 * NOTE: Make sure srcDocStolen use own allocator
 	 * @param errMsg. Output of error message, null if cancel error output
 	 */
 	inline int DeserializeMoved(rapidjson::Document &srcDocStolen, IJST_INOUT std::string *errMsg)
 	{
-		m_pOwnAllocator->Clear();
-		m_pBuffer->Swap(srcDocStolen);
-		m_pAllocator = &srcDocStolen.GetAllocator();
-		// TODO: prevent destory of m_pAllocator, U
+		// TODO: Check srcDocStolen use own allocator?
+		m_pOwnDoc->Swap(srcDocStolen);
+		*m_pBuffer = *reinterpret_cast<StoreType*>(m_pOwnDoc);
+		m_pAllocator = &m_pOwnDoc->GetAllocator();
 		return DoDeserializeWrap(errMsg);
 	}
 
 	inline int Deserialize(const rapidjson::Document& srcDoc, IJST_INOUT std::string* errMsg)
 	{
-		m_pOwnAllocator->Clear();
+		// FixMe: remove const_cast?
+		ClearOwnAllocator(&const_cast<rapidjson::Document &>(srcDoc).GetAllocator());
 		m_pBuffer->CopyFrom(srcDoc, *m_pAllocator);
 		return DoDeserializeWrap(errMsg);
 	}
 
+	inline int Deserialize(const std::string& input, IJST_INOUT std::string* errMsg)
+	{
+		return Deserialize(input.c_str(), input.length(), errMsg);
+	}
+
 	int Deserialize(const char* str, std::size_t length, IJST_INOUT std::string* errMsg)
 	{
+		ClearOwnAllocator(IJSTI_NULL);
 		rapidjson::Document doc(m_pAllocator);
 		doc.Parse(str, length);
 		if (IJSTI_UNLIKELY(doc.HasParseError()))
@@ -816,16 +824,13 @@ public:
 			}
 			return Err::kParseFaild;
 		}
-		return DeserializeMoved(doc, errMsg);
-	}
-
-	inline int Deserialize(const std::string& input, IJST_INOUT std::string* errMsg)
-	{
-		return Deserialize(input.c_str(), input.length(), errMsg);
+		*m_pBuffer = reinterpret_cast<StoreType&>(doc.Move());
+		return DoDeserializeWrap(errMsg);
 	}
 
 	int DeserializeInsitu(char* str, IJST_INOUT std::string* errMsg)
 	{
+		ClearOwnAllocator(IJSTI_NULL);
 		rapidjson::Document doc(m_pAllocator);
 		doc.ParseInsitu(str);
 		if (IJSTI_UNLIKELY(doc.HasParseError()))
@@ -838,7 +843,8 @@ public:
 			}
 			return Err::kParseFaild;
 		}
-		return DeserializeMoved(doc, errMsg);
+		*m_pBuffer = reinterpret_cast<StoreType&>(doc.Move());
+		return DoDeserializeWrap(errMsg);
 	}
 
 	bool WriteInnerBuffer(IJST_OUT std::string &strOutput)
@@ -882,7 +888,7 @@ private:
 		assert(req.pFieldBuffer == this);
 
 		IJSTI_STORE_MOVE(*m_pBuffer, req.stream);
-		m_pOwnAllocator->Clear();
+		ClearOwnAllocator(&req.allocator);
 		m_pAllocator = &req.allocator;
 
 		return DoDeserialize(resp);
@@ -907,6 +913,15 @@ private:
 		}
 
 		m_fieldStatus[offset] = fStatus;
+	}
+
+	//! Clear own allocator if it not equal to pTestAllocator
+	inline void ClearOwnAllocator(AllocatorType *pTestAllocator)
+	{
+		AllocatorType &ownAllocator = m_pOwnDoc->GetAllocator();
+		if (&ownAllocator != pTestAllocator) {
+			ownAllocator.Clear();
+		}
 	}
 
 	int DoSerialize(bool pushAllField, IJST_OUT StoreType& buffer, AllocatorType& allocator)
@@ -1010,9 +1025,9 @@ private:
 				val.CopyFrom(itMember->value, allocator);
 				buffer.AddMember(name, val, allocator);
 			}
+			ClearOwnAllocator(&allocator);
 		}
 		m_pBuffer->SetObject();
-		m_pOwnAllocator->Clear();
 
 		return 0;
 	}
@@ -1039,7 +1054,7 @@ private:
 		}
 
 		// Add member, field name is not need deep copy
-		// Do not check if there is a existing key, that's a feature
+		// Do not check existing key, that's a feature
 		buffer.AddMember(
 				rapidjson::Value().SetString(fieldNameRef),
 				elemOutput,
@@ -1130,7 +1145,10 @@ private:
 		}
 
 		// Clean
-		m_pBuffer->EraseMember(itNextRemain, m_pBuffer->MemberEnd());
+		if (m_pBuffer->MemberCount() != 0)
+		{
+			m_pBuffer->EraseMember(itNextRemain, m_pBuffer->MemberEnd());
+		}
 
 		// Check all required field status
 		std::stringstream invalidNameOss;
@@ -1218,7 +1236,8 @@ private:
 
 	// Must be a pointer to make class Accessor be a standard-layout type struct
 	rapidjson::Value* m_pBuffer;
-	AllocatorType* m_pOwnAllocator;
+	// Should use document instead of Allocator because document can swap allocator
+	rapidjson::Document* m_pOwnDoc;
 
 	AllocatorType* m_pAllocator;
 	const unsigned char *m_parentPtr;
