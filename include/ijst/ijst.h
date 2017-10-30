@@ -711,7 +711,7 @@ public:
 		}
 
 		m_pBuffer->SetObject();
-		ClearOwnAllocator(IJSTI_NULL);
+		// TODO: need clear own allocator
 		m_fieldStatus.clear();
 		return 0;
 	}
@@ -753,10 +753,14 @@ public:
 	inline const StoreType &InnerBuffer() const { return *m_pBuffer; }
 
 	//! Get allocator used in object
-	//! NOTE: The return should only use to be the allocator of inner buffer,
-	//! Because it will be cleared in many actions, such as reset, serialize, deserialize
+	//! The inner allocator is own allocator when init, but may change to other allocator
+	//! when calling SetParent() or Deserialize()
 	inline AllocatorType &InnerAllocator() { return *m_pAllocator; }
 	inline const AllocatorType &InnerAllocator( ) const { return *m_pAllocator; }
+
+	//! Get own allocator that manager resource
+	inline AllocatorType &OwnAllocator() { return m_pOwnDoc->GetAllocator(); }
+	inline const AllocatorType &OwnAllocator( ) const { return m_pOwnDoc->GetAllocator(); }
 
 	/**
 	 * Serialize the structure.
@@ -789,7 +793,6 @@ public:
 	 */
 	inline int DeserializeMoved(rapidjson::Document &srcDocStolen, IJST_INOUT std::string *errMsg)
 	{
-		// TODO: Check srcDocStolen use own allocator?
 		m_pOwnDoc->Swap(srcDocStolen);
 		*m_pBuffer = *reinterpret_cast<StoreType*>(m_pOwnDoc);
 		m_pAllocator = &m_pOwnDoc->GetAllocator();
@@ -798,8 +801,6 @@ public:
 
 	inline int Deserialize(const rapidjson::Document& srcDoc, IJST_INOUT std::string* errMsg)
 	{
-		// FixMe: remove const_cast?
-		ClearOwnAllocator(&const_cast<rapidjson::Document &>(srcDoc).GetAllocator());
 		m_pBuffer->CopyFrom(srcDoc, *m_pAllocator);
 		return DoDeserializeWrap(errMsg);
 	}
@@ -811,7 +812,8 @@ public:
 
 	int Deserialize(const char* str, std::size_t length, IJST_INOUT std::string* errMsg)
 	{
-		ClearOwnAllocator(IJSTI_NULL);
+		// The new object will call Deserialize() interfaces in most suitation
+		// So clear own allocator will not bring much benefice
 		rapidjson::Document doc(m_pAllocator);
 		doc.Parse(str, length);
 		if (IJSTI_UNLIKELY(doc.HasParseError()))
@@ -830,7 +832,8 @@ public:
 
 	int DeserializeInsitu(char* str, IJST_INOUT std::string* errMsg)
 	{
-		ClearOwnAllocator(IJSTI_NULL);
+		// The new object will call Deserialize() interfaces in most suitation
+		// So clear own allocator will not bring much benefice
 		rapidjson::Document doc(m_pAllocator);
 		doc.ParseInsitu(str);
 		if (IJSTI_UNLIKELY(doc.HasParseError()))
@@ -888,7 +891,6 @@ private:
 		assert(req.pFieldBuffer == this);
 
 		IJSTI_STORE_MOVE(*m_pBuffer, req.stream);
-		ClearOwnAllocator(&req.allocator);
 		m_pAllocator = &req.allocator;
 
 		return DoDeserialize(resp);
@@ -913,15 +915,6 @@ private:
 		}
 
 		m_fieldStatus[offset] = fStatus;
-	}
-
-	//! Clear own allocator if it not equal to pTestAllocator
-	inline void ClearOwnAllocator(AllocatorType *pTestAllocator)
-	{
-		AllocatorType &ownAllocator = m_pOwnDoc->GetAllocator();
-		if (&ownAllocator != pTestAllocator) {
-			ownAllocator.Clear();
-		}
 	}
 
 	int DoSerialize(bool pushAllField, IJST_OUT StoreType& buffer, AllocatorType& allocator)
@@ -1025,7 +1018,7 @@ private:
 				val.CopyFrom(itMember->value, allocator);
 				buffer.AddMember(name, val, allocator);
 			}
-			ClearOwnAllocator(&allocator);
+			// The object will be release after serialize in most suitation, so do not need clear own allocator
 		}
 		m_pBuffer->SetObject();
 
