@@ -3,7 +3,10 @@ project(IJST)
 
 set(CMAKE_CXX_STANDARD 11)
 
-#TODO: inlucde gTest and rapidjson as third party
-include_directories(include)
+include_directories(
+        include
+        thirdparty/rapidjson/include
+)
 
+add_subdirectory(thirdparty/googletest)
 add_subdirectory(unit_test)

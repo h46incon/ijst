@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8.8)
 
 
-add_subdirectory(gtest-1.8.0)
 
 enable_testing()
 
