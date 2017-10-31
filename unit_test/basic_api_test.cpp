@@ -71,6 +71,7 @@ TEST(BasicAPI, Constructor4LValue)
 		ASSERT_EQ(st1._.GetBuffer()["k"].GetInt(), 0xA5A5);
 		// new inner stream and allocator
 		ASSERT_NE(&st1._.GetAllocator(), &temp1._.GetAllocator());
+		ASSERT_NE(&st1._.GetOwnAllocator(), &temp1._.GetOwnAllocator());
 		ASSERT_NE(&st1._.GetBuffer(), &temp1._.GetBuffer());
 		// new metaField
 		IJST_SET(temp1, int_2, 0xA5A5);
@@ -97,6 +98,7 @@ TEST(BasicAPI, Constructor4LValue)
 		ASSERT_EQ(st2._.GetBuffer()["k"].GetInt(), 0xA5A5);
 		// new inner stream and allocator
 		ASSERT_NE(&st2._.GetAllocator(), &temp2._.GetAllocator());
+		ASSERT_NE(&st2._.GetOwnAllocator(), &temp2._.GetOwnAllocator());
 		ASSERT_NE(&st2._.GetBuffer(), &temp2._.GetBuffer());
 		// new metaField
 		IJST_SET(temp2, int_2, 0xA5A5);
@@ -118,6 +120,7 @@ TEST(BasicAPI, Constructor4RValue)
 		IJST_SET(temp1, int_1, 0x5A5A);
 		void* streamTemp1 = &temp1._.GetBuffer();
 		void* allocatorTemp1 = &temp1._.GetAllocator();
+		void* ownAllocatorTemp1 = &temp1._.GetOwnAllocator();
 
 		SimpleSt st1(std::move(temp1));
 		// value
@@ -126,6 +129,7 @@ TEST(BasicAPI, Constructor4RValue)
 		// inner stream
 		ASSERT_EQ(&st1._.GetBuffer(), streamTemp1);
 		ASSERT_EQ(&st1._.GetAllocator(), allocatorTemp1);
+		ASSERT_EQ(&st1._.GetOwnAllocator(), ownAllocatorTemp1);
 		//	ASSERT_ANY_THROW(temp3._.GetBuffer());
 	}
 
@@ -135,6 +139,7 @@ TEST(BasicAPI, Constructor4RValue)
 		IJST_SET(temp2, int_1, 0x5A5A);
 		void* streamTemp2 = &temp2._.GetBuffer();
 		void* allocatorTemp2 = &temp2._.GetAllocator();
+		void* ownAllocatorTemp2 = &temp2._.GetOwnAllocator();
 
 		SimpleSt st2;
 		st2 = std::move(temp2);
@@ -144,6 +149,7 @@ TEST(BasicAPI, Constructor4RValue)
 		// inner stream
 		ASSERT_EQ(&st2._.GetBuffer(), streamTemp2);
 		ASSERT_EQ(&st2._.GetAllocator(), allocatorTemp2);
+		ASSERT_EQ(&st2._.GetOwnAllocator(), ownAllocatorTemp2);
 		//	ASSERT_ANY_THROW(temp3._.GetBuffer());
 	}
 }
@@ -152,7 +158,53 @@ TEST(BasicAPI, Constructor4RValue)
 
 #endif
 
+IJST_DEFINE_STRUCT(
+		Complicate,
+		(IJST_TOBJ(SimpleSt), st, "st_v", 0),
+		(IJST_TVEC(IJST_TOBJ(SimpleSt)), vec, "vec_v", 0),
+		(IJST_TMAP(IJST_TOBJ(SimpleSt)), map, "map_v", 0)
+)
+
+TEST(BasicAPI, Allocator)
+{
+	Complicate cst;
+	ASSERT_NE(&cst._.GetAllocator(), &cst.st._.GetAllocator());
+
+	// SetMembersAllocator
+	SimpleSt st;
+	st._.SetMembersAllocator(cst._.GetAllocator());
+	ASSERT_EQ(&cst._.GetAllocator(), &st._.GetAllocator());
+
+	// Init
+	cst.vec.push_back(SimpleSt());
+	cst.vec.push_back(SimpleSt());
+	cst.map["v1"] = SimpleSt();
+	cst.map["v2"] = SimpleSt();
+
+	cst._.Init();
+	// Allocator is same of fields inited
+	ASSERT_EQ(&cst._.GetAllocator(), &cst.vec[0]._.GetAllocator());
+	ASSERT_EQ(&cst._.GetAllocator(), &cst.vec[1]._.GetAllocator());
+	ASSERT_EQ(&cst._.GetAllocator(), &cst.map["v1"]._.GetAllocator());
+	ASSERT_EQ(&cst._.GetAllocator(), &cst.map["v2"]._.GetAllocator());
+	// Allocator is not same of fields not inited
+	ASSERT_NE(&cst._.GetAllocator(), &cst.map["v3"]._.GetAllocator());
+}
+
 struct DummySt {
-	//TODO: Define in Struct
+	IJST_DEFINE_STRUCT(
+			SimpleSt,
+			(IJST_TPRI(Int), int_1, "int_val_1", 0),
+			(IJST_TPRI(Int), int_2, "int_val_2", 0),
+			(IJST_TPRI(String), str_1, "str_val_1", 0),
+			(IJST_TPRI(String), str_2, "str_val_2", 0)
+	)
 };
+
+TEST(BasicAPI, DefineInStruct)
+{
+	DummySt::SimpleSt st;
+	IJST_SET(st, int_1, 1);
+	ASSERT_EQ(st.int_1, 1);
+}
 }

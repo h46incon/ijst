@@ -529,8 +529,6 @@ public:
 			}
 		}
 
-		// Clear
-		ptr->clear();
 		return 0;
 	}
 };
@@ -696,6 +694,11 @@ public:
 		InitOuterPtr();
 	}
 
+	int Init()
+	{
+		return SetMembersAllocator(*m_pAllocator);
+	}
+
 	/*
 	 * Field accessor
 	 */
@@ -745,8 +748,8 @@ public:
 
 		// Set allocator in members
 		for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
-			 itMetaField != m_metaClass->metaFields.end(); ++itMetaField) {
-
+			 itMetaField != m_metaClass->metaFields.end(); ++itMetaField)
+		{
 			void *pField = GetFieldByOffset(itMetaField->offset);
 			int ret = itMetaField->serializerInterface->SetAllocator(pField, allocator);
 			if (IJSTI_UNLIKELY(ret != 0)){
