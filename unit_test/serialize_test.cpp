@@ -46,7 +46,7 @@ TEST(Serialize, EmptyStruct_PushAllField)
 	rapidjson::Value jVal;
 	int ret = nestSt._.SerializeInInnerAlloc(true, jVal);
 	ASSERT_EQ(ret, 0);
-	ASSERT_EQ(nestSt._.InnerBuffer().MemberCount(), 0);
+	ASSERT_EQ(nestSt._.GetBuffer().MemberCount(), 0);
 
 	// Check
 	ASSERT_TRUE(jVal["vec_val_1"].IsArray());
@@ -99,15 +99,15 @@ TEST(Serialize, AdditionalJsonField)
 {
 	ObjRefSt st;
 
-	st._.InnerBuffer().AddMember("addi_o1", rapidjson::Value().SetString("str_o1").Move(), st._.InnerAllocator());
-	st.inner._.InnerBuffer().AddMember("addi_i1", rapidjson::Value().SetString("str_i1").Move(), st.inner._.InnerAllocator());
+	st._.GetBuffer().AddMember("addi_o1", rapidjson::Value().SetString("str_o1").Move(), st._.GetAllocator());
+	st.inner._.GetBuffer().AddMember("addi_i1", rapidjson::Value().SetString("str_i1").Move(), st.inner._.GetAllocator());
 	IJST_SET(st.inner, int_2, 11);
 
 	int ret;
 	// Serialize in place
 	rapidjson::Value jVal2;
 	ret = st._.SerializeInInnerAlloc(true, jVal2);
-	ASSERT_EQ(st._.InnerBuffer().MemberCount(), 0);
+	ASSERT_EQ(st._.GetBuffer().MemberCount(), 0);
 	ASSERT_EQ(ret, 0);
 	ASSERT_STREQ(jVal2["addi_o1"].GetString(), "str_o1");
 	ASSERT_STREQ(jVal2["inner_val"]["addi_i1"].GetString(), "str_i1");

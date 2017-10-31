@@ -105,10 +105,11 @@ namespace detail {
 #if __cplusplus >= 201103L
 	#define IJSTI_MOVE(val) 	std::move(val)
 	#define IJSTI_NULL 			nullptr
-
+	#define IJSTI_OVERRIDE		override
 #else
 #define IJSTI_MOVE(val) 	(val)
 	#define IJSTI_NULL 			0
+	#define IJSTI_OVERRIDE
 #endif
 
 
@@ -239,7 +240,7 @@ public:
 
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)= 0;
 
-	virtual int Reset(void *pField)= 0;
+	virtual int SetAllocator(void *pField, AllocatorType &allocator) {return 0;}
 
 	virtual ~SerializerInterface()
 	{ }
@@ -256,11 +257,11 @@ public:
 	typedef void VarType;
 
 	virtual int
-	Serialize(const SerializeReq &req, SerializeResp &resp) = 0;
+	Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE = 0;
 
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) = 0;
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE = 0;
 
-	virtual int Reset(void *pField) = 0;
+	virtual int SetAllocator(void *pField, AllocatorType &allocator) IJSTI_OVERRIDE;
 };
 
 #define IJSTI_FSERIALIZER_INS(_T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< _T> >::GetInstance()
@@ -279,23 +280,23 @@ class FSerializer<TypeClassObj<_T> > : public SerializerInterface {
 public:
 	typedef _T VarType;
 
-	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
 		_T *ptr = (_T *) req.pField;
 		int ret = ptr->_.ISerialize(req, resp);
 		return ret;
 	}
 
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
 	{
 		_T *ptr = (_T *) req.pFieldBuffer;
 		return ptr->_.IDeserialize(req, resp);
 	}
 
-	virtual int Reset(void* pField)
+	virtual int SetAllocator(void* pField, AllocatorType& allocator) IJSTI_OVERRIDE
 	{
 		_T *ptr = (_T *) pField;
-		return ptr->_.IReset();
+		return ptr->_.ISetAllocator(pField, allocator);
 	}
 };
 
@@ -310,7 +311,7 @@ private:
 public:
 	typedef std::vector<ElemVarType> VarType;
 
-	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
 		const VarType *ptr = static_cast<const VarType *>(req.pField);
 		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
@@ -338,7 +339,7 @@ public:
 		return 0;
 	}
 
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsArray()) {
 			resp.fStatus = FStatus::kParseFailed;
@@ -381,23 +382,21 @@ public:
 		return 0;
 	}
 
-	virtual int Reset(void* pField)
+	virtual int SetAllocator(void *pField, AllocatorType &allocator) IJSTI_OVERRIDE
 	{
 		VarType *ptr = static_cast<VarType *>(pField);
 		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 
-		// Reset member
+		// Loop
 		for (typename VarType::iterator itera = ptr->begin(); itera != ptr->end(); ++itera)
 		{
-			int ret = interface->Reset(&(*itera));
+			int ret = interface->SetAllocator(&(*itera), allocator);
 			if (IJSTI_UNLIKELY(ret != 0))
 			{
 				return ret;
 			}
 		}
 
-		// Clear
-		ptr->clear();
 		return 0;
 	}
 };
@@ -413,7 +412,7 @@ private:
 public:
 	typedef std::map<std::string, ElemVarType> VarType;
 
-	virtual int Serialize(const SerializeReq &req, SerializeResp &resp)
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
 		const VarType *ptr = static_cast<const VarType *>(req.pField);
 		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
@@ -466,7 +465,7 @@ public:
 		return 0;
 	}
 
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsObject()) {
 			resp.fStatus = FStatus::kParseFailed;
@@ -515,7 +514,7 @@ public:
 		return 0;
 	}
 
-	virtual int Reset(void* pField)
+	virtual int SetAllocator(void* pField, AllocatorType& allocator) IJSTI_OVERRIDE
 	{
 		VarType *ptr = static_cast<VarType *>(pField);
 		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
@@ -523,7 +522,7 @@ public:
 		// Reset member
 		for (typename VarType::iterator itera = ptr->begin(); itera != ptr->end(); ++itera)
 		{
-			int ret = interface->Reset(&(itera->second));
+			int ret = interface->SetAllocator(&(itera->second), allocator);
 			if (IJSTI_UNLIKELY(ret != 0))
 			{
 				return ret;
@@ -630,7 +629,7 @@ public:
 		m_pBuffer = new rapidjson::Value(rapidjson::kObjectType);
 		m_pOwnDoc = new rapidjson::Document();
 		m_pAllocator = &m_pOwnDoc->GetAllocator();
-		InitParentPtr();
+		InitOuterPtr();
 	}
 
 	Accessor(const Accessor &rhs) :
@@ -643,7 +642,7 @@ public:
 		m_pAllocator = &m_pOwnDoc->GetAllocator();
 
 		m_metaClass = rhs.m_metaClass;
-		InitParentPtr();
+		InitOuterPtr();
 
 		m_pBuffer->CopyFrom(*rhs.m_pBuffer, *m_pAllocator);
 	}
@@ -694,26 +693,7 @@ public:
 		rhs.m_pAllocator = IJSTI_NULL;
 
 		m_fieldStatus = IJSTI_MOVE(rhs.m_fieldStatus);
-		InitParentPtr();
-	}
-
-	int Reset()
-	{
-		// Reset member
-		for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
-			 itMetaField != m_metaClass->metaFields.end(); ++itMetaField) {
-
-			void *pField = GetFieldByOffset(itMetaField->offset);
-			int ret = itMetaField->serializerInterface->Reset(pField);
-			if (IJSTI_UNLIKELY(ret != 0)){
-				return ret;
-			}
-		}
-
-		m_pBuffer->SetObject();
-		// TODO: need clear own allocator
-		m_fieldStatus.clear();
-		return 0;
+		InitOuterPtr();
 	}
 
 	/*
@@ -749,18 +729,36 @@ public:
 	}
 
 	//! Get inner buffer
-	inline StoreType &InnerBuffer() { return *m_pBuffer; }
-	inline const StoreType &InnerBuffer() const { return *m_pBuffer; }
+	inline StoreType &GetBuffer() { return *m_pBuffer; }
+	inline const StoreType &GetBuffer() const { return *m_pBuffer; }
 
 	//! Get allocator used in object
 	//! The inner allocator is own allocator when init, but may change to other allocator
-	//! when calling SetParent() or Deserialize()
-	inline AllocatorType &InnerAllocator() { return *m_pAllocator; }
-	inline const AllocatorType &InnerAllocator( ) const { return *m_pAllocator; }
+	//! when calling SetInnerAllocator() or Deserialize()
+	inline AllocatorType &GetAllocator() { return *m_pAllocator; }
+	inline const AllocatorType &GetAllocator() const { return *m_pAllocator; }
+
+	//! Set Inner allocator. The pervious allocator will NOT destroy
+	int SetMembersAllocator(AllocatorType &allocator)
+	{
+		m_pAllocator = &allocator;
+
+		// Set allocator in members
+		for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
+			 itMetaField != m_metaClass->metaFields.end(); ++itMetaField) {
+
+			void *pField = GetFieldByOffset(itMetaField->offset);
+			int ret = itMetaField->serializerInterface->SetAllocator(pField, allocator);
+			if (IJSTI_UNLIKELY(ret != 0)){
+				return ret;
+			}
+		}
+		return 0;
+	}
 
 	//! Get own allocator that manager resource
-	inline AllocatorType &OwnAllocator() { return m_pOwnDoc->GetAllocator(); }
-	inline const AllocatorType &OwnAllocator( ) const { return m_pOwnDoc->GetAllocator(); }
+	inline AllocatorType &GetOwnAllocator() { return m_pOwnDoc->GetAllocator(); }
+	inline const AllocatorType &GetOwnAllocator() const { return m_pOwnDoc->GetAllocator(); }
 
 	/**
 	 * Serialize the structure.
@@ -896,15 +894,16 @@ private:
 		return DoDeserialize(resp);
 	}
 
-	inline int IReset()
+	inline int ISetAllocator(void* pField, AllocatorType& allocator)
 	{
-		return Reset();
+		assert(pField == this);
+		return SetMembersAllocator(allocator);
 	}
 	//endregion
 
-	inline void InitParentPtr()
+	inline void InitOuterPtr()
 	{
-		m_parentPtr = reinterpret_cast<const unsigned char *>(this - m_metaClass->accessorOffset);
+		m_pOuter = reinterpret_cast<const unsigned char *>(this - m_metaClass->accessorOffset);
 	}
 
 	void MarkFieldStatus(const void* field, FStatus::_E fStatus)
@@ -1193,12 +1192,12 @@ private:
 	inline std::size_t GetFieldOffset(const void *const ptr) const
 	{
 		const unsigned char *filed_ptr = static_cast<const unsigned char *>(ptr);
-		return filed_ptr - m_parentPtr;
+		return filed_ptr - m_pOuter;
 	}
 
 	inline void *GetFieldByOffset(std::size_t offset) const
 	{
-		return (void *) (m_parentPtr + offset);
+		return (void *) (m_pOuter + offset);
 	}
 
 	FStatus::_E GetStatusByOffset(const size_t offset) const
@@ -1233,7 +1232,7 @@ private:
 	rapidjson::Document* m_pOwnDoc;
 
 	AllocatorType* m_pAllocator;
-	const unsigned char *m_parentPtr;
+	const unsigned char *m_pOuter;
 	//</editor-fold>
 };
 

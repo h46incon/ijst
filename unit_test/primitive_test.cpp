@@ -32,6 +32,12 @@ TEST(Primitive, Int)
 
 	StInt st;
 
+	// Default value
+	{
+		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0);
+		ASSERT_EQ(st.v, 0);
+	}
+
 	// Deserialize
 	{
 		string json = "{\"f_v\": 0, \"f_vec\": [-1, 1], \"f_map\": {\"v1\": -2, \"v2\": 2}}";
@@ -64,14 +70,6 @@ TEST(Primitive, Int)
 		ASSERT_EQ(jVal["f_map"]["v3"].GetInt(), 200);
 	}
 
-	// Reset
-	{
-		IJST_SET(st, v, 1);
-		int ret = st._.Reset();
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(st._.InnerBuffer().MemberCount(), 0);
-		ASSERT_EQ(st.v, 0);
-	}
 }
 
 IJST_DEFINE_STRUCT(
@@ -95,6 +93,12 @@ TEST(Primitive, Bool)
 	}
 
 	StBool st;
+
+	// Default value
+	{
+		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0);
+		ASSERT_EQ(st.v, 0);
+	}
 
 	// Deserialize
 	{
@@ -128,14 +132,6 @@ TEST(Primitive, Bool)
 		ASSERT_EQ(jVal["f_map"]["v3"].GetBool(), true);
 	}
 
-	// Reset
-	{
-		IJST_SET(st, v, 1);
-		int ret = st._.Reset();
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(st._.InnerBuffer().MemberCount(), 0);
-		ASSERT_EQ(st.v, 0);
-	}
 }
 
 IJST_DEFINE_STRUCT(
@@ -159,6 +155,11 @@ TEST(Primitive, String)
 	}
 
 	StString st;
+	// Default value
+	{
+		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0);
+		ASSERT_TRUE(st.v.empty());
+	}
 
 	// Deserialize
 	{
@@ -192,12 +193,4 @@ TEST(Primitive, String)
 		ASSERT_STREQ(jVal["f_map"]["v3"].GetString(), "v033");
 	}
 
-	// Reset
-	{
-		IJST_SET(st, v, "v");
-		int ret = st._.Reset();
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(st._.InnerBuffer().MemberCount(), 0);
-		ASSERT_TRUE(st.v.empty());
-	}
 }
