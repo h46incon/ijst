@@ -798,7 +798,7 @@ public:
 	inline int DeserializeMoved(rapidjson::Document &srcDocStolen, IJST_INOUT std::string *errMsg)
 	{
 		m_pOwnDoc->Swap(srcDocStolen);
-		*m_pBuffer = *reinterpret_cast<StoreType*>(m_pOwnDoc);
+		*m_pBuffer = reinterpret_cast<StoreType&>(m_pOwnDoc->Move());
 		m_pAllocator = &m_pOwnDoc->GetAllocator();
 		return DoDeserializeWrap(errMsg);
 	}
@@ -928,9 +928,8 @@ private:
 		buffer.SetObject();
 
 		// Reserve space
-#if false
 		do {
-			const size_t maxSize = m_metaClass->metaFields.size() + m_pBufferDoc->MemberCount();
+			const size_t maxSize = m_metaClass->metaFields.size() + m_pBuffer->MemberCount();
 			if (buffer.MemberCapacity() >= maxSize) {
 				break;
 			}
@@ -940,7 +939,7 @@ private:
 				fieldSize = maxSize;
 			}
 			else {
-				fieldSize = m_pBufferDoc->MemberCount();
+				fieldSize = m_pBuffer->MemberCount();
 				for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
 					 itMetaField != m_metaClass->metaFields.end(); ++itMetaField)
 				{
@@ -953,7 +952,8 @@ private:
 			}
 			buffer.MemberReserve(fieldSize, allocator);
 		} while (false);
-#endif
+		const rapidjson::SizeType oldCapcity = buffer.MemberCapacity();
+
 
 		std::size_t fieldSize = m_metaClass->metaFields.size();
 		for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
@@ -1027,6 +1027,8 @@ private:
 		}
 		m_pBuffer->SetObject();
 
+		// assert that buffer will not reallocate memory during serialization
+		assert(buffer.MemberCapacity() == oldCapcity);
 		return 0;
 	}
 
