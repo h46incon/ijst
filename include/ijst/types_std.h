@@ -116,8 +116,8 @@ public:
 
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
-		const VarType *fieldI = static_cast<const VarType *>(req.pField);
-		req.buffer.SetBool((*fieldI) != 0);
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.SetBool((*pField) != 0);
 		return 0;
 	}
 
@@ -129,8 +129,8 @@ public:
 			return Err::kDeserializeValueTypeError;
 		}
 
-		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
-		*pBuffer = static_cast<unsigned char>(req.stream.GetBool() ? 1 : 0);
+		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
+		*pField = static_cast<unsigned char>(req.stream.GetBool() ? 1 : 0);
 		return 0;
 	}
 };
@@ -142,8 +142,8 @@ public:
 
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
-		const VarType *fieldI = static_cast<const VarType *>(req.pField);
-		req.buffer.SetInt(*fieldI);
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.SetInt(*pField);
 		return 0;
 	}
 
@@ -155,8 +155,8 @@ public:
 			return Err::kDeserializeValueTypeError;
 		}
 
-		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
-		*pBuffer = req.stream.GetInt();
+		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
+		*pField = req.stream.GetInt();
 		return 0;
 	}
 };
@@ -168,8 +168,8 @@ public:
 
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
-		const VarType *fieldI = static_cast<const VarType *>(req.pField);
-		req.buffer.SetUint(*fieldI);
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.SetUint(*pField);
 		return 0;
 	}
 
@@ -181,8 +181,8 @@ public:
 			return Err::kDeserializeValueTypeError;
 		}
 
-		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
-		*pBuffer = req.stream.GetUint();
+		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
+		*pField = req.stream.GetUint();
 		return 0;
 	}
 };
@@ -194,8 +194,8 @@ public:
 
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
-		const VarType *fieldI = static_cast<const VarType *>(req.pField);
-		req.buffer.SetUint64(*fieldI);
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.SetUint64(*pField);
 		return 0;
 	}
 
@@ -207,8 +207,8 @@ public:
 			return Err::kDeserializeValueTypeError;
 		}
 
-		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
-		*pBuffer = req.stream.GetUint64();
+		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
+		*pField = req.stream.GetUint64();
 		return 0;
 	}
 };
@@ -220,8 +220,8 @@ public:
 
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
-		const VarType *fieldI = static_cast<const VarType *>(req.pField);
-		req.buffer.SetInt(*fieldI);
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.SetInt(*pField);
 		return 0;
 	}
 
@@ -233,8 +233,8 @@ public:
 			return Err::kDeserializeValueTypeError;
 		}
 
-		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
-		*pBuffer = req.stream.GetInt();
+		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
+		*pField = req.stream.GetInt();
 		return 0;
 	}
 };
@@ -246,8 +246,8 @@ public:
 
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
-		const VarType *fieldI = static_cast<const VarType *>(req.pField);
-		req.buffer.SetInt64(*fieldI);
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.SetInt64(*pField);
 		return 0;
 	}
 
@@ -259,8 +259,8 @@ public:
 			return Err::kDeserializeValueTypeError;
 		}
 
-		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
-		*pBuffer = req.stream.GetInt64();
+		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
+		*pField = req.stream.GetInt64();
 		return 0;
 	}
 };
@@ -272,8 +272,8 @@ public:
 
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
-		const VarType *filedV = static_cast<const VarType *>(req.pField);
-		req.buffer.SetString(filedV->c_str(), filedV->length(), req.allocator);
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.SetString(pField->c_str(), pField->length(), req.allocator);
 		return 0;
 	}
 
@@ -285,8 +285,8 @@ public:
 			return Err::kDeserializeValueTypeError;
 		}
 
-		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
-		*pBuffer = std::string(req.stream.GetString(), req.stream.GetStringLength());
+		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
+		*pField = std::string(req.stream.GetString(), req.stream.GetStringLength());
 		return 0;
 	}
 };
@@ -298,29 +298,29 @@ public:
 
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
-		const VarType *fieldJ = static_cast<const VarType *>(req.pField);
-		req.buffer.CopyFrom(fieldJ->V(), req.allocator);
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.CopyFrom(pField->V(), req.allocator);
 		return 0;
 	}
 
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
 	{
-		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
-		pBuffer->v.Swap(req.stream);
-		pBuffer->m_pAllocator = &req.allocator;
+		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
+		pField->v.Swap(req.stream);
+		pField->m_pAllocator = &req.allocator;
 		return 0;
 	}
 
 	virtual int SetAllocator(void *pField, AllocatorType &allocator) IJSTI_OVERRIDE
 	{
-		VarType *pBuffer = static_cast<VarType *>(pField);
-		if (pBuffer->m_pAllocator == &allocator) {
+		VarType *pFieldT = static_cast<VarType *>(pField);
+		if (pFieldT->m_pAllocator == &allocator) {
 			return 0;
 		}
 		StoreType temp;
-		temp = pBuffer->v;
-		pBuffer->v.CopyFrom(temp, allocator);
-		pBuffer->m_pAllocator = &allocator;
+		temp = pFieldT->v;
+		pFieldT->v.CopyFrom(temp, allocator);
+		pFieldT->m_pAllocator = &allocator;
 		return 0;
 	}
 };
@@ -332,8 +332,8 @@ public:
 
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
-		const VarType *fieldI = static_cast<const VarType *>(req.pField);
-		tm *p = localtime(fieldI);
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		tm *p = localtime(pField);
 		char strBuf[32];
 		snprintf(strBuf, 49, "%04d-%02d-%02d %02d:%02d:%02d", p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour,
 				 p->tm_min, p->tm_sec
@@ -364,8 +364,8 @@ public:
 		t.tm_mon -= 1;
 		t.tm_isdst = 0;
 
-		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
-		*pBuffer = mktime(&t);
+		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
+		*pField = mktime(&t);
 		return 0;
 	}
 };

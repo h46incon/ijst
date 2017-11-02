@@ -265,21 +265,21 @@ public:
 
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
-		_T *ptr = (_T *) req.pField;
-		int ret = ptr->_.ISerialize(req, resp);
+		_T *pField = (_T *) req.pField;
+		int ret = pField->_.ISerialize(req, resp);
 		return ret;
 	}
 
 	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
 	{
-		_T *ptr = (_T *) req.pFieldBuffer;
-		return ptr->_.IDeserialize(req, resp);
+		_T *pField = (_T *) req.pFieldBuffer;
+		return pField->_.IDeserialize(req, resp);
 	}
 
 	virtual int SetAllocator(void* pField, AllocatorType& allocator) IJSTI_OVERRIDE
 	{
-		_T *ptr = (_T *) pField;
-		return ptr->_.ISetAllocator(pField, allocator);
+		_T *pFieldT = (_T *) pField;
+		return pFieldT->_.ISetAllocator(pField, allocator);
 	}
 };
 
@@ -296,12 +296,12 @@ public:
 
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
-		const VarType *ptr = static_cast<const VarType *>(req.pField);
+		const VarType *pField = static_cast<const VarType *>(req.pField);
 		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 		req.buffer.SetArray();
 		// Reserve first to make sure rapidjson will not reallocate buffer
-		req.buffer.Reserve(static_cast<rapidjson::SizeType>(ptr->size()), req.allocator);
-		for (typename VarType::const_iterator itera = ptr->begin(); itera != ptr->end(); ++itera) {
+		req.buffer.Reserve(static_cast<rapidjson::SizeType>(pField->size()), req.allocator);
+		for (typename VarType::const_iterator itera = pField->begin(); itera != pField->end(); ++itera) {
 			req.buffer.PushBack(
 					rapidjson::Value(rapidjson::kNullType).Move(),
 					req.allocator
@@ -330,10 +330,10 @@ public:
 			return Err::kDeserializeValueTypeError;
 		}
 
-		VarType *pBufferT = static_cast<VarType *>(req.pFieldBuffer);
-		pBufferT->clear();
-		// pBufferT->shrink_to_fit();
-		pBufferT->reserve(req.stream.Size());
+		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
+		pField->clear();
+		// pField->shrink_to_fit();
+		pField->reserve(req.stream.Size());
 		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
 
 		for (rapidjson::Value::ValueIterator itVal = req.stream.Begin();
@@ -341,19 +341,19 @@ public:
 		{
 			// Alloc buffer
 			// Use resize() instead of push_back() to avoid copy constructor in C++11
-			pBufferT->resize(pBufferT->size() + 1);
-			DeserializeReq elemReq(*itVal, req.allocator, &pBufferT->back());
+			pField->resize(pField->size() + 1);
+			DeserializeReq elemReq(*itVal, req.allocator, &pField->back());
 
 			// Deserialize
 			DeserializeResp elemResp(resp.needErrMsg);
 			int ret = serializerInterface->Deserialize(elemReq, elemResp);
 			if (IJSTI_UNLIKELY(ret != 0))
 			{
-				pBufferT->pop_back();
+				pField->pop_back();
 				if (resp.needErrMsg)
 				{
 					std::stringstream oss;
-					oss << "Deserialize elem error. index: " << pBufferT->size() << ", err: ";
+					oss << "Deserialize elem error. index: " << pField->size() << ", err: ";
 					resp.CombineErrMsg(oss.str(), elemResp);
 				}
 				return ret;
@@ -367,11 +367,11 @@ public:
 
 	virtual int SetAllocator(void *pField, AllocatorType &allocator) IJSTI_OVERRIDE
 	{
-		VarType *ptr = static_cast<VarType *>(pField);
+		VarType *pFieldT = static_cast<VarType *>(pField);
 		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 
 		// Loop
-		for (typename VarType::iterator itera = ptr->begin(); itera != ptr->end(); ++itera)
+		for (typename VarType::iterator itera = pFieldT->begin(); itera != pFieldT->end(); ++itera)
 		{
 			int ret = interface->SetAllocator(&(*itera), allocator);
 			if (IJSTI_UNLIKELY(ret != 0))
@@ -397,13 +397,13 @@ public:
 
 	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 	{
-		const VarType *ptr = static_cast<const VarType *>(req.pField);
+		const VarType *pField = static_cast<const VarType *>(req.pField);
 		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 		if (!req.buffer.IsObject()) {
 			req.buffer.SetObject();
 		}
 
-		for (typename VarType::const_iterator itFieldMember = ptr->begin(); itFieldMember != ptr->end(); ++itFieldMember)
+		for (typename VarType::const_iterator itFieldMember = pField->begin(); itFieldMember != pField->end(); ++itFieldMember)
 		{
 			// Init
 			const void* pFieldValue = &itFieldMember->second;
@@ -456,9 +456,9 @@ public:
 			return Err::kDeserializeValueTypeError;
 		}
 
-		VarType *pBufferT = static_cast<VarType *>(req.pFieldBuffer);
-		pBufferT->clear();
-		// pBufferT->shrink_to_fit();
+		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
+		pField->clear();
+		// pField->shrink_to_fit();
 		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
 
 		for (rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
@@ -467,12 +467,12 @@ public:
 			// Get information
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
 			bool hasAlloc = false;
-			if (pBufferT->find(fieldName) == pBufferT->end()) {
+			if (pField->find(fieldName) == pField->end()) {
 				hasAlloc = true;
 			}
 
 			// Alloc buffer
-			ElemVarType &elemBuffer = (*pBufferT)[fieldName];
+			ElemVarType &elemBuffer = (*pField)[fieldName];
 			DeserializeReq elemReq(itMember->value, req.allocator, &elemBuffer);
 
 			// Deserialize
@@ -482,7 +482,7 @@ public:
 			{
 				if (hasAlloc)
 				{
-					pBufferT->erase(fieldName);
+					pField->erase(fieldName);
 				}
 				resp.needErrMsg &&
 				resp.CombineErrMsg("Deserialize elem error. key: " + fieldName + ", err: ",
@@ -499,11 +499,11 @@ public:
 
 	virtual int SetAllocator(void* pField, AllocatorType& allocator) IJSTI_OVERRIDE
 	{
-		VarType *ptr = static_cast<VarType *>(pField);
+		VarType *pFieldT = static_cast<VarType *>(pField);
 		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 
 		// Reset member
-		for (typename VarType::iterator itera = ptr->begin(); itera != ptr->end(); ++itera)
+		for (typename VarType::iterator itera = pFieldT->begin(); itera != pFieldT->end(); ++itera)
 		{
 			int ret = interface->SetAllocator(&(itera->second), allocator);
 			if (IJSTI_UNLIKELY(ret != 0))
