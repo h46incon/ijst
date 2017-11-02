@@ -194,3 +194,122 @@ TEST(Primitive, String)
 	}
 
 }
+
+IJST_DEFINE_STRUCT(
+		StRaw,
+		(IJST_TPRI(Raw), v, "f_v", 0),
+		(IJST_TVEC(IJST_TPRI(Raw)), vec_v, "f_vec", 0),
+		(IJST_TMAP(IJST_TPRI(Raw)), map_v, "f_map", 0)
+)
+
+TEST(Primitive, Raw)
+{
+	int ret;
+
+	// Deserialize error
+	{
+		// Raw could store any json type
+	}
+
+	StRaw st;
+	// Default value
+	{
+		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0);
+		ASSERT_TRUE(st.v.V().IsNull());
+	}
+
+	// Deserialize
+	{
+		string json = "{\"f_v\": \"v1\", \"f_vec\": [\"v1\", 2], \"f_map\": {\"v1\": null, \"v2\": {\"v21\": false }}}";
+		ret = st._.Deserialize(json, 0);
+		ASSERT_EQ(ret, 0);
+		ASSERT_STREQ(st.v.V().GetString(), "v1");
+		ASSERT_STREQ(st.vec_v[0].V().GetString(), "v1");
+		ASSERT_EQ(st.vec_v[1].V().GetInt(), 2);
+		ASSERT_TRUE(st.map_v["v1"].V().IsNull());
+		ASSERT_EQ(st.map_v["v2"].V()["v21"].GetBool(), false);
+	}
+
+	// Serialize
+	{
+		st.v.V().SetInt(0);
+		IJST_MARK_VALID(st, v);
+
+		ijst::FStoreRaw raw;
+		raw.V().SetNull();
+		st.vec_v[0] = raw;
+		raw.V().SetString("v03");
+		st.vec_v.push_back(raw);
+
+		raw.V().SetString("v2");
+		st.map_v["v1"] = raw;
+		raw.V().SetObject();
+		raw.V().AddMember("v31", rapidjson::Value().SetInt(-1).Move(), raw.GetAllocator());
+		st.map_v["v3"] = raw;
+
+		rapidjson::Value jVal;
+		ret = st._.SerializeInInnerAlloc(false, jVal);
+		ASSERT_EQ(ret, 0);
+		ASSERT_EQ(jVal["f_v"].GetInt(), 0);
+		ASSERT_TRUE(jVal["f_vec"][0].IsNull());
+		ASSERT_EQ(jVal["f_vec"][1].GetInt(), 2);
+		ASSERT_STREQ(jVal["f_vec"][2].GetString(), "v03");
+		ASSERT_STREQ(jVal["f_map"]["v1"].GetString(), "v2");
+		ASSERT_EQ(jVal["f_map"]["v2"]["v21"].GetBool(), false);
+		ASSERT_EQ(jVal["f_map"]["v3"]["v31"].GetInt(), -1);
+	}
+}
+
+TEST(Primitive, Raw_BasicAPI)
+{
+	{
+		// Copy constructor
+		ijst::FStoreRaw src;
+		src.V().SetString("src_v", src.GetAllocator());
+
+		ijst::FStoreRaw dst(src);
+		ASSERT_STREQ(src.V().GetString(), "src_v");
+		ASSERT_STREQ(dst.V().GetString(), "src_v");
+		ASSERT_NE(&src.GetAllocator(), &dst.GetAllocator());
+	}
+
+	{
+		// assignment
+		ijst::FStoreRaw src;
+		src.V().SetString("src_v", src.GetAllocator());
+
+		ijst::FStoreRaw dst;
+		dst = src;
+		ASSERT_STREQ(src.V().GetString(), "src_v");
+		ASSERT_STREQ(dst.V().GetString(), "src_v");
+		ASSERT_NE(&src.GetAllocator(), &dst.GetAllocator());
+	}
+
+#if __cplusplus >= 201103L
+	{
+		// Rvalue Copy constructor
+		ijst::FStoreRaw src;
+		src.V().SetString("src_v", src.GetAllocator());
+		ijst::AllocatorType* pSrcAlloc = &src.GetAllocator();
+
+		ijst::FStoreRaw dst(std::move(src));
+		ASSERT_STREQ(dst.V().GetString(), "src_v");
+		ASSERT_EQ(&dst.GetAllocator(), pSrcAlloc);
+		ASSERT_EQ(&src.GetAllocator(), nullptr);
+	}
+
+	{
+		// Rvalue assignment
+		ijst::FStoreRaw src;
+		src.V().SetString("src_v", src.GetAllocator());
+		ijst::AllocatorType* pSrcAlloc = &src.GetAllocator();
+
+		ijst::FStoreRaw dst;
+		dst = std::move(src);
+		ASSERT_STREQ(dst.V().GetString(), "src_v");
+		ASSERT_EQ(&dst.GetAllocator(), pSrcAlloc);
+		ASSERT_EQ(&src.GetAllocator(), nullptr);
+
+	}
+#endif
+}

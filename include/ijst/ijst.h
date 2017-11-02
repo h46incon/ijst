@@ -49,12 +49,9 @@ public:
 		Bool,
 		Int,
 		String,
+		Raw,
 	};
 };
-
-typedef unsigned char FStoreBool; 		// Could not use bool type because std::vector<bool> is not a container!
-typedef int FStoreInt;
-typedef std::string FStoreString;
 
 struct FDesc {
 	static const unsigned int _MaskDesc 		= 0x000000FF;
@@ -747,6 +744,13 @@ public:
 	//! Set Inner allocator. The pervious allocator will NOT destroy
 	int SetMembersAllocator(AllocatorType &allocator)
 	{
+		if (m_pAllocator != &allocator) {
+			// copy buffer when need
+			StoreType temp;
+			temp = *m_pBuffer;
+			m_pBuffer->CopyFrom(temp, allocator);
+		}
+
 		m_pAllocator = &allocator;
 
 		// Set allocator in members
@@ -1292,6 +1296,69 @@ private:
  **************************************************************************************************/
 
 namespace ijst{
+
+typedef unsigned char FStoreBool; 		// Could not use bool type because std::vector<bool> is not a container!
+typedef int FStoreInt;
+typedef std::string FStoreString;
+class FStoreRaw {
+public:
+	FStoreRaw()
+	{
+		m_pOwnDoc = new rapidjson::Document();
+		m_pAllocator = &m_pOwnDoc->GetAllocator();
+	}
+
+	FStoreRaw(const FStoreRaw &rhs)
+	{
+		m_pOwnDoc = new rapidjson::Document();
+		m_pAllocator = &m_pOwnDoc->GetAllocator();
+		v.CopyFrom(rhs.v, *m_pAllocator);
+	}
+
+#if __cplusplus >= 201103L
+	FStoreRaw(FStoreRaw &&rhs)
+	{
+		m_pOwnDoc = IJSTI_NULL;
+		m_pAllocator = IJSTI_NULL;
+		Steal(rhs);
+	}
+#endif
+
+	FStoreRaw &operator=(FStoreRaw rhs)
+	{
+		Steal(rhs);
+		return *this;
+	}
+
+	void Steal(FStoreRaw& raw)
+	{
+		delete m_pOwnDoc;
+		m_pOwnDoc = raw.m_pOwnDoc;
+		raw.m_pOwnDoc = IJSTI_NULL;
+
+		m_pAllocator = raw.m_pAllocator;
+		raw.m_pAllocator = IJSTI_NULL;
+		v = raw.v;
+	}
+
+	~FStoreRaw()
+	{
+		delete m_pOwnDoc;
+		m_pOwnDoc = IJSTI_NULL;
+	}
+
+	StoreType& V() {return v;}
+	const StoreType& V() const {return v;}
+	AllocatorType& GetAllocator() {return *m_pAllocator;}
+	const AllocatorType& GetAllocator() const {return *m_pAllocator;}
+
+private:
+	friend class detail::FSerializer<detail::TypeClassPrim<FType::Raw> >;
+	StoreType v;
+	AllocatorType* m_pAllocator;
+	rapidjson::Document* m_pOwnDoc;		// use pointer to make FStoreRaw be a standard-layout type
+};
+
 namespace detail {
 
 template<>
@@ -1372,6 +1439,39 @@ public:
 	}
 };
 
+template<>
+class FSerializer<TypeClassPrim<FType::Raw> > : public SerializerInterface {
+public:
+	typedef ijst::FStoreRaw VarType;
+
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+	{
+		const VarType *fieldJ = static_cast<const VarType *>(req.pField);
+		req.buffer.CopyFrom(fieldJ->V(), req.allocator);
+		return 0;
+	}
+
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+	{
+		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
+		pBuffer->v.Swap(req.stream);
+		pBuffer->m_pAllocator = &req.allocator;
+		return 0;
+	}
+
+	virtual int SetAllocator(void *pField, AllocatorType &allocator) IJSTI_OVERRIDE
+	{
+		VarType *pBuffer = static_cast<VarType *>(pField);
+		if (pBuffer->m_pAllocator == &allocator) {
+			return 0;
+		}
+		StoreType temp;
+		temp = pBuffer->v;
+		pBuffer->v.CopyFrom(temp, allocator);
+		pBuffer->m_pAllocator = &allocator;
+		return 0;
+	}
+};
 }	//namespace detail
 }	//namespace ijst
 #include "ijst_repeat_def.inc"
