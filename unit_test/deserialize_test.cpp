@@ -1,8 +1,8 @@
 //
 // Created by h46incon on 2017/9/30.
 //
-#include "gtest/gtest.h"
-#include "ijst/ijst.h"
+#include <gtest/gtest.h>
+#include <ijst/ijst.h>
 using std::vector;
 using std::map;
 using std::string;

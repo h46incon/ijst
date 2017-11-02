@@ -151,6 +151,7 @@ public:
 	{
 		// When accessing initInstanceTag in code, the GetInstance() function will be called before main
 		volatile void* dummy = initInstanceTag;
+		(void)dummy;
 	}
 
 private:
@@ -162,12 +163,12 @@ template<typename _T> void *Singleton<_T>::initInstanceTag = Singleton<_T>::GetI
 class SerializerInterface {
 public:
 	struct SerializeReq {
+		// true if need serialize all field, false if serialize only valid field
+		bool pushAllField;
+
 		// Pointer of field to serialize.
 		// The actual type of field should be decide in the derived class
 		const void* pField;
-
-		// true if need serialize all field, false if serialize only valid field
-		bool pushAllField;
 
 		// Output buffer info. The instance should serialize in this object and use allocator
 		IJST_OUT StoreType& buffer;
@@ -175,10 +176,10 @@ public:
 
 		SerializeReq(StoreType &_buffer, AllocatorType &_allocator,
 					 const void *_pField, bool _pushAllfield)
-				: buffer(_buffer)
-				, allocator(_allocator)
+				: pushAllField(_pushAllfield)
 				, pField(_pField)
-				, pushAllField(_pushAllfield)
+				, buffer(_buffer)
+				, allocator(_allocator)
 		{ }
 	};
 
@@ -196,9 +197,9 @@ public:
 		AllocatorType& allocator;
 
 		DeserializeReq(StoreType &_stream, AllocatorType &_allocator, void *_pField)
-				: stream(_stream)
+				: pFieldBuffer(_pField)
+				, stream(_stream)
 				, allocator(_allocator)
-				, pFieldBuffer(_pField)
 		{ }
 	};
 
@@ -542,7 +543,7 @@ struct MetaField { // NOLINT
 
 class MetaClass {
 public:
-	MetaClass() : mapInited(false), accessorOffset(0) { }
+	MetaClass() : accessorOffset(0), mapInited(false) { }
 
 	void PushMetaField(const std::string &name, std::size_t offset,
 					   unsigned int desc, SerializerInterface *serializerInterface)
@@ -958,8 +959,10 @@ private:
 		} while (false);
 		const rapidjson::SizeType oldCapcity = buffer.MemberCapacity();
 
-
-		std::size_t fieldSize = m_metaClass->metaFields.size();
+#ifndef NDEBUG
+		const std::size_t fieldSize = m_metaClass->metaFields.size();
+		(void)fieldSize;
+#endif
 		for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
 			 itMetaField != m_metaClass->metaFields.end(); ++itMetaField)
 		{
@@ -1071,7 +1074,6 @@ private:
 							 StoreType &buffer, AllocatorType &allocator)
 	{
 		// Init
-		const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
 		rapidjson::GenericStringRef<char> fieldNameRef =
 				rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
 		rapidjson::Value fieldNameVal;

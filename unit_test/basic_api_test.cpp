@@ -2,8 +2,8 @@
 // Created by h46incon on 2017/9/29.
 //
 
-#include "ijst/ijst.h"
-#include "gtest/gtest.h"
+#include <ijst/ijst.h>
+#include <gtest/gtest.h>
 
 namespace dummy_ns {
 IJST_DEFINE_STRUCT(

@@ -4,8 +4,8 @@
 
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-#include "gtest/gtest.h"
-#include "ijst/ijst.h"
+#include <gtest/gtest.h>
+#include <ijst/ijst.h>
 using std::vector;
 using std::map;
 using std::string;
@@ -34,7 +34,7 @@ TEST(Primitive, Int)
 
 	// Default value
 	{
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0);
+		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
 		ASSERT_EQ(st.v, 0);
 	}
 
@@ -96,7 +96,7 @@ TEST(Primitive, Bool)
 
 	// Default value
 	{
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0);
+		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
 		ASSERT_EQ(st.v, 0);
 	}
 
@@ -157,7 +157,7 @@ TEST(Primitive, String)
 	StString st;
 	// Default value
 	{
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0);
+		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
 		ASSERT_TRUE(st.v.empty());
 	}
 
@@ -214,7 +214,7 @@ TEST(Primitive, Raw)
 	StRaw st;
 	// Default value
 	{
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0);
+		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
 		ASSERT_TRUE(st.v.V().IsNull());
 	}
 

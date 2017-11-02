@@ -4,8 +4,8 @@
 
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-#include "gtest/gtest.h"
-#include "ijst/ijst.h"
+#include <gtest/gtest.h>
+#include <ijst/ijst.h>
 using std::vector;
 using std::map;
 using std::string;
@@ -46,7 +46,7 @@ TEST(Serialize, EmptyStruct_PushAllField)
 	rapidjson::Value jVal;
 	int ret = nestSt._.SerializeInInnerAlloc(true, jVal);
 	ASSERT_EQ(ret, 0);
-	ASSERT_EQ(nestSt._.GetBuffer().MemberCount(), 0);
+	ASSERT_EQ(nestSt._.GetBuffer().MemberCount(), 0u);
 
 	// Check
 	ASSERT_TRUE(jVal["vec_val_1"].IsArray());
@@ -59,7 +59,7 @@ TEST(Serialize, EmptyStruct_PushAllField)
 	ASSERT_STREQ(jVal["inner_val_1"]["str_val_2"].GetString(), "");
 
 	ASSERT_TRUE(jVal["map_val_1"].IsObject());
-	ASSERT_EQ(jVal["map_val_1"].MemberCount(), 0);
+	ASSERT_EQ(jVal["map_val_1"].MemberCount(), 0u);
 
 	ASSERT_TRUE(jVal["vec_val_2"].IsArray());
 	ASSERT_TRUE(jVal["vec_val_2"].Empty());
@@ -107,7 +107,7 @@ TEST(Serialize, AdditionalJsonField)
 	// Serialize in place
 	rapidjson::Value jVal2;
 	ret = st._.SerializeInInnerAlloc(true, jVal2);
-	ASSERT_EQ(st._.GetBuffer().MemberCount(), 0);
+	ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
 	ASSERT_EQ(ret, 0);
 	ASSERT_STREQ(jVal2["addi_o1"].GetString(), "str_o1");
 	ASSERT_STREQ(jVal2["inner_val"]["addi_i1"].GetString(), "str_i1");
