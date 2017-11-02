@@ -597,3 +597,82 @@ TEST(Primitive, Raw_BasicAPI)
 	}
 #endif
 }
+
+IJST_DEFINE_STRUCT(
+		StTime,
+		(IJST_TPRI(Time), v, "f_v", 0),
+		(IJST_TVEC(IJST_TPRI(Time)), vec_v, "f_vec", 0),
+		(IJST_TMAP(IJST_TPRI(Time)), map_v, "f_map", 0)
+)
+
+TEST(Primitive, Time)
+{
+	int ret;
+
+	// Deserialize error
+	{
+		const int retExpected = ijst::Err::kDeserializeValueTypeError;
+		StTime stErr;
+		string errorJson;
+
+		errorJson = "{\"f_v\": 0}";
+		ret = stErr._.Deserialize(errorJson, 0);
+		ASSERT_EQ(ret, retExpected);
+
+		errorJson = "{\"f_v\": \"2000-10-10 00:00:\"}";
+		ret = stErr._.Deserialize(errorJson, 0);
+		ASSERT_EQ(ret, retExpected);
+
+		errorJson = "{\"f_v\": \"2000-10-10 00:00:a\"}";
+		ret = stErr._.Deserialize(errorJson, 0);
+		ASSERT_EQ(ret, retExpected);
+
+		errorJson = "{\"f_v\": \"2000-10-1000:00:00\"}";
+		ret = stErr._.Deserialize(errorJson, 0);
+		ASSERT_EQ(ret, retExpected);
+
+		errorJson = "{\"f_v\": \"2000-10-1000:00:00a\"}";
+		ret = stErr._.Deserialize(errorJson, 0);
+		ASSERT_EQ(ret, retExpected);
+	}
+
+	StTime st;
+	// Default value
+	{
+		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
+		ASSERT_EQ(st.v, 0);
+	}
+
+	// Deserialize
+	{
+		string json = "{\"f_v\": \"0-1-1 0:0:0\", \"f_vec\": [\"2000-01-01 00:00:00\", \"2038-1-19 3:14:07\"], "
+				"\"f_map\": {\"v1\": \"2038-01-19 03:14:08\", \"v2\": \"9999-12-31 23:59:59\"}}";
+		ret = st._.Deserialize(json, 0);
+		ASSERT_EQ(ret, 0);
+		ASSERT_EQ(st.v, -62167248000);
+		ASSERT_EQ(st.vec_v[0], 946656000);
+		ASSERT_EQ(st.vec_v[1], 2147454847);
+		ASSERT_EQ(st.map_v["v1"], 2147454848);
+		ASSERT_EQ(st.map_v["v2"], 253402271999);
+	}
+
+	// Serialize
+	{
+		IJST_SET(st, v, -62167248000 + 1);
+		st.vec_v[0] = 0;
+		st.vec_v.push_back(2147454848);
+		st.map_v["v1"] = 1;
+		st.map_v["v3"] = 2147454849;
+
+		rapidjson::Value jVal;
+		ret = st._.SerializeInInnerAlloc(false, jVal);
+		ASSERT_EQ(ret, 0);
+		ASSERT_STREQ(jVal["f_v"].GetString(), "0000-01-01 00:00:01");
+		ASSERT_STREQ(jVal["f_vec"][0].GetString(), "1970-01-01 08:00:00");
+		ASSERT_STREQ(jVal["f_vec"][1].GetString(), "2038-01-19 03:14:07");
+		ASSERT_STREQ(jVal["f_vec"][2].GetString(), "2038-01-19 03:14:08");
+		ASSERT_STREQ(jVal["f_map"]["v1"].GetString(), "1970-01-01 08:00:01");
+		ASSERT_STREQ(jVal["f_map"]["v2"].GetString(), "9999-12-31 23:59:59");
+		ASSERT_STREQ(jVal["f_map"]["v3"].GetString(), "2038-01-19 03:14:09");
+	}
+}

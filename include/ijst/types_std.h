@@ -8,6 +8,7 @@
 
 #include "ijst.h"
 #include <cstdint>
+#include <ctime>
 
 #define IJST_TPRI(_T)	::ijst::detail::TypeClassPrim< ::ijst::FType::_T>
 
@@ -24,6 +25,7 @@ public:
 		Int64,
 		String,
 		Raw,
+		Time,
 	};
 };
 
@@ -44,6 +46,8 @@ typedef std::uint64_t FStoreUInt64;
 typedef std::int32_t FStoreInt32;
 typedef std::int64_t FStoreInt64;
 typedef std::string FStoreString;
+typedef std::time_t FStoreTime;
+
 class FStoreRaw {
 public:
 	FStoreRaw()
@@ -317,6 +321,51 @@ public:
 		temp = pBuffer->v;
 		pBuffer->v.CopyFrom(temp, allocator);
 		pBuffer->m_pAllocator = &allocator;
+		return 0;
+	}
+};
+
+template<>
+class FSerializer<TypeClassPrim<FType::Time> > : public SerializerInterface {
+public:
+	typedef ijst::FStoreTime VarType;
+
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+	{
+		const VarType *fieldI = static_cast<const VarType *>(req.pField);
+		tm *p = localtime(fieldI);
+		char strBuf[32];
+		snprintf(strBuf, 49, "%04d-%02d-%02d %02d:%02d:%02d", p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour,
+				 p->tm_min, p->tm_sec
+		);
+		req.buffer.SetString(strBuf, req.allocator);
+		return 0;
+	}
+
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+	{
+		if (!req.stream.IsString()) {
+			resp.fStatus = FStatus::kParseFailed;
+			resp.SetErrMsg("Value is not Int64");
+			return Err::kDeserializeValueTypeError;
+		}
+
+		tm t;
+		int matched = sscanf(req.stream.GetString(),
+							 "%d-%d-%d %d:%d:%d",
+							 &t.tm_year, &t.tm_mon, &t.tm_mday, &t.tm_hour, &t.tm_min, &t.tm_sec
+		);
+		if (matched != 6) {
+			resp.fStatus = FStatus::kParseFailed;
+			resp.SetErrMsg("Value is string but not a time format");
+			return Err::kDeserializeValueTypeError;
+		}
+		t.tm_year -= 1900;
+		t.tm_mon -= 1;
+		t.tm_isdst = 0;
+
+		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
+		*pBuffer = mktime(&t);
 		return 0;
 	}
 };

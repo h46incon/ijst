@@ -1093,7 +1093,7 @@ private:
 					m_metaClass->mapName.find(fieldName);
 
 			if (itMetaField == m_metaClass->mapName.end()) {
-				// TODO: This is relay on the implementation details of rapidjson's storage, how to check?
+				// TODO: This is relay on the implementation details of rapidjson's object storage (array), how to check?
 				// Not a field in struct
 				if (itNextRemain != itMember) {
 					IJSTI_STORE_MOVE(*itNextRemain, *itMember);
