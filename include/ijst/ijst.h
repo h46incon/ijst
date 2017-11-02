@@ -16,6 +16,7 @@
 #include <map>
 #include <cassert>
 #include <sstream>
+#include <cstdint>
 
 /**	========================================================================================
  *				Public Interface
@@ -40,7 +41,6 @@
 namespace ijst {
 
 typedef rapidjson::Value StoreType;
-//typedef rapidjson::GenericDocument::AllocatorType 	AllocatorType;
 typedef rapidjson::MemoryPoolAllocator<> 	AllocatorType;
 
 struct FType {
@@ -48,6 +48,10 @@ public:
 	enum _E {
 		Bool,
 		Int,
+		UInt32,
+		UInt64,
+		Int32,
+		Int64,
 		String,
 		Raw,
 	};
@@ -1301,6 +1305,10 @@ namespace ijst{
 
 typedef unsigned char FStoreBool; 		// Could not use bool type because std::vector<bool> is not a container!
 typedef int FStoreInt;
+typedef std::uint32_t FStoreUInt32;
+typedef std::uint64_t FStoreUInt64;
+typedef std::int32_t FStoreInt32;
+typedef std::int64_t FStoreInt64;
 typedef std::string FStoreString;
 class FStoreRaw {
 public:
@@ -1411,6 +1419,110 @@ public:
 
 		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
 		*pBuffer = req.stream.GetInt();
+		return 0;
+	}
+};
+
+template<>
+class FSerializer<TypeClassPrim<FType::UInt32> > : public SerializerInterface {
+public:
+	typedef ijst::FStoreUInt32 VarType;
+
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+	{
+		const VarType *fieldI = static_cast<const VarType *>(req.pField);
+		req.buffer.SetUint(*fieldI);
+		return 0;
+	}
+
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+	{
+		if (!req.stream.IsUint()) {
+			resp.fStatus = FStatus::kParseFailed;
+			resp.SetErrMsg("Value is not Int");
+			return Err::kDeserializeValueTypeError;
+		}
+
+		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
+		*pBuffer = req.stream.GetUint();
+		return 0;
+	}
+};
+
+template<>
+class FSerializer<TypeClassPrim<FType::UInt64> > : public SerializerInterface {
+public:
+	typedef ijst::FStoreUInt64 VarType;
+
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+	{
+		const VarType *fieldI = static_cast<const VarType *>(req.pField);
+		req.buffer.SetUint64(*fieldI);
+		return 0;
+	}
+
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+	{
+		if (!req.stream.IsUint64()) {
+			resp.fStatus = FStatus::kParseFailed;
+			resp.SetErrMsg("Value is not Int");
+			return Err::kDeserializeValueTypeError;
+		}
+
+		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
+		*pBuffer = req.stream.GetUint64();
+		return 0;
+	}
+};
+
+template<>
+class FSerializer<TypeClassPrim<FType::Int32> > : public SerializerInterface {
+public:
+	typedef ijst::FStoreInt32 VarType;
+
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+	{
+		const VarType *fieldI = static_cast<const VarType *>(req.pField);
+		req.buffer.SetInt(*fieldI);
+		return 0;
+	}
+
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+	{
+		if (!req.stream.IsInt()) {
+			resp.fStatus = FStatus::kParseFailed;
+			resp.SetErrMsg("Value is not Int");
+			return Err::kDeserializeValueTypeError;
+		}
+
+		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
+		*pBuffer = req.stream.GetInt();
+		return 0;
+	}
+};
+
+template<>
+class FSerializer<TypeClassPrim<FType::Int64> > : public SerializerInterface {
+public:
+	typedef ijst::FStoreInt64 VarType;
+
+	virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+	{
+		const VarType *fieldI = static_cast<const VarType *>(req.pField);
+		req.buffer.SetInt64(*fieldI);
+		return 0;
+	}
+
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+	{
+		if (!req.stream.IsInt64()) {
+			resp.fStatus = FStatus::kParseFailed;
+			resp.SetErrMsg("Value is not Int");
+			return Err::kDeserializeValueTypeError;
+		}
+
+		VarType *pBuffer = static_cast<VarType *>(req.pFieldBuffer);
+		*pBuffer = req.stream.GetInt64();
 		return 0;
 	}
 };

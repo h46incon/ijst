@@ -3,6 +3,7 @@ project(IJST)
 
 set(CMAKE_CXX_STANDARD 11)
 add_definitions(-Wall)
+#add_definitions(-ftime-report)
 
 include_directories(
         include
