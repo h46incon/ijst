@@ -6,6 +6,8 @@
 #include <rapidjson/writer.h>
 #include <gtest/gtest.h>
 #include <ijst/ijst.h>
+#include <ijst/types_std.h>
+
 using std::vector;
 using std::map;
 using std::string;

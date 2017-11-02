@@ -3,6 +3,7 @@
 //
 
 #include <ijst/ijst.h>
+#include <ijst/types_std.h>
 #include <gtest/gtest.h>
 
 namespace dummy_ns {
