@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 #include <ijst/ijst.h>
 #include <ijst/types_std.h>
+#include <ijst/types_time.h>
 #include <limits>
 using std::vector;
 using std::map;
@@ -600,9 +601,9 @@ TEST(Primitive, Raw_BasicAPI)
 
 IJST_DEFINE_STRUCT(
 		StTime,
-		(IJST_TPRI(Time), v, "f_v", 0),
-		(IJST_TVEC(IJST_TPRI(Time)), vec_v, "f_vec", 0),
-		(IJST_TMAP(IJST_TPRI(Time)), map_v, "f_map", 0)
+		(IJST_TIME(), v, "f_v", 0),
+		(IJST_TVEC(IJST_TIME()), vec_v, "f_vec", 0),
+		(IJST_TMAP(IJST_TIME()), map_v, "f_map", 0)
 )
 
 TEST(Primitive, Time)
