@@ -619,7 +619,7 @@ TEST(Primitive, Time)
 		ret = stErr._.Deserialize(errorJson, 0);
 		ASSERT_EQ(ret, retExpected);
 
-		errorJson = "{\"f_v\": \"2000-10-10 00:00:\"}";
+		errorJson = "{\"f_v\": \"2000-10-10 00:00: \"}";
 		ret = stErr._.Deserialize(errorJson, 0);
 		ASSERT_EQ(ret, retExpected);
 
@@ -631,7 +631,15 @@ TEST(Primitive, Time)
 		ret = stErr._.Deserialize(errorJson, 0);
 		ASSERT_EQ(ret, retExpected);
 
-		errorJson = "{\"f_v\": \"2000-10-1000:00:00a\"}";
+		errorJson = "{\"f_v\": \"2000-10-10 00:00:00a\"}";
+		ret = stErr._.Deserialize(errorJson, 0);
+		ASSERT_EQ(ret, retExpected);
+
+		errorJson = "{\"f_v\": \"2000-10-10 00:00:00 a\"}";
+		ret = stErr._.Deserialize(errorJson, 0);
+		ASSERT_EQ(ret, retExpected);
+
+		errorJson = "{\"f_v\": \"2000-10-10 00:00:00 a b \"}";
 		ret = stErr._.Deserialize(errorJson, 0);
 		ASSERT_EQ(ret, retExpected);
 	}
@@ -645,7 +653,7 @@ TEST(Primitive, Time)
 
 	// Deserialize
 	{
-		string json = "{\"f_v\": \"0-1-1 0:0:0\", \"f_vec\": [\"2000-01-01 00:00:00\", \"2038-1-19 3:14:07\"], "
+		string json = "{\"f_v\": \"0-1-1 0:0:0\", \"f_vec\": [\"  2000-01-01  00:00:00  \", \" 2038-1-19   3:14:7 \"], "
 				"\"f_map\": {\"v1\": \"2038-01-19 03:14:08\", \"v2\": \"9999-12-31 23:59:59\"}}";
 		ret = st._.Deserialize(json, 0);
 		ASSERT_EQ(ret, 0);

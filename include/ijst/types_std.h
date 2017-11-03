@@ -351,9 +351,11 @@ public:
 		}
 
 		tm t;
+		// use a dummy to check if any not-whitespace trailing
+		char dummy;
 		int matched = sscanf(req.stream.GetString(),
-							 "%d-%d-%d %d:%d:%d",
-							 &t.tm_year, &t.tm_mon, &t.tm_mday, &t.tm_hour, &t.tm_min, &t.tm_sec
+							 "%d-%d-%d %d:%d:%d %c",
+							 &t.tm_year, &t.tm_mon, &t.tm_mday, &t.tm_hour, &t.tm_min, &t.tm_sec, &dummy
 		);
 		if (matched != 6) {
 			resp.fStatus = FStatus::kParseFailed;
