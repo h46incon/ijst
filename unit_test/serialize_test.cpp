@@ -16,15 +16,15 @@ IJST_DEFINE_STRUCT(
 		Inner,
 		(IJST_TPRI(Int), int_1, "int_val_1", 0),
 		(IJST_TPRI(Int), int_2, "int_val_2", 0),
-		(IJST_TPRI(String), str_1, "str_val_1", 0),
-		(IJST_TPRI(String), str_2, "str_val_2", 0)
+		(IJST_TPRI(Str), str_1, "str_val_1", 0),
+		(IJST_TPRI(Str), str_2, "str_val_2", 0)
 )
 
 IJST_DEFINE_STRUCT(
 		NestSt,
 		(IJST_TVEC(IJST_TPRI(Int)), vec_1, "vec_val_1", 0),
 		(IJST_TOBJ(Inner), inner_1, "inner_val_1", 0),
-		(IJST_TMAP(IJST_TPRI(String)), map_1, "map_val_1", 0),
+		(IJST_TMAP(IJST_TPRI(Str)), map_1, "map_val_1", 0),
 		(IJST_TVEC(IJST_TOBJ(Inner)), vec_2, "vec_val_2", 0)
 )
 
@@ -127,8 +127,8 @@ IJST_DEFINE_STRUCT(
 IJST_DEFINE_STRUCT(
 		Complicate2,
 		(IJST_TOBJ(Complicate1), c1, "c1_v", 0),
-		(IJST_TVEC(IJST_TMAP(IJST_TPRI(String))), vms, "vms_v", 0),
-		(IJST_TMAP(IJST_TVEC(IJST_TPRI(String))), mvs, "mvs_v", 0),
+		(IJST_TVEC(IJST_TMAP(IJST_TPRI(Str))), vms, "vms_v", 0),
+		(IJST_TMAP(IJST_TVEC(IJST_TPRI(Str))), mvs, "mvs_v", 0),
 		(IJST_TMAP(IJST_TMAP(IJST_TOBJ(Inner))), mmo, "mmo_v", 0)
 )
 

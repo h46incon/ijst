@@ -22,7 +22,7 @@ namespace ijst{
 			UInt64,
 			Int32,
 			Int64,
-			String,
+			Str,
 			Raw,
 		};
 	};
@@ -263,7 +263,7 @@ namespace ijst{
 		};
 
 		template<>
-		class FSerializer<TypeClassPrim<FType::String> > : public SerializerInterface {
+		class FSerializer<TypeClassPrim<FType::Str> > : public SerializerInterface {
 		public:
 			typedef ijst::FStoreString VarType;
 

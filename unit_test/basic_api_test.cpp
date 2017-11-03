@@ -11,8 +11,8 @@ IJST_DEFINE_STRUCT(
 		SimpleSt,
 		(IJST_TPRI(Int), int_1, "int_val_1", 0),
 		(IJST_TPRI(Int), int_2, "int_val_2", 0),
-		(IJST_TPRI(String), str_1, "str_val_1", 0),
-		(IJST_TPRI(String), str_2, "str_val_2", 0)
+		(IJST_TPRI(Str), str_1, "str_val_1", 0),
+		(IJST_TPRI(Str), str_2, "str_val_2", 0)
 )
 
 TEST(BasicAPI, FieldStatus)
@@ -197,8 +197,8 @@ struct DummySt {
 			SimpleSt,
 			(IJST_TPRI(Int), int_1, "int_val_1", 0),
 			(IJST_TPRI(Int), int_2, "int_val_2", 0),
-			(IJST_TPRI(String), str_1, "str_val_1", 0),
-			(IJST_TPRI(String), str_2, "str_val_2", 0)
+			(IJST_TPRI(Str), str_1, "str_val_1", 0),
+			(IJST_TPRI(Str), str_2, "str_val_2", 0)
 	)
 };
 

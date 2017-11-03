@@ -421,12 +421,12 @@ TEST(Primitive, Bool)
 
 IJST_DEFINE_STRUCT(
 		StString,
-		(IJST_TPRI(String), v, "f_v", 0),
-		(IJST_TVEC(IJST_TPRI(String)), vec_v, "f_vec", 0),
-		(IJST_TMAP(IJST_TPRI(String)), map_v, "f_map", 0)
+		(IJST_TPRI(Str), v, "f_v", 0),
+		(IJST_TVEC(IJST_TPRI(Str)), vec_v, "f_vec", 0),
+		(IJST_TMAP(IJST_TPRI(Str)), map_v, "f_map", 0)
 )
 
-TEST(Primitive, String)
+TEST(Primitive, Str)
 {
 	int ret;
 
