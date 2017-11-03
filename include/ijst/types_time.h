@@ -9,7 +9,7 @@
 #include "ijst.h"
 #include <ctime>
 
-#define IJST_TIME()				::ijst::detail::TypeClassTime
+#define IJST_TTIME()				::ijst::detail::TypeClassTime
 #define IJST_TFTIME(_TimeZone)	::ijst::detail::TypeClassFastTime< _TimeZone>
 
 namespace ijst{

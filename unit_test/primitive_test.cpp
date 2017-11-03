@@ -601,9 +601,9 @@ TEST(Primitive, Raw_BasicAPI)
 
 IJST_DEFINE_STRUCT(
 		StTime,
-		(IJST_TIME(), v, "f_v", 0),
-		(IJST_TVEC(IJST_TIME()), vec_v, "f_vec", 0),
-		(IJST_TMAP(IJST_TIME()), map_v, "f_map", 0)
+		(IJST_TTIME(), v, "f_v", 0),
+		(IJST_TVEC(IJST_TTIME()), vec_v, "f_vec", 0),
+		(IJST_TMAP(IJST_TTIME()), map_v, "f_map", 0)
 )
 
 TEST(Primitive, Time)
