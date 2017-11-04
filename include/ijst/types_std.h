@@ -7,11 +7,21 @@
 #define	_IJST_TYPES_STD_HPP_INCLUDE_
 
 #include "ijst.h"
-#include <cstdint>
+#if __cplusplus >= 201103L
+	#include <cstdint>
+#else
+	#include <stdint.h>
+#endif
 
 #define IJST_TPRI(_T)	::ijst::detail::TypeClassPrim< ::ijst::FType::_T>
 
 namespace ijst{
+	#if __cplusplus >= 201103L
+		using std::uint32_t;
+		using std::uint64_t;
+		using std::int32_t;
+		using std::int64_t;
+	#endif
 
 	struct FType {
 	public:
@@ -36,10 +46,10 @@ namespace ijst{
 
 	typedef unsigned char FStoreBool; 		// Could not use bool type because std::vector<bool> is not a container!
 	typedef int FStoreInt;
-	typedef std::uint32_t FStoreUInt32;
-	typedef std::uint64_t FStoreUInt64;
-	typedef std::int32_t FStoreInt32;
-	typedef std::int64_t FStoreInt64;
+		typedef uint32_t FStoreUInt32;
+		typedef uint64_t FStoreUInt64;
+		typedef int32_t FStoreInt32;
+		typedef int64_t FStoreInt64;
 	typedef std::string FStoreString;
 
 	class FStoreRaw {

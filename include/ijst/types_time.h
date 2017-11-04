@@ -8,14 +8,22 @@
 
 #include "ijst.h"
 #include <ctime>
+#if __cplusplus >= 201103L
+	#include <cstdint>
+#else
+	#include <stdint.h>
+#endif
 
 #define IJST_TTIME()				::ijst::detail::TypeClassTime
 #define IJST_TFTIME(_TimeZone)	::ijst::detail::TypeClassFastTime< _TimeZone>
 
 namespace ijst{
+	#if __cplusplus >= 201103L
+		using std::int64_t;
+	#endif
 
 	typedef std::time_t FStoreTime;
-	typedef std::int64_t FStoreFastTime;
+		typedef int64_t FStoreFastTime;
 
 	namespace detail{
 		struct TypeClassTime {
@@ -58,8 +66,8 @@ namespace ijst{
 		}	// namespace fasttime::detail
 
 		//! Return time stamp form 1970-01-01 00:00:00
-		template <int _Dummy = 0>
-		std::int64_t Mktime(int year, int mon, int day, int hour, int min, int sec)
+		template <int _Dummy>
+		int64_t Mktime(int year, int mon, int day, int hour, int min, int sec)
 		{
 			// 1..12 -> 11,12,1..10
 			if (0 >= (mon -= 2))
@@ -68,7 +76,7 @@ namespace ijst{
 				year -= 1;
 			}
 
-			return ((((std::int64_t)
+			return ((((int64_t)
 							  (year/4 - year/100 + year/400 + 367*mon/12 + day) +
 					  year*365 - 719499
 					 )*24 + hour /* now have hours - midnight tomorrow handled here */
@@ -77,8 +85,8 @@ namespace ijst{
 
 		}
 
-		template <int _Dummy = 0>
-		void ParseTimeStamp(std::int64_t timeStamp,
+		template <int _Dummy>
+		void ParseTimeStamp(int64_t timeStamp,
 							IJST_OUT int& yearOut, IJST_OUT int& monOut, IJST_OUT int& dayOut,
 							IJST_OUT int& hourOut, IJST_OUT int& minOut, IJST_OUT int& secOut)
 		{
@@ -93,7 +101,7 @@ namespace ijst{
 					{0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366}
 			};
 
-			std::int64_t days, rem, remainder;
+			int64_t days, rem, remainder;
 			const unsigned short *ip;
 
 			if (timeStamp >= 0) {
@@ -202,8 +210,8 @@ namespace ijst{
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				int year, mon, day, hour, min, sec;
-				const std::int64_t utcTimeStamp = *pField + kTimeZone * 3600;
-				fasttime::ParseTimeStamp(utcTimeStamp, year, mon, day, hour, min, sec);
+				const int64_t utcTimeStamp = *pField + kTimeZone * 3600;
+				fasttime::ParseTimeStamp<0>(utcTimeStamp, year, mon, day, hour, min, sec);
 				char strBuf[32];
 				snprintf(strBuf, 32, "%04d-%02d-%02d %02d:%02d:%02d", year, mon, day, hour, min, sec);
 				req.buffer.SetString(strBuf, req.allocator);
@@ -231,7 +239,7 @@ namespace ijst{
 					return Err::kDeserializeValueTypeError;
 				}
 
-				std::int64_t timeStamp = fasttime::Mktime(year, mon, day, hour, min, sec);
+				int64_t timeStamp = fasttime::Mktime<0>(year, mon, day, hour, min, sec);
 				VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 				*pField = timeStamp - kTimeZone * 3600;
 				return 0;
