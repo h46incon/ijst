@@ -10,12 +10,13 @@
 #include <rapidjson/writer.h>
 #include <rapidjson/error/en.h>
 
-#include <string>
-#include <vector>
-#include <stdexcept>
-#include <map>
+#include <cstddef>
 #include <cassert>
+#include <map>
+#include <vector>
+#include <string>
 #include <sstream>
+#include <stdexcept>
 
 /**	========================================================================================
  *				Public Interface

@@ -7,6 +7,7 @@
 #define	_IJST_TYPES_TIME_HPP_INCLUDE_
 
 #include "ijst.h"
+#include <cstdio>
 #include <ctime>
 #if __cplusplus >= 201103L
 	#include <cstdint>
