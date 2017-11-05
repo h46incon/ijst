@@ -19,12 +19,8 @@
 #define IJST_TFTIME(_TimeZone)	::ijst::detail::TypeClassFastTime< _TimeZone>
 
 namespace ijst{
-	#if __cplusplus >= 201103L
-		using std::int64_t;
-	#endif
-
 	typedef std::time_t FStoreTime;
-		typedef int64_t FStoreFastTime;
+	typedef int64_t FStoreFastTime;
 
 	namespace detail{
 		struct TypeClassTime {
