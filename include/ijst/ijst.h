@@ -226,14 +226,15 @@ namespace ijst {
 				}
 
 				template<typename _T>
-				bool CombineErrMsg(const _T & errMsg, const DeserializeResp& childResp)
+				bool CombineErrMsg(const _T & _errMsg, const DeserializeResp& childResp)
 				{
 					if (!needErrMsg) {
 						return false;
 					}
 
 					std::stringstream oss;
-					oss << errMsg << "[" << childResp.errMsg << "]";
+					oss << _errMsg << "[" << childResp.errMsg << "]";
+					errMsg = oss.str();
 					return true;
 				}
 			};
@@ -567,10 +568,10 @@ namespace ijst {
 					const MetaField *ptrMetaField = &(metaFields[i]);
 					// Check key exist
 					if (IJSTI_UNLIKELY(mapName.find(ptrMetaField->name) != mapName.end())) {
-						throw std::runtime_error("MetaClass's name conflict:" + ptrMetaField->name);
+						throw std::runtime_error("MetaClass's field name conflict:" + ptrMetaField->name);
 					}
 					if (IJSTI_UNLIKELY(mapOffset.find(ptrMetaField->offset) != mapOffset.end())) {
-						throw std::runtime_error("MetaClass's offset conflict:" + ptrMetaField->offset);
+						throw std::runtime_error("MetaClass's field offset conflict:" + ptrMetaField->offset);
 					}
 
 					mapName[ptrMetaField->name] = ptrMetaField;
@@ -858,17 +859,25 @@ namespace ijst {
 				return DoDeserializeWrap(errMsg);
 			}
 
-			bool WriteInnerBuffer(IJST_OUT std::string &strOutput)
+			int SerializeToString(bool pushAllField, IJST_OUT std::string &strOutput)
 			{
+				StoreType store;
+				int ret = SerializeInInnerAlloc(pushAllField, IJST_OUT store);
+				if (ret != 0) {
+					return ret;
+				}
 				rapidjson::StringBuffer buffer;
 				buffer.Clear();
 				rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-				bool bSucc = m_pBuffer->Accept(writer);
+				bool bSucc = store.Accept(writer);
 				if (IJSTI_LIKELY(bSucc))
 				{
 					strOutput = std::string(buffer.GetString(), buffer.GetSize());
+					return 0;
 				}
-				return bSucc;
+				else {
+					return Err::kInnerError;
+				}
 			}
 
 		private:
@@ -1176,7 +1185,7 @@ namespace ijst {
 				if (hasErr)
 				{
 					resp.needErrMsg &&
-					resp.SetErrMsg("Some fields are invalid: " + invalidNameOss.str());
+						resp.SetErrMsg("Some fields are invalid: " + invalidNameOss.str());
 					return Err::kDeserializeSomeFiledsInvalid;
 				}
 				return 0;
@@ -1263,6 +1272,7 @@ namespace ijst {
 				static void InitMetaInfo(MetaInfoT* metaInfo)										\
 				{																					\
 					IJSTI_TRY_INIT_META_BEFORE_MAIN(MetaInfoT);										\
+					/*Do not call MetaInfoS::GetInstance() before int this function*/ 				\
 					metaInfo->metaClass.tag = #stName;												\
 					metaInfo->metaClass.accessorOffset = offsetof(stName, _);						\
 					metaInfo->metaClass.metaFields.reserve(N);
