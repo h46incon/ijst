@@ -22,6 +22,12 @@
  *				Public Interface
  */
 
+//! if define IJST_AUTO_META_INIT before include this header, the meta class information will init before main.
+//! That's will make it thread-safe to init meta class information before C++11.
+//! The feature is enable default before C++11. So set the value to 0 to force disable it.
+//#define IJST_AUTO_META_INIT
+//#define IJST_AUTO_META_INIT		0
+
 #define IJST_OUT
 #define IJST_INOUT
 
@@ -72,6 +78,11 @@ namespace ijst {
 	 *				Inner Interface
 	 */
 	namespace detail {
+		#if __cplusplus < 201103L
+		#ifndef IJST_AUTO_META_INIT
+			#define IJST_AUTO_META_INIT		1
+		#endif
+		#endif
 
 		// LIKELY and UNLIKELY
 		#if defined(__GNUC__) || defined(__clang__)
@@ -100,6 +111,12 @@ namespace ijst {
 			#define IJSTI_MOVE(val) 	(val)
 			#define IJSTI_NULL 			0
 			#define IJSTI_OVERRIDE
+		#endif
+
+		#if IJST_AUTO_META_INIT
+			#define IJSTI_TRY_INIT_META_BEFORE_MAIN(_T)			::ijst::detail::Singleton< _T>::InitInstanceBeforeMain();
+		#else
+			#define IJSTI_TRY_INIT_META_BEFORE_MAIN(_T)
 		#endif
 
 		template<class _T>
@@ -575,12 +592,11 @@ namespace ijst {
 		/**
 		 * Reflection info
 		 * Push meta class info of _T in specialized constructor MetaInfo<_T>()
-		 * @tparam _T: class
+		 * @tparam _T: class. Concept require _T::InitMetaInfo(MetaInfo*)
 		 */
 		template<class _T>
 		class MetaInfo {
 		public:
-			typedef _T FieldType;
 			MetaClass metaClass;
 
 		private:
@@ -1246,7 +1262,7 @@ namespace ijst {
 				friend MetaInfoT;																	\
 				static void InitMetaInfo(MetaInfoT* metaInfo)										\
 				{																					\
-					MetaInfoS::InitInstanceBeforeMain();											\
+					IJSTI_TRY_INIT_META_BEFORE_MAIN(MetaInfoT);										\
 					metaInfo->metaClass.tag = #stName;												\
 					metaInfo->metaClass.accessorOffset = offsetof(stName, _);						\
 					metaInfo->metaClass.metaFields.reserve(N);
