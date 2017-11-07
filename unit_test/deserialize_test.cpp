@@ -138,3 +138,53 @@ TEST(Deserialize, NullValue)
 	}
 }
 
+
+IJST_DEFINE_STRUCT(
+		NotEmptySt
+		, (IJST_TVEC(IJST_TPRI(Int)), vec_v, "vec", ijst::FDesc::ElemNotEmpty | ijst::FDesc::Optional)
+		, (IJST_TMAP(IJST_TPRI(Int)), map_v, "map", ijst::FDesc::ElemNotEmpty | ijst::FDesc::Optional)
+)
+
+TEST(Deserialize, NotEmpty)
+{
+	NotEmptySt st;
+	int ret;
+	int retExpected;
+
+	// Field empty
+	{
+		string json = "{}";
+		ret = st._.Deserialize(json, 0);
+		ASSERT_EQ(ret, 0);
+	}
+
+	// vec elem empty
+	{
+		string json = "{\"vec\": [], \"map\": {\"v\": 1}}";
+		ret = st._.Deserialize(json, 0);
+		retExpected = ijst::Err::kDeserializeElemEmpty;
+		ASSERT_EQ(ret, retExpected);
+	}
+
+	// map elem empty
+	{
+		string json = "{\"vec\": [1], \"map\": {}}";
+		ret = st._.Deserialize(json, 0);
+		retExpected = ijst::Err::kDeserializeElemEmpty;
+		ASSERT_EQ(ret, retExpected);
+	}
+
+	// vec valid
+	{
+		string json = "{\"vec\": [1]}";
+		ret = st._.Deserialize(json, 0);
+		ASSERT_EQ(ret, 0);
+	}
+
+	// map valid
+	{
+		string json = "{\"map\": {\"v\": 1}}";
+		ret = st._.Deserialize(json, 0);
+		ASSERT_EQ(ret, 0);
+	}
+}

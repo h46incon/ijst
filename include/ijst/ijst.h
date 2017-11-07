@@ -52,6 +52,7 @@ namespace ijst {
 		static const unsigned int Optional 			= 0x00000001;
 		static const unsigned int Nullable 			= 0x00000002;
 		// Element nullable is hard to represent, has not plan to implement it
+		static const unsigned int ElemNotEmpty 		= 0x00000004;
 	};
 
 	struct FStatus {
@@ -70,7 +71,7 @@ namespace ijst {
 		static const int kDeserializeValueTypeError 	= 0x00001001;
 		static const int kDeserializeSomeFiledsInvalid 	= 0x00001002;
 		static const int kDeserializeParseFaild 		= 0x00001003;
-		static const int kDeserializeElemSizeError 		= 0x00001004;
+		static const int kDeserializeElemEmpty 			= 0x00001004;
 		static const int kInnerError 					= 0x00002001;
 	};
 
@@ -881,12 +882,13 @@ namespace ijst {
 			}
 
 		private:
+			//region Implement SerializeInterface
+			template <class _T> friend class FSerializer;
 			typedef SerializerInterface::SerializeReq SerializeReq;
 			typedef SerializerInterface::SerializeResp SerializeResp;
 			typedef SerializerInterface::DeserializeReq DeserializeReq;
 			typedef SerializerInterface::DeserializeResp DeserializeResp;
 
-			//region Implement SerializeInterface
 			inline int ISerialize(const SerializeReq &req, SerializeResp &resp)
 			{
 				assert(req.pField == this);
@@ -1136,13 +1138,22 @@ namespace ijst {
 						DeserializeReq elemReq(memberStream, *m_pAllocator, pField);
 						DeserializeResp elemResp(resp.needErrMsg);
 						int ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
+						// Check return
 						if (ret != 0) {
 							m_fieldStatus[metaField->offset] = FStatus::kParseFailed;
 							resp.needErrMsg &&
-							resp.CombineErrMsg("Deserialize field error. name: " + metaField->name + ", err: ", elemResp);
+								resp.CombineErrMsg("Deserialize field error. name: " + metaField->name + ", err: ", elemResp);
 							return ret;
 						}
-						// TODO: Check member state
+						// Check elem size
+						if (isBitSet(metaField->desc, FDesc::ElemNotEmpty)
+							&& elemResp.fieldCount == 0)
+						{
+							resp.needErrMsg &&
+								resp.SetErrMsg("Elem in field is empty. name: " + metaField->name);
+							return Err::kDeserializeElemEmpty;
+						}
+						// succ
 						m_fieldStatus[metaField->offset] = FStatus::kValid;
 					}
 
@@ -1231,9 +1242,6 @@ namespace ijst {
 			{
 				return (val & bit) != 0;
 			}
-
-			template <class _T>
-			friend class FSerializer;
 
 			typedef IJSTI_MAP_TYPE<std::size_t, FStatus::_E> FieldStatusType;
 			FieldStatusType m_fieldStatus;
