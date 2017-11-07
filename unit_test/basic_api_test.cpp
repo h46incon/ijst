@@ -8,11 +8,11 @@
 
 namespace dummy_ns {
 IJST_DEFINE_STRUCT(
-		SimpleSt,
-		(IJST_TPRI(Int), int_1, "int_val_1", 0),
-		(IJST_TPRI(Int), int_2, "int_val_2", 0),
-		(IJST_TPRI(Str), str_1, "str_val_1", 0),
-		(IJST_TPRI(Str), str_2, "str_val_2", 0)
+		SimpleSt
+		, (IJST_TPRI(Int), int_1, "int_val_1", 0)
+		, (IJST_TPRI(Int), int_2, "int_val_2", 0)
+		, (IJST_TPRI(Str), str_1, "str_val_1", 0)
+		, (IJST_TPRI(Str), str_2, "str_val_2", 0)
 )
 
 TEST(BasicAPI, FieldStatus)
@@ -160,10 +160,10 @@ TEST(BasicAPI, Constructor4RValue)
 #endif
 
 IJST_DEFINE_STRUCT(
-		Complicate,
-		(IJST_TOBJ(SimpleSt), st, "st_v", 0),
-		(IJST_TVEC(IJST_TOBJ(SimpleSt)), vec, "vec_v", 0),
-		(IJST_TMAP(IJST_TOBJ(SimpleSt)), map, "map_v", 0)
+		Complicate
+		, (IJST_TOBJ(SimpleSt), st, "st_v", 0)
+		, (IJST_TVEC(IJST_TOBJ(SimpleSt)), vec, "vec_v", 0)
+		, (IJST_TMAP(IJST_TOBJ(SimpleSt)), map, "map_v", 0)
 )
 
 TEST(BasicAPI, Allocator)
@@ -194,11 +194,11 @@ TEST(BasicAPI, Allocator)
 
 struct DummySt {
 	IJST_DEFINE_STRUCT(
-			SimpleSt,
-			(IJST_TPRI(Int), int_1, "int_val_1", 0),
-			(IJST_TPRI(Int), int_2, "int_val_2", 0),
-			(IJST_TPRI(Str), str_1, "str_val_1", 0),
-			(IJST_TPRI(Str), str_2, "str_val_2", 0)
+			SimpleSt
+			, (IJST_TPRI(Int), int_1, "int_val_1", 0)
+			, (IJST_TPRI(Int), int_2, "int_val_2", 0)
+			, (IJST_TPRI(Str), str_1, "str_val_1", 0)
+			, (IJST_TPRI(Str), str_2, "str_val_2", 0)
 	)
 };
 

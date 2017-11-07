@@ -14,10 +14,10 @@ using std::map;
 using std::string;
 
 IJST_DEFINE_STRUCT(
-		StInt,
-		(IJST_TPRI(Int), v, "f_v", 0),
-		(IJST_TVEC(IJST_TPRI(Int)), vec_v, "f_vec", 0),
-		(IJST_TMAP(IJST_TPRI(Int)), map_v, "f_map", 0)
+		StInt
+		, (IJST_TPRI(Int), v, "f_v", 0)
+		, (IJST_TVEC(IJST_TPRI(Int)), vec_v, "f_vec", 0)
+		, (IJST_TMAP(IJST_TPRI(Int)), map_v, "f_map", 0)
 )
 
 TEST(Primitive, Int)
@@ -75,10 +75,10 @@ TEST(Primitive, Int)
 }
 
 IJST_DEFINE_STRUCT(
-		StUInt32,
-		(IJST_TPRI(UInt32), v, "f_v", 0),
-		(IJST_TVEC(IJST_TPRI(UInt32)), vec_v, "f_vec", 0),
-		(IJST_TMAP(IJST_TPRI(UInt32)), map_v, "f_map", 0)
+		StUInt32
+		, (IJST_TPRI(UInt32), v, "f_v", 0)
+		, (IJST_TVEC(IJST_TPRI(UInt32)), vec_v, "f_vec", 0)
+		, (IJST_TMAP(IJST_TPRI(UInt32)), map_v, "f_map", 0)
 )
 
 TEST(Primitive, UInt32)
@@ -145,10 +145,10 @@ TEST(Primitive, UInt32)
 }
 
 IJST_DEFINE_STRUCT(
-		StUInt64,
-		(IJST_TPRI(UInt64), v, "f_v", 0),
-		(IJST_TVEC(IJST_TPRI(UInt64)), vec_v, "f_vec", 0),
-		(IJST_TMAP(IJST_TPRI(UInt64)), map_v, "f_map", 0)
+		StUInt64
+		, (IJST_TPRI(UInt64), v, "f_v", 0)
+		, (IJST_TVEC(IJST_TPRI(UInt64)), vec_v, "f_vec", 0)
+		, (IJST_TMAP(IJST_TPRI(UInt64)), map_v, "f_map", 0)
 )
 
 TEST(Primitive, UInt64)
@@ -215,10 +215,10 @@ TEST(Primitive, UInt64)
 }
 
 IJST_DEFINE_STRUCT(
-		StInt32,
-		(IJST_TPRI(Int32), v, "f_v", 0),
-		(IJST_TVEC(IJST_TPRI(Int32)), vec_v, "f_vec", 0),
-		(IJST_TMAP(IJST_TPRI(Int32)), map_v, "f_map", 0)
+		StInt32
+		, (IJST_TPRI(Int32), v, "f_v", 0)
+		, (IJST_TVEC(IJST_TPRI(Int32)), vec_v, "f_vec", 0)
+		, (IJST_TMAP(IJST_TPRI(Int32)), map_v, "f_map", 0)
 )
 
 TEST(Primitive, Int32)
@@ -286,10 +286,10 @@ TEST(Primitive, Int32)
 }
 
 IJST_DEFINE_STRUCT(
-		StInt64,
-		(IJST_TPRI(Int64), v, "f_v", 0),
-		(IJST_TVEC(IJST_TPRI(Int64)), vec_v, "f_vec", 0),
-		(IJST_TMAP(IJST_TPRI(Int64)), map_v, "f_map", 0)
+		StInt64
+		, (IJST_TPRI(Int64), v, "f_v", 0)
+		, (IJST_TVEC(IJST_TPRI(Int64)), vec_v, "f_vec", 0)
+		, (IJST_TMAP(IJST_TPRI(Int64)), map_v, "f_map", 0)
 )
 
 TEST(Primitive, Int64)
@@ -358,10 +358,10 @@ TEST(Primitive, Int64)
 }
 
 IJST_DEFINE_STRUCT(
-		StBool,
-		(IJST_TPRI(Bool), v, "f_v", 0),
-		(IJST_TVEC(IJST_TPRI(Bool)), vec_v, "f_vec", 0),
-		(IJST_TMAP(IJST_TPRI(Bool)), map_v, "f_map", 0)
+		StBool
+		, (IJST_TPRI(Bool), v, "f_v", 0)
+		, (IJST_TVEC(IJST_TPRI(Bool)), vec_v, "f_vec", 0)
+		, (IJST_TMAP(IJST_TPRI(Bool)), map_v, "f_map", 0)
 )
 
 TEST(Primitive, Bool)
@@ -420,10 +420,10 @@ TEST(Primitive, Bool)
 }
 
 IJST_DEFINE_STRUCT(
-		StString,
-		(IJST_TPRI(Str), v, "f_v", 0),
-		(IJST_TVEC(IJST_TPRI(Str)), vec_v, "f_vec", 0),
-		(IJST_TMAP(IJST_TPRI(Str)), map_v, "f_map", 0)
+		StString
+		, (IJST_TPRI(Str), v, "f_v", 0)
+		, (IJST_TVEC(IJST_TPRI(Str)), vec_v, "f_vec", 0)
+		, (IJST_TMAP(IJST_TPRI(Str)), map_v, "f_map", 0)
 )
 
 TEST(Primitive, Str)
@@ -481,10 +481,10 @@ TEST(Primitive, Str)
 }
 
 IJST_DEFINE_STRUCT(
-		StRaw,
-		(IJST_TPRI(Raw), v, "f_v", 0),
-		(IJST_TVEC(IJST_TPRI(Raw)), vec_v, "f_vec", 0),
-		(IJST_TMAP(IJST_TPRI(Raw)), map_v, "f_map", 0)
+		StRaw
+		, (IJST_TPRI(Raw), v, "f_v", 0)
+		, (IJST_TVEC(IJST_TPRI(Raw)), vec_v, "f_vec", 0)
+		, (IJST_TMAP(IJST_TPRI(Raw)), map_v, "f_map", 0)
 )
 
 TEST(Primitive, Raw)
@@ -600,10 +600,10 @@ TEST(Primitive, Raw_BasicAPI)
 }
 
 IJST_DEFINE_STRUCT(
-		StTime,
-		(IJST_TTIME(), v, "f_v", 0),
-		(IJST_TVEC(IJST_TTIME()), vec_v, "f_vec", 0),
-		(IJST_TMAP(IJST_TTIME()), map_v, "f_map", 0)
+		StTime
+		, (IJST_TTIME(), v, "f_v", 0)
+		, (IJST_TVEC(IJST_TTIME()), vec_v, "f_vec", 0)
+		, (IJST_TMAP(IJST_TTIME()), map_v, "f_map", 0)
 )
 
 TEST(Primitive, Time)
@@ -702,10 +702,10 @@ TEST(Primitive, Time)
 }
 
 IJST_DEFINE_STRUCT(
-		StFTime,
-		(IJST_TFTIME(8), v, "f_v", 0),
-		(IJST_TVEC(IJST_TFTIME(8)), vec_v, "f_vec", 0),
-		(IJST_TMAP(IJST_TFTIME(8)), map_v, "f_map", 0)
+		StFTime
+		, (IJST_TFTIME(8), v, "f_v", 0)
+		, (IJST_TVEC(IJST_TFTIME(8)), vec_v, "f_vec", 0)
+		, (IJST_TMAP(IJST_TFTIME(8)), map_v, "f_map", 0)
 )
 
 TEST(Primitive, FastTime)

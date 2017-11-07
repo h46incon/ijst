@@ -13,19 +13,19 @@ using std::map;
 using std::string;
 
 IJST_DEFINE_STRUCT(
-		Inner,
-		(IJST_TPRI(Int), int_1, "int_val_1", 0),
-		(IJST_TPRI(Int), int_2, "int_val_2", 0),
-		(IJST_TPRI(Str), str_1, "str_val_1", 0),
-		(IJST_TPRI(Str), str_2, "str_val_2", 0)
+		Inner
+		, (IJST_TPRI(Int), int_1, "int_val_1", 0)
+		, (IJST_TPRI(Int), int_2, "int_val_2", 0)
+		, (IJST_TPRI(Str), str_1, "str_val_1", 0)
+		, (IJST_TPRI(Str), str_2, "str_val_2", 0)
 )
 
 IJST_DEFINE_STRUCT(
-		NestSt,
-		(IJST_TVEC(IJST_TPRI(Int)), vec_1, "vec_val_1", 0),
-		(IJST_TOBJ(Inner), inner_1, "inner_val_1", 0),
-		(IJST_TMAP(IJST_TPRI(Str)), map_1, "map_val_1", 0),
-		(IJST_TVEC(IJST_TOBJ(Inner)), vec_2, "vec_val_2", 0)
+		NestSt
+		, (IJST_TVEC(IJST_TPRI(Int)), vec_1, "vec_val_1", 0)
+		, (IJST_TOBJ(Inner), inner_1, "inner_val_1", 0)
+		, (IJST_TMAP(IJST_TPRI(Str)), map_1, "map_val_1", 0)
+		, (IJST_TVEC(IJST_TOBJ(Inner)), vec_2, "vec_val_2", 0)
 )
 
 TEST(Serialize, EmptyStruct)
@@ -90,11 +90,11 @@ TEST(Serialize, NullValue)
 }
 
 IJST_DEFINE_STRUCT(
-		ObjRefSt,
-		(IJST_TOBJ(Inner), inner, "inner_val", 0),
-		(IJST_TVEC(IJST_TOBJ(Inner)), inner_v, "inner_v_val", 0),
-		(IJST_TMAP(IJST_TOBJ(Inner)), inner_m, "inner_m_val", 0),
-		(IJST_TMAP(IJST_TVEC(IJST_TOBJ(Inner))), inner_mv, "inner_mv_val", 0)
+		ObjRefSt
+		, (IJST_TOBJ(Inner), inner, "inner_val", 0)
+		, (IJST_TVEC(IJST_TOBJ(Inner)), inner_v, "inner_v_val", 0)
+		, (IJST_TMAP(IJST_TOBJ(Inner)), inner_m, "inner_m_val", 0)
+		, (IJST_TMAP(IJST_TVEC(IJST_TOBJ(Inner))), inner_mv, "inner_mv_val", 0)
 )
 
 TEST(Serialize, AdditionalJsonField)
@@ -117,19 +117,19 @@ TEST(Serialize, AdditionalJsonField)
 }
 
 IJST_DEFINE_STRUCT(
-		Complicate1,
-		(IJST_TOBJ(Inner), i1, "i1_v", 0),
-		(IJST_TOBJ(Inner), i2, "i2_v", 0),
-		(IJST_TOBJ(Inner), i3, "i3_v", 0),
-		(IJST_TOBJ(Inner), i4, "i4_v", 0)
+		Complicate1
+		, (IJST_TOBJ(Inner), i1, "i1_v", 0)
+		, (IJST_TOBJ(Inner), i2, "i2_v", 0)
+		, (IJST_TOBJ(Inner), i3, "i3_v", 0)
+		, (IJST_TOBJ(Inner), i4, "i4_v", 0)
 )
 
 IJST_DEFINE_STRUCT(
-		Complicate2,
-		(IJST_TOBJ(Complicate1), c1, "c1_v", 0),
-		(IJST_TVEC(IJST_TMAP(IJST_TPRI(Str))), vms, "vms_v", 0),
-		(IJST_TMAP(IJST_TVEC(IJST_TPRI(Str))), mvs, "mvs_v", 0),
-		(IJST_TMAP(IJST_TMAP(IJST_TOBJ(Inner))), mmo, "mmo_v", 0)
+		Complicate2
+		, (IJST_TOBJ(Complicate1), c1, "c1_v", 0)
+		, (IJST_TVEC(IJST_TMAP(IJST_TPRI(Str))), vms, "vms_v", 0)
+		, (IJST_TMAP(IJST_TVEC(IJST_TPRI(Str))), mvs, "mvs_v", 0)
+		, (IJST_TMAP(IJST_TMAP(IJST_TOBJ(Inner))), mmo, "mmo_v", 0)
 )
 
 TEST(Serialize, Complicate)
@@ -194,71 +194,71 @@ TEST(Serialize, Complicate)
 }
 
 IJST_DEFINE_STRUCT(
-		Complicate3,
-		(IJST_TPRI(Int), i1, "i1_v", 0),
-		(IJST_TPRI(Int), i2, "i2_v", 0),
-		(IJST_TPRI(Int), i3, "i3_v", 0),
-		(IJST_TPRI(Int), i4, "i4_v", 0),
-		(IJST_TPRI(Int), i5, "i5_v", 0),
-		(IJST_TPRI(Int), i6, "i6_v", 0),
-		(IJST_TPRI(Int), i7, "i7_v", 0),
-		(IJST_TPRI(Int), i8, "i8_v", 0),
-		(IJST_TPRI(Int), i9, "i9_v", 0),
-		(IJST_TPRI(Int), i10, "i10_v", 0),
-		(IJST_TPRI(Int), i11, "i11_v", 0),
-		(IJST_TPRI(Int), i12, "i12_v", 0),
-		(IJST_TPRI(Int), i13, "i13_v", 0),
-		(IJST_TPRI(Int), i14, "i14_v", 0),
-		(IJST_TPRI(Int), i15, "i15_v", 0),
-		(IJST_TPRI(Int), i16, "i16_v", 0),
-		(IJST_TPRI(Int), i17, "i17_v", 0),
-		(IJST_TPRI(Int), i18, "i18_v", 0),
-		(IJST_TPRI(Int), i19, "i19_v", 0),
-		(IJST_TPRI(Int), i20, "i20_v", 0),
-		(IJST_TPRI(Int), i21, "i21_v", 0),
-		(IJST_TPRI(Int), i22, "i22_v", 0),
-		(IJST_TPRI(Int), i23, "i23_v", 0),
-		(IJST_TPRI(Int), i24, "i24_v", 0),
-		(IJST_TPRI(Int), i25, "i25_v", 0),
-		(IJST_TPRI(Int), i26, "i26_v", 0),
-		(IJST_TPRI(Int), i27, "i27_v", 0),
-		(IJST_TPRI(Int), i28, "i28_v", 0),
-		(IJST_TPRI(Int), i29, "i29_v", 0),
-		(IJST_TPRI(Int), i30, "i30_v", 0),
-		(IJST_TPRI(Int), i31, "i31_v", 0),
-		(IJST_TPRI(Int), i32, "i32_v", 0),
-		(IJST_TPRI(Int), i33, "i33_v", 0),
-		(IJST_TPRI(Int), i34, "i34_v", 0),
-		(IJST_TPRI(Int), i35, "i35_v", 0),
-		(IJST_TPRI(Int), i36, "i36_v", 0),
-		(IJST_TPRI(Int), i37, "i37_v", 0),
-		(IJST_TPRI(Int), i38, "i38_v", 0),
-		(IJST_TPRI(Int), i39, "i39_v", 0),
-		(IJST_TPRI(Int), i40, "i40_v", 0),
-		(IJST_TPRI(Int), i41, "i41_v", 0),
-		(IJST_TPRI(Int), i42, "i42_v", 0),
-		(IJST_TPRI(Int), i43, "i43_v", 0),
-		(IJST_TPRI(Int), i44, "i44_v", 0),
-		(IJST_TPRI(Int), i45, "i45_v", 0),
-		(IJST_TPRI(Int), i46, "i46_v", 0),
-		(IJST_TPRI(Int), i47, "i47_v", 0),
-		(IJST_TPRI(Int), i48, "i48_v", 0),
-		(IJST_TPRI(Int), i49, "i49_v", 0),
-		(IJST_TPRI(Int), i50, "i50_v", 0),
-		(IJST_TPRI(Int), i51, "i51_v", 0),
-		(IJST_TPRI(Int), i52, "i52_v", 0),
-		(IJST_TPRI(Int), i53, "i53_v", 0),
-		(IJST_TPRI(Int), i54, "i54_v", 0),
-		(IJST_TPRI(Int), i55, "i55_v", 0),
-		(IJST_TPRI(Int), i56, "i56_v", 0),
-		(IJST_TPRI(Int), i57, "i57_v", 0),
-		(IJST_TPRI(Int), i58, "i58_v", 0),
-		(IJST_TPRI(Int), i59, "i59_v", 0),
-		(IJST_TPRI(Int), i60, "i60_v", 0),
-		(IJST_TPRI(Int), i61, "i61_v", 0),
-		(IJST_TPRI(Int), i62, "i62_v", 0),
-		(IJST_TPRI(Int), i63, "i63_v", 0),
-		(IJST_TPRI(Int), i64, "i64_v", 0)
+		Complicate3
+		, (IJST_TPRI(Int), i1, "i1_v", 0)
+		, (IJST_TPRI(Int), i2, "i2_v", 0)
+		, (IJST_TPRI(Int), i3, "i3_v", 0)
+		, (IJST_TPRI(Int), i4, "i4_v", 0)
+		, (IJST_TPRI(Int), i5, "i5_v", 0)
+		, (IJST_TPRI(Int), i6, "i6_v", 0)
+		, (IJST_TPRI(Int), i7, "i7_v", 0)
+		, (IJST_TPRI(Int), i8, "i8_v", 0)
+		, (IJST_TPRI(Int), i9, "i9_v", 0)
+		, (IJST_TPRI(Int), i10, "i10_v", 0)
+		, (IJST_TPRI(Int), i11, "i11_v", 0)
+		, (IJST_TPRI(Int), i12, "i12_v", 0)
+		, (IJST_TPRI(Int), i13, "i13_v", 0)
+		, (IJST_TPRI(Int), i14, "i14_v", 0)
+		, (IJST_TPRI(Int), i15, "i15_v", 0)
+		, (IJST_TPRI(Int), i16, "i16_v", 0)
+		, (IJST_TPRI(Int), i17, "i17_v", 0)
+		, (IJST_TPRI(Int), i18, "i18_v", 0)
+		, (IJST_TPRI(Int), i19, "i19_v", 0)
+		, (IJST_TPRI(Int), i20, "i20_v", 0)
+		, (IJST_TPRI(Int), i21, "i21_v", 0)
+		, (IJST_TPRI(Int), i22, "i22_v", 0)
+		, (IJST_TPRI(Int), i23, "i23_v", 0)
+		, (IJST_TPRI(Int), i24, "i24_v", 0)
+		, (IJST_TPRI(Int), i25, "i25_v", 0)
+		, (IJST_TPRI(Int), i26, "i26_v", 0)
+		, (IJST_TPRI(Int), i27, "i27_v", 0)
+		, (IJST_TPRI(Int), i28, "i28_v", 0)
+		, (IJST_TPRI(Int), i29, "i29_v", 0)
+		, (IJST_TPRI(Int), i30, "i30_v", 0)
+		, (IJST_TPRI(Int), i31, "i31_v", 0)
+		, (IJST_TPRI(Int), i32, "i32_v", 0)
+		, (IJST_TPRI(Int), i33, "i33_v", 0)
+		, (IJST_TPRI(Int), i34, "i34_v", 0)
+		, (IJST_TPRI(Int), i35, "i35_v", 0)
+		, (IJST_TPRI(Int), i36, "i36_v", 0)
+		, (IJST_TPRI(Int), i37, "i37_v", 0)
+		, (IJST_TPRI(Int), i38, "i38_v", 0)
+		, (IJST_TPRI(Int), i39, "i39_v", 0)
+		, (IJST_TPRI(Int), i40, "i40_v", 0)
+		, (IJST_TPRI(Int), i41, "i41_v", 0)
+		, (IJST_TPRI(Int), i42, "i42_v", 0)
+		, (IJST_TPRI(Int), i43, "i43_v", 0)
+		, (IJST_TPRI(Int), i44, "i44_v", 0)
+		, (IJST_TPRI(Int), i45, "i45_v", 0)
+		, (IJST_TPRI(Int), i46, "i46_v", 0)
+		, (IJST_TPRI(Int), i47, "i47_v", 0)
+		, (IJST_TPRI(Int), i48, "i48_v", 0)
+		, (IJST_TPRI(Int), i49, "i49_v", 0)
+		, (IJST_TPRI(Int), i50, "i50_v", 0)
+		, (IJST_TPRI(Int), i51, "i51_v", 0)
+		, (IJST_TPRI(Int), i52, "i52_v", 0)
+		, (IJST_TPRI(Int), i53, "i53_v", 0)
+		, (IJST_TPRI(Int), i54, "i54_v", 0)
+		, (IJST_TPRI(Int), i55, "i55_v", 0)
+		, (IJST_TPRI(Int), i56, "i56_v", 0)
+		, (IJST_TPRI(Int), i57, "i57_v", 0)
+		, (IJST_TPRI(Int), i58, "i58_v", 0)
+		, (IJST_TPRI(Int), i59, "i59_v", 0)
+		, (IJST_TPRI(Int), i60, "i60_v", 0)
+		, (IJST_TPRI(Int), i61, "i61_v", 0)
+		, (IJST_TPRI(Int), i62, "i62_v", 0)
+		, (IJST_TPRI(Int), i63, "i63_v", 0)
+		, (IJST_TPRI(Int), i64, "i64_v", 0)
 )
 
 TEST(Serialize, BigStruct)
