@@ -63,8 +63,7 @@ namespace ijst{
 		}	// namespace fasttime::detail
 
 		//! Return time stamp form 1970-01-01 00:00:00
-		template <int _Dummy>
-		int64_t Mktime(int year, int mon, int day, int hour, int min, int sec)
+		inline int64_t Mktime(int year, int mon, int day, int hour, int min, int sec)
 		{
 			// 1..12 -> 11,12,1..10
 			if (0 >= (mon -= 2))
@@ -82,8 +81,7 @@ namespace ijst{
 
 		}
 
-		template <int _Dummy>
-		void ParseTimeStamp(int64_t timeStamp,
+		inline void ParseTimeStamp(int64_t timeStamp,
 							IJST_OUT int& yearOut, IJST_OUT int& monOut, IJST_OUT int& dayOut,
 							IJST_OUT int& hourOut, IJST_OUT int& minOut, IJST_OUT int& secOut)
 		{
@@ -208,7 +206,9 @@ namespace ijst{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				int year, mon, day, hour, min, sec;
 				const int64_t utcTimeStamp = *pField + kTimeZone * 3600;
-				fasttime::ParseTimeStamp<0>(utcTimeStamp, year, mon, day, hour, min, sec);
+				// try use function pointer to prevent inlineing the function
+				void (*pParseTimeStamp)(int64_t, int&, int&, int&, int&, int&, int&) = fasttime::ParseTimeStamp;
+				pParseTimeStamp(utcTimeStamp, year, mon, day, hour, min, sec);
 				char strBuf[32];
 				snprintf(strBuf, 32, "%04d-%02d-%02d %02d:%02d:%02d", year, mon, day, hour, min, sec);
 				req.buffer.SetString(strBuf, req.allocator);
@@ -236,7 +236,9 @@ namespace ijst{
 					return Err::kDeserializeValueTypeError;
 				}
 
-				int64_t timeStamp = fasttime::Mktime<0>(year, mon, day, hour, min, sec);
+				// try use function pointer to prevent inlineing the function
+				int64_t (*pMKTime)(int, int, int, int, int, int) = fasttime::Mktime;
+				int64_t timeStamp = pMKTime(year, mon, day, hour, min, sec);
 				VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 				*pField = timeStamp - kTimeZone * 3600;
 				return 0;
