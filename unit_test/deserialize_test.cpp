@@ -32,7 +32,7 @@ TEST(Deserialize, ParseError)
 	string errJson = "{withoutQuote:1}";
 	SimpleSt st;
 	int ret = st._.Deserialize(errJson, 0);
-	int retExpected = ijst::Err::kParseFaild;
+	int retExpected = ijst::Err::kDeserializeParseFaild;
 	ASSERT_EQ(ret, retExpected);
 }
 

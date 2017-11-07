@@ -44,7 +44,6 @@
 #define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
 
 namespace ijst {
-
 	typedef rapidjson::Value StoreType;
 	typedef rapidjson::MemoryPoolAllocator<> 	AllocatorType;
 
@@ -70,7 +69,8 @@ namespace ijst {
 		static const int kSucc 							= 0x00000000;
 		static const int kDeserializeValueTypeError 	= 0x00001001;
 		static const int kDeserializeSomeFiledsInvalid 	= 0x00001002;
-		static const int kParseFaild 					= 0x00001003;
+		static const int kDeserializeParseFaild 		= 0x00001003;
+		static const int kDeserializeElemSizeError 		= 0x00001004;
 		static const int kInnerError 					= 0x00002001;
 	};
 
@@ -141,7 +141,7 @@ namespace ijst {
 		template<typename _T>
 		class Singleton {
 		public:
-			static _T *GetInstance()
+			inline static _T *GetInstance()
 			{
 				static _T instance;
 				return &instance;
@@ -833,7 +833,7 @@ namespace ijst {
 								rapidjson::GetParseError_En(doc.GetParseError())
 						));
 					}
-					return Err::kParseFaild;
+					return Err::kDeserializeParseFaild;
 				}
 				*m_pBuffer = reinterpret_cast<StoreType&>(doc.Move());
 				return DoDeserializeWrap(errMsg);
@@ -853,7 +853,7 @@ namespace ijst {
 								rapidjson::GetParseError_En(doc.GetParseError())
 						));
 					}
-					return Err::kParseFaild;
+					return Err::kDeserializeParseFaild;
 				}
 				*m_pBuffer = reinterpret_cast<StoreType&>(doc.Move());
 				return DoDeserializeWrap(errMsg);
