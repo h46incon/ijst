@@ -31,7 +31,7 @@ TEST(BasicAPI, FieldStatus)
 	ASSERT_STREQ(simpleSt.str_1.c_str(), "str1");
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), ijst::FStatus::kValid);
 
-	// Make valid
+	// Mark valid
 	simpleSt.int_2 = 0xA5A5;
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), ijst::FStatus::kMissing);
 	IJST_MARK_VALID(simpleSt, int_2);

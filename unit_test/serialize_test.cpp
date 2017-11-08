@@ -89,6 +89,21 @@ TEST(Serialize, NullValue)
 	ASSERT_TRUE(jVal["int_val_2"].IsNull());
 }
 
+TEST(Serialize, MarkMissing)
+{
+	Inner innerSt;
+	IJST_SET(innerSt, int_1, 1);
+	IJST_SET(innerSt, int_2, 2);
+	IJST_MARK_MISSING(innerSt, int_2);
+
+	rapidjson::Value jVal;
+	int ret = innerSt._.MoveSerializeInInnerAlloc(false, jVal);
+	ASSERT_EQ(ret, 0);
+
+	ASSERT_EQ(jVal["int_val_1"].GetInt(), 1);
+	ASSERT_FALSE(jVal.HasMember("int_val_2"));
+}
+
 IJST_DEFINE_STRUCT(
 		ObjRefSt
 		, (IJST_TOBJ(Inner), inner, "inner_val", 0)

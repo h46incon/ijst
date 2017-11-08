@@ -40,6 +40,7 @@
 #define IJST_GET_STATUS(obj, field)				obj._.GetStatus(& ((obj).field))
 #define IJST_MARK_VALID(obj, field)				obj._.MarkValid(& ((obj).field))
 #define IJST_MARK_NULL(obj, field)				obj._.MarkNull(& ((obj).field))
+#define IJST_MARK_MISSING(obj, field)			obj._.MarkMissing(& ((obj).field))
 #define IJST_SET(obj, field, val)				obj._.Set((obj).field, (val))
 #define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
 
@@ -706,6 +707,11 @@ namespace ijst {
 			inline void MarkNull(const void* fieldPtr)
 			{
 				MarkFieldStatus(fieldPtr, FStatus::kNull);
+			}
+
+			inline void MarkMissing(const void* fieldPtr)
+			{
+				MarkFieldStatus(fieldPtr, FStatus::kMissing);
 			}
 
 			inline FStatus::_E GetStatus(const void *fieldptr) const
