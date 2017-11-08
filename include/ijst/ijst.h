@@ -171,14 +171,18 @@ namespace ijst {
 				// The actual type of field should be decide in the derived class
 				const void* pField;
 
+				// true if move context in pField to avoid copy when possible
+				bool isMoveSrc;
+
 				// Output buffer info. The instance should serialize in this object and use allocator
 				IJST_OUT StoreType& buffer;
 				AllocatorType& allocator;
 
-				SerializeReq(StoreType &_buffer, AllocatorType &_allocator,
+				SerializeReq(StoreType &_buffer, AllocatorType &_allocator, bool _isMoveSrc,
 							 const void *_pField, bool _pushAllfield)
 						: pushAllField(_pushAllfield)
 						  , pField(_pField)
+						  , isMoveSrc(_isMoveSrc)
 						  , buffer(_buffer)
 						  , allocator(_allocator)
 				{ }
@@ -323,7 +327,7 @@ namespace ijst {
 
 				for (typename VarType::const_iterator itera = pField->begin(); itera != pField->end(); ++itera) {
 					StoreType newElem;
-					SerializeReq elemReq(newElem, req.allocator, &(*itera), req.pushAllField);
+					SerializeReq elemReq(newElem, req.allocator, req.isMoveSrc, &(*itera), req.pushAllField);
 					SerializeResp elemResp;
 					int ret = interface->Serialize(elemReq, elemResp);
 
@@ -423,8 +427,7 @@ namespace ijst {
 					// Init
 					const void* pFieldValue = &itFieldMember->second;
 					StoreType newElem;
-					SerializeReq elemReq(
-							newElem, req.allocator, pFieldValue, req.pushAllField);
+					SerializeReq elemReq(newElem, req.allocator, req.isMoveSrc, pFieldValue, req.pushAllField);
 					SerializeResp elemResp;
 					int ret = interface->Serialize(elemReq, elemResp);
 
@@ -752,26 +755,28 @@ namespace ijst {
 
 			/**
 			 * Serialize the structure.
+			 * @note The object may be invalid after serialization
 			 * @param pushAllField 		true if push all field, false if push only valid or null field
 			 * @param output 			the output of result
 			 * @param allocator	 		allocator. If using inner allocator, user should carefully handler the structure's life cycle
 			 * @return
 			 */
-			inline int Serialize(bool pushAllField, IJST_OUT StoreType& output, AllocatorType& allocator)
+			inline int MoveSerialize(bool pushAllField, IJST_OUT StoreType& output, AllocatorType& allocator)
 			{
-				return DoSerialize(pushAllField, output, allocator);
+				return DoSerialize(pushAllField, true, output, allocator);
 			}
 
 			/**
 			 * Serialize the structure with inner allocator.
-			 * User should make sure the structure's life cycle is longer than output
+			 * @note The object may be invalid after serialization
+			 * @note User should make sure the structure's life cycle is longer than output
 			 * @param pushAllField 		true if push all field, false if push only valid or null field
 			 * @param output 			the output of result
 			 * @return
 			 */
-			inline int SerializeInInnerAlloc(bool pushAllField, IJST_OUT StoreType &output)
+			inline int MoveSerializeInInnerAlloc(bool pushAllField, IJST_OUT StoreType &output)
 			{
-				return DoSerialize(pushAllField, output, *m_pAllocator);
+				return DoSerialize(pushAllField, true, output, *m_pAllocator);
 			}
 
 			/**
@@ -841,7 +846,7 @@ namespace ijst {
 			int SerializeToString(bool pushAllField, IJST_OUT std::string &strOutput)
 			{
 				StoreType store;
-				int ret = SerializeInInnerAlloc(pushAllField, IJST_OUT store);
+				int ret = MoveSerializeInInnerAlloc(pushAllField, IJST_OUT store);
 				if (ret != 0) {
 					return ret;
 				}
@@ -870,7 +875,7 @@ namespace ijst {
 			inline int ISerialize(const SerializeReq &req, SerializeResp &resp)
 			{
 				assert(req.pField == this);
-				return DoSerialize(req.pushAllField, req.buffer, req.allocator);
+				return DoSerialize(req.pushAllField, req.isMoveSrc, req.buffer, req.allocator);
 			}
 
 			inline int IDeserialize(const DeserializeReq &req, IJST_OUT DeserializeResp& resp)
@@ -905,7 +910,7 @@ namespace ijst {
 				m_fieldStatus[offset] = fStatus;
 			}
 
-			int DoSerialize(bool pushAllField, IJST_OUT StoreType& buffer, AllocatorType& allocator)
+			int DoSerialize(bool pushAllField, bool isMoveSrc, IJST_OUT StoreType& buffer, AllocatorType& allocator)
 			{
 				// Serialize fields to buffer
 				buffer.SetObject();
@@ -950,7 +955,7 @@ namespace ijst {
 					switch (fstatus) {
 						case FStatus::kValid:
 						{
-							int ret = DoSerializeField(itMetaField, pushAllField, buffer, allocator);
+							int ret = DoSerializeField(itMetaField, pushAllField, isMoveSrc, buffer, allocator);
 							if (ret != 0) {
 								return ret;
 							}
@@ -972,7 +977,7 @@ namespace ijst {
 							if (!pushAllField) {
 								continue;
 							}
-							int ret = DoSerializeField(itMetaField, pushAllField, buffer, allocator);
+							int ret = DoSerializeField(itMetaField, pushAllField, isMoveSrc, buffer, allocator);
 							if (ret != 0) {
 								return ret;
 							}
@@ -989,7 +994,7 @@ namespace ijst {
 				}
 
 				// append inner data to buffer
-				if (&allocator == m_pAllocator) {
+				if (isMoveSrc && &allocator == m_pAllocator) {
 					// Move
 					for (rapidjson::Value::MemberIterator itMember = m_pBuffer->MemberBegin();
 						 itMember != m_pBuffer->MemberEnd(); ++itMember)
@@ -998,7 +1003,8 @@ namespace ijst {
 						// both itMember->name, itMember->value are null now
 					}
 				}
-				else {
+				else
+				{
 					// Copy
 					for (rapidjson::Value::ConstMemberIterator itMember = m_pBuffer->MemberBegin();
 						 itMember != m_pBuffer->MemberEnd(); ++itMember)
@@ -1011,14 +1017,18 @@ namespace ijst {
 					}
 					// The object will be release after serialize in most suitation, so do not need clear own allocator
 				}
-				m_pBuffer->SetObject();
+
+				if (isMoveSrc)
+				{
+					m_pBuffer->SetObject();
+				}
 
 				// assert that buffer will not reallocate memory during serialization
 				assert(buffer.MemberCapacity() == oldCapcity);
 				return 0;
 			}
 
-			int DoSerializeField(std::vector<MetaField>::const_iterator itMetaField, bool pushAllField,
+			int DoSerializeField(std::vector<MetaField>::const_iterator itMetaField, bool pushAllField, bool isMoveSrc,
 								 StoreType &buffer, AllocatorType &allocator) const
 			{
 				// Init
@@ -1027,7 +1037,7 @@ namespace ijst {
 				// Serialize field
 				StoreType elemOutput;
 				SerializeReq elemSerializeReq(
-						elemOutput, allocator, pFieldValue, pushAllField);
+						elemOutput, allocator, isMoveSrc, pFieldValue, pushAllField);
 
 				SerializeResp elemSerializeResp;
 				int ret = itMetaField->serializerInterface->Serialize(elemSerializeReq, elemSerializeResp);
@@ -1215,7 +1225,7 @@ namespace ijst {
 				return FStatus::kNotAField;
 			}
 
-			inline bool isBitSet(unsigned int val, unsigned int bit)
+			static inline bool isBitSet(unsigned int val, unsigned int bit)
 			{
 				return (val & bit) != 0;
 			}
