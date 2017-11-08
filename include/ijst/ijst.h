@@ -755,6 +755,47 @@ namespace ijst {
 
 			/**
 			 * Serialize the structure.
+			 * @param pushAllField 		true if push all field, false if push only valid or null field
+			 * @param output 			the output of result
+			 * @param allocator	 		allocator. If using inner allocator, user should carefully handler the structure's life cycle
+			 * @return
+			 */
+			inline int Serialize(bool pushAllField, IJST_OUT StoreType& output, AllocatorType& allocator) const
+			{
+				return Accessor::template DoSerialize<false, const Accessor>
+						(*this, pushAllField, output, allocator);
+			}
+
+			/**
+			 * Serialize the structure to string
+			 * @param pushAllField 		true if push all field, false if push only valid or null field
+			 * @param strOutput 		the output of result
+			 * @return
+			 */
+			int SerializeToString(bool pushAllField, IJST_OUT std::string &strOutput) const
+			{
+				StoreType store;
+				AllocatorType allocator;
+				int ret = Serialize(pushAllField, IJST_OUT store, allocator);
+				if (ret != 0) {
+					return ret;
+				}
+				rapidjson::StringBuffer buffer;
+				buffer.Clear();
+				rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+				bool bSucc = store.Accept(writer);
+				if (IJSTI_LIKELY(bSucc))
+				{
+					strOutput = std::string(buffer.GetString(), buffer.GetSize());
+					return 0;
+				}
+				else {
+					return Err::kInnerError;
+				}
+			}
+
+			/**
+			 * Serialize the structure.
 			 * @note The object may be invalid after serialization
 			 * @param pushAllField 		true if push all field, false if push only valid or null field
 			 * @param output 			the output of result
@@ -763,7 +804,36 @@ namespace ijst {
 			 */
 			inline int MoveSerialize(bool pushAllField, IJST_OUT StoreType& output, AllocatorType& allocator)
 			{
-				return DoSerialize(pushAllField, true, output, allocator);
+				return Accessor::template DoSerialize<true, Accessor>
+						(*this, pushAllField, output, allocator);
+			}
+
+			/**
+			 * Serialize the structure to string
+			 * @note The object may be invalid after serialization
+			 * @param pushAllField 		true if push all field, false if push only valid or null field
+			 * @param strOutput 		the output of result
+			 * @return
+			 */
+			int MoveSerializeToString(bool pushAllField, IJST_OUT std::string &strOutput)
+			{
+				StoreType store;
+				int ret = MoveSerializeInInnerAlloc(pushAllField, IJST_OUT store);
+				if (ret != 0) {
+					return ret;
+				}
+				rapidjson::StringBuffer buffer;
+				buffer.Clear();
+				rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+				bool bSucc = store.Accept(writer);
+				if (IJSTI_LIKELY(bSucc))
+				{
+					strOutput = std::string(buffer.GetString(), buffer.GetSize());
+					return 0;
+				}
+				else {
+					return Err::kInnerError;
+				}
 			}
 
 			/**
@@ -776,7 +846,8 @@ namespace ijst {
 			 */
 			inline int MoveSerializeInInnerAlloc(bool pushAllField, IJST_OUT StoreType &output)
 			{
-				return DoSerialize(pushAllField, true, output, *m_pAllocator);
+				return Accessor::template DoSerialize<true, Accessor>
+						(*this, pushAllField, output, *m_pAllocator);
 			}
 
 			/**
@@ -784,7 +855,7 @@ namespace ijst {
 			 * NOTE: Make sure srcDocStolen use own allocator
 			 * @param errMsg. Output of error message, null if cancel error output
 			 */
-			inline int DeserializeMoved(rapidjson::Document &srcDocStolen, IJST_INOUT std::string *errMsg)
+			inline int MoveDeserialize(rapidjson::Document &srcDocStolen, IJST_INOUT std::string *errMsg)
 			{
 				m_pOwnDoc->Swap(srcDocStolen);
 				*m_pBuffer = reinterpret_cast<StoreType&>(m_pOwnDoc->Move());
@@ -843,26 +914,6 @@ namespace ijst {
 				return DoDeserializeWrap(errMsg);
 			}
 
-			int SerializeToString(bool pushAllField, IJST_OUT std::string &strOutput)
-			{
-				StoreType store;
-				int ret = MoveSerializeInInnerAlloc(pushAllField, IJST_OUT store);
-				if (ret != 0) {
-					return ret;
-				}
-				rapidjson::StringBuffer buffer;
-				buffer.Clear();
-				rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-				bool bSucc = store.Accept(writer);
-				if (IJSTI_LIKELY(bSucc))
-				{
-					strOutput = std::string(buffer.GetString(), buffer.GetSize());
-					return 0;
-				}
-				else {
-					return Err::kInnerError;
-				}
-			}
 
 		private:
 			//region Implement SerializeInterface
@@ -875,7 +926,14 @@ namespace ijst {
 			inline int ISerialize(const SerializeReq &req, SerializeResp &resp)
 			{
 				assert(req.pField == this);
-				return DoSerialize(req.pushAllField, req.isMoveSrc, req.buffer, req.allocator);
+				if (req.isMoveSrc) {
+					return Accessor::template DoSerialize<true, Accessor>
+							(*this, req.pushAllField, req.buffer, req.allocator);
+				}
+				else {
+					return Accessor::template DoSerialize<false, const Accessor>
+							(*this, req.pushAllField, req.buffer, req.allocator);
+				}
 			}
 
 			inline int IDeserialize(const DeserializeReq &req, IJST_OUT DeserializeResp& resp)
@@ -910,7 +968,8 @@ namespace ijst {
 				m_fieldStatus[offset] = fStatus;
 			}
 
-			int DoSerialize(bool pushAllField, bool isMoveSrc, IJST_OUT StoreType& buffer, AllocatorType& allocator)
+			int DoSerializeConst(bool pushAllField, bool isMoveSrc,
+										IJST_OUT StoreType& buffer, AllocatorType& allocator) const
 			{
 				// Serialize fields to buffer
 				buffer.SetObject();
@@ -940,11 +999,9 @@ namespace ijst {
 					}
 					buffer.MemberReserve(fieldSize, allocator);
 				} while (false);
-				const rapidjson::SizeType oldCapcity = buffer.MemberCapacity();
 
 				#ifndef NDEBUG
-				const std::size_t fieldSize = m_metaClass->metaFields.size();
-				(void)fieldSize;
+				const rapidjson::SizeType oldCapcity = buffer.MemberCapacity();
 				#endif
 
 				for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
@@ -955,7 +1012,7 @@ namespace ijst {
 					switch (fstatus) {
 						case FStatus::kValid:
 						{
-							int ret = DoSerializeField(itMetaField, pushAllField, isMoveSrc, buffer, allocator);
+							int ret = DoSerializeField(itMetaField, isMoveSrc, pushAllField, buffer, allocator);
 							if (ret != 0) {
 								return ret;
 							}
@@ -977,7 +1034,7 @@ namespace ijst {
 							if (!pushAllField) {
 								continue;
 							}
-							int ret = DoSerializeField(itMetaField, pushAllField, isMoveSrc, buffer, allocator);
+							int ret = DoSerializeField(itMetaField, isMoveSrc, pushAllField, buffer, allocator);
 							if (ret != 0) {
 								return ret;
 							}
@@ -992,44 +1049,30 @@ namespace ijst {
 					}
 
 				}
-
-				// append inner data to buffer
-				if (isMoveSrc && &allocator == m_pAllocator) {
-					// Move
-					for (rapidjson::Value::MemberIterator itMember = m_pBuffer->MemberBegin();
-						 itMember != m_pBuffer->MemberEnd(); ++itMember)
-					{
-						buffer.AddMember(itMember->name, itMember->value, allocator);
-						// both itMember->name, itMember->value are null now
-					}
-				}
-				else
-				{
-					// Copy
-					for (rapidjson::Value::ConstMemberIterator itMember = m_pBuffer->MemberBegin();
-						 itMember != m_pBuffer->MemberEnd(); ++itMember)
-					{
-						rapidjson::Value name;
-						rapidjson::Value val;
-						name.CopyFrom(itMember->name, allocator);
-						val.CopyFrom(itMember->value, allocator);
-						buffer.AddMember(name, val, allocator);
-					}
-					// The object will be release after serialize in most suitation, so do not need clear own allocator
-				}
-
-				if (isMoveSrc)
-				{
-					m_pBuffer->SetObject();
-				}
-
 				// assert that buffer will not reallocate memory during serialization
 				assert(buffer.MemberCapacity() == oldCapcity);
 				return 0;
 			}
 
-			int DoSerializeField(std::vector<MetaField>::const_iterator itMetaField, bool pushAllField, bool isMoveSrc,
-								 StoreType &buffer, AllocatorType &allocator) const
+			template <bool kIsMoveSrc, class _TAccessor>
+			static int DoSerialize(_TAccessor& accessor, bool pushAllField, IJST_OUT StoreType& buffer, AllocatorType& allocator)
+			{
+				const Accessor& rThis = accessor;
+				int iRet = rThis.DoSerializeConst(pushAllField, kIsMoveSrc, buffer, allocator);
+				if (iRet != 0) {
+					return iRet;
+				}
+				Accessor::template AppendInnerToBuffer<kIsMoveSrc, _TAccessor>(accessor, buffer, allocator);
+				return 0;
+			}
+
+			template<bool kIsMoveSrc, class _TAccessor>
+			static inline void AppendInnerToBuffer(_TAccessor &accessor, StoreType &buffer, AllocatorType &allocator);
+
+
+			int DoSerializeField(std::vector<MetaField>::const_iterator itMetaField,
+										bool isMoveSrc, bool pushAllField,
+										StoreType &buffer, AllocatorType &allocator) const
 			{
 				// Init
 				const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
@@ -1059,7 +1102,7 @@ namespace ijst {
 			}
 
 			int DoSerializeNullField(std::vector<MetaField>::const_iterator itMetaField,
-									 StoreType &buffer, AllocatorType &allocator)
+									 StoreType &buffer, AllocatorType &allocator) const
 			{
 				// Init
 				rapidjson::GenericStringRef<char> fieldNameRef =
@@ -1243,6 +1286,46 @@ namespace ijst {
 			const unsigned char *m_pOuter;
 			//</editor-fold>
 		};
+
+		template <>
+		inline void Accessor::template AppendInnerToBuffer<false, const Accessor>(const Accessor& accessor, StoreType&buffer, AllocatorType& allocator)
+		{
+			const Accessor& rThis = accessor;
+			// Copy
+			for (rapidjson::Value::ConstMemberIterator itMember = rThis.m_pBuffer->MemberBegin();
+				 itMember != rThis.m_pBuffer->MemberEnd(); ++itMember)
+			{
+				rapidjson::Value name;
+				rapidjson::Value val;
+				name.CopyFrom(itMember->name, allocator);
+				val.CopyFrom(itMember->value, allocator);
+				buffer.AddMember(name, val, allocator);
+			}
+		}
+
+		template <>
+		inline void Accessor::template AppendInnerToBuffer<true, Accessor>(Accessor& accessor, StoreType&buffer, AllocatorType& allocator)
+		{
+			Accessor& rThis = accessor;
+			// append inner data to buffer
+			if (&allocator == rThis.m_pAllocator) {
+				// Move
+				for (rapidjson::Value::MemberIterator itMember = rThis.m_pBuffer->MemberBegin();
+					 itMember != rThis.m_pBuffer->MemberEnd(); ++itMember)
+				{
+					buffer.AddMember(itMember->name, itMember->value, allocator);
+					// both itMember->name, itMember->value are null now
+				}
+			}
+			else
+			{
+				// Copy
+				Accessor::template AppendInnerToBuffer<false, const Accessor>(accessor, buffer, allocator);
+				// The object will be release after serialize in most suitation, so do not need clear own allocator
+			}
+
+			rThis.m_pBuffer->SetObject();
+		}
 
 		#define IJSTI_DEFINE_STRUCT_IMPL(N, ...) \
 			IJSTI_PP_CONCAT(IJSTI_DEFINE_STRUCT_IMPL_, N)(__VA_ARGS__)

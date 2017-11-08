@@ -106,14 +106,43 @@ TEST(Serialize, AdditionalJsonField)
 	IJST_SET(st.inner, int_2, 11);
 
 	int ret;
-	// Serialize in place
 	rapidjson::Value jVal2;
-	ret = st._.MoveSerializeInInnerAlloc(true, jVal2);
-	ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
+	ijst::AllocatorType allocator;
+	ret = st._.Serialize(true, jVal2, allocator);
+
+	// Check output
 	ASSERT_EQ(ret, 0);
 	ASSERT_STREQ(jVal2["addi_o1"].GetString(), "str_o1");
 	ASSERT_STREQ(jVal2["inner_val"]["addi_i1"].GetString(), "str_i1");
 	ASSERT_EQ(jVal2["inner_val"]["int_val_2"].GetInt(), 11);
+
+	// Check src
+	ASSERT_STREQ(st._.GetBuffer()["addi_o1"].GetString(), "str_o1");
+	ASSERT_STREQ(st.inner._.GetBuffer()["addi_i1"].GetString(), "str_i1");
+}
+
+TEST(Serialize, AdditionalJsonFieldMoved)
+{
+	ObjRefSt st;
+
+	st._.GetBuffer().AddMember("addi_o1", rapidjson::Value().SetString("str_o1").Move(), st._.GetAllocator());
+	st.inner._.GetBuffer().AddMember("addi_i1", rapidjson::Value().SetString("str_i1").Move(), st.inner._.GetAllocator());
+	IJST_SET(st.inner, int_2, 11);
+
+	int ret;
+	// Serialize in place
+	rapidjson::Value jVal2;
+	ret = st._.MoveSerializeInInnerAlloc(true, jVal2);
+
+	// Check output
+	ASSERT_EQ(ret, 0);
+	ASSERT_STREQ(jVal2["addi_o1"].GetString(), "str_o1");
+	ASSERT_STREQ(jVal2["inner_val"]["addi_i1"].GetString(), "str_i1");
+	ASSERT_EQ(jVal2["inner_val"]["int_val_2"].GetInt(), 11);
+
+	// Check src
+	ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
+	ASSERT_EQ(st.inner._.GetBuffer().MemberCount(), 0u);
 }
 
 IJST_DEFINE_STRUCT(
