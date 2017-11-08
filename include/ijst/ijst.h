@@ -319,25 +319,19 @@ namespace ijst {
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 				req.buffer.SetArray();
-				// Reserve first to make sure rapidjson will not reallocate buffer
 				req.buffer.Reserve(static_cast<rapidjson::SizeType>(pField->size()), req.allocator);
+
 				for (typename VarType::const_iterator itera = pField->begin(); itera != pField->end(); ++itera) {
-					req.buffer.PushBack(
-							rapidjson::Value(rapidjson::kNullType).Move(),
-							req.allocator
-					);
-					StoreType &newElem = req.buffer[req.buffer.Size() - 1];
-
-					SerializeReq elemReq(
-							newElem, req.allocator, &(*itera), req.pushAllField);
-
+					StoreType newElem;
+					SerializeReq elemReq(newElem, req.allocator, &(*itera), req.pushAllField);
 					SerializeResp elemResp;
 					int ret = interface->Serialize(elemReq, elemResp);
+
 					if (IJSTI_UNLIKELY(ret != 0))
 					{
-						req.buffer.PopBack();
 						return ret;
 					}
+					req.buffer.PushBack(newElem, req.allocator);
 				}
 				return 0;
 			}
@@ -360,6 +354,7 @@ namespace ijst {
 					 itVal != req.stream.End(); ++itVal)
 				{
 					// Alloc buffer
+					// New a elem buffer in container first to avoid copy
 					// Use resize() instead of push_back() to avoid copy constructor in C++11
 					pField->resize(pField->size() + 1);
 					DeserializeReq elemReq(*itVal, req.allocator, &pField->back());
@@ -427,43 +422,25 @@ namespace ijst {
 				{
 					// Init
 					const void* pFieldValue = &itFieldMember->second;
-					rapidjson::GenericStringRef<char> fileNameRef =
-							rapidjson::StringRef(itFieldMember->first.c_str(), itFieldMember->first.length());
-					rapidjson::Value fieldNameVal;
-					fieldNameVal.SetString(fileNameRef);
-
-					// Add new member when need
-					StoreType* pNewElem = IJSTI_NULL;
-					bool hasAllocMember = false;
-					{
-						rapidjson::Value::MemberIterator itMember = req.buffer.FindMember(fieldNameVal);
-						if (itMember == req.buffer.MemberEnd()) {
-							// Add member by copy key name
-							req.buffer.AddMember(
-									rapidjson::Value(fieldNameVal, req.allocator).Move(),
-									rapidjson::Value(rapidjson::kNullType).Move(),
-									req.allocator
-							);
-							pNewElem = &req.buffer[fieldNameVal];
-							hasAllocMember = true;
-						}
-						else {
-							pNewElem = &(itMember->value);
-						}
-					}
-
+					StoreType newElem;
 					SerializeReq elemReq(
-							*pNewElem, req.allocator, pFieldValue, req.pushAllField);
-
+							newElem, req.allocator, pFieldValue, req.pushAllField);
 					SerializeResp elemResp;
 					int ret = interface->Serialize(elemReq, elemResp);
+
+					// Check return
 					if (IJSTI_UNLIKELY(ret != 0)) {
-						if (hasAllocMember) {
-							req.buffer.RemoveMember(fieldNameVal);
-						}
 						return ret;
 					}
-					assert(&(req.buffer[fieldNameVal]) == &elemReq.buffer);
+
+					// Add member by copy key name
+					rapidjson::GenericStringRef<char> fieldNameRef =
+							rapidjson::StringRef(itFieldMember->first.c_str(), itFieldMember->first.length());
+					req.buffer.AddMember(
+							rapidjson::Value().SetString(fieldNameRef, req.allocator),
+							newElem,
+							req.allocator
+					);
 				}
 				return 0;
 			}
@@ -486,6 +463,7 @@ namespace ijst {
 				{
 					// Get information
 					const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
+					// New a elem buffer in container first to avoid copy
 					bool hasAlloc = false;
 					if (pField->find(fieldName) == pField->end()) {
 						hasAlloc = true;
@@ -505,8 +483,8 @@ namespace ijst {
 							pField->erase(fieldName);
 						}
 						resp.needErrMsg &&
-						resp.CombineErrMsg("Deserialize elem error. key: " + fieldName + ", err: ",
-										   elemResp
+							resp.CombineErrMsg("Deserialize elem error. key: " + fieldName + ", err: ",
+											   elemResp
 						);
 						resp.fStatus = FStatus::kParseFailed;
 						return ret;
@@ -1045,10 +1023,6 @@ namespace ijst {
 			{
 				// Init
 				const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
-				rapidjson::GenericStringRef<char> fieldNameRef =
-						rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
-				rapidjson::Value fieldNameVal;
-				fieldNameVal.SetString(fieldNameRef);
 
 				// Serialize field
 				StoreType elemOutput;
@@ -1061,10 +1035,13 @@ namespace ijst {
 					return ret;
 				}
 
-				// Add member, field name is not need deep copy
+				// Add member, copy field name because the fieldName store in Meta info maybe release when dynamical
+				// library unload, and the memory pool should be fast to copy field name
 				// Do not check existing key, that's a feature
+				rapidjson::GenericStringRef<char> fieldNameRef =
+						rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
 				buffer.AddMember(
-						rapidjson::Value().SetString(fieldNameRef),
+						rapidjson::Value().SetString(fieldNameRef, allocator),
 						elemOutput,
 						allocator
 				);
