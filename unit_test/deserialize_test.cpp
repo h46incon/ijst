@@ -62,16 +62,31 @@ TEST(Deserialize, AdditionalFields)
 {
 	string validJson = "{\"int_val_1\":1, \"int_val_2\":2, \"str_val_2\":\"str2\", \"additional_field\": \"a_field\"}";
 	SimpleSt st;
-	int ret = st._.Deserialize(validJson, 0);
-	ASSERT_EQ(ret, 0);
+	// keep unknown
+	{
+		int ret = st._.Deserialize(validJson, 0);
+		ASSERT_EQ(ret, 0);
 
-	ASSERT_EQ(IJST_GET_STATUS(st, int_1), ijst::FStatus::kValid);
-	ASSERT_EQ(IJST_GET_STATUS(st, str_1), ijst::FStatus::kMissing);
-	ASSERT_EQ(st.int_1, 1);
-	ASSERT_EQ(st.int_2, 2);
-	ASSERT_STREQ(st.str_2.c_str(), "str2");
+		ASSERT_EQ(IJST_GET_STATUS(st, int_1), ijst::FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st, str_1), ijst::FStatus::kMissing);
+		ASSERT_EQ(st.int_1, 1);
+		ASSERT_EQ(st.int_2, 2);
+		ASSERT_STREQ(st.str_2.c_str(), "str2");
+		ASSERT_STREQ(st._.GetBuffer()["additional_field"].GetString(), "a_field");
+	}
 
-	ASSERT_STREQ(st._.GetBuffer()["additional_field"].GetString(), "a_field");
+	// throw unknown
+	{
+		int ret = st._.Deserialize(validJson, 0, false);
+		ASSERT_EQ(ret, 0);
+
+		ASSERT_EQ(IJST_GET_STATUS(st, int_1), ijst::FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st, str_1), ijst::FStatus::kMissing);
+		ASSERT_EQ(st.int_1, 1);
+		ASSERT_EQ(st.int_2, 2);
+		ASSERT_STREQ(st.str_2.c_str(), "str2");
+		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
+	}
 }
 
 TEST(Deserialize, CopySrc)

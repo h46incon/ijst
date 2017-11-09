@@ -206,12 +206,17 @@ namespace ijst {
 				// true if move context in stream to avoid copy when possible
 				bool canMoveSrc;
 
-				DeserializeReq(StoreType &_stream, AllocatorType &_allocator, bool _canMoveSrc,
+				// true if keep Unknown fields
+				bool keepUnknown;
+
+				DeserializeReq(StoreType &_stream, AllocatorType &_allocator,
+							   bool _keepUnknown, bool _canMoveSrc,
 							   void *_pField)
 						: pFieldBuffer(_pField)
 						  , stream(_stream)
 						  , allocator(_allocator)
 						  , canMoveSrc(_canMoveSrc)
+						  , keepUnknown(_keepUnknown)
 				{ }
 			};
 
@@ -368,7 +373,8 @@ namespace ijst {
 					// New a elem buffer in container first to avoid copy
 					// Use resize() instead of push_back() to avoid copy constructor in C++11
 					pField->resize(pField->size() + 1);
-					DeserializeReq elemReq(*itVal, req.allocator, req.canMoveSrc, &pField->back());
+					DeserializeReq elemReq(*itVal, req.allocator,
+										   req.keepUnknown, req.canMoveSrc, &pField->back());
 
 					// Deserialize
 					DeserializeResp elemResp(resp.needErrMsg);
@@ -480,7 +486,8 @@ namespace ijst {
 					}
 
 					ElemVarType &elemBuffer = (*pField)[fieldName];
-					DeserializeReq elemReq(itMember->value, req.allocator, req.canMoveSrc, &elemBuffer);
+					DeserializeReq elemReq(itMember->value, req.allocator,
+										   req.keepUnknown, req.canMoveSrc, &elemBuffer);
 
 					// Deserialize
 					DeserializeResp elemResp(resp.needErrMsg);
@@ -864,20 +871,23 @@ namespace ijst {
 
 
 			//! Deserialize from json object
-			inline int Deserialize(const StoreType& stream, IJST_INOUT std::string* errMsg)
+			inline int Deserialize(const StoreType& stream,
+								   IJST_INOUT std::string* errMsg, bool keepUnknown = true)
 			{
 				size_t fieldCount;
-				return DoDeserialize(stream, errMsg, fieldCount);
+				return DoDeserialize(stream, keepUnknown, errMsg, fieldCount);
 			}
 
 			//! Deserialize from string
-			inline int Deserialize(const std::string& input, IJST_INOUT std::string* errMsg)
+			inline int Deserialize(const std::string& input,
+								   IJST_INOUT std::string* errMsg, bool keepUnknown = true)
 			{
-				return Deserialize(input.c_str(), input.length(), errMsg);
+				return Deserialize(input.c_str(), input.length(), errMsg, keepUnknown);
 			}
 
 			//! Deserialize from C-style string
-			int Deserialize(const char* str, std::size_t length, IJST_INOUT std::string* errMsg)
+			int Deserialize(const char* str, std::size_t length,
+							IJST_INOUT std::string* errMsg, bool keepUnknown = true)
 			{
 				// The new object will call Deserialize() interfaces in most suitation
 				// So clear own allocator will not bring much benefice
@@ -895,7 +905,7 @@ namespace ijst {
 					return Err::kDeserializeParseFaild;
 				}
 				size_t fieldCount;
-				return DoMoveDeserialize(doc, errMsg, fieldCount);
+				return DoMoveDeserialize(doc, keepUnknown, errMsg, fieldCount);
 			}
 
 			/**
@@ -904,13 +914,14 @@ namespace ijst {
 			 * @note Make sure srcDocStolen use own allocator, or use allocator in this object
 			 * @param errMsg. Output of error message, null if cancel error output
 			 */
-			inline int MoveDeserialize(rapidjson::Document &srcDocStolen, IJST_INOUT std::string *errMsg)
+			inline int MoveDeserialize(rapidjson::Document &srcDocStolen,
+									   IJST_INOUT std::string *errMsg, bool keepUnknown = true)
 			{
 				// Store document to store allocator
 				m_pOwnDoc->Swap(srcDocStolen);
 				m_pAllocator = &m_pOwnDoc->GetAllocator();
 				size_t fieldCount;
-				return DoMoveDeserialize(*m_pOwnDoc, errMsg, fieldCount);
+				return DoMoveDeserialize(*m_pOwnDoc, keepUnknown, errMsg, fieldCount);
 			}
 
 
@@ -919,7 +930,7 @@ namespace ijst {
 			 * @note Make sure the lifecycle of str is longer than this object
 			 * @note The context in str may be changed after deserialize
 			 */
-			int DeserializeInsitu(char* str, IJST_INOUT std::string* errMsg)
+			int DeserializeInsitu(char* str, IJST_INOUT std::string* errMsg, bool keepUnknown = true)
 			{
 				// The new object will call Deserialize() interfaces in most suitation
 				// So clear own allocator will not bring much benefice
@@ -937,7 +948,7 @@ namespace ijst {
 					return Err::kDeserializeParseFaild;
 				}
 				size_t fieldCount;
-				return DoMoveDeserialize(doc, errMsg, fieldCount);
+				return DoMoveDeserialize(doc, keepUnknown, errMsg, fieldCount);
 			}
 
 
@@ -971,11 +982,11 @@ namespace ijst {
 
 				if (req.canMoveSrc)
 				{
-					return DoMoveDeserialize(req.stream, pErrMsg, resp.fieldCount);
+					return DoMoveDeserialize(req.stream, req.keepUnknown, pErrMsg, resp.fieldCount);
 				}
 				else
 				{
-					return DoDeserialize(req.stream, pErrMsg, resp.fieldCount);
+					return DoDeserialize(req.stream, req.keepUnknown, pErrMsg, resp.fieldCount);
 				}
 			}
 
@@ -1156,7 +1167,7 @@ namespace ijst {
 			 * Deserialize in inner buffer
 			 * @note Make sure the lifecycle of allocator of the stream is longer than this object
 			 */
-			int DoMoveDeserialize(StoreType& stream,
+			int DoMoveDeserialize(StoreType& stream, bool keepUnknown,
 								  IJST_INOUT std::string* pErrMsgOut, IJST_OUT size_t& fieldCountOut)
 			{
 				if (!stream.IsObject())
@@ -1177,9 +1188,10 @@ namespace ijst {
 							itMetaField = m_metaClass->mapName.find(fieldName);
 
 					if (itMetaField == m_metaClass->mapName.end()) {
-						// TODO: This is relay on the implementation details of rapidjson's object storage (array), how to check?
 						// Not a field in struct
-						if (itNextRemain != itMember) {
+						// Move unknown fields to the front of array first
+						// TODO: This is relay on the implementation details of rapidjson's object storage (array), how to check?
+						if (keepUnknown && itNextRemain != itMember) {
 							IJSTI_STORE_MOVE(*itNextRemain, *itMember);
 						}
 						++itNextRemain;
@@ -1190,7 +1202,7 @@ namespace ijst {
 					StoreType memberStream(rapidjson::kNullType);
 					memberStream.Swap(itMember->value);
 
-					int ret = DoDeserializeField(itMetaField, memberStream, /*canMoveSrc=*/true, pErrMsgOut);
+					int ret = DoDeserializeField(itMetaField, memberStream, keepUnknown, /*canMoveSrc=*/true, pErrMsgOut);
 					if (ret != 0) {
 						return ret;
 					}
@@ -1198,18 +1210,22 @@ namespace ijst {
 				}
 
 				// Clean deserialized
-				if (stream.MemberCount() != 0)
-				{
+				if (stream.MemberCount() != 0) {
 					stream.EraseMember(itNextRemain, stream.MemberEnd());
 				}
-				IJSTI_STORE_MOVE(*m_pBuffer, stream);
+				if (keepUnknown) {
+					IJSTI_STORE_MOVE(*m_pBuffer, stream);
+				}
+				else {
+					m_pBuffer->SetObject();
+				}
 
 				int ret = CheckFieldState(pErrMsgOut);
 				return ret;
 			}
 
 			//! Deserialize in inner buffer
-			int DoDeserialize(const StoreType& stream,
+			int DoDeserialize(const StoreType& stream, bool keepUnknown,
 							  IJST_INOUT std::string* pErrMsgOut, IJST_OUT size_t& fieldCountOut)
 			{
 				if (!stream.IsObject())
@@ -1229,16 +1245,19 @@ namespace ijst {
 							itMetaField = m_metaClass->mapName.find(fieldName);
 
 					if (itMetaField == m_metaClass->mapName.end()) {
-						m_pBuffer->AddMember(
-								rapidjson::Value().SetString(fieldName.c_str(), fieldName.length(), *m_pAllocator),
-								rapidjson::Value().CopyFrom(itMember->value, *m_pAllocator, true),
-								*m_pAllocator
-						);
+						if (keepUnknown) {
+							m_pBuffer->AddMember(
+									rapidjson::Value().SetString(fieldName.c_str(), fieldName.length(), *m_pAllocator),
+									rapidjson::Value().CopyFrom(itMember->value, *m_pAllocator, true),
+									*m_pAllocator
+							);
+						}
 						continue;
 					}
 
 					StoreType& memberStream = const_cast<StoreType&>(itMember->value);
-					int ret = DoDeserializeField(itMetaField, memberStream, /*canMoveSrc=*/false, pErrMsgOut);
+					int ret = DoDeserializeField(itMetaField, memberStream,
+												 keepUnknown, /*canMoveSrc=*/false, pErrMsgOut);
 					if (ret != 0) {
 						return ret;
 					}
@@ -1250,7 +1269,8 @@ namespace ijst {
 			}
 
 			int DoDeserializeField(IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator itMetaField,
-								   StoreType& stream, bool canMoveSrc, IJST_INOUT std::string *pErrMsgOut)
+								   StoreType& stream, bool keepUnknown, bool canMoveSrc,
+								   IJST_INOUT std::string *pErrMsgOut)
 			{
 				const MetaField *metaField = itMetaField->second;
 				// Check nullable
@@ -1262,7 +1282,7 @@ namespace ijst {
 				else
 				{
 					void *pField = GetFieldByOffset(metaField->offset);
-					DeserializeReq elemReq(stream, *m_pAllocator, canMoveSrc, pField);
+					DeserializeReq elemReq(stream, *m_pAllocator, keepUnknown, canMoveSrc, pField);
 					const bool needErrMsg = pErrMsgOut != IJSTI_NULL;
 					DeserializeResp elemResp(needErrMsg);
 					int ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
