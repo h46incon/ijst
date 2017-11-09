@@ -52,8 +52,8 @@ namespace ijst {
 		static const unsigned int _MaskDesc 		= 0x000000FF;
 		static const unsigned int Optional 			= 0x00000001;
 		static const unsigned int Nullable 			= 0x00000002;
-		// Element nullable is hard to represent, has not plan to implement it
 		static const unsigned int ElemNotEmpty 		= 0x00000004;
+		// FDesc of Element (i.e. Nullable, ElemNotEmpty) inside container is hard to represent, has not plan to implement it
 	};
 
 	struct FStatus {
@@ -1172,6 +1172,9 @@ namespace ijst {
 			{
 				if (!stream.IsObject())
 				{
+					if (pErrMsgOut != IJSTI_NULL) {
+						*pErrMsgOut = "value is not object";
+					}
 					return Err::kDeserializeValueTypeError;
 				}
 
@@ -1230,6 +1233,9 @@ namespace ijst {
 			{
 				if (!stream.IsObject())
 				{
+					if (pErrMsgOut != IJSTI_NULL) {
+						*pErrMsgOut = "value is not object";
+					}
 					return Err::kDeserializeValueTypeError;
 				}
 
