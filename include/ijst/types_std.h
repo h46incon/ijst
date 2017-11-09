@@ -96,14 +96,14 @@ namespace ijst{
 			m_pOwnDoc = IJSTI_NULL;
 		}
 
-		StoreType& V() {return v;}
-		const StoreType& V() const {return v;}
+		BufferType& V() {return v;}
+		const BufferType& V() const {return v;}
 		AllocatorType& GetAllocator() {return *m_pAllocator;}
 		const AllocatorType& GetAllocator() const {return *m_pAllocator;}
 
 	private:
 		friend class detail::FSerializer<detail::TypeClassPrim<FType::Raw> >;
-		StoreType v;
+		BufferType v;
 		AllocatorType* m_pAllocator;
 		rapidjson::Document* m_pOwnDoc;		// use pointer to make FStoreRaw be a standard-layout type
 	};
@@ -323,7 +323,7 @@ namespace ijst{
 				if (pFieldT->m_pAllocator == &allocator) {
 					return 0;
 				}
-				StoreType temp;
+				BufferType temp;
 				temp = pFieldT->v;
 				pFieldT->v.CopyFrom(temp, allocator, false);
 				pFieldT->m_pAllocator = &allocator;

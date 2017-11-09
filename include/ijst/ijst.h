@@ -45,7 +45,7 @@
 #define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
 
 namespace ijst {
-	typedef rapidjson::Value StoreType;
+	typedef rapidjson::Value BufferType;
 	typedef rapidjson::MemoryPoolAllocator<> 	AllocatorType;
 
 	struct FDesc {
@@ -176,10 +176,10 @@ namespace ijst {
 				bool canMoveSrc;
 
 				// Output buffer info. The instance should serialize in this object and use allocator
-				IJST_OUT StoreType& buffer;
+				IJST_OUT BufferType& buffer;
 				AllocatorType& allocator;
 
-				SerializeReq(StoreType &_buffer, AllocatorType &_allocator,
+				SerializeReq(BufferType &_buffer, AllocatorType &_allocator,
 							 const void *_pField, bool _canMoveSrc,
 							 bool _pushAllfield)
 						: pushAllField(_pushAllfield)
@@ -200,7 +200,7 @@ namespace ijst {
 				void* pFieldBuffer;
 
 				// The input stream and allocator
-				StoreType& stream;
+				BufferType& stream;
 				AllocatorType& allocator;
 
 				// true if move context in stream to avoid copy when possible
@@ -209,7 +209,7 @@ namespace ijst {
 				// true if keep Unknown fields
 				bool keepUnknown;
 
-				DeserializeReq(StoreType &_stream, AllocatorType &_allocator,
+				DeserializeReq(BufferType &_stream, AllocatorType &_allocator,
 							   bool _keepUnknown, bool _canMoveSrc,
 							   void *_pField)
 						: pFieldBuffer(_pField)
@@ -338,7 +338,7 @@ namespace ijst {
 				req.buffer.Reserve(static_cast<rapidjson::SizeType>(pField->size()), req.allocator);
 
 				for (typename VarType::const_iterator itera = pField->begin(); itera != pField->end(); ++itera) {
-					StoreType newElem;
+					BufferType newElem;
 					SerializeReq elemReq(newElem, req.allocator, &(*itera), req.canMoveSrc, req.pushAllField);
 					SerializeResp elemResp;
 					int ret = interface->Serialize(elemReq, elemResp);
@@ -439,7 +439,7 @@ namespace ijst {
 				{
 					// Init
 					const void* pFieldValue = &itFieldMember->second;
-					StoreType newElem;
+					BufferType newElem;
 					SerializeReq elemReq(newElem, req.allocator, pFieldValue, req.canMoveSrc, req.pushAllField);
 					SerializeResp elemResp;
 					int ret = interface->Serialize(elemReq, elemResp);
@@ -733,8 +733,8 @@ namespace ijst {
 			}
 
 			//! Get inner buffer
-			inline StoreType &GetBuffer() { return *m_pBuffer; }
-			inline const StoreType &GetBuffer() const { return *m_pBuffer; }
+			inline BufferType &GetBuffer() { return *m_pBuffer; }
+			inline const BufferType &GetBuffer() const { return *m_pBuffer; }
 
 			//! Get allocator used in object
 			//! The inner allocator is own allocator when init, but may change to other allocator
@@ -747,7 +747,7 @@ namespace ijst {
 			{
 				if (m_pAllocator != &allocator) {
 					// copy buffer when need
-					StoreType temp;
+					BufferType temp;
 					temp = *m_pBuffer;
 					// The life cycle of const string in temp should be same as this object
 					m_pBuffer->CopyFrom(temp, allocator, false);
@@ -779,7 +779,7 @@ namespace ijst {
 			 * @param allocator	 		allocator. If using inner allocator, user should carefully handler the structure's life cycle
 			 * @return
 			 */
-			inline int Serialize(bool pushAllField, IJST_OUT StoreType& output, AllocatorType& allocator) const
+			inline int Serialize(bool pushAllField, IJST_OUT BufferType& output, AllocatorType& allocator) const
 			{
 				return Accessor::template DoSerialize<false, const Accessor>
 						(*this, pushAllField, output, allocator);
@@ -793,7 +793,7 @@ namespace ijst {
 			 */
 			int SerializeToString(bool pushAllField, IJST_OUT std::string &strOutput) const
 			{
-				StoreType store;
+				BufferType store;
 				AllocatorType allocator;
 				int ret = Serialize(pushAllField, IJST_OUT store, allocator);
 				if (ret != 0) {
@@ -821,7 +821,7 @@ namespace ijst {
 			 * @param allocator	 		allocator. If using inner allocator, user should carefully handler the structure's life cycle
 			 * @return
 			 */
-			inline int MoveSerialize(bool pushAllField, IJST_OUT StoreType& output, AllocatorType& allocator)
+			inline int MoveSerialize(bool pushAllField, IJST_OUT BufferType& output, AllocatorType& allocator)
 			{
 				return Accessor::template DoSerialize<true, Accessor>
 						(*this, pushAllField, output, allocator);
@@ -836,7 +836,7 @@ namespace ijst {
 			 */
 			int MoveSerializeToString(bool pushAllField, IJST_OUT std::string &strOutput)
 			{
-				StoreType store;
+				BufferType store;
 				int ret = MoveSerializeInInnerAlloc(pushAllField, IJST_OUT store);
 				if (ret != 0) {
 					return ret;
@@ -863,7 +863,7 @@ namespace ijst {
 			 * @param output 			the output of result
 			 * @return
 			 */
-			inline int MoveSerializeInInnerAlloc(bool pushAllField, IJST_OUT StoreType &output)
+			inline int MoveSerializeInInnerAlloc(bool pushAllField, IJST_OUT BufferType &output)
 			{
 				return Accessor::template DoSerialize<true, Accessor>
 						(*this, pushAllField, output, *m_pAllocator);
@@ -871,7 +871,7 @@ namespace ijst {
 
 
 			//! Deserialize from json object
-			inline int Deserialize(const StoreType& stream,
+			inline int Deserialize(const BufferType& stream,
 								   IJST_INOUT std::string* errMsg, bool keepUnknown = true)
 			{
 				size_t fieldCount;
@@ -917,7 +917,7 @@ namespace ijst {
 			inline int MoveDeserialize(rapidjson::Document &srcDocStolen,
 									   IJST_INOUT std::string *errMsg, bool keepUnknown = true)
 			{
-				// Store document to store allocator
+				// Store document to manager allocator
 				m_pOwnDoc->Swap(srcDocStolen);
 				m_pAllocator = &m_pOwnDoc->GetAllocator();
 				size_t fieldCount;
@@ -1013,7 +1013,7 @@ namespace ijst {
 			}
 
 			int DoSerializeConst(bool pushAllField, bool canMoveSrc,
-										IJST_OUT StoreType& buffer, AllocatorType& allocator) const
+										IJST_OUT BufferType& buffer, AllocatorType& allocator) const
 			{
 				// Serialize fields to buffer
 				buffer.SetObject();
@@ -1099,7 +1099,7 @@ namespace ijst {
 			}
 
 			template <bool kCanMoveSrc, class _TAccessor>
-			static int DoSerialize(_TAccessor& accessor, bool pushAllField, IJST_OUT StoreType& buffer, AllocatorType& allocator)
+			static int DoSerialize(_TAccessor& accessor, bool pushAllField, IJST_OUT BufferType& buffer, AllocatorType& allocator)
 			{
 				const Accessor& rThis = accessor;
 				int iRet = rThis.DoSerializeConst(pushAllField, kCanMoveSrc, buffer, allocator);
@@ -1111,18 +1111,18 @@ namespace ijst {
 			}
 
 			template<bool kCanMoveSrc, class _TAccessor>
-			static inline void AppendInnerToBuffer(_TAccessor &accessor, StoreType &buffer, AllocatorType &allocator);
+			static inline void AppendInnerToBuffer(_TAccessor &accessor, BufferType &buffer, AllocatorType &allocator);
 
 
 			int DoSerializeField(std::vector<MetaField>::const_iterator itMetaField,
 										bool canMoveSrc, bool pushAllField,
-										StoreType &buffer, AllocatorType &allocator) const
+										BufferType &buffer, AllocatorType &allocator) const
 			{
 				// Init
 				const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
 
 				// Serialize field
-				StoreType elemOutput;
+				BufferType elemOutput;
 				SerializeReq elemSerializeReq(elemOutput, allocator, pFieldValue, canMoveSrc, pushAllField);
 
 				SerializeResp elemSerializeResp;
@@ -1145,7 +1145,7 @@ namespace ijst {
 			}
 
 			int DoSerializeNullField(std::vector<MetaField>::const_iterator itMetaField,
-									 StoreType &buffer, AllocatorType &allocator) const
+									 BufferType &buffer, AllocatorType &allocator) const
 			{
 				// Init
 				rapidjson::GenericStringRef<char> fieldNameRef =
@@ -1167,7 +1167,7 @@ namespace ijst {
 			 * Deserialize in inner buffer
 			 * @note Make sure the lifecycle of allocator of the stream is longer than this object
 			 */
-			int DoMoveDeserialize(StoreType& stream, bool keepUnknown,
+			int DoMoveDeserialize(BufferType& stream, bool keepUnknown,
 								  IJST_INOUT std::string* pErrMsgOut, IJST_OUT size_t& fieldCountOut)
 			{
 				if (!stream.IsObject())
@@ -1202,7 +1202,7 @@ namespace ijst {
 					}
 
 					// Move member out of object
-					StoreType memberStream(rapidjson::kNullType);
+					BufferType memberStream(rapidjson::kNullType);
 					memberStream.Swap(itMember->value);
 
 					int ret = DoDeserializeField(itMetaField, memberStream, keepUnknown, /*canMoveSrc=*/true, pErrMsgOut);
@@ -1228,7 +1228,7 @@ namespace ijst {
 			}
 
 			//! Deserialize in inner buffer
-			int DoDeserialize(const StoreType& stream, bool keepUnknown,
+			int DoDeserialize(const BufferType& stream, bool keepUnknown,
 							  IJST_INOUT std::string* pErrMsgOut, IJST_OUT size_t& fieldCountOut)
 			{
 				if (!stream.IsObject())
@@ -1261,7 +1261,7 @@ namespace ijst {
 						continue;
 					}
 
-					StoreType& memberStream = const_cast<StoreType&>(itMember->value);
+					BufferType& memberStream = const_cast<BufferType&>(itMember->value);
 					int ret = DoDeserializeField(itMetaField, memberStream,
 												 keepUnknown, /*canMoveSrc=*/false, pErrMsgOut);
 					if (ret != 0) {
@@ -1275,7 +1275,7 @@ namespace ijst {
 			}
 
 			int DoDeserializeField(IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator itMetaField,
-								   StoreType& stream, bool keepUnknown, bool canMoveSrc,
+								   BufferType& stream, bool keepUnknown, bool canMoveSrc,
 								   IJST_INOUT std::string *pErrMsgOut)
 			{
 				const MetaField *metaField = itMetaField->second;
@@ -1404,7 +1404,7 @@ namespace ijst {
 		//! copy version of Accessor::AppendInnerToBuffer
 		template <>
 		inline void Accessor::template AppendInnerToBuffer<false, const Accessor>(
-				const Accessor& accessor, StoreType&buffer, AllocatorType& allocator)
+				const Accessor& accessor, BufferType&buffer, AllocatorType& allocator)
 		{
 			const Accessor& rThis = accessor;
 			// Copy
@@ -1422,7 +1422,7 @@ namespace ijst {
 		//! move version of Accessor::AppendInnerToBuffer
 		template <>
 		inline void Accessor::template AppendInnerToBuffer<true, Accessor>(
-				Accessor& accessor, StoreType&buffer, AllocatorType& allocator)
+				Accessor& accessor, BufferType&buffer, AllocatorType& allocator)
 		{
 			Accessor& rThis = accessor;
 			// append inner data to buffer
