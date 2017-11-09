@@ -57,7 +57,7 @@ namespace ijst{
 		{
 			m_pOwnDoc = new rapidjson::Document();
 			m_pAllocator = &m_pOwnDoc->GetAllocator();
-			v.CopyFrom(rhs.v, *m_pAllocator);
+			v.CopyFrom(rhs.v, *m_pAllocator, true);
 		}
 
 		#if __cplusplus >= 201103L
@@ -299,15 +299,21 @@ namespace ijst{
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
-				req.buffer.CopyFrom(pField->V(), req.allocator);
+				req.buffer.CopyFrom(pField->V(), req.allocator, true);
 				return 0;
 			}
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
 			{
 				VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
-				pField->v.Swap(req.stream);
-				pField->m_pAllocator = &req.allocator;
+
+				if (req.canMoveSrc) {
+					pField->v.Swap(req.stream);
+					pField->m_pAllocator = &req.allocator;
+				}
+				else {
+					pField->v.CopyFrom(req.stream, *pField->m_pAllocator, true);
+				}
 				return 0;
 			}
 
@@ -319,7 +325,7 @@ namespace ijst{
 				}
 				StoreType temp;
 				temp = pFieldT->v;
-				pFieldT->v.CopyFrom(temp, allocator);
+				pFieldT->v.CopyFrom(temp, allocator, false);
 				pFieldT->m_pAllocator = &allocator;
 				return 0;
 			}

@@ -503,16 +503,47 @@ TEST(Primitive, Raw)
 		ASSERT_TRUE(st.v.V().IsNull());
 	}
 
-	// Deserialize
+	// Deserialize copy
 	{
-		string json = "{\"f_v\": \"v1\", \"f_vec\": [\"v1\", 2], \"f_map\": {\"v1\": null, \"v2\": {\"v21\": false }}}";
-		ret = st._.Deserialize(json, 0);
-		ASSERT_EQ(ret, 0);
+		{
+			string json = "{\"f_v\": \"v1\", \"f_vec\": [\"v1\", 2], \"f_map\": {\"v1\": null, \"v2\": {\"v21\": false }}}";
+			rapidjson::Document doc;
+			doc.Parse(json.c_str(), json.length());
+			ASSERT_FALSE(doc.HasParseError());
+			ret = st._.Deserialize(doc, 0);
+			ASSERT_EQ(ret, 0);
+			// Check source doc
+			ASSERT_STREQ(doc["f_v"].GetString(), "v1");
+			ASSERT_STREQ(doc["f_vec"][0].GetString(), "v1");
+			ASSERT_EQ(doc["f_vec"][1].GetInt(), 2);
+			ASSERT_TRUE(doc["f_map"]["v1"].IsNull());
+			ASSERT_EQ(doc["f_map"]["v2"]["v21"].GetBool(), false);
+			// doc is destory here
+		}
+		// Check st
 		ASSERT_STREQ(st.v.V().GetString(), "v1");
 		ASSERT_STREQ(st.vec_v[0].V().GetString(), "v1");
 		ASSERT_EQ(st.vec_v[1].V().GetInt(), 2);
 		ASSERT_TRUE(st.map_v["v1"].V().IsNull());
 		ASSERT_EQ(st.map_v["v2"].V()["v21"].GetBool(), false);
+	}
+
+	// Deserialize Move
+	{
+		string json = "{\"f_v\": \"v1\", \"f_vec\": [\"v1\", 2], \"f_map\": {\"v1\": null, \"v2\": {\"v21\": false }}}";
+		rapidjson::Document doc;
+		doc.Parse(json.c_str(), json.length());
+		ASSERT_FALSE(doc.HasParseError());
+		ret = st._.MoveDeserialize(doc, 0);
+		ASSERT_EQ(ret, 0);
+		// Check st
+		ASSERT_STREQ(st.v.V().GetString(), "v1");
+		ASSERT_STREQ(st.vec_v[0].V().GetString(), "v1");
+		ASSERT_EQ(st.vec_v[1].V().GetInt(), 2);
+		ASSERT_TRUE(st.map_v["v1"].V().IsNull());
+		ASSERT_EQ(st.map_v["v2"].V()["v21"].GetBool(), false);
+		// Check source doc
+		ASSERT_TRUE(doc.IsNull());
 	}
 
 	// Serialize

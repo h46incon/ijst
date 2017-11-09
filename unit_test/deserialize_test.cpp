@@ -74,6 +74,61 @@ TEST(Deserialize, AdditionalFields)
 	ASSERT_STREQ(st._.GetBuffer()["additional_field"].GetString(), "a_field");
 }
 
+TEST(Deserialize, CopySrc)
+{
+	SimpleSt st;
+	{
+		rapidjson::Document doc;
+		{
+			string validJson = "{\"int_val_2\":1, \"str_val_2\":\"str2\"}";
+			doc.Parse(validJson.c_str(), validJson.length());
+			ASSERT_FALSE(doc.HasParseError());
+		}
+		int ret = st._.Deserialize(doc, 0);
+		ASSERT_EQ(ret, 0);
+		// Check src
+		ASSERT_EQ(doc["int_val_2"].GetInt(), 1);
+		ASSERT_STREQ(doc["str_val_2"].GetString(), "str2");
+	}
+
+	// Check st
+	ASSERT_EQ(st.int_2, 1);
+	ASSERT_STREQ(st.str_2.c_str(), "str2");
+}
+
+TEST(Deserialize, MoveSrc)
+{
+	SimpleSt st;
+	rapidjson::Document doc;
+	{
+		string validJson = "{\"int_val_2\":1, \"str_val_2\":\"str2\"}";
+		doc.Parse(validJson.c_str(), validJson.length());
+		ASSERT_FALSE(doc.HasParseError());
+	}
+	int ret = st._.MoveDeserialize(doc, 0);
+	ASSERT_EQ(ret, 0);
+
+	// Check src
+	ASSERT_TRUE(doc.IsNull());
+
+	// Check st
+	ASSERT_EQ(st.int_2, 1);
+	ASSERT_STREQ(st.str_2.c_str(), "str2");
+}
+
+TEST(Deserialize, Insitu)
+{
+	SimpleSt st;
+	string validJson = "{\"int_val_2\":1, \"str_val_2\":\"str2\"}";
+	char* buf = new char[validJson.size()];
+	strncpy(buf, validJson.c_str(), validJson.size());
+	int ret = st._.DeserializeInsitu(buf, 0);
+	ASSERT_EQ(ret, 0);
+
+	// Check st
+	ASSERT_EQ(st.int_2, 1);
+	ASSERT_STREQ(st.str_2.c_str(), "str2");
+}
 IJST_DEFINE_STRUCT(
 		NullableSt
 		, (IJST_TPRI(Int), int_1, "int_val_1", ijst::FDesc::Optional)
