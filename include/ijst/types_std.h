@@ -37,7 +37,7 @@ namespace ijst{
 		};
 	}	// namespace detail
 
-	typedef unsigned char FStoreBool; 		// Could not use bool type because std::vector<bool> is not a container!
+	typedef uint8_t FStoreBool; 		// Could not use bool type because std::vector<bool> is not a container!
 	typedef int FStoreInt;
 	typedef uint32_t FStoreUInt32;
 	typedef uint64_t FStoreUInt64;
@@ -130,7 +130,7 @@ namespace ijst{
 				}
 
 				VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
-				*pField = static_cast<unsigned char>(req.stream.GetBool() ? 1 : 0);
+				*pField = static_cast<VarType >(req.stream.GetBool() ? 1 : 0);
 				return 0;
 			}
 		};
