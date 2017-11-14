@@ -115,12 +115,14 @@ namespace ijst {
 					(dest) = (src);                 				\
 				}                                   				\
 			} while (false)
-		#define IJSTI_SET_ERRMSG_AND_RET(pErrMsgOut, errMsg, retCode)	\
-			do {														\
-				if ((pErrMsgOut) != IJSTI_NULL) {						\
-					*(pErrMsgOut) = (errMsg);							\
-				}														\
-				return (retCode);										\
+
+		//! Set errMsg to pErrMsgOut when not null
+		//! Use macro instead of function to avoid compute errMsg when pErrMsgOut is null
+		#define IJSTI_SET_ERRMSG(pErrMsgOut, errMsg)				\
+			do {													\
+				if ((pErrMsgOut) != IJSTI_NULL) {					\
+					*(pErrMsgOut) = (errMsg);						\
+				}													\
 			} while (false)
 
 
@@ -1200,9 +1202,7 @@ namespace ijst {
 			{
 				if (!stream.IsObject())
 				{
-					if (pErrMsgOut != IJSTI_NULL) {
-						*pErrMsgOut = "value is not object";
-					}
+					IJSTI_SET_ERRMSG(pErrMsgOut, "value is not object");
 					return Err::kDeserializeValueTypeError;
 				}
 
@@ -1230,10 +1230,8 @@ namespace ijst {
 								++itNextRemain;
 								break;
 							case UnknownMode::kError:
-								IJSTI_SET_ERRMSG_AND_RET(
-										pErrMsgOut,
-										"Member in object is unknown" + fieldName,
-										Err::kSomeUnknownMember);
+								IJSTI_SET_ERRMSG(pErrMsgOut, "Member in object is unknown" + fieldName);
+								return Err::kSomeUnknownMember;
 							case UnknownMode::kIgnore:
 								break;
 							default:
@@ -1273,11 +1271,8 @@ namespace ijst {
 			int DoDeserialize(const BufferType& stream, EUnknownMode unknownMode,
 							  IJST_INOUT std::string* pErrMsgOut, IJST_OUT size_t& fieldCountOut)
 			{
-				if (!stream.IsObject())
-				{
-					if (pErrMsgOut != IJSTI_NULL) {
-						*pErrMsgOut = "value is not object";
-					}
+				if (!stream.IsObject()) {
+					IJSTI_SET_ERRMSG(pErrMsgOut, "value is not object");
 					return Err::kDeserializeValueTypeError;
 				}
 
@@ -1306,10 +1301,8 @@ namespace ijst {
 							case UnknownMode::kIgnore:
 								break;
 							case UnknownMode::kError:
-								IJSTI_SET_ERRMSG_AND_RET(
-										pErrMsgOut,
-										"Member in object is unknown" + fieldName,
-										Err::kSomeUnknownMember);
+								IJSTI_SET_ERRMSG(pErrMsgOut, "Member in object is unknown" + fieldName);
+								return Err::kSomeUnknownMember;
 							default:
 								assert(false);
 						}
@@ -1350,20 +1343,20 @@ namespace ijst {
 					// Check return
 					if (ret != 0) {
 						m_fieldStatus[metaField->offset] = FStatus::kParseFailed;
-						if (pErrMsgOut != IJSTI_NULL)
-						{
-							*pErrMsgOut = ("Deserialize field error. name: " + metaField->name + ", err: " + elemResp.errMsg);
-						}
+						IJSTI_SET_ERRMSG(
+								pErrMsgOut,
+								("Deserialize field error. name: " + metaField->name + ", err: " + elemResp.errMsg)
+						);
 						return ret;
 					}
 					// Check elem size
 					if (isBitSet(metaField->desc, FDesc::ElemNotEmpty)
 						&& elemResp.fieldCount == 0)
 					{
-						if (pErrMsgOut != IJSTI_NULL)
-						{
-							*pErrMsgOut = ("Elem in field is empty. name: " + metaField->name);
-						}
+						IJSTI_SET_ERRMSG(
+								pErrMsgOut,
+								"Elem in field is empty. name: " + metaField->name
+						);
 						return Err::kDeserializeElemEmpty;
 					}
 					// succ
@@ -1403,10 +1396,10 @@ namespace ijst {
 				}
 				if (hasErr)
 				{
-					if (pErrMsgOut != IJSTI_NULL)
-					{
-						*pErrMsgOut = "Some fields are invalid: " + invalidNameOss.str();
-					}
+					IJSTI_SET_ERRMSG(
+							pErrMsgOut,
+							"Some fields are invalid: " + invalidNameOss.str()
+					);
 					return Err::kDeserializeSomeFiledsInvalid;
 				}
 				return 0;
