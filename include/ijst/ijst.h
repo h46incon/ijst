@@ -630,16 +630,6 @@ namespace ijst {
 			}
 		};
 
-		template<class _T>
-		class MetaInfoIniter {
-		private:
-			friend class Singleton<MetaInfoIniter<_T> >;
-			MetaInfoIniter()
-			{
-				_T::InitMetaInfo();
-			}
-		};
-
 		class Accessor {
 		public:
 			//region constructors
