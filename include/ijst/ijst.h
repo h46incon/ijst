@@ -66,6 +66,7 @@ namespace ijst {
 			kValid,
 		};
 	};
+	typedef FStatus::_E EFStatus;
 
 	struct Err {
 		static const int kSucc 							= 0x00000000;
@@ -73,8 +74,19 @@ namespace ijst {
 		static const int kDeserializeSomeFiledsInvalid 	= 0x00001002;
 		static const int kDeserializeParseFaild 		= 0x00001003;
 		static const int kDeserializeElemEmpty 			= 0x00001004;
+		static const int kSomeUnknownMember				= 0x00001005;
 		static const int kInnerError 					= 0x00002001;
 	};
+
+	struct UnknownMode {
+	public:
+		enum _E {
+			kKeep,		// keep unknown fileds
+			kIgnore,	// ignore unknown fileds
+			kError		// error when unknown fields occurs
+		};
+	};
+	typedef UnknownMode::_E EUnknownMode;
 
 	/**	========================================================================================
 	 *				Inner Interface
@@ -102,6 +114,13 @@ namespace ijst {
 					/*rapidjson's assigment behaviour is move */ 	\
 					(dest) = (src);                 				\
 				}                                   				\
+			} while (false)
+		#define IJSTI_SET_ERRMSG_AND_RET(pErrMsgOut, errMsg, retCode)	\
+			do {														\
+				if ((pErrMsgOut) != IJSTI_NULL) {						\
+					*(pErrMsgOut) = (errMsg);							\
+				}														\
+				return (retCode);										\
 			} while (false)
 
 
@@ -164,6 +183,14 @@ namespace ijst {
 
 		class SerializerInterface {
 		public:
+			struct SrcMode {
+				enum _E {
+					kKeep,
+					kMove 		// Move context in stream to avoid copy when possible
+				};
+			};
+			typedef SrcMode::_E ESrcMode;
+
 			struct SerializeReq {
 				// true if need serialize all field, false if serialize only valid field
 				bool pushAllField;
@@ -203,25 +230,22 @@ namespace ijst {
 				BufferType& stream;
 				AllocatorType& allocator;
 
-				// true if move context in stream to avoid copy when possible
-				bool canMoveSrc;
-
-				// true if keep Unknown fields
-				bool keepUnknown;
+				ESrcMode srcMode;
+				EUnknownMode unknownMode;
 
 				DeserializeReq(BufferType &_stream, AllocatorType &_allocator,
-							   bool _keepUnknown, bool _canMoveSrc,
+							   EUnknownMode _unknownMode, ESrcMode _srcMode,
 							   void *_pField)
 						: pFieldBuffer(_pField)
 						  , stream(_stream)
 						  , allocator(_allocator)
-						  , canMoveSrc(_canMoveSrc)
-						  , keepUnknown(_keepUnknown)
+						  , srcMode(_srcMode)
+						  , unknownMode(_unknownMode)
 				{ }
 			};
 
 			struct DeserializeResp {
-				FStatus::_E fStatus;
+				EFStatus fStatus;
 				size_t fieldCount;
 				const bool needErrMsg;
 				std::string errMsg;
@@ -374,7 +398,7 @@ namespace ijst {
 					// Use resize() instead of push_back() to avoid copy constructor in C++11
 					pField->resize(pField->size() + 1);
 					DeserializeReq elemReq(*itVal, req.allocator,
-										   req.keepUnknown, req.canMoveSrc, &pField->back());
+										   req.unknownMode, req.srcMode, &pField->back());
 
 					// Deserialize
 					DeserializeResp elemResp(resp.needErrMsg);
@@ -487,7 +511,7 @@ namespace ijst {
 
 					ElemVarType &elemBuffer = (*pField)[fieldName];
 					DeserializeReq elemReq(itMember->value, req.allocator,
-										   req.keepUnknown, req.canMoveSrc, &elemBuffer);
+										   req.unknownMode, req.srcMode, &elemBuffer);
 
 					// Deserialize
 					DeserializeResp elemResp(resp.needErrMsg);
@@ -726,7 +750,7 @@ namespace ijst {
 				MarkFieldStatus(fieldPtr, FStatus::kMissing);
 			}
 
-			inline FStatus::_E GetStatus(const void *fieldptr) const
+			inline EFStatus GetStatus(const void *fieldptr) const
 			{
 				const size_t offset = GetFieldOffset(fieldptr);
 				return GetStatusByOffset(offset);
@@ -872,22 +896,22 @@ namespace ijst {
 
 			//! Deserialize from json object
 			inline int Deserialize(const BufferType& stream,
-								   IJST_INOUT std::string* errMsg, bool keepUnknown = true)
+								   IJST_INOUT std::string* errMsg, EUnknownMode unknownMode = UnknownMode::kKeep)
 			{
 				size_t fieldCount;
-				return DoDeserialize(stream, keepUnknown, errMsg, fieldCount);
+				return DoDeserialize(stream, unknownMode, errMsg, fieldCount);
 			}
 
 			//! Deserialize from string
 			inline int Deserialize(const std::string& input,
-								   IJST_INOUT std::string* errMsg, bool keepUnknown = true)
+								   IJST_INOUT std::string* errMsg, EUnknownMode unknownMode = UnknownMode::kKeep)
 			{
-				return Deserialize(input.c_str(), input.length(), errMsg, keepUnknown);
+				return Deserialize(input.c_str(), input.length(), errMsg, unknownMode);
 			}
 
 			//! Deserialize from C-style string
 			int Deserialize(const char* str, std::size_t length,
-							IJST_INOUT std::string* errMsg, bool keepUnknown = true)
+							IJST_INOUT std::string* errMsg, EUnknownMode unknownMode = UnknownMode::kKeep)
 			{
 				// The new object will call Deserialize() interfaces in most suitation
 				// So clear own allocator will not bring much benefice
@@ -905,7 +929,7 @@ namespace ijst {
 					return Err::kDeserializeParseFaild;
 				}
 				size_t fieldCount;
-				return DoMoveDeserialize(doc, keepUnknown, errMsg, fieldCount);
+				return DoMoveDeserialize(doc, unknownMode, errMsg, fieldCount);
 			}
 
 			/**
@@ -915,13 +939,13 @@ namespace ijst {
 			 * @param errMsg. Output of error message, null if cancel error output
 			 */
 			inline int MoveDeserialize(rapidjson::Document &srcDocStolen,
-									   IJST_INOUT std::string *errMsg, bool keepUnknown = true)
+									   IJST_INOUT std::string *errMsg, EUnknownMode unknownMode = UnknownMode::kKeep)
 			{
 				// Store document to manager allocator
 				m_pOwnDoc->Swap(srcDocStolen);
 				m_pAllocator = &m_pOwnDoc->GetAllocator();
 				size_t fieldCount;
-				return DoMoveDeserialize(*m_pOwnDoc, keepUnknown, errMsg, fieldCount);
+				return DoMoveDeserialize(*m_pOwnDoc, unknownMode, errMsg, fieldCount);
 			}
 
 
@@ -930,7 +954,7 @@ namespace ijst {
 			 * @note Make sure the lifecycle of str is longer than this object
 			 * @note The context in str may be changed after deserialize
 			 */
-			int DeserializeInsitu(char* str, IJST_INOUT std::string* errMsg, bool keepUnknown = true)
+			int DeserializeInsitu(char* str, IJST_INOUT std::string* errMsg, EUnknownMode unknownMode = UnknownMode::kKeep)
 			{
 				// The new object will call Deserialize() interfaces in most suitation
 				// So clear own allocator will not bring much benefice
@@ -948,7 +972,7 @@ namespace ijst {
 					return Err::kDeserializeParseFaild;
 				}
 				size_t fieldCount;
-				return DoMoveDeserialize(doc, keepUnknown, errMsg, fieldCount);
+				return DoMoveDeserialize(doc, unknownMode, errMsg, fieldCount);
 			}
 
 
@@ -959,6 +983,8 @@ namespace ijst {
 			typedef SerializerInterface::SerializeResp SerializeResp;
 			typedef SerializerInterface::DeserializeReq DeserializeReq;
 			typedef SerializerInterface::DeserializeResp DeserializeResp;
+			typedef SerializerInterface::SrcMode SrcMode;
+			typedef SerializerInterface::ESrcMode ESrcMode;
 
 			inline int ISerialize(const SerializeReq &req, SerializeResp &resp)
 			{
@@ -977,16 +1003,18 @@ namespace ijst {
 			{
 				assert(req.pFieldBuffer == this);
 
-				m_pAllocator = &req.allocator;
 				std::string *pErrMsg = resp.needErrMsg ? &resp.errMsg : IJSTI_NULL;
 
-				if (req.canMoveSrc)
+				switch (req.srcMode)
 				{
-					return DoMoveDeserialize(req.stream, req.keepUnknown, pErrMsg, resp.fieldCount);
-				}
-				else
-				{
-					return DoDeserialize(req.stream, req.keepUnknown, pErrMsg, resp.fieldCount);
+					case SrcMode::kKeep:
+						m_pAllocator = &req.allocator;
+						return DoDeserialize(req.stream, req.unknownMode, pErrMsg, resp.fieldCount);
+					case SrcMode::kMove:
+						m_pAllocator = &req.allocator;
+						return DoMoveDeserialize(req.stream, req.unknownMode, pErrMsg, resp.fieldCount);
+					default:
+						assert(false);
 				}
 			}
 
@@ -1002,7 +1030,7 @@ namespace ijst {
 				m_pOuter = reinterpret_cast<const unsigned char *>(this - m_metaClass->accessorOffset);
 			}
 
-			void MarkFieldStatus(const void* field, FStatus::_E fStatus)
+			void MarkFieldStatus(const void* field, EFStatus fStatus)
 			{
 				const std::size_t offset = GetFieldOffset(field);
 				if (IJSTI_UNLIKELY(m_metaClass->mapOffset.find(offset) == m_metaClass->mapOffset.end())) {
@@ -1034,7 +1062,7 @@ namespace ijst {
 						for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
 							 itMetaField != m_metaClass->metaFields.end(); ++itMetaField)
 						{
-							FStatus::_E fstatus = GetStatusByOffset(itMetaField->offset);
+							EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
 							if (fstatus == FStatus::kValid || fstatus == FStatus::kNull) {
 								++fieldSize;
 							}
@@ -1052,7 +1080,7 @@ namespace ijst {
 					 itMetaField != m_metaClass->metaFields.end(); ++itMetaField)
 				{
 					// Check field state
-					FStatus::_E fstatus = GetStatusByOffset(itMetaField->offset);
+					EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
 					switch (fstatus) {
 						case FStatus::kValid:
 						{
@@ -1164,10 +1192,10 @@ namespace ijst {
 			}
 
 			/**
-			 * Deserialize in inner buffer
+			 * Deserialize move from stream
 			 * @note Make sure the lifecycle of allocator of the stream is longer than this object
 			 */
-			int DoMoveDeserialize(BufferType& stream, bool keepUnknown,
+			int DoMoveDeserialize(BufferType& stream, EUnknownMode unknownMode,
 								  IJST_INOUT std::string* pErrMsgOut, IJST_OUT size_t& fieldCountOut)
 			{
 				if (!stream.IsObject())
@@ -1192,12 +1220,25 @@ namespace ijst {
 
 					if (itMetaField == m_metaClass->mapName.end()) {
 						// Not a field in struct
-						// Move unknown fields to the front of array first
-						// TODO: This is relay on the implementation details of rapidjson's object storage (array), how to check?
-						if (keepUnknown && itNextRemain != itMember) {
-							IJSTI_STORE_MOVE(*itNextRemain, *itMember);
+						switch (unknownMode) {
+							case UnknownMode::kKeep:
+								// Move unknown fields to the front of array first
+								// TODO: This is relay on the implementation details of rapidjson's object storage (array), how to check?
+								if (itNextRemain != itMember) {
+									IJSTI_STORE_MOVE(*itNextRemain, *itMember);
+								}
+								++itNextRemain;
+								break;
+							case UnknownMode::kError:
+								IJSTI_SET_ERRMSG_AND_RET(
+										pErrMsgOut,
+										"Member in object is unknown" + fieldName,
+										Err::kSomeUnknownMember);
+							case UnknownMode::kIgnore:
+								break;
+							default:
+								assert(false);
 						}
-						++itNextRemain;
 						continue;
 					}
 
@@ -1205,7 +1246,8 @@ namespace ijst {
 					BufferType memberStream(rapidjson::kNullType);
 					memberStream.Swap(itMember->value);
 
-					int ret = DoDeserializeField(itMetaField, memberStream, keepUnknown, /*canMoveSrc=*/true, pErrMsgOut);
+					int ret = DoDeserializeField(itMetaField, memberStream, unknownMode, /*srcMode=*/SrcMode::kMove,
+												 pErrMsgOut);
 					if (ret != 0) {
 						return ret;
 					}
@@ -1216,7 +1258,7 @@ namespace ijst {
 				if (stream.MemberCount() != 0) {
 					stream.EraseMember(itNextRemain, stream.MemberEnd());
 				}
-				if (keepUnknown) {
+				if (unknownMode == UnknownMode::kKeep) {
 					IJSTI_STORE_MOVE(*m_pBuffer, stream);
 				}
 				else {
@@ -1227,8 +1269,8 @@ namespace ijst {
 				return ret;
 			}
 
-			//! Deserialize in inner buffer
-			int DoDeserialize(const BufferType& stream, bool keepUnknown,
+			//! Deserialize from stream
+			int DoDeserialize(const BufferType& stream, EUnknownMode unknownMode,
 							  IJST_INOUT std::string* pErrMsgOut, IJST_OUT size_t& fieldCountOut)
 			{
 				if (!stream.IsObject())
@@ -1250,20 +1292,33 @@ namespace ijst {
 					IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator
 							itMetaField = m_metaClass->mapName.find(fieldName);
 
-					if (itMetaField == m_metaClass->mapName.end()) {
-						if (keepUnknown) {
-							m_pBuffer->AddMember(
-									rapidjson::Value().SetString(fieldName.c_str(), fieldName.length(), *m_pAllocator),
-									rapidjson::Value().CopyFrom(itMember->value, *m_pAllocator, true),
-									*m_pAllocator
-							);
+					if (itMetaField == m_metaClass->mapName.end())
+					{
+						// Not a field in struct
+						switch (unknownMode) {
+							case UnknownMode::kKeep:
+								m_pBuffer->AddMember(
+										rapidjson::Value().SetString(fieldName.c_str(), fieldName.length(), *m_pAllocator),
+										rapidjson::Value().CopyFrom(itMember->value, *m_pAllocator, true),
+										*m_pAllocator
+								);
+								break;
+							case UnknownMode::kIgnore:
+								break;
+							case UnknownMode::kError:
+								IJSTI_SET_ERRMSG_AND_RET(
+										pErrMsgOut,
+										"Member in object is unknown" + fieldName,
+										Err::kSomeUnknownMember);
+							default:
+								assert(false);
 						}
 						continue;
 					}
 
 					BufferType& memberStream = const_cast<BufferType&>(itMember->value);
 					int ret = DoDeserializeField(itMetaField, memberStream,
-												 keepUnknown, /*canMoveSrc=*/false, pErrMsgOut);
+												 unknownMode, /*srcMode=*/SrcMode::kKeep, pErrMsgOut);
 					if (ret != 0) {
 						return ret;
 					}
@@ -1275,7 +1330,7 @@ namespace ijst {
 			}
 
 			int DoDeserializeField(IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator itMetaField,
-								   BufferType& stream, bool keepUnknown, bool canMoveSrc,
+								   BufferType& stream, EUnknownMode unknownMode, ESrcMode srcMode,
 								   IJST_INOUT std::string *pErrMsgOut)
 			{
 				const MetaField *metaField = itMetaField->second;
@@ -1288,7 +1343,7 @@ namespace ijst {
 				else
 				{
 					void *pField = GetFieldByOffset(metaField->offset);
-					DeserializeReq elemReq(stream, *m_pAllocator, keepUnknown, canMoveSrc, pField);
+					DeserializeReq elemReq(stream, *m_pAllocator, unknownMode, srcMode, pField);
 					const bool needErrMsg = pErrMsgOut != IJSTI_NULL;
 					DeserializeResp elemResp(needErrMsg);
 					int ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
@@ -1331,7 +1386,7 @@ namespace ijst {
 						continue;
 					}
 
-					FStatus::_E fStatus = GetStatusByOffset(itField->offset);
+					EFStatus fStatus = GetStatusByOffset(itField->offset);
 					if (fStatus == FStatus::kValid
 						|| fStatus == FStatus::kNull)
 					{
@@ -1368,9 +1423,9 @@ namespace ijst {
 				return (void *) (m_pOuter + offset);
 			}
 
-			FStatus::_E GetStatusByOffset(const size_t offset) const
+			EFStatus GetStatusByOffset(const size_t offset) const
 			{
-				IJSTI_MAP_TYPE<size_t, FStatus::_E>::const_iterator itera = m_fieldStatus.find(offset);
+				IJSTI_MAP_TYPE<size_t, EFStatus>::const_iterator itera = m_fieldStatus.find(offset);
 				if (itera != m_fieldStatus.end()) {
 					return itera->second;
 				}
@@ -1387,7 +1442,7 @@ namespace ijst {
 				return (val & bit) != 0;
 			}
 
-			typedef IJSTI_MAP_TYPE<std::size_t, FStatus::_E> FieldStatusType;
+			typedef IJSTI_MAP_TYPE<std::size_t, EFStatus> FieldStatusType;
 			FieldStatusType m_fieldStatus;
 			const MetaClass *m_metaClass;
 

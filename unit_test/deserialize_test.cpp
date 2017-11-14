@@ -60,7 +60,10 @@ TEST(Deserialize, RequiredFields)
 
 TEST(Deserialize, AdditionalFields)
 {
-	string validJson = "{\"int_val_1\":1, \"int_val_2\":2, \"str_val_2\":\"str2\", \"additional_field\": \"a_field\"}";
+	string validJson = "{\"addi_field1\": \"a_field1\","
+			"\"int_val_1\":1, \"str_val_2\":\"str2\", "
+			"\"addi_field2\":\"a_field2\","
+			"\"int_val_2\":2, \"addi_field3\": \"a_field3\"}";
 	SimpleSt st;
 	// keep unknown
 	{
@@ -72,12 +75,15 @@ TEST(Deserialize, AdditionalFields)
 		ASSERT_EQ(st.int_1, 1);
 		ASSERT_EQ(st.int_2, 2);
 		ASSERT_STREQ(st.str_2.c_str(), "str2");
-		ASSERT_STREQ(st._.GetBuffer()["additional_field"].GetString(), "a_field");
+		ASSERT_EQ(st._.GetBuffer().MemberCount(), 3u);
+		ASSERT_STREQ(st._.GetBuffer()["addi_field1"].GetString(), "a_field1");
+		ASSERT_STREQ(st._.GetBuffer()["addi_field2"].GetString(), "a_field2");
+		ASSERT_STREQ(st._.GetBuffer()["addi_field3"].GetString(), "a_field3");
 	}
 
 	// throw unknown
 	{
-		int ret = st._.Deserialize(validJson, 0, false);
+		int ret = st._.Deserialize(validJson, 0, ijst::UnknownMode::kIgnore);
 		ASSERT_EQ(ret, 0);
 
 		ASSERT_EQ(IJST_GET_STATUS(st, int_1), ijst::FStatus::kValid);
@@ -87,6 +93,13 @@ TEST(Deserialize, AdditionalFields)
 		ASSERT_STREQ(st.str_2.c_str(), "str2");
 		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
 	}
+
+	// error when unknown
+	{
+		int ret = st._.Deserialize(validJson, 0, ijst::UnknownMode::kError);
+		const int retExpect = ijst::Err::kSomeUnknownMember;
+		ASSERT_EQ(ret, retExpect);
+	}
 }
 
 TEST(Deserialize, CopySrc)
@@ -95,7 +108,7 @@ TEST(Deserialize, CopySrc)
 	{
 		rapidjson::Document doc;
 		{
-			string validJson = "{\"int_val_2\":1, \"str_val_2\":\"str2\"}";
+			string validJson = "{\"int_val_2\":1, \"str_val_2\":\"str2\", \"addi_field\":\"a_field\"}";
 			doc.Parse(validJson.c_str(), validJson.length());
 			ASSERT_FALSE(doc.HasParseError());
 		}
@@ -116,7 +129,7 @@ TEST(Deserialize, MoveSrc)
 	SimpleSt st;
 	rapidjson::Document doc;
 	{
-		string validJson = "{\"int_val_2\":1, \"str_val_2\":\"str2\"}";
+		string validJson = "{\"int_val_2\":1, \"str_val_2\":\"str2\", \"addi_field\":\"a_field\"}";
 		doc.Parse(validJson.c_str(), validJson.length());
 		ASSERT_FALSE(doc.HasParseError());
 	}

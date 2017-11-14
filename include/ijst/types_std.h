@@ -17,7 +17,6 @@
 
 namespace ijst{
 	struct FType {
-	public:
 		enum _E {
 			Bool,
 			Int,
@@ -29,9 +28,10 @@ namespace ijst{
 			Raw,
 		};
 	};
+	typedef FType::_E EFType;
 
 	namespace detail {
-		template<FType::_E _T>
+		template<EFType _T>
 		struct TypeClassPrim {
 			// nothing
 		};
@@ -307,12 +307,18 @@ namespace ijst{
 			{
 				VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 
-				if (req.canMoveSrc) {
-					pField->v.Swap(req.stream);
-					pField->m_pAllocator = &req.allocator;
-				}
-				else {
-					pField->v.CopyFrom(req.stream, *pField->m_pAllocator, true);
+				// TODO
+				switch (req.srcMode)
+				{
+					case SerializerInterface::SrcMode::kKeep:
+						pField->v.CopyFrom(req.stream, *pField->m_pAllocator, true);
+						break;
+					case SerializerInterface::SrcMode::kMove:
+						pField->v.Swap(req.stream);
+						pField->m_pAllocator = &req.allocator;
+						break;
+					default:
+						assert(false);
 				}
 				return 0;
 			}
