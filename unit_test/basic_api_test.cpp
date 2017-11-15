@@ -36,6 +36,10 @@ TEST(BasicAPI, FieldStatus)
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), ijst::FStatus::kMissing);
 	IJST_MARK_VALID(simpleSt, int_2);
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), ijst::FStatus::kValid);
+
+	// IsField
+	ASSERT_TRUE(simpleSt._.HasField(&simpleSt.int_1));
+	ASSERT_FALSE(simpleSt._.HasField(&simpleSt.str_2 + 1));
 }
 
 TEST(BasicAPI, FieldValue)

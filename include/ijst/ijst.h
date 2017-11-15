@@ -16,17 +16,26 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include <stdexcept>
 
 /**	========================================================================================
  *				Public Interface
  */
 
-//! if define IJST_AUTO_META_INIT before include this header, the meta class information will init before main.
-//! That's will make it thread-safe to init meta class information before C++11.
-//! The feature is enable default before C++11. So set the value to 0 to force disable it.
+/*! IJST_AUTO_META_INIT
+	if define IJST_AUTO_META_INIT before include this header, the meta class information will init before main.
+	That's will make it thread-safe to init meta class information before C++11.
+	The feature is enable default before C++11. So set the value to 0 to force disable it.
+*/
 //#define IJST_AUTO_META_INIT
 //#define IJST_AUTO_META_INIT		0
+
+/*! IJST_ASSERT
+	By default, ijst uses assert() for errors that indicate a bug.
+    User can override it by defining IJST_ASSERT(x) macro.
+*/
+#ifndef IJST_ASSERT
+	#define IJST_ASSERT(x) assert(x)
+#endif // IJST_ASSERT
 
 #define IJST_OUT
 
@@ -579,10 +588,7 @@ namespace ijst {
 					// Assert field offset not exist before
 					assert(mapOffset.find(ptrMetaField->offset) == mapOffset.end());
 					// Make sure field json name not exist before
-					// This name is specify be user, use exception instead of assert
-					if (IJSTI_UNLIKELY(mapName.find(ptrMetaField->name) != mapName.end())) {
-						throw std::runtime_error("Field json name conflict:" + ptrMetaField->offset);
-					}
+					IJST_ASSERT(mapName.find(ptrMetaField->name) == mapName.end());
 
 					mapName[ptrMetaField->name] = ptrMetaField;
 					mapOffset[ptrMetaField->offset] = ptrMetaField;
@@ -703,6 +709,12 @@ namespace ijst {
 			/*
 			 * Field accessor
 			 */
+			inline bool HasField(const void *pField) const
+			{
+				size_t offset = GetFieldOffset(pField);
+				return (m_metaClass->mapOffset.find(offset) != m_metaClass->mapOffset.end());
+			}
+
 			template<typename _T1, typename _T2>
 			inline void Set(_T1 &field, const _T2 &value)
 			{
@@ -716,24 +728,24 @@ namespace ijst {
 				Set(field, value);
 			}
 
-			inline void MarkValid(const void* fieldPtr)
+			inline void MarkValid(const void* pField)
 			{
-				MarkFieldStatus(fieldPtr, FStatus::kValid);
+				MarkFieldStatus(pField, FStatus::kValid);
 			}
 
-			inline void MarkNull(const void* fieldPtr)
+			inline void MarkNull(const void* pField)
 			{
-				MarkFieldStatus(fieldPtr, FStatus::kNull);
+				MarkFieldStatus(pField, FStatus::kNull);
 			}
 
-			inline void MarkMissing(const void* fieldPtr)
+			inline void MarkMissing(const void* pField)
 			{
-				MarkFieldStatus(fieldPtr, FStatus::kMissing);
+				MarkFieldStatus(pField, FStatus::kMissing);
 			}
 
-			inline EFStatus GetStatus(const void *fieldptr) const
+			inline EFStatus GetStatus(const void *pField) const
 			{
-				const size_t offset = GetFieldOffset(fieldptr);
+				const size_t offset = GetFieldOffset(pField);
 				return GetStatusByOffset(offset);
 			}
 
@@ -1008,9 +1020,7 @@ namespace ijst {
 			void MarkFieldStatus(const void* field, EFStatus fStatus)
 			{
 				const std::size_t offset = GetFieldOffset(field);
-				if (IJSTI_UNLIKELY(m_metaClass->mapOffset.find(offset) == m_metaClass->mapOffset.end())) {
-					throw std::runtime_error("could not find field with expected offset: " + offset);
-				}
+				(IJST_ASSERT(m_metaClass->mapOffset.find(offset) != m_metaClass->mapOffset.end()));
 
 				m_fieldStatus[offset] = fStatus;
 			}
@@ -1379,7 +1389,7 @@ namespace ijst {
 				return 0;
 			}
 
-			inline std::size_t GetFieldOffset(const void *const ptr) const
+			inline std::size_t GetFieldOffset(const void *ptr) const
 			{
 				const unsigned char *filed_ptr = static_cast<const unsigned char *>(ptr);
 				return filed_ptr - m_pOuter;
