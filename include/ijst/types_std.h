@@ -63,8 +63,8 @@ namespace ijst{
 		#if __cplusplus >= 201103L
 		FStoreRaw(FStoreRaw &&rhs)
 		{
-			m_pOwnDoc = IJSTI_NULL;
-			m_pAllocator = IJSTI_NULL;
+			m_pOwnDoc = IJST_NULL;
+			m_pAllocator = IJST_NULL;
 			Steal(rhs);
 		}
 		#endif
@@ -83,17 +83,17 @@ namespace ijst{
 
 			delete m_pOwnDoc;
 			m_pOwnDoc = rhs.m_pOwnDoc;
-			rhs.m_pOwnDoc = IJSTI_NULL;
+			rhs.m_pOwnDoc = IJST_NULL;
 
 			m_pAllocator = rhs.m_pAllocator;
-			rhs.m_pAllocator = IJSTI_NULL;
+			rhs.m_pAllocator = IJST_NULL;
 			v = rhs.v;
 		}
 
 		~FStoreRaw()
 		{
 			delete m_pOwnDoc;
-			m_pOwnDoc = IJSTI_NULL;
+			m_pOwnDoc = IJST_NULL;
 		}
 
 		BufferType& V() {return v;}
