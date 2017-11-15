@@ -113,14 +113,6 @@ namespace ijst {
 		#endif
 
 		#define IJSTI_MAP_TYPE    			std::map
-		#define IJSTI_STORE_MOVE(dest, src)							\
-			do {                                    				\
-				if (IJSTI_UNLIKELY(&(dest) != &(src))) {            \
-					/*rapidjson's assigment behaviour is move */ 	\
-					(dest) = (src);                 				\
-				}                                   				\
-			} while (false)
-
 		//! Set errMsg to pErrMsgOut when not null
 		//! Use macro instead of function to avoid compute errMsg when pErrMsgOut is null
 		#define IJSTI_SET_ERRMSG(pErrMsgOut, errMsg)				\
@@ -132,7 +124,7 @@ namespace ijst {
 
 
 		#if __cplusplus >= 201103L
-			#define IJSTI_MOVE(val) 	std::move(val)
+			#define IJSTI_MOVE(val) 	std::move((val))
 			#define IJSTI_OVERRIDE		override
 		#else
 			#define IJSTI_MOVE(val) 	(val)
@@ -1205,7 +1197,8 @@ namespace ijst {
 								// Move unknown fields to the front of array first
 								// TODO: This is relay on the implementation details of rapidjson's object storage (array), how to check?
 								if (itNextRemain != itMember) {
-									IJSTI_STORE_MOVE(*itNextRemain, *itMember);
+									itNextRemain->name.SetNull().Swap(itMember->name);
+									itNextRemain->value.SetNull().Swap(itMember->value);
 								}
 								++itNextRemain;
 								break;
@@ -1237,7 +1230,7 @@ namespace ijst {
 					stream.EraseMember(itNextRemain, stream.MemberEnd());
 				}
 				if (unknownMode == UnknownMode::kKeep) {
-					IJSTI_STORE_MOVE(*m_pBuffer, stream);
+					m_pBuffer->SetNull().Swap(stream);
 				}
 				else {
 					m_pBuffer->SetObject();
