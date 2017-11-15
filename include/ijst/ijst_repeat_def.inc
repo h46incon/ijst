@@ -5,7 +5,7 @@
  # define IJSTI_PP_NFIELD_IMPL( \
    e0 , e1 , e2 , e3 , e4 , e5 , e6 , e7 , e8 , e9 , e10 , e11 , e12 , e13 , e14 , e15 , e16 , e17 , e18 , e19 , e20 , e21 , e22 , e23 , e24 , e25 , e26 , e27 , e28 , e29 , e30 , e31 , e32 , e33 , e34 , e35 , e36 , e37 , e38 , e39 , e40 , e41 , e42 , e43 , e44 , e45 , e46 , e47 , e48 , e49 , e50 , e51 , e52 , e53 , e54 , e55 , e56 , e57 , e58 , e59 , e60 , e61 , e62 , e63 , e64, \
    N, ...) N
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_0(stName ) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 0) \
@@ -19,7 +19,7 @@
   ::ijst::detail::Accessor _; \
   \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_1(stName , f0) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 1) \
@@ -33,7 +33,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_2(stName , f0 , f1) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 2) \
@@ -47,7 +47,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_3(stName , f0 , f1 , f2) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 3) \
@@ -61,7 +61,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_4(stName , f0 , f1 , f2 , f3) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 4) \
@@ -75,7 +75,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_5(stName , f0 , f1 , f2 , f3 , f4) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 5) \
@@ -89,7 +89,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_6(stName , f0 , f1 , f2 , f3 , f4 , f5) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 6) \
@@ -103,7 +103,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_7(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 7) \
@@ -117,7 +117,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_8(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 8) \
@@ -131,7 +131,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_9(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 9) \
@@ -145,7 +145,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_10(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 10) \
@@ -159,7 +159,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_11(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 11) \
@@ -173,7 +173,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_12(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 12) \
@@ -187,7 +187,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_13(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 13) \
@@ -201,7 +201,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_14(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 14) \
@@ -215,7 +215,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_15(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 15) \
@@ -229,7 +229,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_16(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 16) \
@@ -243,7 +243,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_17(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 17) \
@@ -257,7 +257,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_18(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 18) \
@@ -271,7 +271,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_19(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 19) \
@@ -285,7 +285,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_20(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 20) \
@@ -299,7 +299,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_21(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 21) \
@@ -313,7 +313,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_22(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 22) \
@@ -327,7 +327,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_23(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 23) \
@@ -341,7 +341,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_24(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 24) \
@@ -355,7 +355,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_25(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 25) \
@@ -369,7 +369,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_26(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 26) \
@@ -383,7 +383,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_27(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 27) \
@@ -397,7 +397,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_28(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 28) \
@@ -411,7 +411,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_29(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 29) \
@@ -425,7 +425,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_30(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 30) \
@@ -439,7 +439,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_31(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 31) \
@@ -453,7 +453,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_32(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 32) \
@@ -467,7 +467,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_33(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 33) \
@@ -481,7 +481,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_34(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 34) \
@@ -495,7 +495,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_35(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 35) \
@@ -509,7 +509,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_36(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 36) \
@@ -523,7 +523,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_37(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 37) \
@@ -537,7 +537,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_38(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 38) \
@@ -551,7 +551,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_39(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 39) \
@@ -565,7 +565,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_40(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 40) \
@@ -579,7 +579,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_41(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 41) \
@@ -593,7 +593,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_42(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 42) \
@@ -607,7 +607,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_43(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 43) \
@@ -621,7 +621,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_44(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 44) \
@@ -635,7 +635,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_45(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 45) \
@@ -649,7 +649,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_46(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 46) \
@@ -663,7 +663,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_47(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 47) \
@@ -677,7 +677,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_48(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 48) \
@@ -691,7 +691,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_49(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 49) \
@@ -705,7 +705,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_50(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 50) \
@@ -719,7 +719,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); IJSTI_DEFINE_FIELD(f49); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_51(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49 , f50) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 51) \
@@ -733,7 +733,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); IJSTI_DEFINE_FIELD(f49); IJSTI_DEFINE_FIELD(f50); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_52(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49 , f50 , f51) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 52) \
@@ -747,7 +747,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); IJSTI_DEFINE_FIELD(f49); IJSTI_DEFINE_FIELD(f50); IJSTI_DEFINE_FIELD(f51); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_53(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49 , f50 , f51 , f52) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 53) \
@@ -761,7 +761,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); IJSTI_DEFINE_FIELD(f49); IJSTI_DEFINE_FIELD(f50); IJSTI_DEFINE_FIELD(f51); IJSTI_DEFINE_FIELD(f52); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_54(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49 , f50 , f51 , f52 , f53) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 54) \
@@ -775,7 +775,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); IJSTI_DEFINE_FIELD(f49); IJSTI_DEFINE_FIELD(f50); IJSTI_DEFINE_FIELD(f51); IJSTI_DEFINE_FIELD(f52); IJSTI_DEFINE_FIELD(f53); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_55(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49 , f50 , f51 , f52 , f53 , f54) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 55) \
@@ -789,7 +789,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); IJSTI_DEFINE_FIELD(f49); IJSTI_DEFINE_FIELD(f50); IJSTI_DEFINE_FIELD(f51); IJSTI_DEFINE_FIELD(f52); IJSTI_DEFINE_FIELD(f53); IJSTI_DEFINE_FIELD(f54); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_56(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49 , f50 , f51 , f52 , f53 , f54 , f55) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 56) \
@@ -803,7 +803,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); IJSTI_DEFINE_FIELD(f49); IJSTI_DEFINE_FIELD(f50); IJSTI_DEFINE_FIELD(f51); IJSTI_DEFINE_FIELD(f52); IJSTI_DEFINE_FIELD(f53); IJSTI_DEFINE_FIELD(f54); IJSTI_DEFINE_FIELD(f55); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_57(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49 , f50 , f51 , f52 , f53 , f54 , f55 , f56) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 57) \
@@ -817,7 +817,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); IJSTI_DEFINE_FIELD(f49); IJSTI_DEFINE_FIELD(f50); IJSTI_DEFINE_FIELD(f51); IJSTI_DEFINE_FIELD(f52); IJSTI_DEFINE_FIELD(f53); IJSTI_DEFINE_FIELD(f54); IJSTI_DEFINE_FIELD(f55); IJSTI_DEFINE_FIELD(f56); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_58(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49 , f50 , f51 , f52 , f53 , f54 , f55 , f56 , f57) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 58) \
@@ -831,7 +831,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); IJSTI_DEFINE_FIELD(f49); IJSTI_DEFINE_FIELD(f50); IJSTI_DEFINE_FIELD(f51); IJSTI_DEFINE_FIELD(f52); IJSTI_DEFINE_FIELD(f53); IJSTI_DEFINE_FIELD(f54); IJSTI_DEFINE_FIELD(f55); IJSTI_DEFINE_FIELD(f56); IJSTI_DEFINE_FIELD(f57); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_59(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49 , f50 , f51 , f52 , f53 , f54 , f55 , f56 , f57 , f58) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 59) \
@@ -845,7 +845,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); IJSTI_DEFINE_FIELD(f49); IJSTI_DEFINE_FIELD(f50); IJSTI_DEFINE_FIELD(f51); IJSTI_DEFINE_FIELD(f52); IJSTI_DEFINE_FIELD(f53); IJSTI_DEFINE_FIELD(f54); IJSTI_DEFINE_FIELD(f55); IJSTI_DEFINE_FIELD(f56); IJSTI_DEFINE_FIELD(f57); IJSTI_DEFINE_FIELD(f58); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_60(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49 , f50 , f51 , f52 , f53 , f54 , f55 , f56 , f57 , f58 , f59) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 60) \
@@ -859,7 +859,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); IJSTI_DEFINE_FIELD(f49); IJSTI_DEFINE_FIELD(f50); IJSTI_DEFINE_FIELD(f51); IJSTI_DEFINE_FIELD(f52); IJSTI_DEFINE_FIELD(f53); IJSTI_DEFINE_FIELD(f54); IJSTI_DEFINE_FIELD(f55); IJSTI_DEFINE_FIELD(f56); IJSTI_DEFINE_FIELD(f57); IJSTI_DEFINE_FIELD(f58); IJSTI_DEFINE_FIELD(f59); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_61(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49 , f50 , f51 , f52 , f53 , f54 , f55 , f56 , f57 , f58 , f59 , f60) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 61) \
@@ -873,7 +873,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); IJSTI_DEFINE_FIELD(f49); IJSTI_DEFINE_FIELD(f50); IJSTI_DEFINE_FIELD(f51); IJSTI_DEFINE_FIELD(f52); IJSTI_DEFINE_FIELD(f53); IJSTI_DEFINE_FIELD(f54); IJSTI_DEFINE_FIELD(f55); IJSTI_DEFINE_FIELD(f56); IJSTI_DEFINE_FIELD(f57); IJSTI_DEFINE_FIELD(f58); IJSTI_DEFINE_FIELD(f59); IJSTI_DEFINE_FIELD(f60); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_62(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49 , f50 , f51 , f52 , f53 , f54 , f55 , f56 , f57 , f58 , f59 , f60 , f61) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 62) \
@@ -887,7 +887,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); IJSTI_DEFINE_FIELD(f49); IJSTI_DEFINE_FIELD(f50); IJSTI_DEFINE_FIELD(f51); IJSTI_DEFINE_FIELD(f52); IJSTI_DEFINE_FIELD(f53); IJSTI_DEFINE_FIELD(f54); IJSTI_DEFINE_FIELD(f55); IJSTI_DEFINE_FIELD(f56); IJSTI_DEFINE_FIELD(f57); IJSTI_DEFINE_FIELD(f58); IJSTI_DEFINE_FIELD(f59); IJSTI_DEFINE_FIELD(f60); IJSTI_DEFINE_FIELD(f61); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_63(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49 , f50 , f51 , f52 , f53 , f54 , f55 , f56 , f57 , f58 , f59 , f60 , f61 , f62) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 63) \
@@ -901,7 +901,7 @@
   ::ijst::detail::Accessor _; \
   IJSTI_DEFINE_FIELD(f0); IJSTI_DEFINE_FIELD(f1); IJSTI_DEFINE_FIELD(f2); IJSTI_DEFINE_FIELD(f3); IJSTI_DEFINE_FIELD(f4); IJSTI_DEFINE_FIELD(f5); IJSTI_DEFINE_FIELD(f6); IJSTI_DEFINE_FIELD(f7); IJSTI_DEFINE_FIELD(f8); IJSTI_DEFINE_FIELD(f9); IJSTI_DEFINE_FIELD(f10); IJSTI_DEFINE_FIELD(f11); IJSTI_DEFINE_FIELD(f12); IJSTI_DEFINE_FIELD(f13); IJSTI_DEFINE_FIELD(f14); IJSTI_DEFINE_FIELD(f15); IJSTI_DEFINE_FIELD(f16); IJSTI_DEFINE_FIELD(f17); IJSTI_DEFINE_FIELD(f18); IJSTI_DEFINE_FIELD(f19); IJSTI_DEFINE_FIELD(f20); IJSTI_DEFINE_FIELD(f21); IJSTI_DEFINE_FIELD(f22); IJSTI_DEFINE_FIELD(f23); IJSTI_DEFINE_FIELD(f24); IJSTI_DEFINE_FIELD(f25); IJSTI_DEFINE_FIELD(f26); IJSTI_DEFINE_FIELD(f27); IJSTI_DEFINE_FIELD(f28); IJSTI_DEFINE_FIELD(f29); IJSTI_DEFINE_FIELD(f30); IJSTI_DEFINE_FIELD(f31); IJSTI_DEFINE_FIELD(f32); IJSTI_DEFINE_FIELD(f33); IJSTI_DEFINE_FIELD(f34); IJSTI_DEFINE_FIELD(f35); IJSTI_DEFINE_FIELD(f36); IJSTI_DEFINE_FIELD(f37); IJSTI_DEFINE_FIELD(f38); IJSTI_DEFINE_FIELD(f39); IJSTI_DEFINE_FIELD(f40); IJSTI_DEFINE_FIELD(f41); IJSTI_DEFINE_FIELD(f42); IJSTI_DEFINE_FIELD(f43); IJSTI_DEFINE_FIELD(f44); IJSTI_DEFINE_FIELD(f45); IJSTI_DEFINE_FIELD(f46); IJSTI_DEFINE_FIELD(f47); IJSTI_DEFINE_FIELD(f48); IJSTI_DEFINE_FIELD(f49); IJSTI_DEFINE_FIELD(f50); IJSTI_DEFINE_FIELD(f51); IJSTI_DEFINE_FIELD(f52); IJSTI_DEFINE_FIELD(f53); IJSTI_DEFINE_FIELD(f54); IJSTI_DEFINE_FIELD(f55); IJSTI_DEFINE_FIELD(f56); IJSTI_DEFINE_FIELD(f57); IJSTI_DEFINE_FIELD(f58); IJSTI_DEFINE_FIELD(f59); IJSTI_DEFINE_FIELD(f60); IJSTI_DEFINE_FIELD(f61); IJSTI_DEFINE_FIELD(f62); \
  };
- # undef IJSTM__________________________________________________________________________________________________________
+ # undef IJSTM_SPLITTER_________________________________________________________________________________________________
  # define IJSTI_DEFINE_STRUCT_IMPL_64(stName , f0 , f1 , f2 , f3 , f4 , f5 , f6 , f7 , f8 , f9 , f10 , f11 , f12 , f13 , f14 , f15 , f16 , f17 , f18 , f19 , f20 , f21 , f22 , f23 , f24 , f25 , f26 , f27 , f28 , f29 , f30 , f31 , f32 , f33 , f34 , f35 , f36 , f37 , f38 , f39 , f40 , f41 , f42 , f43 , f44 , f45 , f46 , f47 , f48 , f49 , f50 , f51 , f52 , f53 , f54 , f55 , f56 , f57 , f58 , f59 , f60 , f61 , f62 , f63) \
  class stName{ \
   IJSTI_METAINFO_DEFINE_START(stName, 64) \

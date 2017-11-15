@@ -47,8 +47,8 @@
 	#define IJSTM_FIELD_INIT(z, i, _)		,IJSTI_IDL_FNAME f##i ()
 	#define IJSTM_DEFINE_FIELD(z, i, _) 	IJSTI_DEFINE_FIELD(f##i);
 
-	// Add spliter
-	IJSTM_HASH undef IJSTM__________________________________________________________________________________________________________
+	// Add splitter
+	IJSTM_HASH undef IJSTM_SPLITTER_________________________________________________________________________________________________
 
 	// Define struct
 	#define n BOOST_PP_ITERATION()
