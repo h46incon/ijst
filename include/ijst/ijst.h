@@ -188,14 +188,6 @@ namespace ijst {
 
 		class SerializerInterface {
 		public:
-			struct SrcMode {
-				enum _E {
-					kKeep,
-					kMove 		// Move context in stream to avoid copy when possible
-				};
-			};
-			typedef SrcMode::_E ESrcMode;
-
 			struct SerializeReq {
 				// true if need serialize all field, false if serialize only valid field
 				bool pushAllField;
@@ -235,16 +227,17 @@ namespace ijst {
 				BufferType& stream;
 				AllocatorType& allocator;
 
-				ESrcMode srcMode;
+				// true if move context in stream to avoid copy when possible
+				bool canMoveSrc;
 				EUnknownMode unknownMode;
 
 				DeserializeReq(BufferType &_stream, AllocatorType &_allocator,
-							   EUnknownMode _unknownMode, ESrcMode _srcMode,
+							   EUnknownMode _unknownMode, bool _canMoveSrc,
 							   void *_pField)
 						: pFieldBuffer(_pField)
 						  , stream(_stream)
 						  , allocator(_allocator)
-						  , srcMode(_srcMode)
+						  , canMoveSrc(_canMoveSrc)
 						  , unknownMode(_unknownMode)
 				{ }
 			};
@@ -403,7 +396,7 @@ namespace ijst {
 					// Use resize() instead of push_back() to avoid copy constructor in C++11
 					pField->resize(pField->size() + 1);
 					DeserializeReq elemReq(*itVal, req.allocator,
-										   req.unknownMode, req.srcMode, &pField->back());
+										   req.unknownMode, req.canMoveSrc, &pField->back());
 
 					// Deserialize
 					DeserializeResp elemResp(resp.needErrMsg);
@@ -516,7 +509,7 @@ namespace ijst {
 
 					ElemVarType &elemBuffer = (*pField)[fieldName];
 					DeserializeReq elemReq(itMember->value, req.allocator,
-										   req.unknownMode, req.srcMode, &elemBuffer);
+										   req.unknownMode, req.canMoveSrc, &elemBuffer);
 
 					// Deserialize
 					DeserializeResp elemResp(resp.needErrMsg);
@@ -978,8 +971,6 @@ namespace ijst {
 			typedef SerializerInterface::SerializeResp SerializeResp;
 			typedef SerializerInterface::DeserializeReq DeserializeReq;
 			typedef SerializerInterface::DeserializeResp DeserializeResp;
-			typedef SerializerInterface::SrcMode SrcMode;
-			typedef SerializerInterface::ESrcMode ESrcMode;
 
 			inline int ISerialize(const SerializeReq &req, SerializeResp &resp)
 			{
@@ -999,17 +990,13 @@ namespace ijst {
 				assert(req.pFieldBuffer == this);
 
 				std::string *pErrMsg = resp.needErrMsg ? &resp.errMsg : IJST_NULL;
+				m_pAllocator = &req.allocator;
 
-				switch (req.srcMode)
-				{
-					case SrcMode::kKeep:
-						m_pAllocator = &req.allocator;
-						return DoDeserialize(req.stream, req.unknownMode, pErrMsg, resp.fieldCount);
-					case SrcMode::kMove:
-						m_pAllocator = &req.allocator;
-						return DoMoveDeserialize(req.stream, req.unknownMode, pErrMsg, resp.fieldCount);
-					default:
-						assert(false);
+				if (req.canMoveSrc) {
+					return DoMoveDeserialize(req.stream, req.unknownMode, pErrMsg, resp.fieldCount);
+				}
+				else {
+					return DoDeserialize(req.stream, req.unknownMode, pErrMsg, resp.fieldCount);
 				}
 			}
 
@@ -1237,7 +1224,7 @@ namespace ijst {
 					BufferType memberStream(rapidjson::kNullType);
 					memberStream.Swap(itMember->value);
 
-					int ret = DoDeserializeField(itMetaField, memberStream, unknownMode, /*srcMode=*/SrcMode::kMove,
+					int ret = DoDeserializeField(itMetaField, memberStream, unknownMode, /*canMoveSrc=*/true,
 												 pErrMsgOut);
 					if (ret != 0) {
 						return ret;
@@ -1304,7 +1291,7 @@ namespace ijst {
 
 					BufferType& memberStream = const_cast<BufferType&>(itMember->value);
 					int ret = DoDeserializeField(itMetaField, memberStream,
-												 unknownMode, /*srcMode=*/SrcMode::kKeep, pErrMsgOut);
+												 unknownMode, /*canMoveSrc=*/false, pErrMsgOut);
 					if (ret != 0) {
 						return ret;
 					}
@@ -1316,7 +1303,7 @@ namespace ijst {
 			}
 
 			int DoDeserializeField(IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator itMetaField,
-								   BufferType& stream, EUnknownMode unknownMode, ESrcMode srcMode,
+								   BufferType& stream, EUnknownMode unknownMode, bool canMoveSrc,
 								   std::string *pErrMsgOut)
 			{
 				const MetaField *metaField = itMetaField->second;
@@ -1329,7 +1316,7 @@ namespace ijst {
 				else
 				{
 					void *pField = GetFieldByOffset(metaField->offset);
-					DeserializeReq elemReq(stream, *m_pAllocator, unknownMode, srcMode, pField);
+					DeserializeReq elemReq(stream, *m_pAllocator, unknownMode, canMoveSrc, pField);
 					const bool needErrMsg = pErrMsgOut != IJST_NULL;
 					DeserializeResp elemResp(needErrMsg);
 					int ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);

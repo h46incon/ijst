@@ -307,18 +307,12 @@ namespace ijst{
 			{
 				VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 
-				// TODO
-				switch (req.srcMode)
-				{
-					case SerializerInterface::SrcMode::kKeep:
-						pField->v.CopyFrom(req.stream, *pField->m_pAllocator, true);
-						break;
-					case SerializerInterface::SrcMode::kMove:
-						pField->v.Swap(req.stream);
-						pField->m_pAllocator = &req.allocator;
-						break;
-					default:
-						assert(false);
+				if (req.canMoveSrc) {
+					pField->v.Swap(req.stream);
+					pField->m_pAllocator = &req.allocator;
+				}
+				else {
+					pField->v.CopyFrom(req.stream, *pField->m_pAllocator, true);
 				}
 				return 0;
 			}
