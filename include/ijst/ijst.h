@@ -97,13 +97,14 @@ namespace ijst {
 	 *				Inner Interface
 	 */
 	namespace detail {
+		//! IJST_AUTO_META_INIT
 		#if __cplusplus < 201103L
 		#ifndef IJST_AUTO_META_INIT
 			#define IJST_AUTO_META_INIT		1
 		#endif
 		#endif
 
-		// LIKELY and UNLIKELY
+		//! LIKELY and UNLIKELY
 		#if defined(__GNUC__) || defined(__clang__)
 			#define IJSTI_LIKELY(x)			__builtin_expect(!!(x), 1)
 			#define IJSTI_UNLIKELY(x)		__builtin_expect(!!(x), 0)
@@ -113,6 +114,7 @@ namespace ijst {
 		#endif
 
 		#define IJSTI_MAP_TYPE    			std::map
+
 		//! Set errMsg to pErrMsgOut when not null
 		//! Use macro instead of function to avoid compute errMsg when pErrMsgOut is null
 		#define IJSTI_SET_ERRMSG(pErrMsgOut, errMsg)				\
@@ -569,18 +571,17 @@ namespace ijst {
 
 			void InitMap()
 			{
-				if (IJSTI_UNLIKELY(mapInited)) {
-					throw std::runtime_error("MetaClass's map has inited before");
-				}
+				// assert MetaClass's map has not inited before
+				assert(!mapInited);
 
 				for (size_t i = 0; i < metaFields.size(); ++i) {
 					const MetaField *ptrMetaField = &(metaFields[i]);
-					// Check key exist
+					// Assert field offset not exist before
+					assert(mapOffset.find(ptrMetaField->offset) == mapOffset.end());
+					// Make sure field json name not exist before
+					// This name is specify be user, use exception instead of assert
 					if (IJSTI_UNLIKELY(mapName.find(ptrMetaField->name) != mapName.end())) {
-						throw std::runtime_error("MetaClass's field name conflict:" + ptrMetaField->name);
-					}
-					if (IJSTI_UNLIKELY(mapOffset.find(ptrMetaField->offset) != mapOffset.end())) {
-						throw std::runtime_error("MetaClass's field offset conflict:" + ptrMetaField->offset);
+						throw std::runtime_error("Field json name conflict:" + ptrMetaField->offset);
 					}
 
 					mapName[ptrMetaField->name] = ptrMetaField;
