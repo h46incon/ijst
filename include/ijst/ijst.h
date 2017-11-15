@@ -108,12 +108,12 @@ namespace ijst {
 		static const int kInnerError 					= 0x00002001;
 	};
 
-	//! Bevihour when meeting unknown member in json object
+	//! Behaviour when meeting unknown member in json object
 	struct UnknownMode {
 	public:
 		enum _E {
-			kKeep,		// keep unknown fileds
-			kIgnore,	// ignore unknown fileds
+			kKeep,		// keep unknown fields
+			kIgnore,	// ignore unknown fields
 			kError		// error when unknown fields occurs
 		};
 	};
@@ -225,8 +225,8 @@ namespace ijst {
 
 				SerializeReq(BufferType &_buffer, AllocatorType &_allocator,
 							 const void *_pField, bool _canMoveSrc,
-							 bool _pushAllfield)
-						: pushAllField(_pushAllfield)
+							 bool _pushAllField)
+						: pushAllField(_pushAllField)
 						  , pField(_pField)
 						  , canMoveSrc(_canMoveSrc)
 						  , buffer(_buffer)
@@ -650,7 +650,7 @@ namespace ijst {
 		class Accessor {
 		public:
 			//region constructors
-			Accessor(const MetaClass *_metaClass) :
+			explicit Accessor(const MetaClass *_metaClass) :
 					m_metaClass(_metaClass)
 			{
 				m_pBuffer = new rapidjson::Value(rapidjson::kObjectType);
@@ -756,22 +756,11 @@ namespace ijst {
 			}
 
 			//! Mark status of field to FStatus::kValid
-			inline void MarkValid(const void* pField)
-			{
-				MarkFieldStatus(pField, FStatus::kValid);
-			}
-
+			inline void MarkValid(const void* pField) { MarkFieldStatus(pField, FStatus::kValid); }
 			//! Mark status of field to FStatus::kNull
-			inline void MarkNull(const void* pField)
-			{
-				MarkFieldStatus(pField, FStatus::kNull);
-			}
-
+			inline void MarkNull(const void* pField) { MarkFieldStatus(pField, FStatus::kNull); }
 			//! Mark status of field to FStatus::kMissing
-			inline void MarkMissing(const void* pField)
-			{
-				MarkFieldStatus(pField, FStatus::kMissing);
-			}
+			inline void MarkMissing(const void* pField) { MarkFieldStatus(pField, FStatus::kMissing); }
 
 			//! Get status of field
 			inline EFStatus GetStatus(const void *pField) const
@@ -827,7 +816,7 @@ namespace ijst {
 			 * Serialize the structure.
 			 * @param pushAllField 		True if push all field, false if push only valid or null field
 			 * @param output 			The output of result
-			 * @param allocator	 		Allocator when adding memebers to output.
+			 * @param allocator	 		Allocator when adding members to output.
 			 * @return					Error code.
 			 *
 			 * @note If using inner allocator, user should carefully handler the structure's life cycle.
@@ -871,7 +860,7 @@ namespace ijst {
 			 * @note The object may be invalid after serialization
 			 * @param pushAllField 		True if push all field, false if push only valid or null field
 			 * @param output 			The output of result
-			 * @param allocator	 		Allocator when adding memebers to output.
+			 * @param allocator	 		Allocator when adding members to output.
 			 * @return					Error code
 			 *
 			 * @note If using inner allocator, user should carefully handler the structure's life cycle.
@@ -988,7 +977,7 @@ namespace ijst {
 			/**
 			 * Deserialize from json document. The source object may be stolen after deserialize.
 			 * Because the accessor need manager the input allocator, but the Allocator class has no Swap() interface,
-			 * so use Documemnt instead.
+			 * so use document object instead.
 			 * @param srcDocStolen		Input document object.
 			 * @param pErrMsgOut		Error message output. Null if do not need error message
 			 * @param unknownMode		Behaviour when meet unknown member in json
@@ -1020,7 +1009,7 @@ namespace ijst {
 			 */
 			int DeserializeInsitu(char* str, std::string* pErrMsgOut = IJST_NULL, EUnknownMode unknownMode = UnknownMode::kKeep)
 			{
-				// The new object will call Deserialize() interfaces in most suitation
+				// The new object will call Deserialize() interfaces in most situation
 				// So clear own allocator will not bring much benefice
 				m_pAllocator = &m_pOwnDoc->GetAllocator();
 				rapidjson::Document doc(m_pAllocator);

@@ -45,7 +45,7 @@ namespace ijst{
 				return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
 			}
 
-			/* do a mathdiv for long type */
+			/* do a math div for long type */
 			inline long MathDiv(long a, long b)
 			{
 				return a / b - (a % b < 0);

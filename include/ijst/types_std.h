@@ -101,10 +101,10 @@ namespace ijst{
 		//! Get actually value in object
 		BufferType& V() {return v;}
 		const BufferType& V() const {return v;}
-		//! See ijst::Accessor::GetAlloator
+		//! See ijst::Accessor::GetAllocator
 		AllocatorType& GetAllocator() {return *m_pAllocator;}
 		const AllocatorType& GetAllocator() const {return *m_pAllocator;}
-		//! See ijst::Accessor::GetOwnAlloator
+		//! See ijst::Accessor::GetOwnAllocator
 		AllocatorType& GetOwnAllocator() {return m_pOwnDoc->GetAllocator();}
 		const AllocatorType& GetOwnAllocator() const {return m_pOwnDoc->GetAllocator();}
 
