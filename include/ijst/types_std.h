@@ -13,9 +13,11 @@
 	#include <stdint.h>
 #endif
 
+//! Declare a primitive type field. _T is a value in ijst::FType
 #define IJST_TPRI(_T)	::ijst::detail::TypeClassPrim< ::ijst::FType::_T>
 
 namespace ijst{
+	//! Primitive field types
 	struct FType {
 		enum _E {
 			Bool,
@@ -96,10 +98,15 @@ namespace ijst{
 			m_pOwnDoc = IJST_NULL;
 		}
 
+		//! Get actually value in object
 		BufferType& V() {return v;}
 		const BufferType& V() const {return v;}
+		//! See ijst::Accessor::GetAlloator
 		AllocatorType& GetAllocator() {return *m_pAllocator;}
 		const AllocatorType& GetAllocator() const {return *m_pAllocator;}
+		//! See ijst::Accessor::GetOwnAlloator
+		AllocatorType& GetOwnAllocator() {return m_pOwnDoc->GetAllocator();}
+		const AllocatorType& GetOwnAllocator() const {return m_pOwnDoc->GetAllocator();}
 
 	private:
 		friend class detail::FSerializer<detail::TypeClassPrim<FType::Raw> >;

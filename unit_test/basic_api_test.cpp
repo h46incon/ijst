@@ -186,7 +186,7 @@ TEST(BasicAPI, Allocator)
 	cst.map["v1"] = SimpleSt();
 	cst.map["v2"] = SimpleSt();
 
-	cst._.Init();
+	cst._.InitMembersAllocator();
 	// Allocator is same of fields inited
 	ASSERT_EQ(&cst._.GetAllocator(), &cst.vec[0]._.GetAllocator());
 	ASSERT_EQ(&cst._.GetAllocator(), &cst.vec[1]._.GetAllocator());
