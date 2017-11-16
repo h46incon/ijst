@@ -130,15 +130,6 @@ namespace ijst {
 		#endif
 		#endif
 
-		//! LIKELY and UNLIKELY
-		#if defined(__GNUC__) || defined(__clang__)
-			#define IJSTI_LIKELY(x)			__builtin_expect(!!(x), 1)
-			#define IJSTI_UNLIKELY(x)		__builtin_expect(!!(x), 0)
-		#else
-			#define IJSTI_LIKELY(x) 		(x)
-			#define IJSTI_UNLIKELY(x)		(x)
-		#endif
-
 		#define IJSTI_MAP_TYPE    			std::map
 
 		//! Set errMsg to pErrMsgOut when not null.
@@ -385,8 +376,7 @@ namespace ijst {
 					SerializeResp elemResp;
 					int ret = interface->Serialize(elemReq, elemResp);
 
-					if (IJSTI_UNLIKELY(ret != 0))
-					{
+					if (ret != 0) {
 						return ret;
 					}
 					req.buffer.PushBack(newElem, req.allocator);
@@ -421,7 +411,7 @@ namespace ijst {
 					// Deserialize
 					DeserializeResp elemResp(resp.needErrMsg);
 					int ret = serializerInterface->Deserialize(elemReq, elemResp);
-					if (IJSTI_UNLIKELY(ret != 0))
+					if (ret != 0)
 					{
 						pField->pop_back();
 						if (resp.needErrMsg)
@@ -448,8 +438,7 @@ namespace ijst {
 				for (typename VarType::iterator itera = pFieldT->begin(); itera != pFieldT->end(); ++itera)
 				{
 					int ret = interface->SetAllocator(&(*itera), allocator);
-					if (IJSTI_UNLIKELY(ret != 0))
-					{
+					if (ret != 0) {
 						return ret;
 					}
 				}
@@ -487,7 +476,7 @@ namespace ijst {
 					int ret = interface->Serialize(elemReq, elemResp);
 
 					// Check return
-					if (IJSTI_UNLIKELY(ret != 0)) {
+					if (ret != 0) {
 						return ret;
 					}
 
@@ -534,7 +523,7 @@ namespace ijst {
 					// Deserialize
 					DeserializeResp elemResp(resp.needErrMsg);
 					int ret = serializerInterface->Deserialize(elemReq, elemResp);
-					if (IJSTI_UNLIKELY(ret != 0))
+					if (ret != 0)
 					{
 						if (hasAlloc)
 						{
@@ -562,8 +551,7 @@ namespace ijst {
 				for (typename VarType::iterator itera = pFieldT->begin(); itera != pFieldT->end(); ++itera)
 				{
 					int ret = interface->SetAllocator(&(itera->second), allocator);
-					if (IJSTI_UNLIKELY(ret != 0))
-					{
+					if (ret != 0) {
 						return ret;
 					}
 				}
@@ -701,7 +689,7 @@ namespace ijst {
 			//! Steal other Accessor object.
 			void Steal(Accessor &rhs)
 			{
-				if (IJSTI_UNLIKELY(this == &rhs)) {
+				if (this == &rhs) {
 					return;
 				}
 
@@ -804,7 +792,7 @@ namespace ijst {
 				{
 					void *pField = GetFieldByOffset(itMetaField->offset);
 					int ret = itMetaField->serializerInterface->SetAllocator(pField, allocator);
-					if (IJSTI_UNLIKELY(ret != 0)){
+					if (ret != 0) {
 						return ret;
 					}
 				}
@@ -845,8 +833,7 @@ namespace ijst {
 				buffer.Clear();
 				rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 				bool bSucc = store.Accept(writer);
-				if (IJSTI_LIKELY(bSucc))
-				{
+				if (bSucc) {
 					strOutput = std::string(buffer.GetString(), buffer.GetSize());
 					return 0;
 				}
@@ -889,8 +876,7 @@ namespace ijst {
 				buffer.Clear();
 				rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 				bool bSucc = store.Accept(writer);
-				if (IJSTI_LIKELY(bSucc))
-				{
+				if (bSucc) {
 					strOutput = std::string(buffer.GetString(), buffer.GetSize());
 					return 0;
 				}
@@ -960,7 +946,7 @@ namespace ijst {
 				m_pAllocator = &m_pOwnDoc->GetAllocator();
 				rapidjson::Document doc(m_pAllocator);
 				doc.Parse(cstrInput, length);
-				if (IJSTI_UNLIKELY(doc.HasParseError()))
+				if (doc.HasParseError())
 				{
 					if (pErrMsgOut != IJST_NULL)
 					{
@@ -1014,7 +1000,7 @@ namespace ijst {
 				m_pAllocator = &m_pOwnDoc->GetAllocator();
 				rapidjson::Document doc(m_pAllocator);
 				doc.ParseInsitu(str);
-				if (IJSTI_UNLIKELY(doc.HasParseError()))
+				if (doc.HasParseError())
 				{
 					if (pErrMsgOut != IJST_NULL)
 					{
@@ -1200,7 +1186,7 @@ namespace ijst {
 
 				SerializeResp elemSerializeResp;
 				int ret = itMetaField->serializerInterface->Serialize(elemSerializeReq, elemSerializeResp);
-				if (IJSTI_UNLIKELY(ret != 0)) {
+				if (ret != 0) {
 					return ret;
 				}
 
@@ -1467,7 +1453,7 @@ namespace ijst {
 					return itera->second;
 				}
 
-				if (IJSTI_LIKELY(m_metaClass->mapOffset.find(offset) != m_metaClass->mapOffset.end())) {
+				if (m_metaClass->mapOffset.find(offset) != m_metaClass->mapOffset.end()) {
 					return FStatus::kMissing;
 				}
 

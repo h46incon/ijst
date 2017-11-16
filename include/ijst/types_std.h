@@ -79,7 +79,7 @@ namespace ijst{
 
 		void Steal(FStoreRaw& rhs)
 		{
-			if (IJSTI_UNLIKELY(this == &rhs)) {
+			if (this == &rhs) {
 				return;
 			}
 
