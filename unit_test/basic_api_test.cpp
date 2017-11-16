@@ -212,4 +212,24 @@ TEST(BasicAPI, DefineInStruct)
 	IJST_SET(st, int_1, 1);
 	ASSERT_EQ(st.int_1, 1);
 }
+
+#if __cplusplus >= 201103L
+void TestDefineInFunction()
+{
+	IJST_DEFINE_STRUCT(
+		StInFunc
+		, (IJST_TPRI(Int), int_1, "int_val_1", 0)
+	);
+
+	StInFunc st;
+	IJST_SET(st, int_1, 1);
+	ASSERT_EQ(st.int_1, 1);
 }
+
+TEST(BasicAPI, DefineInFunction)
+{
+	TestDefineInFunction();
+}
+#endif
+}
+

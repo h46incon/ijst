@@ -28,7 +28,7 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TVEC(IJST_TOBJ(Inner)), vec_2, "vec_val_2", 0)
 )
 
-TEST(Serialize, EmptyStruct)
+TEST(Serialize, EmptyValue)
 {
 	NestSt nestSt;
 
@@ -40,7 +40,7 @@ TEST(Serialize, EmptyStruct)
 	ASSERT_TRUE(jVal.MemberCount() == 0);
 }
 
-TEST(Serialize, EmptyStruct_PushAllField)
+TEST(Serialize, EmptyValue_PushAllField)
 {
 	NestSt nestSt;
 	// Empty struct
@@ -235,6 +235,19 @@ TEST(Serialize, Complicate)
 	ASSERT_EQ(jVal["mmo_v"]["om1"]["im2"]["int_val_2"].GetInt(), 12);
 	ASSERT_STREQ(jVal["mmo_v"]["om2"]["im1"]["str_val_1"].GetString(), "lstr1");
 	ASSERT_STREQ(jVal["mmo_v"]["om2"]["im3"]["str_val_2"].GetString(), "lstr2");
+}
+
+IJST_DEFINE_STRUCT(
+	EmptySt
+);
+
+TEST(Serialize, EmptyStruct)
+{
+	EmptySt st;
+	rapidjson::Value jVal;
+	int ret = st._.MoveSerializeInInnerAlloc(true, jVal);
+	ASSERT_EQ(ret, 0);
+	ASSERT_EQ(jVal.MemberCount(), 0u);
 }
 
 IJST_DEFINE_STRUCT(
