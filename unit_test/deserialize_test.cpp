@@ -148,14 +148,15 @@ TEST(Deserialize, Insitu)
 {
 	SimpleSt st;
 	string validJson = "{\"int_val_2\":1, \"str_val_2\":\"str2\"}";
-	char* buf = new char[validJson.size()];
-	strncpy(buf, validJson.c_str(), validJson.size());
-	int ret = st._.DeserializeInsitu(buf, 0);
+	char* buf = new char[validJson.length() + 1];
+	strncpy(buf, validJson.c_str(), validJson.length() + 1);
+	int ret = st._.DeserializeInsitu(buf);
 	ASSERT_EQ(ret, 0);
 
 	// Check st
 	ASSERT_EQ(st.int_2, 1);
 	ASSERT_STREQ(st.str_2.c_str(), "str2");
+	delete[] buf;
 }
 IJST_DEFINE_STRUCT(
 		NullableSt
