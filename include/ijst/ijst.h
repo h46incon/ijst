@@ -638,8 +638,8 @@ namespace ijst {
 		class Accessor {
 		public:
 			//region constructors
-			explicit Accessor(const MetaClass *_metaClass) :
-					m_metaClass(_metaClass)
+			explicit Accessor(const MetaClass *pMetaClass) :
+					m_pMetaClass(pMetaClass)
 			{
 				m_pBuffer = new rapidjson::Value(rapidjson::kObjectType);
 				m_pOwnDoc = new rapidjson::Document();
@@ -656,7 +656,7 @@ namespace ijst {
 				m_pOwnDoc = new rapidjson::Document();
 				m_pAllocator = &m_pOwnDoc->GetAllocator();
 
-				m_metaClass = rhs.m_metaClass;
+				m_pMetaClass = rhs.m_pMetaClass;
 				InitOuterPtr();
 
 				m_pBuffer->CopyFrom(*rhs.m_pBuffer, *m_pAllocator, true);
@@ -703,8 +703,8 @@ namespace ijst {
 				rhs.m_pOwnDoc = IJST_NULL;
 
 				// other simple field
-				m_metaClass = rhs.m_metaClass;
-				rhs.m_metaClass = IJST_NULL;
+				m_pMetaClass = rhs.m_pMetaClass;
+				rhs.m_pMetaClass = IJST_NULL;
 				m_pAllocator = rhs.m_pAllocator;
 				rhs.m_pAllocator = IJST_NULL;
 
@@ -725,7 +725,7 @@ namespace ijst {
 			inline bool HasField(const void *pField) const
 			{
 				size_t offset = GetFieldOffset(pField);
-				return (m_metaClass->mapOffset.find(offset) != m_metaClass->mapOffset.end());
+				return (m_pMetaClass->mapOffset.find(offset) != m_pMetaClass->mapOffset.end());
 			}
 
 			//! Set field to val and mark it valid.
@@ -787,8 +787,8 @@ namespace ijst {
 				m_pAllocator = &allocator;
 
 				// Set allocator in members
-				for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
-					 itMetaField != m_metaClass->metaFields.end(); ++itMetaField)
+				for (std::vector<MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
+					 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
 				{
 					void *pField = GetFieldByOffset(itMetaField->offset);
 					int ret = itMetaField->serializerInterface->SetAllocator(pField, allocator);
@@ -1060,13 +1060,13 @@ namespace ijst {
 
 			inline void InitOuterPtr()
 			{
-				m_pOuter = reinterpret_cast<const unsigned char *>(this - m_metaClass->accessorOffset);
+				m_pOuter = reinterpret_cast<const unsigned char *>(this - m_pMetaClass->accessorOffset);
 			}
 
 			void MarkFieldStatus(const void* field, EFStatus fStatus)
 			{
 				const std::size_t offset = GetFieldOffset(field);
-				(IJST_ASSERT(m_metaClass->mapOffset.find(offset) != m_metaClass->mapOffset.end()));
+				(IJST_ASSERT(m_pMetaClass->mapOffset.find(offset) != m_pMetaClass->mapOffset.end()));
 
 				m_fieldStatus[offset] = fStatus;
 			}
@@ -1079,7 +1079,7 @@ namespace ijst {
 
 				// Reserve space
 				do {
-					const size_t maxSize = m_metaClass->metaFields.size() + m_pBuffer->MemberCount();
+					const size_t maxSize = m_pMetaClass->metaFields.size() + m_pBuffer->MemberCount();
 					if (buffer.MemberCapacity() >= maxSize) {
 						break;
 					}
@@ -1090,8 +1090,8 @@ namespace ijst {
 					}
 					else {
 						fieldSize = m_pBuffer->MemberCount();
-						for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
-							 itMetaField != m_metaClass->metaFields.end(); ++itMetaField)
+						for (std::vector<MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
+							 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
 						{
 							EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
 							if (fstatus == FStatus::kValid || fstatus == FStatus::kNull) {
@@ -1107,8 +1107,8 @@ namespace ijst {
 				const rapidjson::SizeType oldCapcity = buffer.MemberCapacity();
 				#endif
 
-				for (std::vector<MetaField>::const_iterator itMetaField = m_metaClass->metaFields.begin();
-					 itMetaField != m_metaClass->metaFields.end(); ++itMetaField)
+				for (std::vector<MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
+					 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
 				{
 					// Check field state
 					EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
@@ -1245,9 +1245,9 @@ namespace ijst {
 					// Get related field info
 					const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
 					IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator
-							itMetaField = m_metaClass->mapName.find(fieldName);
+							itMetaField = m_pMetaClass->mapName.find(fieldName);
 
-					if (itMetaField == m_metaClass->mapName.end()) {
+					if (itMetaField == m_pMetaClass->mapName.end()) {
 						// Not a field in struct
 						switch (unknownMode) {
 							case UnknownMode::kKeep:
@@ -1315,9 +1315,9 @@ namespace ijst {
 					// Get related field info
 					const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
 					IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator
-							itMetaField = m_metaClass->mapName.find(fieldName);
+							itMetaField = m_pMetaClass->mapName.find(fieldName);
 
-					if (itMetaField == m_metaClass->mapName.end())
+					if (itMetaField == m_pMetaClass->mapName.end())
 					{
 						// Not a field in struct
 						switch (unknownMode) {
@@ -1400,8 +1400,8 @@ namespace ijst {
 				// Check all required field status
 				std::stringstream invalidNameOss;
 				bool hasErr = false;
-				for (std::vector<MetaField>::const_iterator itField = m_metaClass->metaFields.begin();
-					 itField != m_metaClass->metaFields.end(); ++itField)
+				for (std::vector<MetaField>::const_iterator itField = m_pMetaClass->metaFields.begin();
+					 itField != m_pMetaClass->metaFields.end(); ++itField)
 				{
 					if (isBitSet(itField->desc, FDesc::Optional))
 					{
@@ -1453,7 +1453,7 @@ namespace ijst {
 					return itera->second;
 				}
 
-				if (m_metaClass->mapOffset.find(offset) != m_metaClass->mapOffset.end()) {
+				if (m_pMetaClass->mapOffset.find(offset) != m_pMetaClass->mapOffset.end()) {
 					return FStatus::kMissing;
 				}
 
@@ -1467,7 +1467,7 @@ namespace ijst {
 
 			typedef IJSTI_MAP_TYPE<std::size_t, EFStatus> FieldStatusType;
 			FieldStatusType m_fieldStatus;
-			const MetaClass *m_metaClass;
+			const MetaClass *m_pMetaClass;
 
 			// Must be a pointer to make class Accessor be a standard-layout type struct
 			rapidjson::Value* m_pBuffer;
