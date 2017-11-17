@@ -11,7 +11,7 @@ IJST_DEFINE_STRUCT (
 )
 ```
 
-同过该宏可以指定结构体的名字和每个字段的信息。该宏会声明相关的 class，以及相应元信息的注册代码。
+通过该宏可以指定结构体的名字和每个字段的信息。该宏会声明相关的 class，以及注册相关的元信息。
 
 一个例子：
 
@@ -25,7 +25,7 @@ IJST_DEFINE_STRUCT (
     , (IJST_TPRI(Str), strName, "name", 0)
     , (IJST_TPRI(Bool), bSex, "sex", 0)     // 只是举一个bool的栗子
     // 接下来是复杂的字段
-    , (IJST_TVEC(IJST_TPRI(UInt64)), vecFriendsID, "friends_id", ijst::FDesc::Optional) // 可能没朋友
+    , (IJST_TVEC(IJST_TPRI(UInt64)), vecFriendsID, "friends_id", ijst::FDesc::Optional) // Optional，可能没朋友
     , (IJST_TMAP(IJST_TPRI(Str)), mapWhatEver, "what_ever", ijst::FDesc::ElemNotEmpty)
 );
 
@@ -191,7 +191,7 @@ assert( IJST_GET_STATUS(st, strName) == ijst::FStatus::kValid );
 
 ### 反序列化时的行为
 
-在反序列化时，可能会在 json 中遇到未在结构体中声明的字段。将其一味的丢弃是会遭人唾弃的（如早期的 ProtoBuf 3）。
+在反序列化时，可能会在 json 中遇到未在结构体中声明的字段。将其一味的丢弃是会遭人唾弃的。
 在 ijst 的反序列化接口中，可以通过一个 `ijst::EUnknownMode` 类型的参数指定相关的行为：
 
 - kIgnore：忽略 unknown 字段。
@@ -205,6 +205,9 @@ assert( IJST_GET_STATUS(st, strName) == ijst::FStatus::kValid );
 std::string strJson = // Init...
 int ret = sampleStruct._.Deserialize(strJson, ijst::UnknownMode::kIgnore);
 ```
+
+在序列化时，会输出对象保存的所有 unknown 字段。
+
 ### 访问 Unknown 字段
 
 可以通过 ijst 提供的 `GetBuffer()` 接口**访问和修改** Unknown 字段：
@@ -213,8 +216,6 @@ int ret = sampleStruct._.Deserialize(strJson, ijst::UnknownMode::kIgnore);
 rapidjson::Value& jUnknown = sampleStruct._.GetBuffer();
 assert(jUnknown.IsObject() == true);
 ```
-
-在序列化时，会输出对象保存的所有 unknown 字段。
 
 ### Allocator
 

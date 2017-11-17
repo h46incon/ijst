@@ -3,8 +3,8 @@
 ijst (iJsonStruct)一个是C++ Json 序列化库：
 
 - 使用方便。只需在 C++ 中定义一次结构体，无须重复添加元信息，更不用额外工具生成代码。
-- 完整。支持 list、map以及结构体的嵌套定义。
-- 轻量。header-only，仅依赖 stl和 [rapidjson](https://github.com/Tencent/rapidjson)。
+- 完整。支持 list、map 以及结构体的嵌套定义。
+- 轻量。header-only，仅依赖 stl 和 [rapidjson](https://github.com/Tencent/rapidjson)。
 - 兼容 C++98。
 
 ## 用法
