@@ -904,12 +904,12 @@ namespace ijst {
 			/**
 			 * Deserialize from json object
 			 * @param stream			Input json object
-			 * @param pErrMsgOut		Error message output. Null if do not need error message
 			 * @param unknownMode		Behaviour when meet unknown member in json
+			 * @param pErrMsgOut		Error message output. Null if do not need error message
 			 * @return					Error code
 			 */
-			inline int Deserialize(const BufferType& stream,
-								   std::string* pErrMsgOut = IJST_NULL, EUnknownMode unknownMode = UnknownMode::kKeep)
+			inline int Deserialize(const BufferType &stream, EUnknownMode unknownMode = UnknownMode::kKeep,
+								   std::string *pErrMsgOut = IJST_NULL)
 			{
 				size_t fieldCount;
 				return DoDeserialize(stream, unknownMode, pErrMsgOut, fieldCount);
@@ -918,28 +918,28 @@ namespace ijst {
 			/**
 			 * Deserialize from std::string
 			 * @param strInput			Input string
-			 * @param pErrMsgOut		Error message output. Null if do not need error message
 			 * @param unknownMode		Behaviour when meet unknown member in json
+			 * @param pErrMsgOut		Error message output. Null if do not need error message
 			 * @return					Error code
 			 */
-			inline int Deserialize(const std::string& strInput,
-								   std::string* pErrMsgOut = IJST_NULL, EUnknownMode unknownMode = UnknownMode::kKeep)
+			inline int Deserialize(const std::string &strInput, EUnknownMode unknownMode = UnknownMode::kKeep,
+								   std::string *pErrMsgOut = IJST_NULL)
 			{
-				return Deserialize(strInput.c_str(), strInput.length(), pErrMsgOut, unknownMode);
+				return Deserialize(strInput.c_str(), strInput.length(), unknownMode, pErrMsgOut);
 			}
 
 			/**
 			 * Deserialize from C-style string
 			 * @param cstrInput			Input C string
 			 * @param length			Length of string
-			 * @param pErrMsgOut		Error message output. Null if do not need error message
 			 * @param unknownMode		Behaviour when meet unknown member in json
+			 * @param pErrMsgOut		Error message output. Null if do not need error message
 			 * @return					Error code
 			 *
 			 * @note The input string can contain '\0'
 			 */
-			int Deserialize(const char* cstrInput, std::size_t length,
-							std::string* pErrMsgOut = IJST_NULL, EUnknownMode unknownMode = UnknownMode::kKeep)
+			int Deserialize(const char *cstrInput, std::size_t length, EUnknownMode unknownMode = UnknownMode::kKeep,
+							std::string *pErrMsgOut = IJST_NULL)
 			{
 				// The new object will call Deserialize() interfaces soon in most situation
 				// So clear own allocator will not bring much benefice
@@ -965,15 +965,15 @@ namespace ijst {
 			 * Because the accessor need manager the input allocator, but the Allocator class has no Swap() interface,
 			 * so use document object instead.
 			 * @param srcDocStolen		Input document object.
-			 * @param pErrMsgOut		Error message output. Null if do not need error message
 			 * @param unknownMode		Behaviour when meet unknown member in json
+			 * @param pErrMsgOut		Error message output. Null if do not need error message
 			 * @return					Error code
 			 *
 			 * @note The source document may be changed after deserialize.
 			 * @note Make sure srcDocStolen use own allocator, or use allocator in this object.
 			 */
-			inline int MoveDeserialize(rapidjson::Document &srcDocStolen,
-									   std::string *pErrMsgOut = IJST_NULL, EUnknownMode unknownMode = UnknownMode::kKeep)
+			inline int MoveDeserialize(rapidjson::Document &srcDocStolen, EUnknownMode unknownMode = UnknownMode::kKeep,
+									   std::string *pErrMsgOut = IJST_NULL)
 			{
 				// Store document to manager allocator
 				m_pOwnDoc->Swap(srcDocStolen);
@@ -986,14 +986,15 @@ namespace ijst {
 			/**
 			 * Deserialize insitu from str
 			 * @param cstrInput			Input C string
-			 * @param pErrMsgOut		Error message output. Null if do not need error message
 			 * @param unknownMode		Behaviour when meet unknown member in json
+			 * @param pErrMsgOut		Error message output. Null if do not need error message
 			 * @return					Error code
 			 *
 			 * @note The context in str may be changed after deserialize
 			 * @note Make sure the lifecycle of str is longer than this object
 			 */
-			int DeserializeInsitu(char* str, std::string* pErrMsgOut = IJST_NULL, EUnknownMode unknownMode = UnknownMode::kKeep)
+			int DeserializeInsitu(char *str, EUnknownMode unknownMode = UnknownMode::kKeep,
+								  std::string *pErrMsgOut = IJST_NULL)
 			{
 				// The new object will call Deserialize() interfaces in most situation
 				// So clear own allocator will not bring much benefice

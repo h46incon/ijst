@@ -28,7 +28,7 @@ TEST(Primitive, Int)
 	{
 		string errorJson = "{\"f_v\": \"1\"}";
 		StInt stErr;
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		int retExpected = ijst::Err::kDeserializeValueTypeError;
 		ASSERT_EQ(ret, retExpected);
 	}
@@ -44,7 +44,7 @@ TEST(Primitive, Int)
 	// Deserialize
 	{
 		string json = "{\"f_v\": 0, \"f_vec\": [-1, 1], \"f_map\": {\"v1\": -2, \"v2\": 2}}";
-		ret = st._.Deserialize(json, 0);
+		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(st.v, 0);
 		ASSERT_EQ(st.vec_v[0], -1);
@@ -91,15 +91,15 @@ TEST(Primitive, UInt32)
 		StUInt32 stErr;
 
 		string errorJson = "{\"f_v\": -1}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"1\"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": 4294967296}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -114,7 +114,7 @@ TEST(Primitive, UInt32)
 	// Deserialize
 	{
 		string json = "{\"f_v\": 0, \"f_vec\": [4294967295, 1], \"f_map\": {\"v1\": 2, \"v2\": 4}}";
-		ret = st._.Deserialize(json, 0);
+		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(st.v, 0u);
 		ASSERT_EQ(st.vec_v[0], 4294967295u);
@@ -161,15 +161,15 @@ TEST(Primitive, UInt64)
 		StUInt64 stErr;
 
 		string errorJson = "{\"f_v\": -1}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"1\"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": 18446744073709551616}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -184,7 +184,7 @@ TEST(Primitive, UInt64)
 	// Deserialize
 	{
 		string json = "{\"f_v\": 0, \"f_vec\": [18446744073709551615, 1], \"f_map\": {\"v1\": 2, \"v2\": 4}}";
-		ret = st._.Deserialize(json, 0);
+		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(st.v, 0u);
 		ASSERT_EQ(st.vec_v[0], 18446744073709551615ul);
@@ -231,15 +231,15 @@ TEST(Primitive, Int32)
 		StInt32 stErr;
 
 		string errorJson = "{\"f_v\": -2147483649}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"1\"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": 2147483648}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -254,7 +254,7 @@ TEST(Primitive, Int32)
 	// Deserialize
 	{
 		string json = "{\"f_v\": 0, \"f_vec\": [-2147483648, 2147483647], \"f_map\": {\"v1\": 2, \"v2\": 4}}";
-		ret = st._.Deserialize(json, 0);
+		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(st.v, 0);
 		ASSERT_EQ(st.vec_v[0], -2147483648);
@@ -302,15 +302,15 @@ TEST(Primitive, Int64)
 		StInt64 stErr;
 
 		string errorJson = "{\"f_v\": -9223372036854775809}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"1\"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": 9223372036854775808}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -326,7 +326,7 @@ TEST(Primitive, Int64)
 	// Deserialize
 	{
 		string json = "{\"f_v\": 0, \"f_vec\": [-9223372036854775808, 9223372036854775807], \"f_map\": {\"v1\": 2, \"v2\": 4}}";
-		ret = st._.Deserialize(json, 0);
+		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(st.v, 0);
 		ASSERT_EQ(st.vec_v[0], i64Min);
@@ -372,7 +372,7 @@ TEST(Primitive, Bool)
 	{
 		string errorJson = "{\"f_v\": \"1\"}";
 		StBool stErr;
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		int retExpected = ijst::Err::kDeserializeValueTypeError;
 		ASSERT_EQ(ret, retExpected);
 	}
@@ -388,7 +388,7 @@ TEST(Primitive, Bool)
 	// Deserialize
 	{
 		string json = "{\"f_v\": true, \"f_vec\": [true, false], \"f_map\": {\"v1\": true, \"v2\": false}}";
-		ret = st._.Deserialize(json, 0);
+		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(st.v, 1);
 		ASSERT_EQ(st.vec_v[0], 1);
@@ -434,7 +434,7 @@ TEST(Primitive, Str)
 	{
 		string errorJson = "{\"f_v\": 0}";
 		StString stErr;
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		int retExpected = ijst::Err::kDeserializeValueTypeError;
 		ASSERT_EQ(ret, retExpected);
 	}
@@ -449,7 +449,7 @@ TEST(Primitive, Str)
 	// Deserialize
 	{
 		string json = "{\"f_v\": \"v1\", \"f_vec\": [\"v1\", \"v2\"], \"f_map\": {\"v1\": \"v11\", \"v2\": \"v22\"}}";
-		ret = st._.Deserialize(json, 0);
+		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 		ASSERT_STREQ(st.v.c_str(), "v1");
 		ASSERT_STREQ(st.vec_v[0].c_str(), "v1");
@@ -510,7 +510,7 @@ TEST(Primitive, Raw)
 			rapidjson::Document doc;
 			doc.Parse(json.c_str(), json.length());
 			ASSERT_FALSE(doc.HasParseError());
-			ret = st._.Deserialize(doc, 0);
+			ret = st._.Deserialize(doc);
 			ASSERT_EQ(ret, 0);
 			// Check source doc
 			ASSERT_STREQ(doc["f_v"].GetString(), "v1");
@@ -534,7 +534,7 @@ TEST(Primitive, Raw)
 		rapidjson::Document doc;
 		doc.Parse(json.c_str(), json.length());
 		ASSERT_FALSE(doc.HasParseError());
-		ret = st._.MoveDeserialize(doc, 0);
+		ret = st._.MoveDeserialize(doc);
 		ASSERT_EQ(ret, 0);
 		// Check st
 		ASSERT_STREQ(st.v.V().GetString(), "v1");
@@ -649,31 +649,31 @@ TEST(Primitive, Time)
 		string errorJson;
 
 		errorJson = "{\"f_v\": 0}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"2000-10-10 00:00: \"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"2000-10-10 00:00:a\"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"2000-10-1000:00:00\"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"2000-10-10 00:00:00a\"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"2000-10-10 00:00:00 a\"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"2000-10-10 00:00:00 a b \"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -694,7 +694,7 @@ TEST(Primitive, Time)
 							", \"v2\": \"2038-1-19 3:14:8 \""							// time stamp need 64bit to store
 							", \"vn1\": \"1970-1-1 07:59:59\""							// -1
 							", \"vzero\": \"1970-1-1 08:00:00\"}}";						// 0
-		ret = st._.Deserialize(json, 0);
+		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(st.v, -377705145600);
 		ASSERT_EQ(st.vec_v[0], 946656000);
@@ -750,31 +750,31 @@ TEST(Primitive, FastTime)
 		string errorJson;
 
 		errorJson = "{\"f_v\": 0}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"2000-10-10 00:00: \"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"2000-10-10 00:00:a\"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"2000-10-1000:00:00\"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"2000-10-10 00:00:00a\"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"2000-10-10 00:00:00 a\"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"2000-10-10 00:00:00 a b \"}";
-		ret = stErr._.Deserialize(errorJson, 0);
+		ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -795,7 +795,7 @@ TEST(Primitive, FastTime)
 				", \"v2\": \"2038-1-19 3:14:8 \""							// time stamp need 64bit to store
 				", \"vn1\": \"1970-1-1 07:59:59\""							// -1
 				", \"vzero\": \"1970-1-1 08:00:00\"}}";						// 0
-		ret = st._.Deserialize(json, 0);
+		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(st.v, -377705145600);
 		ASSERT_EQ(st.vec_v[0], 946656000);
