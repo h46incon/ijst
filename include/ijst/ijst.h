@@ -130,8 +130,6 @@ namespace ijst {
 		#endif
 		#endif
 
-		#define IJSTI_MAP_TYPE    			std::map
-
 		//! Set errMsg to pErrMsgOut when not null.
 		//! Use macro instead of function to avoid compute errMsg when pErrMsgOut is null.
 		#define IJSTI_SET_ERRMSG(pErrMsgOut, errMsg)				\
@@ -602,8 +600,8 @@ namespace ijst {
 			}
 
 			std::vector<MetaField> metaFields;
-			IJSTI_MAP_TYPE<std::string, const MetaField *> mapName;
-			IJSTI_MAP_TYPE<std::size_t, const MetaField *> mapOffset;
+			std::map<std::string, const MetaField *> mapName;
+			std::map<std::size_t, const MetaField *> mapOffset;
 			std::string tag;
 			std::size_t accessorOffset;
 		private:
@@ -641,17 +639,18 @@ namespace ijst {
 			explicit Accessor(const MetaClass *pMetaClass) :
 					m_pMetaClass(pMetaClass)
 			{
+				m_pFieldStatus = new FieldStatusType();
 				m_pBuffer = new rapidjson::Value(rapidjson::kObjectType);
 				m_pOwnDoc = new rapidjson::Document();
 				m_pAllocator = &m_pOwnDoc->GetAllocator();
 				InitOuterPtr();
 			}
 
-			Accessor(const Accessor &rhs) :
-					m_fieldStatus(rhs.m_fieldStatus)
+			Accessor(const Accessor &rhs)
 			{
 				assert(this != &rhs);
 
+				m_pFieldStatus = new FieldStatusType(*rhs.m_pFieldStatus);
 				m_pBuffer = new rapidjson::Value(rapidjson::kObjectType);
 				m_pOwnDoc = new rapidjson::Document();
 				m_pAllocator = &m_pOwnDoc->GetAllocator();
@@ -667,6 +666,7 @@ namespace ijst {
 			{
 				m_pBuffer = IJST_NULL;
 				m_pOwnDoc = IJST_NULL;
+				m_pFieldStatus = IJST_NULL;
 				Steal(rhs);
 			}
 			#endif
@@ -683,6 +683,8 @@ namespace ijst {
 				m_pBuffer = IJST_NULL;
 				delete m_pOwnDoc;
 				m_pOwnDoc = IJST_NULL;
+				delete m_pFieldStatus;
+				m_pFieldStatus = IJST_NULL;
 			}
 			//endregion
 
@@ -702,13 +704,16 @@ namespace ijst {
 				m_pOwnDoc = rhs.m_pOwnDoc;
 				rhs.m_pOwnDoc = IJST_NULL;
 
+				delete m_pFieldStatus;
+				m_pFieldStatus = rhs.m_pFieldStatus;
+				rhs.m_pFieldStatus = IJST_NULL;
+
 				// other simple field
 				m_pMetaClass = rhs.m_pMetaClass;
 				rhs.m_pMetaClass = IJST_NULL;
 				m_pAllocator = rhs.m_pAllocator;
 				rhs.m_pAllocator = IJST_NULL;
 
-				m_fieldStatus = IJSTI_MOVE(rhs.m_fieldStatus);
 				InitOuterPtr();
 			}
 
@@ -1069,7 +1074,7 @@ namespace ijst {
 				const std::size_t offset = GetFieldOffset(field);
 				(IJST_ASSERT(m_pMetaClass->mapOffset.find(offset) != m_pMetaClass->mapOffset.end()));
 
-				m_fieldStatus[offset] = fStatus;
+				(*m_pFieldStatus)[offset] = fStatus;
 			}
 
 			int DoSerializeConst(bool pushAllField, bool canMoveSrc,
@@ -1245,7 +1250,7 @@ namespace ijst {
 
 					// Get related field info
 					const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-					IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator
+					std::map<std::string, const MetaField *>::const_iterator
 							itMetaField = m_pMetaClass->mapName.find(fieldName);
 
 					if (itMetaField == m_pMetaClass->mapName.end()) {
@@ -1315,7 +1320,7 @@ namespace ijst {
 				{
 					// Get related field info
 					const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-					IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator
+					std::map<std::string, const MetaField *>::const_iterator
 							itMetaField = m_pMetaClass->mapName.find(fieldName);
 
 					if (itMetaField == m_pMetaClass->mapName.end())
@@ -1353,7 +1358,7 @@ namespace ijst {
 				return ret;
 			}
 
-			int DoDeserializeField(IJSTI_MAP_TYPE<std::string, const MetaField *>::const_iterator itMetaField,
+			int DoDeserializeField(std::map<std::string, const MetaField *>::const_iterator itMetaField,
 								   BufferType& stream, EUnknownMode unknownMode, bool canMoveSrc,
 								   std::string *pErrMsgOut)
 			{
@@ -1362,7 +1367,7 @@ namespace ijst {
 				if (isBitSet(metaField->desc, FDesc::Nullable)
 					&& stream.IsNull())
 				{
-					m_fieldStatus[metaField->offset] = FStatus::kNull;
+					(*m_pFieldStatus)[metaField->offset] = FStatus::kNull;
 				}
 				else
 				{
@@ -1373,7 +1378,7 @@ namespace ijst {
 					int ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
 					// Check return
 					if (ret != 0) {
-						m_fieldStatus[metaField->offset] = FStatus::kParseFailed;
+						(*m_pFieldStatus)[metaField->offset] = FStatus::kParseFailed;
 						IJSTI_SET_ERRMSG(
 								pErrMsgOut,
 								("Deserialize field error. name: " + metaField->name + ", err: " + elemResp.errMsg)
@@ -1391,7 +1396,7 @@ namespace ijst {
 						return Err::kDeserializeElemEmpty;
 					}
 					// succ
-					m_fieldStatus[metaField->offset] = FStatus::kValid;
+					(*m_pFieldStatus)[metaField->offset] = FStatus::kValid;
 				}
 				return 0;
 			}
@@ -1449,8 +1454,8 @@ namespace ijst {
 
 			EFStatus GetStatusByOffset(const size_t offset) const
 			{
-				IJSTI_MAP_TYPE<size_t, EFStatus>::const_iterator itera = m_fieldStatus.find(offset);
-				if (itera != m_fieldStatus.end()) {
+				FieldStatusType::const_iterator itera = m_pFieldStatus->find(offset);
+				if (itera != m_pFieldStatus->end()) {
 					return itera->second;
 				}
 
@@ -1466,11 +1471,11 @@ namespace ijst {
 				return (val & bit) != 0;
 			}
 
-			typedef IJSTI_MAP_TYPE<std::size_t, EFStatus> FieldStatusType;
-			FieldStatusType m_fieldStatus;
-			const MetaClass *m_pMetaClass;
+			// Use pointers to make class Accessor be a standard-layout type struct
+			typedef std::map<std::size_t, EFStatus> FieldStatusType;
+			FieldStatusType* m_pFieldStatus;
+			const MetaClass* m_pMetaClass;
 
-			// Must be a pointer to make class Accessor be a standard-layout type struct
 			rapidjson::Value* m_pBuffer;
 			// Should use document instead of Allocator because document can swap allocator
 			rapidjson::Document* m_pOwnDoc;
