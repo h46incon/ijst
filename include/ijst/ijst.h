@@ -5,13 +5,15 @@
 #ifndef _IJST_HPP_INCLUDE_
 #define _IJST_HPP_INCLUDE_
 
+#include "std_layout_wrapper.h"
+
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/error/en.h>
 
-#include <cstddef>
 #include <cassert>
+#include <cstddef>
 #include <map>
 #include <vector>
 #include <string>
@@ -359,16 +361,17 @@ namespace ijst {
 		private:
 			typedef typename FSerializer<_T>::VarType ElemVarType;
 		public:
-			typedef std::vector<ElemVarType> VarType;
+			typedef ijst::Vector<ElemVarType> VarType;
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
+				const VarType *pFieldWrapper = static_cast<const VarType *>(req.pField);
+				const typename VarType::TVal& field = pFieldWrapper->Val();
 				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 				req.buffer.SetArray();
-				req.buffer.Reserve(static_cast<rapidjson::SizeType>(pField->size()), req.allocator);
+				req.buffer.Reserve(static_cast<rapidjson::SizeType>(field.size()), req.allocator);
 
-				for (typename VarType::const_iterator itera = pField->begin(); itera != pField->end(); ++itera) {
+				for (typename VarType::TVal::const_iterator itera = field.begin(); itera != field.end(); ++itera) {
 					BufferType newElem;
 					SerializeReq elemReq(newElem, req.allocator, &(*itera), req.canMoveSrc, req.pushAllField);
 					SerializeResp elemResp;
@@ -390,10 +393,11 @@ namespace ijst {
 					return Err::kDeserializeValueTypeError;
 				}
 
-				VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
-				pField->clear();
+				VarType *pFieldWrapper = static_cast<VarType *>(req.pFieldBuffer);
+				typename VarType::TVal& field = pFieldWrapper->Val();
+				field.clear();
 				// pField->shrink_to_fit();
-				pField->reserve(req.stream.Size());
+				field.reserve(req.stream.Size());
 				SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
 
 				for (rapidjson::Value::ValueIterator itVal = req.stream.Begin();
@@ -402,20 +406,20 @@ namespace ijst {
 					// Alloc buffer
 					// New a elem buffer in container first to avoid copy
 					// Use resize() instead of push_back() to avoid copy constructor in C++11
-					pField->resize(pField->size() + 1);
+					field.resize(field.size() + 1);
 					DeserializeReq elemReq(*itVal, req.allocator,
-										   req.unknownMode, req.canMoveSrc, &pField->back());
+										   req.unknownMode, req.canMoveSrc, &field.back());
 
 					// Deserialize
 					DeserializeResp elemResp(resp.needErrMsg);
 					int ret = serializerInterface->Deserialize(elemReq, elemResp);
 					if (ret != 0)
 					{
-						pField->pop_back();
+						field.pop_back();
 						if (resp.needErrMsg)
 						{
 							std::stringstream oss;
-							oss << "Deserialize elem error. index: " << pField->size() << ", err: ";
+							oss << "Deserialize elem error. index: " << field.size() << ", err: ";
 							resp.CombineErrMsg(oss.str(), elemResp);
 						}
 						return ret;
@@ -429,11 +433,12 @@ namespace ijst {
 
 			virtual int SetAllocator(void *pField, AllocatorType &allocator) IJSTI_OVERRIDE
 			{
-				VarType *pFieldT = static_cast<VarType *>(pField);
+				VarType *pFieldWrapper = static_cast<VarType *>(pField);
+				typename VarType::TVal& field = pFieldWrapper->Val();
 				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 
 				// Loop
-				for (typename VarType::iterator itera = pFieldT->begin(); itera != pFieldT->end(); ++itera)
+				for (typename VarType::TVal::iterator itera = field.begin(); itera != field.end(); ++itera)
 				{
 					int ret = interface->SetAllocator(&(*itera), allocator);
 					if (ret != 0) {
@@ -454,17 +459,18 @@ namespace ijst {
 		private:
 			typedef typename FSerializer<_T>::VarType ElemVarType;
 		public:
-			typedef std::map<std::string, ElemVarType> VarType;
+			typedef ijst::Map<std::string, ElemVarType> VarType;
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
+				const VarType *pFieldWrapper = static_cast<const VarType *>(req.pField);
+				const typename VarType::TVal &field = pFieldWrapper->Val();
 				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 				if (!req.buffer.IsObject()) {
 					req.buffer.SetObject();
 				}
 
-				for (typename VarType::const_iterator itFieldMember = pField->begin(); itFieldMember != pField->end(); ++itFieldMember)
+				for (typename VarType::TVal::const_iterator itFieldMember = field.begin(); itFieldMember != field.end(); ++itFieldMember)
 				{
 					// Init
 					const void* pFieldValue = &itFieldMember->second;
@@ -498,8 +504,9 @@ namespace ijst {
 					return Err::kDeserializeValueTypeError;
 				}
 
-				VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
-				pField->clear();
+				VarType *pFieldWrapper = static_cast<VarType *>(req.pFieldBuffer);
+				typename VarType::TVal &field = pFieldWrapper->Val();
+				field.clear();
 				// pField->shrink_to_fit();
 				SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
 
@@ -510,11 +517,11 @@ namespace ijst {
 					const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
 					// New a elem buffer in container first to avoid copy
 					bool hasAlloc = false;
-					if (pField->find(fieldName) == pField->end()) {
+					if (field.find(fieldName) == field.end()) {
 						hasAlloc = true;
 					}
 
-					ElemVarType &elemBuffer = (*pField)[fieldName];
+					ElemVarType &elemBuffer = field[fieldName];
 					DeserializeReq elemReq(itMember->value, req.allocator,
 										   req.unknownMode, req.canMoveSrc, &elemBuffer);
 
@@ -525,7 +532,7 @@ namespace ijst {
 					{
 						if (hasAlloc)
 						{
-							pField->erase(fieldName);
+							field.erase(fieldName);
 						}
 						resp.needErrMsg &&
 							resp.CombineErrMsg("Deserialize elem error. key: " + fieldName + ", err: ",
@@ -542,11 +549,12 @@ namespace ijst {
 
 			virtual int SetAllocator(void* pField, AllocatorType& allocator) IJSTI_OVERRIDE
 			{
-				VarType *pFieldT = static_cast<VarType *>(pField);
+				VarType *pFieldWrapper = static_cast<VarType *>(pField);
+				typename VarType::TVal &field = pFieldWrapper->Val();
 				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 
 				// Reset member
-				for (typename VarType::iterator itera = pFieldT->begin(); itera != pFieldT->end(); ++itera)
+				for (typename VarType::TVal::iterator itera = field.begin(); itera != field.end(); ++itera)
 				{
 					int ret = interface->SetAllocator(&(itera->second), allocator);
 					if (ret != 0) {

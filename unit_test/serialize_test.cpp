@@ -192,15 +192,15 @@ TEST(Serialize, Complicate)
 	map<string, string> ms2;
 	ms2["k1"] = "v3";
 	ms2["k3"] = "v4";
-	st.vms.push_back(ms1);
-	st.vms.push_back(ms2);
+	st.vms->push_back(ms1);
+	st.vms->push_back(ms2);
 	// mvs
 	vector<string> vs1;
 	vs1.push_back("s1");
 	vs1.push_back("s2");
 	st.mvs["mk1"] = vs1;
-	st.mvs["mk2"].push_back("s3");
-	st.mvs["mk2"].push_back("s4");
+	st.mvs["mk2"]->push_back("s3");
+	st.mvs["mk2"]->push_back("s4");
 	// mmo
 	Inner in1;
 	in1.int_1 = 11;

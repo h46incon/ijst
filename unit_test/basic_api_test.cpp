@@ -7,6 +7,251 @@
 #include <gtest/gtest.h>
 
 namespace dummy_ns {
+
+TEST(BasicAPI, WrapperCommon)
+{
+	// default constructor
+	ijst::SLWrapper<std::string> val;
+	ASSERT_TRUE(val.Val().empty());
+
+	val.Val() = "Val";
+	{
+		const ijst::SLWrapper<std::string>& valRef = val;
+		ASSERT_EQ(valRef.Val(), "Val");
+	}
+
+	// Copy constructor
+	{
+		ijst::SLWrapper<std::string> val2 (val);
+		ASSERT_EQ(val2.Val(), "Val");
+	}
+
+	// Copy constructor for TVal
+	{
+		std::string innerV = val.Val();
+		ijst::SLWrapper<std::string> val2(innerV);
+		ASSERT_EQ(val2.Val(), "Val");
+	}
+
+	// Assignment
+	{
+		ijst::SLWrapper<std::string> val2;
+		val2 = val;
+		ASSERT_EQ(val2.Val(), "Val");
+	}
+
+	// Assignment for TVal
+	{
+		std::string innerV = val.Val();
+		ijst::SLWrapper<std::string> val2;
+		val2 = innerV;
+		ASSERT_EQ(val2.Val(), "Val");
+	}
+
+	// Check source
+	ASSERT_EQ(val.Val(), "Val");
+
+#if __cplusplus >= 201103L
+	// Copy constructor for RValue
+	{
+		ijst::SLWrapper<std::string> valTemp (val);
+		ijst::SLWrapper<std::string> val2 (std::move(valTemp));
+		ASSERT_EQ(val2.Val(), "Val");
+	}
+
+	// Copy constructor for TVal RValue
+	{
+		std::string innerV = val.Val();
+		ijst::SLWrapper<std::string> val2(std::move(innerV));
+		ASSERT_EQ(val2.Val(), "Val");
+	}
+
+	// Assignment for RValue
+	{
+		ijst::SLWrapper<std::string> valTemp (val);
+		ijst::SLWrapper<std::string> val2;
+		val2 = std::move(valTemp);
+		ASSERT_EQ(val2.Val(), "Val");
+	}
+
+	// Assignment for TVal
+	{
+		std::string innerV = val.Val();
+		ijst::SLWrapper<std::string> val2;
+		val2 = std::move(innerV);
+		ASSERT_EQ(val2.Val(), "Val");
+	}
+#endif
+}
+TEST(BasicAPI, WrapperVector)
+{
+	// default constructor
+	ijst::Vector<int> val;
+	ASSERT_TRUE(val->empty());
+
+	// operator []
+	val->push_back(1);
+	val[0] = 2;
+	const ijst::Vector<int>& vecRef = val;
+	ASSERT_EQ(vecRef[0], 2);
+
+	// Copy constructor
+	{
+		ijst::Vector<int> val2 (val);
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2[0], 2);
+	}
+
+	// Copy constructor for TVal
+	{
+		std::vector<int> innerV = val.Val();
+		ijst::Vector<int> val2(innerV);
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2[0], 2);
+	}
+
+	// Assignment
+	{
+		ijst::Vector<int> val2;
+		val2 = val;
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2[0], 2);
+	}
+
+	// Assignment for TVal
+	{
+		std::vector<int> innerV = val.Val();
+		ijst::Vector<int> val2;
+		val2 = innerV;
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2[0], 2);
+	}
+
+	// Check source
+	ASSERT_EQ(val->size(), 1u);
+	ASSERT_EQ(val[0], 2);
+
+#if __cplusplus >= 201103L
+	// Copy constructor for RValue
+	{
+		ijst::Vector<int> valTemp (val);
+		ijst::Vector<int> val2 (std::move(valTemp));
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2[0], 2);
+	}
+
+	// Copy constructor for TVal RValue
+	{
+		std::vector<int> innerV = val.Val();
+		ijst::Vector<int> val2(std::move(innerV));
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2[0], 2);
+	}
+
+	// Assignment for RValue
+	{
+		ijst::Vector<int> valTemp (val);
+		ijst::Vector<int> val2;
+		val2 = std::move(valTemp);
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2[0], 2);
+	}
+
+	// Assignment for TVal
+	{
+		std::vector<int> innerV = val.Val();
+		ijst::Vector<int> val2;
+		val2 = std::move(innerV);
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2[0], 2);
+	}
+#endif
+}
+
+
+TEST(BasicAPI, WrapperMap)
+{
+	// default constructor
+	ijst::Map<std::string, int> val;
+	ASSERT_TRUE(val->empty());
+
+	// operator []
+	val["k"] = 2;
+	ASSERT_EQ(val["k"], 2);
+
+	// Copy constructor
+	{
+		ijst::Map<std::string, int> val2 (val);
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2["k"], 2);
+	}
+
+	// Copy constructor for TVal
+	{
+		std::map<std::string, int> innerV = val.Val();
+		ijst::Map<std::string, int> val2(innerV);
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2["k"], 2);
+	}
+
+	// Assignment
+	{
+		ijst::Map<std::string, int> val2;
+		val2 = val;
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2["k"], 2);
+	}
+
+	// Assignment for TVal
+	{
+		std::map<std::string, int> innerV = val.Val();
+		ijst::Map<std::string, int> val2;
+		val2 = innerV;
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2["k"], 2);
+	}
+
+	// Check source
+	ASSERT_EQ(val->size(), 1u);
+	ASSERT_EQ(val["k"], 2);
+
+#if __cplusplus >= 201103L
+	// Copy constructor for RValue
+	{
+		ijst::Map<std::string, int> valTemp (val);
+		ijst::Map<std::string, int> val2 (std::move(valTemp));
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2["k"], 2);
+	}
+
+	// Copy constructor for TVal RValue
+	{
+		std::map<std::string, int> innerV = val.Val();
+		ijst::Map<std::string, int> val2(std::move(innerV));
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2["k"], 2);
+	}
+
+	// Assignment for RValue
+	{
+		ijst::Map<std::string, int> valTemp (val);
+		ijst::Map<std::string, int> val2;
+		val2 = std::move(valTemp);
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2["k"], 2);
+	}
+
+	// Assignment for TVal
+	{
+		std::map<std::string, int> innerV = val.Val();
+		ijst::Map<std::string, int> val2;
+		val2 = std::move(innerV);
+		ASSERT_EQ(val2->size(), 1u);
+		ASSERT_EQ(val2["k"], 2);
+	}
+#endif
+}
+
 IJST_DEFINE_STRUCT(
 		SimpleSt
 		, (IJST_TPRI(Int), int_1, "int_val_1", 0)
@@ -181,8 +426,8 @@ TEST(BasicAPI, Allocator)
 	ASSERT_EQ(&cst._.GetAllocator(), &st._.GetAllocator());
 
 	// Init
-	cst.vec.push_back(SimpleSt());
-	cst.vec.push_back(SimpleSt());
+	cst.vec->push_back(SimpleSt());
+	cst.vec->push_back(SimpleSt());
 	cst.map["v1"] = SimpleSt();
 	cst.map["v2"] = SimpleSt();
 
