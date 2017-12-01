@@ -441,6 +441,59 @@ TEST(BasicAPI, Allocator)
 	ASSERT_NE(&cst._.GetAllocator(), &cst.map["v3"]._.GetAllocator());
 }
 
+IJST_DEFINE_STRUCT(
+		Complicate2
+		, (IJST_TOBJ(Complicate), v, "v", 0)
+)
+
+TEST(BasicAPI, ChainedOptional)
+{
+	Complicate2 st;
+
+	// fields are missing:
+
+	// Get* null
+	ASSERT_EQ(IJST_NULL, st.Getv().Ptr());
+	// Get* null chained
+	ASSERT_EQ(IJST_NULL, st.Getv()->Getvec().Ptr());
+	// Long null chained
+	ASSERT_EQ(IJST_NULL, st.Getv()->Getvec()[0]->Getint_1().Ptr());
+	ASSERT_EQ(IJST_NULL, st.Getv()->Getmap()[""]->Getint_1().Ptr());
+
+	// Get valid
+	IJST_MARK_VALID(st, v);
+	ASSERT_EQ(st.Getv().Ptr(), &(st.v));
+
+	// vector null
+	ASSERT_EQ(IJST_NULL, st.v.Getvec()[0].Ptr());
+	// vector elem out of range
+	IJST_MARK_VALID(st.v, vec);
+	ASSERT_EQ(st.v.Getvec().Ptr(), &(st.v.vec));
+	ASSERT_EQ(IJST_NULL, st.v.Getvec()[0].Ptr());
+	// vector valid
+	st.v.vec->resize(1);
+	ASSERT_EQ(st.v.Getvec()[0].Ptr(), &(st.v.vec[0]));
+	ASSERT_EQ(IJST_NULL, st.v.Getvec()[0]->Getint_1().Ptr());
+
+
+	// map null
+	ASSERT_EQ(IJST_NULL, st.v.Getmap()[""].Ptr());
+	// map key not exist
+	IJST_MARK_VALID(st.v, map);
+	ASSERT_EQ(st.v.Getmap().Ptr(), &(st.v.map));
+	ASSERT_EQ(IJST_NULL, st.v.Getmap()[""].Ptr());
+	// map valid
+	st.v.map[""];
+	ASSERT_EQ(st.v.Getmap()[""].Ptr(), &(st.v.map[""]));
+	ASSERT_EQ(IJST_NULL, st.v.Getmap()[""]->Getint_1().Ptr());
+
+	// Long valid chained
+	IJST_MARK_VALID(st.v.vec[0], int_1);
+	ASSERT_EQ(st.Getv()->Getvec()[0]->Getint_1().Ptr(), &(st.v.vec[0].int_1));
+	IJST_MARK_VALID(st.v.map[""], int_2);
+	ASSERT_EQ(st.Getv()->Getmap()[""]->Getint_2().Ptr(), &(st.v.map[""].int_2));
+}
+
 struct DummySt {
 	IJST_DEFINE_STRUCT(
 			SimpleSt

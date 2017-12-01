@@ -70,7 +70,7 @@
 #if __cplusplus >= 201103L
 	#define IJST_NULL 			nullptr
 #else
-	#define IJST_NULL 			0
+	#define IJST_NULL 			NULL
 #endif
 
 namespace ijst {
@@ -120,6 +120,74 @@ namespace ijst {
 		};
 	};
 	typedef UnknownMode::_E EUnknownMode;
+
+	#define IJSTI_OPTIONAL_BASE_DEFINE(_T)						\
+		public:													\
+			Optional(_T* _pVal) : m_pVal(_pVal) {}				\
+			_T* Ptr() const { return m_pVal; }					\
+		private:												\
+			_T* const m_pVal;
+
+	template <typename _T>
+	class Optional
+	{
+		typedef _T ValType;
+		IJSTI_OPTIONAL_BASE_DEFINE(ValType)
+	public:
+		_T* At() const
+		{
+			static _T empty;
+			if (m_pVal == IJST_NULL) {
+				empty._.SetValid(false);
+				return &empty;
+			}
+			else {
+				return m_pVal;
+			}
+		}
+		_T *operator->() const { return At(); }
+	};
+
+	template <typename _TElem>
+	class Optional <ijst::Vector<_TElem> >
+	{
+		typedef ijst::Vector<_TElem> ValType;
+		IJSTI_OPTIONAL_BASE_DEFINE(ValType)
+	public:
+		Optional<_TElem> At(typename ijst::Vector<_TElem>::TVal::size_type i) const
+		{
+			if (m_pVal == IJST_NULL || (*m_pVal)->size() <= i) {
+				return Optional<_TElem>(IJST_NULL);
+			}
+			return Optional<_TElem>(&(*m_pVal)[i]);
+		}
+
+		Optional<_TElem> operator[](typename ijst::Vector<_TElem>::TVal::size_type i) const { return At(i); }
+	};
+
+	template <typename _TElem>
+	class Optional <ijst::Map<std::string, _TElem> >
+	{
+		typedef ijst::Map<std::string, _TElem> ValType;
+		IJSTI_OPTIONAL_BASE_DEFINE(ValType)
+	public:
+		Optional<_TElem> At(const std::string& key) const
+		{
+			if (m_pVal == IJST_NULL) {
+				return Optional<_TElem>(IJST_NULL);
+			}
+			typename std::map<std::string, _TElem>::iterator it = (*m_pVal)->find(key);
+			if (it == (*m_pVal)->end()){
+				return Optional<_TElem>(IJST_NULL);
+			}
+			else {
+				return Optional<_TElem>(&it->second);
+			}
+
+		}
+
+		Optional<_TElem> operator[](const std::string& key) const { return At(key); }
+	};
 
 	/**	========================================================================================
 	 *				Inner Interface
@@ -645,7 +713,7 @@ namespace ijst {
 		public:
 			//region constructors
 			explicit Accessor(const MetaClass *pMetaClass) :
-					m_pMetaClass(pMetaClass)
+					m_pMetaClass(pMetaClass), m_isValid(true)
 			{
 				m_pFieldStatus = new FieldStatusType();
 				m_pBuffer = new rapidjson::Value(rapidjson::kObjectType);
@@ -657,6 +725,8 @@ namespace ijst {
 			Accessor(const Accessor &rhs)
 			{
 				assert(this != &rhs);
+
+				m_isValid = rhs.m_isValid;
 
 				m_pFieldStatus = new FieldStatusType(*rhs.m_pFieldStatus);
 				m_pBuffer = new rapidjson::Value(rapidjson::kObjectType);
@@ -722,6 +792,8 @@ namespace ijst {
 				m_pAllocator = rhs.m_pAllocator;
 				rhs.m_pAllocator = IJST_NULL;
 
+				m_isValid = rhs.m_isValid;
+
 				InitOuterPtr();
 			}
 
@@ -730,6 +802,9 @@ namespace ijst {
 			{
 				return SetMembersAllocator(*m_pAllocator);
 			}
+
+			inline void SetValid(bool _value) { m_isValid = _value; };
+			inline bool IsValid() const { return m_isValid; }
 
 			/*
 			 * Field accessor.
@@ -1490,6 +1565,8 @@ namespace ijst {
 
 			AllocatorType* m_pAllocator;
 			const unsigned char *m_pOuter;
+
+			bool m_isValid;
 			//</editor-fold>
 		};
 
@@ -1549,11 +1626,28 @@ namespace ijst {
 		#define IJSTI_IDL_SNAME(fType, fName, sName, desc)		sName
 		#define IJSTI_IDL_DESC(fType, fName, sName, desc)		desc
 
-		#define IJSTI_DEFINE_FIELD(fDef) 							\
-				::ijst::detail::FSerializer<IJSTI_IDL_FTYPE fDef>::VarType IJSTI_IDL_FNAME fDef
+
+		#define IJSTI_FIELD_TYPEDEF_START()															\
+				struct _TypeDef {
+
+		#define IJSTI_FIELD_TYPEDEF(fType, fName, ...) 												\
+					typedef ::ijst::detail::FSerializer< fType>::VarType fName;
+
+		#define IJSTI_FIELD_TYPEDEF_END()															\
+				};
+
+		#define IJSTI_DEFINE_FIELD(fType, fName, ... )												\
+				::ijst::detail::FSerializer< fType>::VarType fName;   /* Make IDE happy*/
+
+		#define IJSTI_FIELD_GETTER(fType, fName, ... )												\
+				::ijst::Optional<_TypeDef::fName> IJSTI_PP_CONCAT(Get, fName)() 					\
+				{																					\
+					if (!this->_.IsValid() || this->_.GetStatus(&fName) != ijst::FStatus::kValid)	\
+						{ return ::ijst::Optional<_TypeDef::fName>(IJST_NULL); }					\
+					return ::ijst::Optional<_TypeDef::fName>(&fName);								\
+				}
 
 		#define IJSTI_METAINFO_DEFINE_START(stName, N)												\
-			private:																				\
 				typedef ::ijst::detail::MetaInfo<stName> MetaInfoT;									\
 				typedef ::ijst::detail::Singleton<MetaInfoT> MetaInfoS;								\
 				friend MetaInfoT;																	\
@@ -1565,13 +1659,13 @@ namespace ijst {
 					metaInfo->metaClass.accessorOffset = offsetof(stName, _);						\
 					metaInfo->metaClass.metaFields.reserve(N);
 
-		#define IJSTI_METAINFO_ADD(stName, fDef)  					\
-				metaInfo->metaClass.PushMetaField(					\
-					IJSTI_IDL_SNAME fDef, 							\
-					offsetof(stName, IJSTI_IDL_FNAME fDef),			\
-					IJSTI_IDL_DESC fDef, 							\
-					IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef)		\
-				)
+		#define IJSTI_METAINFO_ADD(stName, fDef)  								\
+				metaInfo->metaClass.PushMetaField(								\
+					IJSTI_IDL_SNAME fDef, 										\
+					offsetof(stName, IJSTI_IDL_FNAME fDef),						\
+					IJSTI_IDL_DESC fDef, 										\
+					IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef)					\
+				);
 
 		#define IJSTI_METAINFO_DEFINE_END()															\
 					metaInfo->metaClass.InitMap();													\

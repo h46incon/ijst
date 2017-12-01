@@ -59,7 +59,7 @@ namespace ijst {
 		~SLWrapper() noexcept
 		{ delete m_pVal; m_pVal = nullptr; }
 #else
-		SLWrapperer()
+		~SLWrapper()
 		{ delete m_pVal; m_pVal = NULL; }
 #endif
 
