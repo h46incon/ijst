@@ -441,14 +441,30 @@ TEST(BasicAPI, Allocator)
 	ASSERT_NE(&cst._.GetAllocator(), &cst.map["v3"]._.GetAllocator());
 }
 
-IJST_DEFINE_STRUCT(
-		Complicate2
-		, (IJST_TOBJ(Complicate), v, "v", 0)
+IJST_DEFINE_STRUCT_WITH_GETTER(
+		SWGetter
+		, (IJST_TPRI(Int), int_1, "int_val_1", 0)
+		, (IJST_TPRI(Int), int_2, "int_val_2", 0)
+		, (IJST_TPRI(Str), str_1, "str_val_1", 0)
+		, (IJST_TPRI(Str), str_2, "str_val_2", 0)
+)
+
+IJST_DEFINE_STRUCT_WITH_GETTER(
+		CWGetter
+		, (IJST_TOBJ(SimpleSt), sim, "sim_v", 0)
+		, (IJST_TOBJ(SWGetter), st, "st_v", 0)
+		, (IJST_TVEC(IJST_TOBJ(SWGetter)), vec, "vec_v", 0)
+		, (IJST_TMAP(IJST_TOBJ(SWGetter)), map, "map_v", 0)
+)
+
+IJST_DEFINE_STRUCT_WITH_GETTER(
+		CWGetter2
+		, (IJST_TOBJ(CWGetter), v, "v", 0)
 )
 
 TEST(BasicAPI, ChainedOptional)
 {
-	Complicate2 st;
+	CWGetter2 st;
 
 	// fields are missing:
 
@@ -457,12 +473,15 @@ TEST(BasicAPI, ChainedOptional)
 	// Get* null chained
 	ASSERT_EQ(IJST_NULL, st.Getv()->Getvec().Ptr());
 	// Long null chained
+	ASSERT_EQ(IJST_NULL, st.Getv()->Getsim().Ptr());
 	ASSERT_EQ(IJST_NULL, st.Getv()->Getvec()[0]->Getint_1().Ptr());
 	ASSERT_EQ(IJST_NULL, st.Getv()->Getmap()[""]->Getint_1().Ptr());
 
 	// Get valid
 	IJST_MARK_VALID(st, v);
 	ASSERT_EQ(st.Getv().Ptr(), &(st.v));
+	IJST_MARK_VALID(st.v, sim);
+	ASSERT_EQ(st.Getv()->Getsim().Ptr(), &(st.v.sim));
 
 	// vector null
 	ASSERT_EQ(IJST_NULL, st.v.Getvec()[0].Ptr());
@@ -474,7 +493,6 @@ TEST(BasicAPI, ChainedOptional)
 	st.v.vec->resize(1);
 	ASSERT_EQ(st.v.Getvec()[0].Ptr(), &(st.v.vec[0]));
 	ASSERT_EQ(IJST_NULL, st.v.Getvec()[0]->Getint_1().Ptr());
-
 
 	// map null
 	ASSERT_EQ(IJST_NULL, st.v.Getmap()[""].Ptr());

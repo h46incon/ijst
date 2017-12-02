@@ -46,6 +46,8 @@
 	#define IJSTM_METAINFO_ADD(z, i, _) 	IJSTI_METAINFO_ADD(stName, f##i)
 	#define IJSTM_FIELD_INIT(z, i, _)		,IJSTI_IDL_FNAME f##i ()
 	#define IJSTM_DEFINE_FIELD(z, i, _) 	IJSTI_DEFINE_FIELD f##i
+
+	#define IJSTM_DEFINE_GETTER(i) 			BOOST_PP_CAT(IJSTI_DEFINE_GETTER_IMPL_, i)
 	#define IJSTM_FIELD_GETTER(z, i, _) 	IJSTI_FIELD_GETTER f##i
 	#define IJSTM_FIELD_TYPEDEF(z, i, _) 	IJSTI_FIELD_TYPEDEF f##i
 
@@ -55,23 +57,26 @@
 	// Define struct
 	#define n BOOST_PP_ITERATION()
 
-	IJSTM_HASH define IJSTM_DEFINE_STRUCT(n)(stName BOOST_PP_ENUM_TRAILING_PARAMS(n, f)) 			IJSTM_BSLASH
-	class stName{	 																				IJSTM_BSLASH
-	public:	 																						IJSTM_BSLASH
-		IJSTI_FIELD_TYPEDEF_START()	 																IJSTM_BSLASH
-			BOOST_PP_REPEAT(n, IJSTM_FIELD_TYPEDEF, ~)												IJSTM_BSLASH
-		IJSTI_FIELD_TYPEDEF_END()	 																IJSTM_BSLASH
-		::ijst::detail::Accessor _;	 																IJSTM_BSLASH
-		BOOST_PP_REPEAT(n, IJSTM_DEFINE_FIELD, ~)													IJSTM_BSLASH
-		BOOST_PP_REPEAT(n, IJSTM_FIELD_GETTER, ~)													IJSTM_BSLASH
-		stName(): 	 																				IJSTM_BSLASH
-			_(&(MetaInfoS::GetInstance()->metaClass))	 											IJSTM_BSLASH
-			BOOST_PP_REPEAT(n, IJSTM_FIELD_INIT, ~)													IJSTM_BSLASH
-			{}	 																					IJSTM_BSLASH
-	private:	 																					IJSTM_BSLASH
-		IJSTI_METAINFO_DEFINE_START(stName, n)	 													IJSTM_BSLASH
-			BOOST_PP_REPEAT(n, IJSTM_METAINFO_ADD, ~)												IJSTM_BSLASH
-		IJSTI_METAINFO_DEFINE_END()	 																IJSTM_BSLASH
+	IJSTM_HASH define IJSTM_DEFINE_GETTER(n)(BOOST_PP_ENUM_PARAMS(n, f))									IJSTM_BSLASH
+		IJSTI_FIELD_TYPEDEF_START()																			IJSTM_BSLASH
+			BOOST_PP_REPEAT(n, IJSTM_FIELD_TYPEDEF, _)														IJSTM_BSLASH
+		IJSTI_FIELD_TYPEDEF_END()																			IJSTM_BSLASH
+		BOOST_PP_REPEAT(n, IJSTM_FIELD_GETTER, _)
+
+	IJSTM_HASH define IJSTM_DEFINE_STRUCT(n)(stName, needGetter BOOST_PP_ENUM_TRAILING_PARAMS(n, f)) 		IJSTM_BSLASH
+	class stName{	 																						IJSTM_BSLASH
+	public:	 																								IJSTM_BSLASH
+		::ijst::detail::Accessor _;	 																		IJSTM_BSLASH
+		BOOST_PP_REPEAT(n, IJSTM_DEFINE_FIELD, ~)															IJSTM_BSLASH
+		IJSTI_PP_CONCAT(IJSTI_DEFINE_GETTER_, needGetter) (n BOOST_PP_ENUM_TRAILING_PARAMS(n,f))			IJSTM_BSLASH
+		stName(): 	 																						IJSTM_BSLASH
+			_(&(MetaInfoS::GetInstance()->metaClass))	 													IJSTM_BSLASH
+			BOOST_PP_REPEAT(n, IJSTM_FIELD_INIT, ~)															IJSTM_BSLASH
+			{}	 																							IJSTM_BSLASH
+	private:	 																							IJSTM_BSLASH
+		IJSTI_METAINFO_DEFINE_START(stName, n)	 															IJSTM_BSLASH
+			BOOST_PP_REPEAT(n, IJSTM_METAINFO_ADD, ~)														IJSTM_BSLASH
+		IJSTI_METAINFO_DEFINE_END()	 																		IJSTM_BSLASH
 	};
 
 	#undef n

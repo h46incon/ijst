@@ -44,8 +44,12 @@
 #define IJST_OUT
 
 //! Declare a ijst struct
-#define IJST_DEFINE_STRUCT(...) \
-    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), __VA_ARGS__)
+#define IJST_DEFINE_STRUCT(stName, ...) \
+    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(stName, ##__VA_ARGS__), stName, F, ##__VA_ARGS__)
+//! Declare a ijst struct with getter
+#define IJST_DEFINE_STRUCT_WITH_GETTER(stName, ...) \
+    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(stName, ##__VA_ARGS__), stName, T, ##__VA_ARGS__)
+
 //! Declare a vector<_T> field
 #define IJST_TVEC(_T)	::ijst::detail::TypeClassVec< _T>
 //! Declare a map<_T> field
@@ -1614,8 +1618,15 @@ namespace ijst {
 			rThis.m_pBuffer->SetObject();
 		}
 
-		#define IJSTI_DEFINE_STRUCT_IMPL(N, ...) \
-			IJSTI_PP_CONCAT(IJSTI_DEFINE_STRUCT_IMPL_, N)(__VA_ARGS__)
+		//! Wrapper of IJST_DEFINE_STRUCT_IMPL_*
+		//! @param needGetter: must be T or F
+		#define IJSTI_DEFINE_STRUCT_IMPL(N, stName, needGetter, ...) \
+			IJSTI_PP_CONCAT(IJSTI_DEFINE_STRUCT_IMPL_, N)(stName, needGetter, ##__VA_ARGS__)
+
+		//! Define getter of fields
+		#define IJSTI_DEFINE_GETTER_T(N, ...)	\
+			IJSTI_PP_CONCAT(IJSTI_DEFINE_GETTER_IMPL_, N) (__VA_ARGS__)
+		#define IJSTI_DEFINE_GETTER_F(N, ...)	// empty
 
 		// Expands to the concatenation of its two arguments.
 		#define IJSTI_PP_CONCAT(x, y) IJSTI_PP_CONCAT_PRIMITIVE(x, y)
@@ -1626,6 +1637,8 @@ namespace ijst {
 		#define IJSTI_IDL_SNAME(fType, fName, sName, desc)		sName
 		#define IJSTI_IDL_DESC(fType, fName, sName, desc)		desc
 
+		#define IJSTI_DEFINE_FIELD(fType, fName, ... )												\
+				::ijst::detail::FSerializer< fType>::VarType fName;   /* Make IDE happy*/
 
 		#define IJSTI_FIELD_TYPEDEF_START()															\
 				struct _TypeDef {
@@ -1635,9 +1648,6 @@ namespace ijst {
 
 		#define IJSTI_FIELD_TYPEDEF_END()															\
 				};
-
-		#define IJSTI_DEFINE_FIELD(fType, fName, ... )												\
-				::ijst::detail::FSerializer< fType>::VarType fName;   /* Make IDE happy*/
 
 		#define IJSTI_FIELD_GETTER(fType, fName, ... )												\
 				::ijst::Optional<_TypeDef::fName> IJSTI_PP_CONCAT(Get, fName)() 					\
@@ -1654,7 +1664,7 @@ namespace ijst {
 				static void InitMetaInfo(MetaInfoT* metaInfo)										\
 				{																					\
 					IJSTI_TRY_INIT_META_BEFORE_MAIN(MetaInfoT);										\
-					/*Do not call MetaInfoS::GetInstance() before int this function*/ 				\
+					/*Do not call MetaInfoS::GetInstance() int this function */			 			\
 					metaInfo->metaClass.tag = #stName;												\
 					metaInfo->metaClass.accessorOffset = offsetof(stName, _);						\
 					metaInfo->metaClass.metaFields.reserve(N);
