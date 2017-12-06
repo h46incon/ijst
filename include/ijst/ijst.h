@@ -217,9 +217,11 @@ namespace ijst {
 		#if __cplusplus >= 201103L
 			#define IJSTI_MOVE(val) 	std::move((val))
 			#define IJSTI_OVERRIDE		override
+			#define IJSTI_NOEXCEPT		noexcept
 		#else
 			#define IJSTI_MOVE(val) 	(val)
 			#define IJSTI_OVERRIDE
+			#define IJSTI_NOEXCEPT
 		#endif
 
 		#if IJST_AUTO_META_INIT
@@ -744,7 +746,7 @@ namespace ijst {
 			}
 
 			#if __cplusplus >= 201103L
-			Accessor(Accessor &&rhs)
+			Accessor(Accessor &&rhs) IJSTI_NOEXCEPT
 			{
 				m_pBuffer = IJST_NULL;
 				m_pOwnDoc = IJST_NULL;
@@ -759,7 +761,7 @@ namespace ijst {
 				return *this;
 			}
 
-			~Accessor()
+			~Accessor() IJSTI_NOEXCEPT
 			{
 				delete m_pBuffer;
 				m_pBuffer = IJST_NULL;

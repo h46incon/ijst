@@ -63,7 +63,7 @@ namespace ijst{
 		}
 
 		#if __cplusplus >= 201103L
-		FStoreRaw(FStoreRaw &&rhs)
+		FStoreRaw(FStoreRaw &&rhs) IJSTI_NOEXCEPT
 		{
 			m_pOwnDoc = IJST_NULL;
 			m_pAllocator = IJST_NULL;
@@ -77,7 +77,7 @@ namespace ijst{
 			return *this;
 		}
 
-		void Steal(FStoreRaw& rhs)
+		void Steal(FStoreRaw& rhs) IJSTI_NOEXCEPT
 		{
 			if (this == &rhs) {
 				return;
