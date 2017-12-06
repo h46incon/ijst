@@ -381,6 +381,11 @@ namespace ijst {
 		template<class _T>
 		class FSerializer : public SerializerInterface {
 		public:
+			#if __cplusplus >= 201103L
+			static_assert(!std::is_same<_T, _T>::value,
+						  "This base template should not be instantiated. (Maybe use wrong param when define ijst struct)");
+			#endif
+
 			typedef void VarType;
 
 			virtual int
