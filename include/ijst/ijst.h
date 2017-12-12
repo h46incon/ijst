@@ -29,8 +29,13 @@
  *	That's will make it thread-safe to init meta class information before C++11.
  *	The feature is enable default before C++11. So set the value to 0 to force disable it.
 */
-//#define IJST_AUTO_META_INIT
-//#define IJST_AUTO_META_INIT		0
+#ifndef IJST_AUTO_META_INIT
+	#if __cplusplus < 201103L
+		#define IJST_AUTO_META_INIT		1
+	#else
+		#define IJST_AUTO_META_INIT		0
+	#endif
+#endif
 
 /*!
  * IJST_ASSERT
@@ -39,7 +44,18 @@
 */
 #ifndef IJST_ASSERT
 	#define IJST_ASSERT(x) assert(x)
-#endif // IJST_ASSERT
+#endif
+
+/*!
+ * IJST_USE_SL_WRAPPER
+ *	By default, ijst uses std::vector, std::map, and std::string when defining struct, and the offset of each field is
+ *	computed by "((Struct*)0)->field".
+ *	User can specify IJST_USE_SL_WRAPPER to 1 to use ijst::Vector, ijst::Map, ijst::SLWrapper<std::string> and offsetof()
+ *	macro. This option will make the behaviour more standards-compliant, but will bring a little inconvenience when using.
+*/
+#ifndef IJST_USE_SL_WRAPPER
+	#define IJST_USE_SL_WRAPPER	0
+#endif
 
 #define IJST_OUT
 
@@ -76,6 +92,20 @@
 #else
 	#define IJST_NULL 			NULL
 #endif
+
+//! Wrappers
+#if IJST_USE_SL_WRAPPER
+	#define IJST_CONT_VEC(...)			ijst::Vector<__VA_ARGS__>
+	#define IJST_CONT_MAP(...)			ijst::Map<__VA_ARGS__>
+	#define IJST_CONT_VAL(_v)			(_v).Val()
+	#define IJST_OFFSETOF(_T, member)	offsetof(_T, member)
+#else
+	#define IJST_CONT_VEC(...)			std::vector<__VA_ARGS__>
+	#define IJST_CONT_MAP(...)			std::map<__VA_ARGS__>
+	#define IJST_CONT_VAL(_v)			(_v)
+	#define IJST_OFFSETOF(_T, member)	((size_t)&(((_T*)0)->member))
+#endif
+
 
 namespace ijst {
 	typedef rapidjson::Value BufferType;
@@ -153,26 +183,26 @@ namespace ijst {
 	};
 
 	template <typename _TElem>
-	class Optional <ijst::Vector<_TElem> >
+	class Optional <IJST_CONT_VEC(_TElem) >
 	{
-		typedef ijst::Vector<_TElem> ValType;
+		typedef IJST_CONT_VEC(_TElem) ValType;
 		IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 	public:
-		Optional<_TElem> At(typename ijst::Vector<_TElem>::TVal::size_type i) const
+		Optional<_TElem> At(typename std::vector<_TElem>::size_type i) const
 		{
-			if (m_pVal == IJST_NULL || (*m_pVal)->size() <= i) {
+			if (m_pVal == IJST_NULL || IJST_CONT_VAL(*m_pVal).size() <= i) {
 				return Optional<_TElem>(IJST_NULL);
 			}
 			return Optional<_TElem>(&(*m_pVal)[i]);
 		}
 
-		Optional<_TElem> operator[](typename ijst::Vector<_TElem>::TVal::size_type i) const { return At(i); }
+		Optional<_TElem> operator[](typename std::vector<_TElem>::size_type i) const { return At(i); }
 	};
 
 	template <typename _TElem>
-	class Optional <ijst::Map<std::string, _TElem> >
+	class Optional <IJST_CONT_MAP(std::string, _TElem) >
 	{
-		typedef ijst::Map<std::string, _TElem> ValType;
+		typedef IJST_CONT_MAP(std::string, _TElem) ValType;
 		IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 	public:
 		Optional<_TElem> At(const std::string& key) const
@@ -180,8 +210,8 @@ namespace ijst {
 			if (m_pVal == IJST_NULL) {
 				return Optional<_TElem>(IJST_NULL);
 			}
-			typename std::map<std::string, _TElem>::iterator it = (*m_pVal)->find(key);
-			if (it == (*m_pVal)->end()){
+			typename std::map<std::string, _TElem>::iterator it = IJST_CONT_VAL(*m_pVal).find(key);
+			if (it == IJST_CONT_VAL(*m_pVal).end()){
 				return Optional<_TElem>(IJST_NULL);
 			}
 			else {
@@ -197,13 +227,6 @@ namespace ijst {
 	 *				Inner Interface
 	 */
 	namespace detail {
-		//! IJST_AUTO_META_INIT
-		#if __cplusplus < 201103L
-		#ifndef IJST_AUTO_META_INIT
-			#define IJST_AUTO_META_INIT		1
-		#endif
-		#endif
-
 		//! Set errMsg to pErrMsgOut when not null.
 		//! Use macro instead of function to avoid compute errMsg when pErrMsgOut is null.
 		#define IJSTI_SET_ERRMSG(pErrMsgOut, errMsg)				\
@@ -439,18 +462,20 @@ namespace ijst {
 		class FSerializer<TypeClassVec<_T> > : public SerializerInterface {
 		private:
 			typedef typename FSerializer<_T>::VarType ElemVarType;
+			typedef std::vector<ElemVarType> RealVarType;
 		public:
-			typedef ijst::Vector<ElemVarType> VarType;
+			typedef IJST_CONT_VEC(ElemVarType) VarType;
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pFieldWrapper = static_cast<const VarType *>(req.pField);
-				const typename VarType::TVal& field = pFieldWrapper->Val();
+				assert(pFieldWrapper != IJST_NULL);
+				const RealVarType& field = IJST_CONT_VAL(*pFieldWrapper);
 				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 				req.buffer.SetArray();
 				req.buffer.Reserve(static_cast<rapidjson::SizeType>(field.size()), req.allocator);
 
-				for (typename VarType::TVal::const_iterator itera = field.begin(); itera != field.end(); ++itera) {
+				for (typename RealVarType::const_iterator itera = field.begin(); itera != field.end(); ++itera) {
 					BufferType newElem;
 					SerializeReq elemReq(newElem, req.allocator, &(*itera), req.canMoveSrc, req.pushAllField);
 					SerializeResp elemResp;
@@ -473,9 +498,10 @@ namespace ijst {
 				}
 
 				VarType *pFieldWrapper = static_cast<VarType *>(req.pFieldBuffer);
-				typename VarType::TVal& field = pFieldWrapper->Val();
+				assert(pFieldWrapper != IJST_NULL);
+				RealVarType& field = IJST_CONT_VAL(*pFieldWrapper);
 				field.clear();
-				// pField->shrink_to_fit();
+				// field.shrink_to_fit();
 				field.reserve(req.stream.Size());
 				SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
 
@@ -513,11 +539,12 @@ namespace ijst {
 			virtual int SetAllocator(void *pField, AllocatorType &allocator) IJSTI_OVERRIDE
 			{
 				VarType *pFieldWrapper = static_cast<VarType *>(pField);
-				typename VarType::TVal& field = pFieldWrapper->Val();
+				assert(pFieldWrapper != IJST_NULL);
+				RealVarType& field = IJST_CONT_VAL(*pFieldWrapper);
 				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 
 				// Loop
-				for (typename VarType::TVal::iterator itera = field.begin(); itera != field.end(); ++itera)
+				for (typename RealVarType::iterator itera = field.begin(); itera != field.end(); ++itera)
 				{
 					int ret = interface->SetAllocator(&(*itera), allocator);
 					if (ret != 0) {
@@ -537,19 +564,21 @@ namespace ijst {
 		class FSerializer<TypeClassMap<_T> > : public SerializerInterface {
 		private:
 			typedef typename FSerializer<_T>::VarType ElemVarType;
+			typedef std::map<std::string, ElemVarType> RealVarType;
 		public:
-			typedef ijst::Map<std::string, ElemVarType> VarType;
+			typedef IJST_CONT_MAP(std::string, ElemVarType) VarType;
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pFieldWrapper = static_cast<const VarType *>(req.pField);
-				const typename VarType::TVal &field = pFieldWrapper->Val();
+				assert(pFieldWrapper != IJST_NULL);
+				const RealVarType &field = IJST_CONT_VAL(*pFieldWrapper);
 				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 				if (!req.buffer.IsObject()) {
 					req.buffer.SetObject();
 				}
 
-				for (typename VarType::TVal::const_iterator itFieldMember = field.begin(); itFieldMember != field.end(); ++itFieldMember)
+				for (typename RealVarType::const_iterator itFieldMember = field.begin(); itFieldMember != field.end(); ++itFieldMember)
 				{
 					// Init
 					const void* pFieldValue = &itFieldMember->second;
@@ -584,7 +613,8 @@ namespace ijst {
 				}
 
 				VarType *pFieldWrapper = static_cast<VarType *>(req.pFieldBuffer);
-				typename VarType::TVal &field = pFieldWrapper->Val();
+				assert(pFieldWrapper != IJST_NULL);
+				RealVarType&field = IJST_CONT_VAL(*pFieldWrapper);
 				field.clear();
 				// pField->shrink_to_fit();
 				SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
@@ -629,11 +659,12 @@ namespace ijst {
 			virtual int SetAllocator(void* pField, AllocatorType& allocator) IJSTI_OVERRIDE
 			{
 				VarType *pFieldWrapper = static_cast<VarType *>(pField);
-				typename VarType::TVal &field = pFieldWrapper->Val();
+				assert(pFieldWrapper != IJST_NULL);
+				RealVarType&field = IJST_CONT_VAL(*pFieldWrapper);
 				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 
 				// Reset member
-				for (typename VarType::TVal::iterator itera = field.begin(); itera != field.end(); ++itera)
+				for (typename RealVarType::iterator itera = field.begin(); itera != field.end(); ++itera)
 				{
 					int ret = interface->SetAllocator(&(itera->second), allocator);
 					if (ret != 0) {
@@ -1672,13 +1703,13 @@ namespace ijst {
 				IJSTI_TRY_INIT_META_BEFORE_MAIN(MetaInfoT);										\
 				/*Do not call MetaInfoS::GetInstance() int this function */			 			\
 				metaInfo->metaClass.tag = #stName;												\
-				metaInfo->metaClass.accessorOffset = offsetof(stName, _);						\
+				metaInfo->metaClass.accessorOffset = IJST_OFFSETOF(stName, _);					\
 				metaInfo->metaClass.metaFields.reserve(N);
 
 	#define IJSTI_METAINFO_ADD(stName, fDef)  								\
 			metaInfo->metaClass.PushMetaField(								\
 				IJSTI_IDL_SNAME fDef, 										\
-				offsetof(stName, IJSTI_IDL_FNAME fDef),						\
+				IJST_OFFSETOF(stName, IJSTI_IDL_FNAME fDef),				\
 				IJSTI_IDL_DESC fDef, 										\
 				IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef)					\
 			);

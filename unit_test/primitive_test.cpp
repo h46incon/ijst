@@ -57,7 +57,7 @@ TEST(Primitive, Int)
 	{
 		IJST_SET(st, v, 100);
 		st.vec_v[0] = -100;
-		st.vec_v->push_back(100);
+		IJST_CONT_VAL(st.vec_v).push_back(100);
 		st.map_v["v1"] = -200;
 		st.map_v["v3"] = 200;
 
@@ -127,7 +127,7 @@ TEST(Primitive, UInt32)
 	{
 		IJST_SET(st, v, 100u);
 		st.vec_v[1] = 100u;
-		st.vec_v->push_back(200u);
+		IJST_CONT_VAL(st.vec_v).push_back(200u);
 		st.map_v["v1"] = 200u;
 		st.map_v["v3"] = 400u;
 
@@ -197,7 +197,7 @@ TEST(Primitive, UInt64)
 	{
 		IJST_SET(st, v, 100u);
 		st.vec_v[1] = 100u;
-		st.vec_v->push_back(200u);
+		IJST_CONT_VAL(st.vec_v).push_back(200u);
 		st.map_v["v1"] = 200u;
 		st.map_v["v3"] = 400u;
 
@@ -268,7 +268,7 @@ TEST(Primitive, Int32)
 		IJST_SET(st, v, 100);
 		st.vec_v[0] = 2147483647;
 		st.vec_v[1] = -2147483648;
-		st.vec_v->push_back(200);
+		IJST_CONT_VAL(st.vec_v).push_back(200);
 		st.map_v["v1"] = 200;
 		st.map_v["v3"] = 400;
 
@@ -340,7 +340,7 @@ TEST(Primitive, Int64)
 		IJST_SET(st, v, 100);
 		st.vec_v[0] = 9223372036854775807;
 		st.vec_v[1] = i64Min;
-		st.vec_v->push_back(200);
+		IJST_CONT_VAL(st.vec_v).push_back(200);
 		st.map_v["v1"] = 200;
 		st.map_v["v3"] = 400;
 
@@ -401,7 +401,7 @@ TEST(Primitive, Bool)
 	{
 		IJST_SET(st, v, 0);
 		st.vec_v[0] = 0;
-		st.vec_v->push_back(1);
+		IJST_CONT_VAL(st.vec_v).push_back(1);
 		st.map_v["v1"] = 0;
 		st.map_v["v3"] = 1;
 
@@ -462,7 +462,7 @@ TEST(Primitive, Str)
 	{
 		IJST_SET(st, v, "v0");
 		st.vec_v[0] = "v01";
-		st.vec_v->push_back("v03");
+		IJST_CONT_VAL(st.vec_v).push_back("v03");
 		st.map_v["v1"] = "v011";
 		st.map_v["v3"] = "v033";
 
@@ -555,7 +555,7 @@ TEST(Primitive, Raw)
 		raw.V().SetNull();
 		st.vec_v[0] = raw;
 		raw.V().SetString("v03");
-		st.vec_v->push_back(raw);
+		IJST_CONT_VAL(st.vec_v).push_back(raw);
 
 		raw.V().SetString("v2");
 		st.map_v["v1"] = raw;
@@ -711,7 +711,7 @@ TEST(Primitive, Time)
 	{
 		IJST_SET(st, v, -377705145600 + 1);
 		st.vec_v[0] = 0;
-		st.vec_v->push_back(2147454848);
+		IJST_CONT_VAL(st.vec_v).push_back(2147454848);
 		st.map_v["v1"] = 1;
 		st.map_v["v3"] = 2147454849;
 
@@ -812,7 +812,7 @@ TEST(Primitive, FastTime)
 	{
 		IJST_SET(st, v, -377705145600 + 1);
 		st.vec_v[0] = 0;
-		st.vec_v->push_back(2147454848);
+		IJST_CONT_VAL(st.vec_v).push_back(2147454848);
 		st.map_v["v1"] = 1;
 		st.map_v["v3"] = 2147454849;
 

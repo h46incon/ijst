@@ -426,8 +426,8 @@ TEST(BasicAPI, Allocator)
 	ASSERT_EQ(&cst._.GetAllocator(), &st._.GetAllocator());
 
 	// Init
-	cst.vec->push_back(SimpleSt());
-	cst.vec->push_back(SimpleSt());
+	IJST_CONT_VAL(cst.vec).push_back(SimpleSt());
+	IJST_CONT_VAL(cst.vec).push_back(SimpleSt());
 	cst.map["v1"] = SimpleSt();
 	cst.map["v2"] = SimpleSt();
 
@@ -490,7 +490,7 @@ TEST(BasicAPI, ChainedOptional)
 	ASSERT_EQ(st.v.Getvec().Ptr(), &(st.v.vec));
 	ASSERT_EQ(IJST_NULL, st.v.Getvec()[0].Ptr());
 	// vector valid
-	st.v.vec->resize(1);
+	IJST_CONT_VAL(st.v.vec).resize(1);
 	ASSERT_EQ(st.v.Getvec()[0].Ptr(), &(st.v.vec[0]));
 	ASSERT_EQ(IJST_NULL, st.v.Getvec()[0]->Getint_1().Ptr());
 
