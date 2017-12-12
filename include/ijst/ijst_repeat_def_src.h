@@ -54,23 +54,24 @@
 	// Add splitter
 	IJSTM_HASH undef IJSTM_SPLITTER_________________________________________________________________________________________________
 
-	// Define struct
 	#define n BOOST_PP_ITERATION()
 
+	//* Define Getter
 	IJSTM_HASH define IJSTM_DEFINE_GETTER(n)(BOOST_PP_ENUM_PARAMS(n, f))									IJSTM_BSLASH
 		IJSTI_FIELD_TYPEDEF_START()																			IJSTM_BSLASH
 			BOOST_PP_REPEAT(n, IJSTM_FIELD_TYPEDEF, _)														IJSTM_BSLASH
 		IJSTI_FIELD_TYPEDEF_END()																			IJSTM_BSLASH
 		BOOST_PP_REPEAT(n, IJSTM_FIELD_GETTER, _)
 
+	//* Define Struct
 	IJSTM_HASH define IJSTM_DEFINE_STRUCT(n)(stName, needGetter BOOST_PP_ENUM_TRAILING_PARAMS(n, f)) 		IJSTM_BSLASH
 	class stName{	 																						IJSTM_BSLASH
 	public:	 																								IJSTM_BSLASH
 		::ijst::Accessor _;			 																		IJSTM_BSLASH
 		BOOST_PP_REPEAT(n, IJSTM_DEFINE_FIELD, ~)															IJSTM_BSLASH
 		IJSTI_PP_CONCAT(IJSTI_DEFINE_GETTER_, needGetter) (n BOOST_PP_ENUM_TRAILING_PARAMS(n,f))			IJSTM_BSLASH
-		stName(): 	 																						IJSTM_BSLASH
-			_(&(MetaInfoS::GetInstance()->metaClass))	 													IJSTM_BSLASH
+		explicit stName(bool isValid = true): 	 															IJSTM_BSLASH
+			_(&(MetaInfoS::GetInstance()->metaClass), isValid)	 											IJSTM_BSLASH
 			BOOST_PP_REPEAT(n, IJSTM_FIELD_INIT, ~)															IJSTM_BSLASH
 			{}	 																							IJSTM_BSLASH
 	private:	 																							IJSTM_BSLASH
@@ -80,46 +81,5 @@
 	};
 
 	#undef n
-
-	/********************************************************************************************
-	 * The meta macro above will generate a marco like following:
-	 ********************************************************************************************
-	#define IJSTI_DEFINE_STRUCT_IMPL_4(stName, f0, f1, f2, f3) 									\
-	class stName{																				\
-	public:																						\
-		IJSTI_FIELD_TYPEDEF_START()	 															\
-			IJSTI_FIELD_TYPEDEF f0																\
-			IJSTI_FIELD_TYPEDEF f1																\
-			IJSTI_FIELD_TYPEDEF f2																\
-			IJSTI_FIELD_TYPEDEF f3																\
-		IJSTI_FIELD_TYPEDEF_END()	 															\
-																								\
-		::ijst::detail::Accessor _;																\
-		IJSTI_DEFINE_FIELD f0																	\
-		IJSTI_DEFINE_FIELD f1																	\
-		IJSTI_DEFINE_FIELD f2																	\
-		IJSTI_DEFINE_FIELD f3																	\
-																								\
-		IJSTI_FIELD_GETTER f0																	\
-		IJSTI_FIELD_GETTER f1																	\
-		IJSTI_FIELD_GETTER f2																	\
-		IJSTI_FIELD_GETTER f3																	\
-																								\
-		stName(): 																				\
-			_(&(MetaInfoS::GetInstance()->metaClass))											\
-			,IJSTI_IDL_FNAME f0 ()																\
-			,IJSTI_IDL_FNAME f1 ()																\
-			,IJSTI_IDL_FNAME f2 ()																\
-			,IJSTI_IDL_FNAME f3 ()																\
-			{}																					\
-	private:																					\
-		IJSTI_METAINFO_DEFINE_START(stName, 4)													\
-			IJSTI_METAINFO_ADD(stName, f0)														\
-			IJSTI_METAINFO_ADD(stName, f1)														\
-			IJSTI_METAINFO_ADD(stName, f2)														\
-			IJSTI_METAINFO_ADD(stName, f3)														\
-		IJSTI_METAINFO_DEFINE_END()																\
-	};
-	*/
 
 #endif // BOOST_PP_IS_ITERATING

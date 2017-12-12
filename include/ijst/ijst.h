@@ -170,9 +170,8 @@ namespace ijst {
 	public:
 		_T* At() const
 		{
-			static _T empty;
+			static _T empty(false);
 			if (m_pVal == IJST_NULL) {
-				empty._.SetValid(false);
 				return &empty;
 			}
 			else {
@@ -755,8 +754,8 @@ namespace ijst {
 	class Accessor {
 	public:
 		//region constructors
-		explicit Accessor(const detail::MetaClass *pMetaClass) :
-				m_pMetaClass(pMetaClass), m_isValid(true)
+		explicit Accessor(const detail::MetaClass *pMetaClass, bool isValid) :
+				m_pMetaClass(pMetaClass), m_isValid(isValid)
 		{
 			m_pFieldStatus = new FieldStatusType();
 			m_pBuffer = new rapidjson::Value(rapidjson::kObjectType);
@@ -846,7 +845,6 @@ namespace ijst {
 			return SetMembersAllocator(*m_pAllocator);
 		}
 
-		inline void SetValid(bool _value) { m_isValid = _value; };
 		inline bool IsValid() const { return m_isValid; }
 
 		/*
