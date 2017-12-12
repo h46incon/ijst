@@ -272,8 +272,8 @@ TEST(BasicAPI, FieldStatus)
 
 	// IJST_* macro
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), ijst::FStatus::kMissing);
-	IJST_SET_STRICT(simpleSt, str_1, std::string("str1"));
-	ASSERT_STREQ(simpleSt.str_1.c_str(), "str1");
+	IJST_SET_STRICT(simpleSt, str_1, ijst::FStoreString(std::string("str1")));
+	ASSERT_STREQ(IJST_CONT_VAL(simpleSt.str_1).c_str(), "str1");
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), ijst::FStatus::kValid);
 
 	// Mark valid
@@ -295,13 +295,13 @@ TEST(BasicAPI, FieldValue)
 	simpleSt._.SetStrict(simpleSt.int_1, 0x5A5A);
 	IJST_SET(simpleSt, int_2, 0xA5A5);
 	simpleSt._.Set(simpleSt.str_1, "str1");
-	IJST_SET_STRICT(simpleSt, str_2, std::string("str2"));
+	IJST_SET_STRICT(simpleSt, str_2, ijst::FStoreString(std::string("str2")));
 
 	// Check
 	ASSERT_EQ(simpleSt.int_1, 0x5A5A);
 	ASSERT_EQ(simpleSt.int_2, 0xA5A5);
-	ASSERT_STREQ(simpleSt.str_1.c_str(), "str1");
-	ASSERT_STREQ(simpleSt.str_2.c_str(), "str2");
+	ASSERT_STREQ(IJST_CONT_VAL(simpleSt.str_1).c_str(), "str1");
+	ASSERT_STREQ(IJST_CONT_VAL(simpleSt.str_2).c_str(), "str2");
 }
 
 TEST(BasicAPI, Constructor4LValue)

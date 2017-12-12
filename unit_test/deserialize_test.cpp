@@ -55,7 +55,7 @@ TEST(Deserialize, RequiredFields)
 	ASSERT_EQ(IJST_GET_STATUS(st, int_1), ijst::FStatus::kMissing);
 	ASSERT_EQ(IJST_GET_STATUS(st, str_1), ijst::FStatus::kMissing);
 	ASSERT_EQ(st.int_2, 1);
-	ASSERT_STREQ(st.str_2.c_str(), "str2");
+	ASSERT_STREQ(IJST_CONT_VAL(st.str_2).c_str(), "str2");
 }
 
 TEST(Deserialize, AdditionalFields)
@@ -74,7 +74,7 @@ TEST(Deserialize, AdditionalFields)
 		ASSERT_EQ(IJST_GET_STATUS(st, str_1), ijst::FStatus::kMissing);
 		ASSERT_EQ(st.int_1, 1);
 		ASSERT_EQ(st.int_2, 2);
-		ASSERT_STREQ(st.str_2.c_str(), "str2");
+		ASSERT_STREQ(IJST_CONT_VAL(st.str_2).c_str(), "str2");
 		ASSERT_EQ(st._.GetBuffer().MemberCount(), 3u);
 		ASSERT_STREQ(st._.GetBuffer()["addi_field1"].GetString(), "a_field1");
 		ASSERT_STREQ(st._.GetBuffer()["addi_field2"].GetString(), "a_field2");
@@ -90,7 +90,7 @@ TEST(Deserialize, AdditionalFields)
 		ASSERT_EQ(IJST_GET_STATUS(st, str_1), ijst::FStatus::kMissing);
 		ASSERT_EQ(st.int_1, 1);
 		ASSERT_EQ(st.int_2, 2);
-		ASSERT_STREQ(st.str_2.c_str(), "str2");
+		ASSERT_STREQ(IJST_CONT_VAL(st.str_2).c_str(), "str2");
 		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
 	}
 
@@ -121,7 +121,7 @@ TEST(Deserialize, CopySrc)
 
 	// Check st
 	ASSERT_EQ(st.int_2, 1);
-	ASSERT_STREQ(st.str_2.c_str(), "str2");
+	ASSERT_STREQ(IJST_CONT_VAL(st.str_2).c_str(), "str2");
 }
 
 TEST(Deserialize, MoveSrc)
@@ -141,7 +141,7 @@ TEST(Deserialize, MoveSrc)
 
 	// Check st
 	ASSERT_EQ(st.int_2, 1);
-	ASSERT_STREQ(st.str_2.c_str(), "str2");
+	ASSERT_STREQ(IJST_CONT_VAL(st.str_2).c_str(), "str2");
 }
 
 TEST(Deserialize, Insitu)
@@ -155,7 +155,7 @@ TEST(Deserialize, Insitu)
 
 	// Check st
 	ASSERT_EQ(st.int_2, 1);
-	ASSERT_STREQ(st.str_2.c_str(), "str2");
+	ASSERT_STREQ(IJST_CONT_VAL(st.str_2).c_str(), "str2");
 	delete[] buf;
 }
 IJST_DEFINE_STRUCT(

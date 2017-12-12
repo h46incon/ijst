@@ -186,21 +186,21 @@ TEST(Serialize, Complicate)
 	st.c1.i3.str_1 = "str1";
 	st.c1.i4.str_2 = "str2";
 	// vms
-	map<string, string> ms1;
+	map<string, ijst::FStoreString> ms1;
 	ms1["k1"] = "v1";
 	ms1["k2"] = "v2";
-	map<string, string> ms2;
+	map<string, ijst::FStoreString> ms2;
 	ms2["k1"] = "v3";
 	ms2["k3"] = "v4";
 	IJST_CONT_VAL(st.vms).push_back(ms1);
 	IJST_CONT_VAL(st.vms).push_back(ms2);
 	// mvs
-	vector<string> vs1;
-	vs1.push_back("s1");
-	vs1.push_back("s2");
+	vector<ijst::FStoreString> vs1;
+	vs1.push_back(string("s1"));
+	vs1.push_back(string("s2"));
 	st.mvs["mk1"] = vs1;
-	IJST_CONT_VAL(st.mvs["mk2"]).push_back("s3");
-	IJST_CONT_VAL(st.mvs["mk2"]).push_back("s4");
+	IJST_CONT_VAL(st.mvs["mk2"]).push_back(string("s3"));
+	IJST_CONT_VAL(st.mvs["mk2"]).push_back(string("s4"));
 	// mmo
 	Inner in1;
 	in1.int_1 = 11;

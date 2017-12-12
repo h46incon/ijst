@@ -443,7 +443,7 @@ TEST(Primitive, Str)
 	// Default value
 	{
 		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
-		ASSERT_TRUE(st.v.empty());
+		ASSERT_TRUE(IJST_CONT_VAL(st.v).empty());
 	}
 
 	// Deserialize
@@ -451,18 +451,18 @@ TEST(Primitive, Str)
 		string json = "{\"f_v\": \"v1\", \"f_vec\": [\"v1\", \"v2\"], \"f_map\": {\"v1\": \"v11\", \"v2\": \"v22\"}}";
 		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
-		ASSERT_STREQ(st.v.c_str(), "v1");
-		ASSERT_STREQ(st.vec_v[0].c_str(), "v1");
-		ASSERT_STREQ(st.vec_v[1].c_str(),"v2");
-		ASSERT_STREQ(st.map_v["v1"].c_str(), "v11");
-		ASSERT_STREQ(st.map_v["v2"].c_str(), "v22");
+		ASSERT_STREQ(IJST_CONT_VAL(st.v).c_str(), "v1");
+		ASSERT_STREQ(IJST_CONT_VAL(st.vec_v[0]).c_str(), "v1");
+		ASSERT_STREQ(IJST_CONT_VAL(st.vec_v[1]).c_str(),"v2");
+		ASSERT_STREQ(IJST_CONT_VAL(st.map_v["v1"]).c_str(), "v11");
+		ASSERT_STREQ(IJST_CONT_VAL(st.map_v["v2"]).c_str(), "v22");
 	}
 
 	// Serialize
 	{
 		IJST_SET(st, v, "v0");
 		st.vec_v[0] = "v01";
-		IJST_CONT_VAL(st.vec_v).push_back("v03");
+		IJST_CONT_VAL(st.vec_v).push_back(std::string("v03"));
 		st.map_v["v1"] = "v011";
 		st.map_v["v3"] = "v033";
 

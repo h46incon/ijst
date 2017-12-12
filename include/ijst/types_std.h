@@ -45,7 +45,12 @@ namespace ijst{
 	typedef uint64_t FStoreUInt64;
 	typedef int32_t FStoreInt32;
 	typedef int64_t FStoreInt64;
+
+#if IJST_USE_SL_WRAPPER
+	typedef ijst::SLWrapper<std::string> FStoreString;
+#else
 	typedef std::string FStoreString;
+#endif
 
 	class FStoreRaw {
 	public:
@@ -280,7 +285,7 @@ namespace ijst{
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
-				req.buffer.SetString(pField->c_str(), pField->length(), req.allocator);
+				req.buffer.SetString(IJST_CONT_VAL(*pField).c_str(), IJST_CONT_VAL(*pField).length(), req.allocator);
 				return 0;
 			}
 
