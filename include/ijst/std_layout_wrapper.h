@@ -10,6 +10,26 @@
 #include <string>
 
 namespace ijst {
+	namespace detail {
+		//* SFINAE
+		template <typename T>
+		struct IsStdVector {
+		};
+
+		template<typename TElem>
+		struct IsStdVector<std::vector<TElem> > {
+			static const bool value = true;
+		};
+
+		template <typename T>
+		struct IsStdMap {
+		};
+
+		template<typename TKey, typename TVal>
+		struct IsStdMap<std::map<TKey, TVal> > {
+			static const bool value = true;
+		};
+	}
 	/**
 	 * Common wrapper
 	 * @tparam T: Value type, must implement default constructor, copy constructor, assignment
@@ -71,6 +91,19 @@ namespace ijst {
 		T& operator*() { return *m_pVal; }
 		const T& operator*() const { return *m_pVal; }
 
+#if __cplusplus >= 201103L
+		template <typename U=T, bool = detail::IsStdVector<U>::value>
+		typename U::value_type& operator[](typename U::size_type i) { return (*m_pVal)[i]; }
+
+		template <typename U=T, bool = detail::IsStdVector<U>::value>
+		const typename U::value_type& operator[](typename U::size_type i) const { return (*m_pVal)[i]; }
+
+		template <typename U=T, bool = detail::IsStdMap<U>::value>
+		typename U::mapped_type& operator[](const typename U::key_type& _key) { return (*m_pVal)[_key]; }
+
+		template <typename U=T, bool = detail::IsStdMap<U>::value>
+		typename U::mapped_type& operator[](typename U::key_type&& _key) { return (*m_pVal)[_key]; }
+#endif
 	private:
 		T* m_pVal;
 	};

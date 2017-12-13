@@ -82,7 +82,28 @@ TEST(BasicAPI, WrapperCommon)
 		ASSERT_EQ(val2.Val(), "Val");
 	}
 #endif
+
+#if __cplusplus >= 201103L
+	// operator [] for vector
+	{
+		ijst::SLWrapper<std::vector<int> > val;
+		val->push_back(2);
+		val[0] = 3;
+		const ijst::SLWrapper<std::vector<int> >& valRef = val;
+		ASSERT_EQ(valRef[0], 3);
+	}
+
+	// operator [] for map
+	{
+		ijst::SLWrapper<std::map<int, std::string> > val;
+		int key = 42;
+		val[key] = "value";
+		ASSERT_STREQ(val[key].c_str(), "value");
+		ASSERT_STREQ(val[std::move(key)].c_str(), "value");
+	}
+#endif
 }
+
 TEST(BasicAPI, WrapperVector)
 {
 	// default constructor
