@@ -1,6 +1,6 @@
 ## 定义结构体
 
-使用 ijst 唯一额外的工作就是使用 `IJST_DEFINE_STRUCT` 宏定义 ijst struct：
+使用 ijst 唯一额外的工作就是使用 `IJST_DEFINE_STRUCT` 或 `IJST_DEFINE_STRUCT_WITH_GETTER` 宏定义 ijst struct：
 
 ```cpp
 IJST_DEFINE_STRUCT (
@@ -9,6 +9,8 @@ IJST_DEFINE_STRUCT (
     , (field_type1, field_name1, "json_name1", filed_desc1)
     // ...
 )
+
+// IJST_DEFINE_STRUCT_WITH_GETTER 宏用法同上
 ```
 
 通过该宏可以指定结构体的名字和每个字段的信息。该宏会声明相关的 class，以及注册相关的元信息。
@@ -47,7 +49,7 @@ SampleStruct sampleStruct;
 
 \*\* **基本原子类型**
 
-在 `ijst\types_std.h` 中定义。提供的宏为 `IJST_TPRI(_type)`。
+在 `ijst/types_std.h` 中定义。提供的宏为 `IJST_TPRI(_type)`。
 
 ijst 提供了一系列的原子类型，包括 `Int, Bool, Int, UInt32, UInt64, Int32, Int64, Str, Raw`。
 如 `IJST_TPRI(Int)` 即可声明一个 int 型字段。这些原子类型可以满足大部分的使用需求。
@@ -56,21 +58,21 @@ ijst 提供了一系列的原子类型，包括 `Int, Bool, Int, UInt32, UInt64,
 
 \*\* **时间原子类型**
 
-在 `ijst\types_time.h` 中定义。提供的宏为 `IJST_TTIME(), IJST_TFTIME(_time_zone)`。
+在 `ijst/types_time.h` 中定义。提供的宏为 `IJST_TTIME(), IJST_TFTIME(_time_zone)`。
 
 这两个类型会将格式为 *YYYY-MM-DD HH:MM:SS* 的字符串转换为 unix 时间戳。
 其中 `IJST_TTIME()` 会调用系统调用确定时区（**挺慢的**），`IJST_TFTIME(_time_zone)` 可以使用参数指定的时区，如 `IJST_TFTIME(8)` 指定时区为东八区。
 
 \*\* **容器类型**
 
-在 `ijst\ijst.h` 中定义。提供的宏为 `IJST_TVEC(_type), IJST_TMAP(_type)`。
+在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TVEC(_type), IJST_TMAP(_type)`。
 
 ijst 分别使用这两个宏表达 json 中的 list 和任意键值的 object，和 json 中一样，容器的元素类型可以为原子类型和容器（即支持**嵌套**定义）。
 如 `IJST_TVEC(IJST_TRPI(Int))` 可表达 json 值 *[1, 2, 3]*， `IJST_TMAP(IJST_TVEC(IJST_TPRI(Bool)))` 可表达 json 值 *{"key1": [true, true], "key2": [true, false]}*。
 
 \*\* **ijst 结构体类型**
 
-在 `ijst\ijst.h` 中定义。提供的宏为 `IJST_TOBJ(_type)`。
+在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TOBJ(_type)`。
 
 可使用该宏在结构体中包含其他的结构体，如 `IJST_TOBJ(struct_name)`。
 
@@ -80,7 +82,10 @@ ijst 分别使用这两个宏表达 json 中的 list 和任意键值的 object�
 
 ### FieldName
 
-成员变量名。除了不能为"_"（一个下划线），没有其他额外限制。
+成员变量名。
+
+- 如果使用 `IJST_DEFINE_STRUCT`，变量名不能为 `_`（一个下划线）
+- 如果使用 `IJST_DEFINE_STRUCT_WITH_GETTER`，变量名不能为 `_`， `_TypeDef`， `Get变量名`。
 
 ### JsonName
 
