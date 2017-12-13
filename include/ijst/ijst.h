@@ -168,7 +168,7 @@ namespace ijst {
 		typedef _T ValType;
 		IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 	public:
-		_T* At() const
+		_T* operator->() const
 		{
 			static _T empty(false);
 			if (m_pVal == IJST_NULL) {
@@ -178,16 +178,15 @@ namespace ijst {
 				return m_pVal;
 			}
 		}
-		_T *operator->() const { return At(); }
 	};
 
 	template <typename _TElem>
-	class Optional <IJST_CONT_VEC(_TElem) >
+	class Optional <IJST_CONT_VEC(_TElem)>
 	{
 		typedef IJST_CONT_VEC(_TElem) ValType;
 		IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 	public:
-		Optional<_TElem> At(typename std::vector<_TElem>::size_type i) const
+		Optional<_TElem> operator[](typename std::vector<_TElem>::size_type i) const
 		{
 			if (m_pVal == IJST_NULL || IJST_CONT_VAL(*m_pVal).size() <= i) {
 				return Optional<_TElem>(IJST_NULL);
@@ -195,16 +194,31 @@ namespace ijst {
 			return Optional<_TElem>(&(*m_pVal)[i]);
 		}
 
-		Optional<_TElem> operator[](typename std::vector<_TElem>::size_type i) const { return At(i); }
 	};
 
 	template <typename _TElem>
-	class Optional <IJST_CONT_MAP(std::string, _TElem) >
+	class Optional <const IJST_CONT_VEC(_TElem)>
+	{
+		typedef const IJST_CONT_VEC(_TElem) ValType;
+		IJSTI_OPTIONAL_BASE_DEFINE(ValType)
+	public:
+		Optional<const _TElem> operator[](typename std::vector<_TElem>::size_type i) const
+		{
+			if (m_pVal == IJST_NULL || IJST_CONT_VAL(*m_pVal).size() <= i) {
+				return Optional<const _TElem>(IJST_NULL);
+			}
+			return Optional<const _TElem>(&(*m_pVal)[i]);
+		}
+
+	};
+
+	template <typename _TElem>
+	class Optional <IJST_CONT_MAP(std::string, _TElem)>
 	{
 		typedef IJST_CONT_MAP(std::string, _TElem) ValType;
 		IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 	public:
-		Optional<_TElem> At(const std::string& key) const
+		Optional<_TElem> operator[](const std::string& key) const
 		{
 			if (m_pVal == IJST_NULL) {
 				return Optional<_TElem>(IJST_NULL);
@@ -216,12 +230,31 @@ namespace ijst {
 			else {
 				return Optional<_TElem>(&it->second);
 			}
-
 		}
 
-		Optional<_TElem> operator[](const std::string& key) const { return At(key); }
 	};
 
+	template <typename _TElem>
+	class Optional <const IJST_CONT_MAP(std::string, _TElem)>
+	{
+		typedef const IJST_CONT_MAP(std::string, _TElem) ValType;
+		IJSTI_OPTIONAL_BASE_DEFINE(ValType)
+	public:
+		Optional<const _TElem> operator[](const std::string& key) const
+		{
+			if (m_pVal == IJST_NULL) {
+				return Optional<const _TElem>(IJST_NULL);
+			}
+			typename std::map<std::string, _TElem>::const_iterator it = IJST_CONT_VAL(*m_pVal).find(key);
+			if (it == IJST_CONT_VAL(*m_pVal).end()){
+				return Optional<const _TElem>(IJST_NULL);
+			}
+			else {
+				return Optional<const _TElem>(&it->second);
+			}
+		}
+
+	};
 	/**	========================================================================================
 	 *				Inner Interface
 	 */
@@ -1673,7 +1706,7 @@ namespace ijst {
 	#define IJSTI_IDL_DESC(fType, fName, sName, desc)		desc
 
 	#define IJSTI_DEFINE_FIELD(fType, fName, ... )												\
-			::ijst::detail::FSerializer< fType>::VarType fName;   /* Make IDE happy*/
+			::ijst::detail::FSerializer< fType>::VarType fName;
 
 	#define IJSTI_FIELD_TYPEDEF_START()															\
 			struct _TypeDef {
@@ -1685,7 +1718,13 @@ namespace ijst {
 			};
 
 	#define IJSTI_FIELD_GETTER(fType, fName, ... )												\
-			::ijst::Optional<_TypeDef::fName> IJSTI_PP_CONCAT(Get, fName)() 					\
+			::ijst::Optional<const _TypeDef::fName> IJSTI_PP_CONCAT(Get, fName)() const 		\
+			{																					\
+				if (!this->_.IsValid() || this->_.GetStatus(&fName) != ijst::FStatus::kValid)	\
+					{ return ::ijst::Optional<const _TypeDef::fName>(IJST_NULL); }				\
+				return ::ijst::Optional<const _TypeDef::fName>(&fName);							\
+			}																					\
+			::ijst::Optional<_TypeDef::fName> IJSTI_PP_CONCAT(Get, fName)()						\
 			{																					\
 				if (!this->_.IsValid() || this->_.GetStatus(&fName) != ijst::FStatus::kValid)	\
 					{ return ::ijst::Optional<_TypeDef::fName>(IJST_NULL); }					\

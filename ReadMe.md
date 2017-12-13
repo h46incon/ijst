@@ -117,9 +117,6 @@ int* pData = stOutter.GetstInner()->GetvecData()[2].Ptr();
 if (pData != NULL) {
     // ... 
 }
-
-// 不喜欢重载运算符？
-pData = stOutter.GetstInner().At()->GetmapData().At("key").Ptr();
 ```
 
 ### 详细说明
