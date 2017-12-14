@@ -122,7 +122,7 @@ TEST(Serialize, AdditionalJsonField)
 
 	int ret;
 	rapidjson::Value jVal2;
-	ijst::AllocatorType allocator;
+	ijst::JsonAllocator allocator;
 	ret = st._.Serialize(true, jVal2, allocator);
 
 	// Check output

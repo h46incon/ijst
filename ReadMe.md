@@ -120,4 +120,4 @@ if (pData != NULL) {
 ```
 
 ### 详细说明
-移步 `doc/Usage.md`。
+移步 [Usage](doc/Usage.md)。

@@ -606,7 +606,7 @@ TEST(Primitive, Raw_BasicAPI)
 		// Rvalue Copy constructor
 		ijst::FStoreRaw src;
 		src.V().SetString("src_v", src.GetAllocator());
-		ijst::AllocatorType* pSrcAlloc = &src.GetAllocator();
+		ijst::JsonAllocator* pSrcAlloc = &src.GetAllocator();
 
 		ijst::FStoreRaw dst(std::move(src));
 		ASSERT_STREQ(dst.V().GetString(), "src_v");
@@ -618,7 +618,7 @@ TEST(Primitive, Raw_BasicAPI)
 		// Rvalue assignment
 		ijst::FStoreRaw src;
 		src.V().SetString("src_v", src.GetAllocator());
-		ijst::AllocatorType* pSrcAlloc = &src.GetAllocator();
+		ijst::JsonAllocator* pSrcAlloc = &src.GetAllocator();
 
 		ijst::FStoreRaw dst;
 		dst = std::move(src);

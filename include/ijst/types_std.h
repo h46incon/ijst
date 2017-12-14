@@ -104,19 +104,19 @@ namespace ijst{
 		}
 
 		//! Get actually value in object
-		BufferType& V() {return v;}
-		const BufferType& V() const {return v;}
+		JsonValue& V() {return v;}
+		const JsonValue& V() const {return v;}
 		//! See ijst::Accessor::GetAllocator
-		AllocatorType& GetAllocator() {return *m_pAllocator;}
-		const AllocatorType& GetAllocator() const {return *m_pAllocator;}
+		JsonAllocator& GetAllocator() {return *m_pAllocator;}
+		const JsonAllocator& GetAllocator() const {return *m_pAllocator;}
 		//! See ijst::Accessor::GetOwnAllocator
-		AllocatorType& GetOwnAllocator() {return m_pOwnDoc->GetAllocator();}
-		const AllocatorType& GetOwnAllocator() const {return m_pOwnDoc->GetAllocator();}
+		JsonAllocator& GetOwnAllocator() {return m_pOwnDoc->GetAllocator();}
+		const JsonAllocator& GetOwnAllocator() const {return m_pOwnDoc->GetAllocator();}
 
 	private:
 		friend class detail::FSerializer<detail::TypeClassPrim<FType::Raw> >;
-		BufferType v;
-		AllocatorType* m_pAllocator;
+		JsonValue v;
+		JsonAllocator* m_pAllocator;
 		rapidjson::Document* m_pOwnDoc;		// use pointer to make FStoreRaw be a standard-layout type
 	};
 
@@ -329,13 +329,13 @@ namespace ijst{
 				return 0;
 			}
 
-			virtual int SetAllocator(void *pField, AllocatorType &allocator) IJSTI_OVERRIDE
+			virtual int SetAllocator(void *pField, JsonAllocator &allocator) IJSTI_OVERRIDE
 			{
 				VarType *pFieldT = static_cast<VarType *>(pField);
 				if (pFieldT->m_pAllocator == &allocator) {
 					return 0;
 				}
-				BufferType temp;
+				JsonValue temp;
 				temp = pFieldT->v;
 				pFieldT->v.CopyFrom(temp, allocator, false);
 				pFieldT->m_pAllocator = &allocator;
