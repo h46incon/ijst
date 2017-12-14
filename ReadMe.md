@@ -64,7 +64,7 @@ assert(jStruct.mapVal["k2"] == 2);
 
 //*** 序列化
 std::string strOut;
-ret = jStruct._.SerializeToString(/*pushAllField=*/true, strOut);
+ret = jStruct._.Serialize(/*pushAllField=*/true, strOut);
 assert (ret == 0);
 ```
 

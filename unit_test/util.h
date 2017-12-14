@@ -16,12 +16,12 @@
 #define UTEST_MOVE_TO_STRING_AND_CHECK(st, pushAllField, doc)				\
 {																			\
 	string json;															\
-	int toStrRet = st._.SerializeToString(pushAllField, json);				\
+	int toStrRet = st._.Serialize(pushAllField, json);						\
 	ASSERT_EQ(toStrRet, 0);													\
 	doc.Parse(json.c_str(), json.length());									\
 	ASSERT_FALSE(doc.HasParseError());										\
 	rapidjson::Value _jVal;													\
-	int serRet = st._.MoveSerializeInInnerAlloc(pushAllField, _jVal);		\
+	int serRet = st._.MoveToJsonInInnerAlloc(pushAllField, _jVal);			\
 	ASSERT_EQ(serRet, 0);													\
 	ASSERT_EQ((rapidjson::Value&)doc, _jVal);								\
 	ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);							\

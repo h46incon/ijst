@@ -154,7 +154,7 @@ namespace ijst{
 		public:
 			typedef ijst::FStoreTime VarType;
 
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				tm *p = localtime(pField);
@@ -169,7 +169,7 @@ namespace ijst{
 				return 0;
 			}
 
-			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				tm *p = localtime(pField);
@@ -219,7 +219,7 @@ namespace ijst{
 		public:
 			typedef ijst::FStoreFastTime VarType;
 
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				int year, mon, day, hour, min, sec;
@@ -233,7 +233,7 @@ namespace ijst{
 				return 0;
 			}
 
-			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				int year, mon, day, hour, min, sec;

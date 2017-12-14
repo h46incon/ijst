@@ -126,14 +126,14 @@ namespace ijst{
 		public:
 			typedef ijst::FStoreBool VarType;
 
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				req.buffer.SetBool((*pField) != 0);
 				return 0;
 			}
 
-			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				return (req.writer.Bool((*pField) != 0) ? 0 : Err::kWriteFailed);
@@ -159,14 +159,14 @@ namespace ijst{
 		public:
 			typedef ijst::FStoreInt VarType;
 
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				req.buffer.SetInt(*pField);
 				return 0;
 			}
 
-			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				return (req.writer.Int(*pField) ? 0 : Err::kWriteFailed);
@@ -191,14 +191,14 @@ namespace ijst{
 		public:
 			typedef ijst::FStoreUInt32 VarType;
 
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				req.buffer.SetUint(*pField);
 				return 0;
 			}
 
-			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				return (req.writer.Uint(*pField) ? 0 : Err::kWriteFailed);
@@ -223,14 +223,14 @@ namespace ijst{
 		public:
 			typedef ijst::FStoreUInt64 VarType;
 
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				req.buffer.SetUint64(*pField);
 				return 0;
 			}
 
-			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				return (req.writer.Uint64(*pField) ? 0 : Err::kWriteFailed);
@@ -255,14 +255,14 @@ namespace ijst{
 		public:
 			typedef ijst::FStoreInt32 VarType;
 
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				req.buffer.SetInt(*pField);
 				return 0;
 			}
 
-			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				return (req.writer.Int(*pField) ? 0 : Err::kWriteFailed);
@@ -287,14 +287,14 @@ namespace ijst{
 		public:
 			typedef ijst::FStoreInt64 VarType;
 
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				req.buffer.SetInt64(*pField);
 				return 0;
 			}
 
-			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				return (req.writer.Int64(*pField) ? 0 : Err::kWriteFailed);
@@ -319,14 +319,14 @@ namespace ijst{
 		public:
 			typedef ijst::FStoreString VarType;
 
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				req.buffer.SetString(IJST_CONT_VAL(*pField).c_str(), IJST_CONT_VAL(*pField).length(), req.allocator);
 				return 0;
 			}
 
-			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				return (req.writer.String(pField->c_str(), pField->length()) ? 0 : Err::kWriteFailed);
@@ -351,14 +351,14 @@ namespace ijst{
 		public:
 			typedef ijst::FStoreRaw VarType;
 
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				req.buffer.CopyFrom(pField->V(), req.allocator, true);
 				return 0;
 			}
 
-			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				return (pField->V().Accept(req.writer) ? 0 : Err::kWriteFailed);

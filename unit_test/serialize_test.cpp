@@ -118,12 +118,12 @@ TEST(Serialize, AdditionalJsonField)
 	rapidjson::Value jVal;
 	rapidjson::Document doc;
 	ijst::JsonAllocator allocator;
-	ret = st._.Serialize(true, jVal, allocator);
+	ret = st._.ToJson(true, jVal, allocator);
 
-	// SerializeToString
+	// Serialize
 	{
 		string json;
-		int ret = st._.SerializeToString(true, json);
+		int ret = st._.Serialize(true, json);
 		ASSERT_EQ(ret, 0);
 		doc.Parse(json.c_str(), json.length());
 		ASSERT_FALSE(doc.HasParseError());
