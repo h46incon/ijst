@@ -2,9 +2,8 @@
 // Created by h46incon on 2017/9/29.
 //
 
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
-#include <gtest/gtest.h>
+#include "util.h"
+
 #include <ijst/ijst.h>
 #include <ijst/types_std.h>
 
@@ -33,11 +32,10 @@ TEST(Serialize, EmptyValue)
 	NestSt nestSt;
 
 	// Empty struct
-	rapidjson::Value jVal;
-	int ret = nestSt._.MoveSerializeInInnerAlloc(false, jVal);
-	ASSERT_EQ(ret, 0);
-	ASSERT_TRUE(jVal.IsObject());
-	ASSERT_TRUE(jVal.MemberCount() == 0);
+	rapidjson::Document doc;
+	UTEST_MOVE_TO_STRING_AND_CHECK(nestSt, false, doc);
+	ASSERT_TRUE(doc.IsObject());
+	ASSERT_TRUE(doc.MemberCount() == 0);
 }
 
 TEST(Serialize, EmptyValue_PushAllField)
@@ -45,26 +43,24 @@ TEST(Serialize, EmptyValue_PushAllField)
 	NestSt nestSt;
 	// Empty struct
 
-	rapidjson::Value jVal;
-	int ret = nestSt._.MoveSerializeInInnerAlloc(true, jVal);
-	ASSERT_EQ(ret, 0);
-	ASSERT_EQ(nestSt._.GetBuffer().MemberCount(), 0u);
+	rapidjson::Document doc;
+	UTEST_MOVE_TO_STRING_AND_CHECK(nestSt, true, doc);
 
 	// Check
-	ASSERT_TRUE(jVal["vec_val_1"].IsArray());
-	ASSERT_TRUE(jVal["vec_val_1"].Empty());
+	ASSERT_TRUE(doc["vec_val_1"].IsArray());
+	ASSERT_TRUE(doc["vec_val_1"].Empty());
 
-	ASSERT_TRUE(jVal["inner_val_1"].IsObject());
-	ASSERT_EQ(jVal["inner_val_1"]["int_val_1"].GetInt(), 0);
-	ASSERT_EQ(jVal["inner_val_1"]["int_val_2"].GetInt(), 0);
-	ASSERT_STREQ(jVal["inner_val_1"]["str_val_1"].GetString(), "");
-	ASSERT_STREQ(jVal["inner_val_1"]["str_val_2"].GetString(), "");
+	ASSERT_TRUE(doc["inner_val_1"].IsObject());
+	ASSERT_EQ(doc["inner_val_1"]["int_val_1"].GetInt(), 0);
+	ASSERT_EQ(doc["inner_val_1"]["int_val_2"].GetInt(), 0);
+	ASSERT_STREQ(doc["inner_val_1"]["str_val_1"].GetString(), "");
+	ASSERT_STREQ(doc["inner_val_1"]["str_val_2"].GetString(), "");
 
-	ASSERT_TRUE(jVal["map_val_1"].IsObject());
-	ASSERT_EQ(jVal["map_val_1"].MemberCount(), 0u);
+	ASSERT_TRUE(doc["map_val_1"].IsObject());
+	ASSERT_EQ(doc["map_val_1"].MemberCount(), 0u);
 
-	ASSERT_TRUE(jVal["vec_val_2"].IsArray());
-	ASSERT_TRUE(jVal["vec_val_2"].Empty());
+	ASSERT_TRUE(doc["vec_val_2"].IsArray());
+	ASSERT_TRUE(doc["vec_val_2"].Empty());
 }
 
 TEST(Serialize, AllocatorLifeCycle)
@@ -80,13 +76,12 @@ TEST(Serialize, NullValue)
 	IJST_SET(innerSt, int_2, 2);
 	IJST_MARK_NULL(innerSt, int_2);
 
-	rapidjson::Value jVal;
-	int ret = innerSt._.MoveSerializeInInnerAlloc(true, jVal);
-	ASSERT_EQ(ret, 0);
+	rapidjson::Document doc;
+	UTEST_MOVE_TO_STRING_AND_CHECK(innerSt, true, doc);
 
 	ASSERT_EQ(IJST_GET_STATUS(innerSt, int_2), ijst::FStatus::kNull);
-	ASSERT_EQ(jVal["int_val_1"].GetInt(), 1);
-	ASSERT_TRUE(jVal["int_val_2"].IsNull());
+	ASSERT_EQ(doc["int_val_1"].GetInt(), 1);
+	ASSERT_TRUE(doc["int_val_2"].IsNull());
 }
 
 TEST(Serialize, MarkMissing)
@@ -96,12 +91,11 @@ TEST(Serialize, MarkMissing)
 	IJST_SET(innerSt, int_2, 2);
 	IJST_MARK_MISSING(innerSt, int_2);
 
-	rapidjson::Value jVal;
-	int ret = innerSt._.MoveSerializeInInnerAlloc(false, jVal);
-	ASSERT_EQ(ret, 0);
+	rapidjson::Document doc;
+	UTEST_MOVE_TO_STRING_AND_CHECK(innerSt, false, doc);
 
-	ASSERT_EQ(jVal["int_val_1"].GetInt(), 1);
-	ASSERT_FALSE(jVal.HasMember("int_val_2"));
+	ASSERT_EQ(doc["int_val_1"].GetInt(), 1);
+	ASSERT_FALSE(doc.HasMember("int_val_2"));
 }
 
 IJST_DEFINE_STRUCT(
@@ -121,15 +115,25 @@ TEST(Serialize, AdditionalJsonField)
 	IJST_SET(st.inner, int_2, 11);
 
 	int ret;
-	rapidjson::Value jVal2;
+	rapidjson::Value jVal;
+	rapidjson::Document doc;
 	ijst::JsonAllocator allocator;
-	ret = st._.Serialize(true, jVal2, allocator);
+	ret = st._.Serialize(true, jVal, allocator);
 
+	// SerializeToString
+	{
+		string json;
+		int ret = st._.SerializeToString(true, json);
+		ASSERT_EQ(ret, 0);
+		doc.Parse(json.c_str(), json.length());
+		ASSERT_FALSE(doc.HasParseError());
+		ASSERT_EQ((rapidjson::Value&)doc, jVal);
+	}
 	// Check output
 	ASSERT_EQ(ret, 0);
-	ASSERT_STREQ(jVal2["addi_o1"].GetString(), "str_o1");
-	ASSERT_STREQ(jVal2["inner_val"]["addi_i1"].GetString(), "str_i1");
-	ASSERT_EQ(jVal2["inner_val"]["int_val_2"].GetInt(), 11);
+	ASSERT_STREQ(doc["addi_o1"].GetString(), "str_o1");
+	ASSERT_STREQ(doc["inner_val"]["addi_i1"].GetString(), "str_i1");
+	ASSERT_EQ(doc["inner_val"]["int_val_2"].GetInt(), 11);
 
 	// Check src
 	ASSERT_STREQ(st._.GetBuffer()["addi_o1"].GetString(), "str_o1");
@@ -144,16 +148,14 @@ TEST(Serialize, AdditionalJsonFieldMoved)
 	st.inner._.GetBuffer().AddMember("addi_i1", rapidjson::Value().SetString("str_i1").Move(), st.inner._.GetAllocator());
 	IJST_SET(st.inner, int_2, 11);
 
-	int ret;
 	// Serialize in place
-	rapidjson::Value jVal2;
-	ret = st._.MoveSerializeInInnerAlloc(true, jVal2);
+	rapidjson::Document doc;
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
 
 	// Check output
-	ASSERT_EQ(ret, 0);
-	ASSERT_STREQ(jVal2["addi_o1"].GetString(), "str_o1");
-	ASSERT_STREQ(jVal2["inner_val"]["addi_i1"].GetString(), "str_i1");
-	ASSERT_EQ(jVal2["inner_val"]["int_val_2"].GetInt(), 11);
+	ASSERT_STREQ(doc["addi_o1"].GetString(), "str_o1");
+	ASSERT_STREQ(doc["inner_val"]["addi_i1"].GetString(), "str_i1");
+	ASSERT_EQ(doc["inner_val"]["int_val_2"].GetInt(), 11);
 
 	// Check src
 	ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
@@ -212,29 +214,28 @@ TEST(Serialize, Complicate)
 	st.mmo["om2"]["im3"].str_2 = "lstr2";
 
 	// Value Check
-	rapidjson::Value jVal;
-	int ret = st._.MoveSerializeInInnerAlloc(true, jVal);
-	ASSERT_EQ(ret, 0);
+	rapidjson::Document doc;
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
 	// c1
-	ASSERT_EQ(jVal["c1_v"]["i1_v"]["int_val_1"].GetInt(), 1);
-	ASSERT_EQ(jVal["c1_v"]["i2_v"]["int_val_2"].GetInt(), 2);
-	ASSERT_STREQ(jVal["c1_v"]["i3_v"]["str_val_1"].GetString(), "str1");
-	ASSERT_STREQ(jVal["c1_v"]["i4_v"]["str_val_2"].GetString(), "str2");
+	ASSERT_EQ(doc["c1_v"]["i1_v"]["int_val_1"].GetInt(), 1);
+	ASSERT_EQ(doc["c1_v"]["i2_v"]["int_val_2"].GetInt(), 2);
+	ASSERT_STREQ(doc["c1_v"]["i3_v"]["str_val_1"].GetString(), "str1");
+	ASSERT_STREQ(doc["c1_v"]["i4_v"]["str_val_2"].GetString(), "str2");
 	//vms
-	ASSERT_STREQ(jVal["vms_v"][0]["k1"].GetString(), "v1");
-	ASSERT_STREQ(jVal["vms_v"][0]["k2"].GetString(), "v2");
-	ASSERT_STREQ(jVal["vms_v"][1]["k1"].GetString(), "v3");
-	ASSERT_STREQ(jVal["vms_v"][1]["k3"].GetString(), "v4");
+	ASSERT_STREQ(doc["vms_v"][0]["k1"].GetString(), "v1");
+	ASSERT_STREQ(doc["vms_v"][0]["k2"].GetString(), "v2");
+	ASSERT_STREQ(doc["vms_v"][1]["k1"].GetString(), "v3");
+	ASSERT_STREQ(doc["vms_v"][1]["k3"].GetString(), "v4");
 	//mvs
-	ASSERT_STREQ(jVal["mvs_v"]["mk1"][0].GetString(), "s1");
-	ASSERT_STREQ(jVal["mvs_v"]["mk1"][1].GetString(), "s2");
-	ASSERT_STREQ(jVal["mvs_v"]["mk2"][0].GetString(), "s3");
-	ASSERT_STREQ(jVal["mvs_v"]["mk2"][1].GetString(), "s4");
+	ASSERT_STREQ(doc["mvs_v"]["mk1"][0].GetString(), "s1");
+	ASSERT_STREQ(doc["mvs_v"]["mk1"][1].GetString(), "s2");
+	ASSERT_STREQ(doc["mvs_v"]["mk2"][0].GetString(), "s3");
+	ASSERT_STREQ(doc["mvs_v"]["mk2"][1].GetString(), "s4");
 	// mmo
-	ASSERT_EQ(jVal["mmo_v"]["om1"]["im1"]["int_val_1"].GetInt(), 11);
-	ASSERT_EQ(jVal["mmo_v"]["om1"]["im2"]["int_val_2"].GetInt(), 12);
-	ASSERT_STREQ(jVal["mmo_v"]["om2"]["im1"]["str_val_1"].GetString(), "lstr1");
-	ASSERT_STREQ(jVal["mmo_v"]["om2"]["im3"]["str_val_2"].GetString(), "lstr2");
+	ASSERT_EQ(doc["mmo_v"]["om1"]["im1"]["int_val_1"].GetInt(), 11);
+	ASSERT_EQ(doc["mmo_v"]["om1"]["im2"]["int_val_2"].GetInt(), 12);
+	ASSERT_STREQ(doc["mmo_v"]["om2"]["im1"]["str_val_1"].GetString(), "lstr1");
+	ASSERT_STREQ(doc["mmo_v"]["om2"]["im3"]["str_val_2"].GetString(), "lstr2");
 }
 
 IJST_DEFINE_STRUCT(
@@ -244,10 +245,9 @@ IJST_DEFINE_STRUCT(
 TEST(Serialize, EmptyStruct)
 {
 	EmptySt st;
-	rapidjson::Value jVal;
-	int ret = st._.MoveSerializeInInnerAlloc(true, jVal);
-	ASSERT_EQ(ret, 0);
-	ASSERT_EQ(jVal.MemberCount(), 0u);
+	rapidjson::Document doc;
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+	ASSERT_EQ(doc.MemberCount(), 0u);
 }
 
 IJST_DEFINE_STRUCT(
@@ -321,10 +321,9 @@ IJST_DEFINE_STRUCT(
 TEST(Serialize, BigStruct)
 {
 	Complicate3 st;
-	rapidjson::Value jVal;
-	int ret = st._.MoveSerializeInInnerAlloc(true, jVal);
-	ASSERT_EQ(ret, 0);
-	ASSERT_EQ(jVal["i1_v"].GetInt(), 0);
-	ASSERT_EQ(jVal["i64_v"].GetInt(), 0);
+	rapidjson::Document doc;
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+	ASSERT_EQ(doc["i1_v"].GetInt(), 0);
+	ASSERT_EQ(doc["i64_v"].GetInt(), 0);
 }
 

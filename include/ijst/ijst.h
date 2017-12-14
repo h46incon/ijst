@@ -140,8 +140,9 @@ namespace ijst {
 		static const int kDeserializeSomeFiledsInvalid 	= 0x00001002;
 		static const int kDeserializeParseFaild 		= 0x00001003;
 		static const int kDeserializeElemEmpty 			= 0x00001004;
-		static const int kSomeUnknownMember				= 0x00001005;
+		static const int kDeserializeSomeUnknownMember	= 0x00001005;
 		static const int kInnerError 					= 0x00002001;
+		static const int kWriteFailed					= 0x00003001;
 	};
 
 	//! Behaviour when meeting unknown member in json object
@@ -259,6 +260,7 @@ namespace ijst {
 	 *				Inner Interface
 	 */
 	namespace detail {
+		typedef rapidjson::Writer<rapidjson::StringBuffer> JsonWriter;
 		//! Set errMsg to pErrMsgOut when not null.
 		//! Use macro instead of function to avoid compute errMsg when pErrMsgOut is null.
 		#define IJSTI_SET_ERRMSG(pErrMsgOut, errMsg)				\
@@ -357,6 +359,26 @@ namespace ijst {
 			struct SerializeResp {
 			};
 
+			struct WriteReq {
+				// true if need serialize all field, false if serialize only valid field
+				bool pushAllField;
+
+				// Pointer of field to serialize.
+				// The actual type of field should be decide in the derived class
+				const void* pField;
+
+				JsonWriter& writer;
+
+				WriteReq(JsonWriter& _writer, const void *_pField, bool _pushAllField)
+						: pushAllField(_pushAllField)
+						, pField(_pField)
+						, writer(_writer)
+				{ }
+			};
+
+			struct WriteResp {
+			};
+
 			struct DeserializeReq {
 				// Pointer of deserialize output.
 				// The instance should deserialize in this object
@@ -420,6 +442,8 @@ namespace ijst {
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp)= 0;
 
+			virtual int Write(const WriteReq& req, WriteResp &resp) = 0;
+
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)= 0;
 
 			virtual int SetAllocator(void *pField, JsonAllocator &allocator) {return 0;}
@@ -430,7 +454,7 @@ namespace ijst {
 
 		/**
 		 * Template interface of serialization class
-		 * This template is unimplemented,  and will throw complie error when use it.
+		 * This template is unimplemented, and will throw a compile error when use it.
 		 * @tparam _T class
 		 */
 		template<class _T>
@@ -443,8 +467,9 @@ namespace ijst {
 
 			typedef void VarType;
 
-			virtual int
-			Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE = 0;
+			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE = 0;
+
+			virtual int Write(const WriteReq& req, WriteResp &resp) IJSTI_OVERRIDE = 0;
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE = 0;
 
@@ -469,8 +494,13 @@ namespace ijst {
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				_T *pField = (_T *) req.pField;
-				int ret = pField->_.ISerialize(req, resp);
-				return ret;
+				return pField->_.ISerialize(req, resp);
+			}
+
+			virtual int Write(const WriteReq& req, WriteResp &resp) IJSTI_OVERRIDE
+			{
+				_T *pField = (_T *) req.pField;
+				return pField->_.IWrite(req, resp);
 			}
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
@@ -517,6 +547,33 @@ namespace ijst {
 						return ret;
 					}
 					req.buffer.PushBack(newElem, req.allocator);
+				}
+				return 0;
+			}
+
+			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pFieldWrapper = static_cast<const VarType *>(req.pField);
+				assert(pFieldWrapper != IJST_NULL);
+				const RealVarType& field = IJST_CONT_VAL(*pFieldWrapper);
+				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
+
+				if (!req.writer.StartArray()) {
+					return Err::kWriteFailed;
+				}
+
+				for (typename RealVarType::const_iterator itera = field.begin(); itera != field.end(); ++itera) {
+					WriteReq elemReq(req.writer, &(*itera), req.pushAllField);
+					WriteResp elemResp;
+					int ret = interface->Write(elemReq, elemResp);
+
+					if (ret != 0) {
+						return ret;
+					}
+				}
+
+				if (!req.writer.EndArray()) {
+					return Err::kWriteFailed;
 				}
 				return 0;
 			}
@@ -632,6 +689,38 @@ namespace ijst {
 							newElem,
 							req.allocator
 					);
+				}
+				return 0;
+			}
+
+			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pFieldWrapper = static_cast<const VarType *>(req.pField);
+				assert(pFieldWrapper != IJST_NULL);
+				const RealVarType& field = IJST_CONT_VAL(*pFieldWrapper);
+				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
+
+				if (!req.writer.StartObject()) {
+					return Err::kWriteFailed;
+				}
+
+				for (typename RealVarType::const_iterator itFieldMember = field.begin(); itFieldMember != field.end(); ++itFieldMember) {
+					const std::string& key = itFieldMember->first;
+					if (!req.writer.Key(key.c_str(), static_cast<rapidjson::SizeType>(key.length()))) {
+						return Err::kWriteFailed;
+					}
+
+					WriteReq elemReq(req.writer, &(itFieldMember->second), req.pushAllField);
+					WriteResp elemResp;
+					int ret = interface->Write(elemReq, elemResp);
+
+					if (ret != 0) {
+						return ret;
+					}
+				}
+
+				if (!req.writer.EndObject()) {
+					return Err::kWriteFailed;
 				}
 				return 0;
 			}
@@ -985,23 +1074,15 @@ namespace ijst {
 		 */
 		int SerializeToString(bool pushAllField, IJST_OUT std::string &strOutput) const
 		{
-			JsonValue store;
-			JsonAllocator allocator;
-			int ret = Serialize(pushAllField, IJST_OUT store, allocator);
-			if (ret != 0) {
-				return ret;
-			}
 			rapidjson::StringBuffer buffer;
-			buffer.Clear();
-			rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-			bool bSucc = store.Accept(writer);
-			if (bSucc) {
-				strOutput = std::string(buffer.GetString(), buffer.GetSize());
-				return 0;
+			detail::JsonWriter writer(buffer);
+			int iRet = DoWrite(writer, pushAllField);
+			if (iRet != 0) {
+				return iRet;
 			}
-			else {
-				return Err::kInnerError;
-			}
+
+			strOutput = std::string(buffer.GetString(), buffer.GetLength());
+			return 0;
 		}
 
 		/**
@@ -1018,33 +1099,6 @@ namespace ijst {
 		{
 			return Accessor::template DoSerialize<true, Accessor>
 					(*this, pushAllField, output, allocator);
-		}
-
-		/**
-		 * Serialize the structure to string
-		 * @note The object may be invalid after serialization
-		 * @param pushAllField 		True if push all field, false if push only valid or null field
-		 * @param strOutput 		The output of result
-		 * @return					Error code
-		 */
-		int MoveSerializeToString(bool pushAllField, IJST_OUT std::string &strOutput)
-		{
-			JsonValue store;
-			int ret = MoveSerializeInInnerAlloc(pushAllField, IJST_OUT store);
-			if (ret != 0) {
-				return ret;
-			}
-			rapidjson::StringBuffer buffer;
-			buffer.Clear();
-			rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-			bool bSucc = store.Accept(writer);
-			if (bSucc) {
-				strOutput = std::string(buffer.GetString(), buffer.GetSize());
-				return 0;
-			}
-			else {
-				return Err::kInnerError;
-			}
 		}
 
 		/**
@@ -1181,6 +1235,8 @@ namespace ijst {
 		template <class _T> friend class detail::FSerializer;
 		typedef detail::SerializerInterface::SerializeReq SerializeReq;
 		typedef detail::SerializerInterface::SerializeResp SerializeResp;
+		typedef detail::SerializerInterface::WriteReq WriteReq;
+		typedef detail::SerializerInterface::WriteResp WriteResp;
 		typedef detail::SerializerInterface::DeserializeReq DeserializeReq;
 		typedef detail::SerializerInterface::DeserializeResp DeserializeResp;
 
@@ -1195,6 +1251,12 @@ namespace ijst {
 				return Accessor::template DoSerialize<false, const Accessor>
 						(*this, req.pushAllField, req.buffer, req.allocator);
 			}
+		}
+
+		inline int IWrite(const WriteReq &req, WriteResp &resp) const
+		{
+			assert(req.pField == this);
+			return DoWrite(req.writer, req.pushAllField);
 		}
 
 		inline int IDeserialize(const DeserializeReq &req, IJST_OUT DeserializeResp& resp)
@@ -1232,8 +1294,8 @@ namespace ijst {
 			(*m_pFieldStatus)[offset] = fStatus;
 		}
 
-		int DoSerializeConst(bool pushAllField, bool canMoveSrc,
-									IJST_OUT JsonValue& buffer, JsonAllocator& allocator) const
+		int DoSerializeAllFields(bool pushAllField, bool canMoveSrc,
+								 IJST_OUT JsonValue &buffer, JsonAllocator &allocator) const
 		{
 			// Serialize fields to buffer
 			buffer.SetObject();
@@ -1275,7 +1337,12 @@ namespace ijst {
 				EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
 				switch (fstatus) {
 					case FStatus::kValid:
+					case FStatus::kMissing:
+					case FStatus::kParseFailed:
 					{
+						if (fstatus != FStatus::kValid && !pushAllField) {
+							continue;
+						}
 						int ret = DoSerializeField(itMetaField, canMoveSrc, pushAllField, buffer, allocator);
 						if (ret != 0) {
 							return ret;
@@ -1292,18 +1359,6 @@ namespace ijst {
 					}
 						break;
 
-					case FStatus::kMissing:
-					case FStatus::kParseFailed:
-					{
-						if (!pushAllField) {
-							continue;
-						}
-						int ret = DoSerializeField(itMetaField, canMoveSrc, pushAllField, buffer, allocator);
-						if (ret != 0) {
-							return ret;
-						}
-					}
-						break;
 
 					case FStatus::kNotAField:
 					default:
@@ -1322,7 +1377,7 @@ namespace ijst {
 		static int DoSerialize(_TAccessor& accessor, bool pushAllField, IJST_OUT JsonValue& buffer, JsonAllocator& allocator)
 		{
 			const Accessor& rThis = accessor;
-			int iRet = rThis.DoSerializeConst(pushAllField, kCanMoveSrc, buffer, allocator);
+			int iRet = rThis.DoSerializeAllFields(pushAllField, kCanMoveSrc, buffer, allocator);
 			if (iRet != 0) {
 				return iRet;
 			}
@@ -1384,6 +1439,84 @@ namespace ijst {
 		}
 
 		/**
+		 * Write to string
+		 */
+		int DoWrite(detail::JsonWriter& writer, bool pushAllField) const
+		{
+			if (!writer.StartObject()) {
+				return Err::kWriteFailed;
+			}
+			// Write fields
+			for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
+				 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
+			{
+				// Check field state
+				EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
+				switch (fstatus) {
+					case FStatus::kValid:
+					case FStatus::kMissing:
+					case FStatus::kParseFailed:
+					{
+						if (fstatus != FStatus::kValid && !pushAllField) {
+							continue;
+						}
+
+						const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
+						if(!writer.Key(itMetaField->name.c_str(), itMetaField->name.length())) {
+							return Err::kWriteFailed;
+						}
+						WriteReq req(writer, pFieldValue, pushAllField);
+						WriteResp resp;
+						int ret = itMetaField->serializerInterface->Write(req, resp);
+						if (ret != 0) {
+							return ret;
+						}
+					}
+						break;
+
+					case FStatus::kNull:
+					{
+						if(!writer.Key(itMetaField->name.c_str(), itMetaField->name.length())) {
+							return Err::kWriteFailed;
+						}
+						if (!writer.Null()) {
+							return Err::kWriteFailed;
+						}
+					}
+						break;
+
+					case FStatus::kNotAField:
+					default:
+						// Error occurs
+						assert(false);
+						return Err::kInnerError;
+				}
+
+			}
+
+			// Write Buffer
+			assert(m_pBuffer->IsObject());
+			for (rapidjson::Value::ConstMemberIterator itMember = m_pBuffer->MemberBegin();
+				 itMember != m_pBuffer->MemberEnd(); ++itMember)
+			{
+				// Write key
+				const JsonValue& key = itMember->name;
+				if (!writer.Key(key.GetString(), key.GetStringLength())) {
+					return Err::kWriteFailed;
+				}
+				// Write value
+				if (!itMember->value.Accept(writer)) {
+					return Err::kWriteFailed;
+				}
+			}
+
+			if (!writer.EndObject()) {
+				return Err::kWriteFailed;
+			}
+			return 0;
+		}
+
+		/**
 		 * Deserialize move from stream
 		 * @note Make sure the lifecycle of allocator of the stream is longer than this object
 		 */
@@ -1422,7 +1555,7 @@ namespace ijst {
 							break;
 						case UnknownMode::kError:
 							IJSTI_SET_ERRMSG(pErrMsgOut, "Member in object is unknown" + fieldName);
-							return Err::kSomeUnknownMember;
+							return Err::kDeserializeSomeUnknownMember;
 						case UnknownMode::kIgnore:
 							break;
 						default:
@@ -1493,7 +1626,7 @@ namespace ijst {
 							break;
 						case UnknownMode::kError:
 							IJSTI_SET_ERRMSG(pErrMsgOut, "Member in object is unknown" + fieldName);
-							return Err::kSomeUnknownMember;
+							return Err::kDeserializeSomeUnknownMember;
 						default:
 							assert(false);
 					}

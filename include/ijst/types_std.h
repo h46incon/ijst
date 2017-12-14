@@ -133,6 +133,12 @@ namespace ijst{
 				return 0;
 			}
 
+			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				return (req.writer.Bool((*pField) != 0) ? 0 : Err::kWriteFailed);
+			}
+
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
 			{
 				if (!req.stream.IsBool()) {
@@ -145,6 +151,7 @@ namespace ijst{
 				*pField = static_cast<VarType >(req.stream.GetBool() ? 1 : 0);
 				return 0;
 			}
+
 		};
 
 		template<>
@@ -157,6 +164,12 @@ namespace ijst{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				req.buffer.SetInt(*pField);
 				return 0;
+			}
+
+			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				return (req.writer.Int(*pField) ? 0 : Err::kWriteFailed);
 			}
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
@@ -185,6 +198,12 @@ namespace ijst{
 				return 0;
 			}
 
+			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				return (req.writer.Uint(*pField) ? 0 : Err::kWriteFailed);
+			}
+
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
 			{
 				if (!req.stream.IsUint()) {
@@ -209,6 +228,12 @@ namespace ijst{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				req.buffer.SetUint64(*pField);
 				return 0;
+			}
+
+			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				return (req.writer.Uint64(*pField) ? 0 : Err::kWriteFailed);
 			}
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
@@ -237,6 +262,12 @@ namespace ijst{
 				return 0;
 			}
 
+			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				return (req.writer.Int(*pField) ? 0 : Err::kWriteFailed);
+			}
+
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
 			{
 				if (!req.stream.IsInt()) {
@@ -261,6 +292,12 @@ namespace ijst{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				req.buffer.SetInt64(*pField);
 				return 0;
+			}
+
+			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				return (req.writer.Int64(*pField) ? 0 : Err::kWriteFailed);
 			}
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
@@ -289,6 +326,12 @@ namespace ijst{
 				return 0;
 			}
 
+			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				return (req.writer.String(pField->c_str(), pField->length()) ? 0 : Err::kWriteFailed);
+			}
+
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
 			{
 				if (!req.stream.IsString()) {
@@ -313,6 +356,12 @@ namespace ijst{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				req.buffer.CopyFrom(pField->V(), req.allocator, true);
 				return 0;
+			}
+
+			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				return (pField->V().Accept(req.writer) ? 0 : Err::kWriteFailed);
 			}
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE

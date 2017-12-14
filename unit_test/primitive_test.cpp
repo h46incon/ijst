@@ -2,10 +2,8 @@
 // Created by h46incon on 2017/10/11.
 //
 
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
-#include <gtest/gtest.h>
-#include <ijst/ijst.h>
+#include "util.h"
+
 #include <ijst/types_std.h>
 #include <ijst/types_time.h>
 #include <limits>
@@ -61,16 +59,15 @@ TEST(Primitive, Int)
 		st.map_v["v1"] = -200;
 		st.map_v["v3"] = 200;
 
-		rapidjson::Value jVal;
-		ret = st._.MoveSerializeInInnerAlloc(false, jVal);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(jVal["f_v"].GetInt(), 100);
-		ASSERT_EQ(jVal["f_vec"][0].GetInt(), -100);
-		ASSERT_EQ(jVal["f_vec"][1].GetInt(), 1);
-		ASSERT_EQ(jVal["f_vec"][2].GetInt(), 100);
-		ASSERT_EQ(jVal["f_map"]["v1"].GetInt(), -200);
-		ASSERT_EQ(jVal["f_map"]["v2"].GetInt(), 2);
-		ASSERT_EQ(jVal["f_map"]["v3"].GetInt(), 200);
+		rapidjson::Document doc;
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+		ASSERT_EQ(doc["f_v"].GetInt(), 100);
+		ASSERT_EQ(doc["f_vec"][0].GetInt(), -100);
+		ASSERT_EQ(doc["f_vec"][1].GetInt(), 1);
+		ASSERT_EQ(doc["f_vec"][2].GetInt(), 100);
+		ASSERT_EQ(doc["f_map"]["v1"].GetInt(), -200);
+		ASSERT_EQ(doc["f_map"]["v2"].GetInt(), 2);
+		ASSERT_EQ(doc["f_map"]["v3"].GetInt(), 200);
 	}
 }
 
@@ -131,16 +128,15 @@ TEST(Primitive, UInt32)
 		st.map_v["v1"] = 200u;
 		st.map_v["v3"] = 400u;
 
-		rapidjson::Value jVal;
-		ret = st._.MoveSerializeInInnerAlloc(false, jVal);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(jVal["f_v"].GetUint(), 100u);
-		ASSERT_EQ(jVal["f_vec"][0].GetUint(), 4294967295u);
-		ASSERT_EQ(jVal["f_vec"][1].GetUint(), 100u);
-		ASSERT_EQ(jVal["f_vec"][2].GetUint(), 200u);
-		ASSERT_EQ(jVal["f_map"]["v1"].GetUint(), 200u);
-		ASSERT_EQ(jVal["f_map"]["v2"].GetUint(), 4u);
-		ASSERT_EQ(jVal["f_map"]["v3"].GetUint(), 400u);
+		rapidjson::Document doc;
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+		ASSERT_EQ(doc["f_v"].GetUint(), 100u);
+		ASSERT_EQ(doc["f_vec"][0].GetUint(), 4294967295u);
+		ASSERT_EQ(doc["f_vec"][1].GetUint(), 100u);
+		ASSERT_EQ(doc["f_vec"][2].GetUint(), 200u);
+		ASSERT_EQ(doc["f_map"]["v1"].GetUint(), 200u);
+		ASSERT_EQ(doc["f_map"]["v2"].GetUint(), 4u);
+		ASSERT_EQ(doc["f_map"]["v3"].GetUint(), 400u);
 	}
 }
 
@@ -201,16 +197,16 @@ TEST(Primitive, UInt64)
 		st.map_v["v1"] = 200u;
 		st.map_v["v3"] = 400u;
 
-		rapidjson::Value jVal;
-		ret = st._.MoveSerializeInInnerAlloc(false, jVal);
+		rapidjson::Document doc;
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
 		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(jVal["f_v"].GetUint64(), 100u);
-		ASSERT_EQ(jVal["f_vec"][0].GetUint64(), 18446744073709551615ul);
-		ASSERT_EQ(jVal["f_vec"][1].GetUint64(), 100u);
-		ASSERT_EQ(jVal["f_vec"][2].GetUint64(), 200u);
-		ASSERT_EQ(jVal["f_map"]["v1"].GetUint64(), 200u);
-		ASSERT_EQ(jVal["f_map"]["v2"].GetUint64(), 4u);
-		ASSERT_EQ(jVal["f_map"]["v3"].GetUint64(), 400u);
+		ASSERT_EQ(doc["f_v"].GetUint64(), 100u);
+		ASSERT_EQ(doc["f_vec"][0].GetUint64(), 18446744073709551615ul);
+		ASSERT_EQ(doc["f_vec"][1].GetUint64(), 100u);
+		ASSERT_EQ(doc["f_vec"][2].GetUint64(), 200u);
+		ASSERT_EQ(doc["f_map"]["v1"].GetUint64(), 200u);
+		ASSERT_EQ(doc["f_map"]["v2"].GetUint64(), 4u);
+		ASSERT_EQ(doc["f_map"]["v3"].GetUint64(), 400u);
 	}
 }
 
@@ -272,16 +268,15 @@ TEST(Primitive, Int32)
 		st.map_v["v1"] = 200;
 		st.map_v["v3"] = 400;
 
-		rapidjson::Value jVal;
-		ret = st._.MoveSerializeInInnerAlloc(false, jVal);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(jVal["f_v"].GetInt(), 100);
-		ASSERT_EQ(jVal["f_vec"][0].GetInt(), 2147483647);
-		ASSERT_EQ(jVal["f_vec"][1].GetInt(), -2147483648);
-		ASSERT_EQ(jVal["f_vec"][2].GetInt(), 200);
-		ASSERT_EQ(jVal["f_map"]["v1"].GetInt(), 200);
-		ASSERT_EQ(jVal["f_map"]["v2"].GetInt(), 4);
-		ASSERT_EQ(jVal["f_map"]["v3"].GetInt(), 400);
+		rapidjson::Document doc;
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+		ASSERT_EQ(doc["f_v"].GetInt(), 100);
+		ASSERT_EQ(doc["f_vec"][0].GetInt(), 2147483647);
+		ASSERT_EQ(doc["f_vec"][1].GetInt(), -2147483648);
+		ASSERT_EQ(doc["f_vec"][2].GetInt(), 200);
+		ASSERT_EQ(doc["f_map"]["v1"].GetInt(), 200);
+		ASSERT_EQ(doc["f_map"]["v2"].GetInt(), 4);
+		ASSERT_EQ(doc["f_map"]["v3"].GetInt(), 400);
 	}
 }
 
@@ -344,16 +339,15 @@ TEST(Primitive, Int64)
 		st.map_v["v1"] = 200;
 		st.map_v["v3"] = 400;
 
-		rapidjson::Value jVal;
-		ret = st._.MoveSerializeInInnerAlloc(false, jVal);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(jVal["f_v"].GetInt64(), 100);
-		ASSERT_EQ(jVal["f_vec"][0].GetInt64(), 9223372036854775807);
-		ASSERT_EQ(jVal["f_vec"][1].GetInt64(), i64Min);
-		ASSERT_EQ(jVal["f_vec"][2].GetInt64(), 200);
-		ASSERT_EQ(jVal["f_map"]["v1"].GetInt64(), 200);
-		ASSERT_EQ(jVal["f_map"]["v2"].GetInt64(), 4);
-		ASSERT_EQ(jVal["f_map"]["v3"].GetInt64(), 400);
+		rapidjson::Document doc;
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+		ASSERT_EQ(doc["f_v"].GetInt64(), 100);
+		ASSERT_EQ(doc["f_vec"][0].GetInt64(), 9223372036854775807);
+		ASSERT_EQ(doc["f_vec"][1].GetInt64(), i64Min);
+		ASSERT_EQ(doc["f_vec"][2].GetInt64(), 200);
+		ASSERT_EQ(doc["f_map"]["v1"].GetInt64(), 200);
+		ASSERT_EQ(doc["f_map"]["v2"].GetInt64(), 4);
+		ASSERT_EQ(doc["f_map"]["v3"].GetInt64(), 400);
 	}
 }
 
@@ -405,16 +399,15 @@ TEST(Primitive, Bool)
 		st.map_v["v1"] = 0;
 		st.map_v["v3"] = 1;
 
-		rapidjson::Value jVal;
-		ret = st._.MoveSerializeInInnerAlloc(false, jVal);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(jVal["f_v"].GetBool(), false);
-		ASSERT_EQ(jVal["f_vec"][0].GetBool(), false);
-		ASSERT_EQ(jVal["f_vec"][1].GetBool(), false);
-		ASSERT_EQ(jVal["f_vec"][2].GetBool(), true);
-		ASSERT_EQ(jVal["f_map"]["v1"].GetBool(), false);
-		ASSERT_EQ(jVal["f_map"]["v2"].GetBool(), false);
-		ASSERT_EQ(jVal["f_map"]["v3"].GetBool(), true);
+		rapidjson::Document doc;
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+		ASSERT_EQ(doc["f_v"].GetBool(), false);
+		ASSERT_EQ(doc["f_vec"][0].GetBool(), false);
+		ASSERT_EQ(doc["f_vec"][1].GetBool(), false);
+		ASSERT_EQ(doc["f_vec"][2].GetBool(), true);
+		ASSERT_EQ(doc["f_map"]["v1"].GetBool(), false);
+		ASSERT_EQ(doc["f_map"]["v2"].GetBool(), false);
+		ASSERT_EQ(doc["f_map"]["v3"].GetBool(), true);
 	}
 
 }
@@ -466,16 +459,15 @@ TEST(Primitive, Str)
 		st.map_v["v1"] = "v011";
 		st.map_v["v3"] = "v033";
 
-		rapidjson::Value jVal;
-		ret = st._.MoveSerializeInInnerAlloc(false, jVal);
-		ASSERT_EQ(ret, 0);
-		ASSERT_STREQ(jVal["f_v"].GetString(), "v0");
-		ASSERT_STREQ(jVal["f_vec"][0].GetString(), "v01");
-		ASSERT_STREQ(jVal["f_vec"][1].GetString(), "v2");
-		ASSERT_STREQ(jVal["f_vec"][2].GetString(), "v03");
-		ASSERT_STREQ(jVal["f_map"]["v1"].GetString(), "v011");
-		ASSERT_STREQ(jVal["f_map"]["v2"].GetString(), "v22");
-		ASSERT_STREQ(jVal["f_map"]["v3"].GetString(), "v033");
+		rapidjson::Document doc;
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+		ASSERT_STREQ(doc["f_v"].GetString(), "v0");
+		ASSERT_STREQ(doc["f_vec"][0].GetString(), "v01");
+		ASSERT_STREQ(doc["f_vec"][1].GetString(), "v2");
+		ASSERT_STREQ(doc["f_vec"][2].GetString(), "v03");
+		ASSERT_STREQ(doc["f_map"]["v1"].GetString(), "v011");
+		ASSERT_STREQ(doc["f_map"]["v2"].GetString(), "v22");
+		ASSERT_STREQ(doc["f_map"]["v3"].GetString(), "v033");
 	}
 
 }
@@ -563,16 +555,15 @@ TEST(Primitive, Raw)
 		raw.V().AddMember("v31", rapidjson::Value().SetInt(-1).Move(), raw.GetAllocator());
 		st.map_v["v3"] = raw;
 
-		rapidjson::Value jVal;
-		ret = st._.MoveSerializeInInnerAlloc(false, jVal);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(jVal["f_v"].GetInt(), 0);
-		ASSERT_TRUE(jVal["f_vec"][0].IsNull());
-		ASSERT_EQ(jVal["f_vec"][1].GetInt(), 2);
-		ASSERT_STREQ(jVal["f_vec"][2].GetString(), "v03");
-		ASSERT_STREQ(jVal["f_map"]["v1"].GetString(), "v2");
-		ASSERT_EQ(jVal["f_map"]["v2"]["v21"].GetBool(), false);
-		ASSERT_EQ(jVal["f_map"]["v3"]["v31"].GetInt(), -1);
+		rapidjson::Document doc;
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+		ASSERT_EQ(doc["f_v"].GetInt(), 0);
+		ASSERT_TRUE(doc["f_vec"][0].IsNull());
+		ASSERT_EQ(doc["f_vec"][1].GetInt(), 2);
+		ASSERT_STREQ(doc["f_vec"][2].GetString(), "v03");
+		ASSERT_STREQ(doc["f_map"]["v1"].GetString(), "v2");
+		ASSERT_EQ(doc["f_map"]["v2"]["v21"].GetBool(), false);
+		ASSERT_EQ(doc["f_map"]["v3"]["v31"].GetInt(), -1);
 	}
 }
 
@@ -715,20 +706,19 @@ TEST(Primitive, Time)
 		st.map_v["v1"] = 1;
 		st.map_v["v3"] = 2147454849;
 
-		rapidjson::Value jVal;
-		ret = st._.MoveSerializeInInnerAlloc(false, jVal);
-		ASSERT_EQ(ret, 0);
-		ASSERT_STREQ(jVal["f_v"].GetString(), "-9999-01-01 00:00:01");
-		ASSERT_STREQ(jVal["f_vec"][0].GetString(), "1970-01-01 08:00:00");
-		ASSERT_STREQ(jVal["f_vec"][1].GetString(), "9999-12-31 23:59:59");
-		ASSERT_STREQ(jVal["f_vec"][2].GetString(), "2015-07-01 00:00:00");
-		ASSERT_STREQ(jVal["f_vec"][3].GetString(), "2015-07-01 00:00:00");
-		ASSERT_STREQ(jVal["f_vec"][4].GetString(), "2038-01-19 03:14:08");
-		ASSERT_STREQ(jVal["f_map"]["vzero"].GetString(), "1970-01-01 08:00:00");
-		ASSERT_STREQ(jVal["f_map"]["vn1"].GetString(), "1970-01-01 07:59:59");
-		ASSERT_STREQ(jVal["f_map"]["v1"].GetString(), "1970-01-01 08:00:01");
-		ASSERT_STREQ(jVal["f_map"]["v2"].GetString(), "2038-01-19 03:14:08");
-		ASSERT_STREQ(jVal["f_map"]["v3"].GetString(), "2038-01-19 03:14:09");
+		rapidjson::Document doc;
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+		ASSERT_STREQ(doc["f_v"].GetString(), "-9999-01-01 00:00:01");
+		ASSERT_STREQ(doc["f_vec"][0].GetString(), "1970-01-01 08:00:00");
+		ASSERT_STREQ(doc["f_vec"][1].GetString(), "9999-12-31 23:59:59");
+		ASSERT_STREQ(doc["f_vec"][2].GetString(), "2015-07-01 00:00:00");
+		ASSERT_STREQ(doc["f_vec"][3].GetString(), "2015-07-01 00:00:00");
+		ASSERT_STREQ(doc["f_vec"][4].GetString(), "2038-01-19 03:14:08");
+		ASSERT_STREQ(doc["f_map"]["vzero"].GetString(), "1970-01-01 08:00:00");
+		ASSERT_STREQ(doc["f_map"]["vn1"].GetString(), "1970-01-01 07:59:59");
+		ASSERT_STREQ(doc["f_map"]["v1"].GetString(), "1970-01-01 08:00:01");
+		ASSERT_STREQ(doc["f_map"]["v2"].GetString(), "2038-01-19 03:14:08");
+		ASSERT_STREQ(doc["f_map"]["v3"].GetString(), "2038-01-19 03:14:09");
 	}
 }
 
@@ -816,19 +806,18 @@ TEST(Primitive, FastTime)
 		st.map_v["v1"] = 1;
 		st.map_v["v3"] = 2147454849;
 
-		rapidjson::Value jVal;
-		ret = st._.MoveSerializeInInnerAlloc(false, jVal);
-		ASSERT_EQ(ret, 0);
-		ASSERT_STREQ(jVal["f_v"].GetString(), "-9999-01-01 00:00:01");
-		ASSERT_STREQ(jVal["f_vec"][0].GetString(), "1970-01-01 08:00:00");
-		ASSERT_STREQ(jVal["f_vec"][1].GetString(), "9999-12-31 23:59:59");
-		ASSERT_STREQ(jVal["f_vec"][2].GetString(), "2015-07-01 00:00:00");
-		ASSERT_STREQ(jVal["f_vec"][3].GetString(), "2015-07-01 00:00:00");
-		ASSERT_STREQ(jVal["f_vec"][4].GetString(), "2038-01-19 03:14:08");
-		ASSERT_STREQ(jVal["f_map"]["vzero"].GetString(), "1970-01-01 08:00:00");
-		ASSERT_STREQ(jVal["f_map"]["vn1"].GetString(), "1970-01-01 07:59:59");
-		ASSERT_STREQ(jVal["f_map"]["v1"].GetString(), "1970-01-01 08:00:01");
-		ASSERT_STREQ(jVal["f_map"]["v2"].GetString(), "2038-01-19 03:14:08");
-		ASSERT_STREQ(jVal["f_map"]["v3"].GetString(), "2038-01-19 03:14:09");
+		rapidjson::Document doc;
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+		ASSERT_STREQ(doc["f_v"].GetString(), "-9999-01-01 00:00:01");
+		ASSERT_STREQ(doc["f_vec"][0].GetString(), "1970-01-01 08:00:00");
+		ASSERT_STREQ(doc["f_vec"][1].GetString(), "9999-12-31 23:59:59");
+		ASSERT_STREQ(doc["f_vec"][2].GetString(), "2015-07-01 00:00:00");
+		ASSERT_STREQ(doc["f_vec"][3].GetString(), "2015-07-01 00:00:00");
+		ASSERT_STREQ(doc["f_vec"][4].GetString(), "2038-01-19 03:14:08");
+		ASSERT_STREQ(doc["f_map"]["vzero"].GetString(), "1970-01-01 08:00:00");
+		ASSERT_STREQ(doc["f_map"]["vn1"].GetString(), "1970-01-01 07:59:59");
+		ASSERT_STREQ(doc["f_map"]["v1"].GetString(), "1970-01-01 08:00:01");
+		ASSERT_STREQ(doc["f_map"]["v2"].GetString(), "2038-01-19 03:14:08");
+		ASSERT_STREQ(doc["f_map"]["v3"].GetString(), "2038-01-19 03:14:09");
 	}
 }

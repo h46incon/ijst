@@ -97,7 +97,7 @@ TEST(Deserialize, AdditionalFields)
 	// error when unknown
 	{
 		int ret = st._.Deserialize(validJson, ijst::UnknownMode::kError, 0);
-		const int retExpect = ijst::Err::kSomeUnknownMember;
+		const int retExpect = ijst::Err::kDeserializeSomeUnknownMember;
 		ASSERT_EQ(ret, retExpect);
 	}
 }

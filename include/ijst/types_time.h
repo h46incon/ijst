@@ -158,11 +158,29 @@ namespace ijst{
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
 				tm *p = localtime(pField);
+				if (p == IJST_NULL) {
+					return Err::kInnerError;
+				}
 				char strBuf[32];
 				snprintf(strBuf, 32, "%04d-%02d-%02d %02d:%02d:%02d", p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour,
 						 p->tm_min, p->tm_sec
 				);
 				req.buffer.SetString(strBuf, req.allocator);
+				return 0;
+			}
+
+			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				tm *p = localtime(pField);
+				if (p == IJST_NULL) {
+					return Err::kInnerError;
+				}
+				char strBuf[32];
+				snprintf(strBuf, 32, "%04d-%02d-%02d %02d:%02d:%02d", p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour,
+						 p->tm_min, p->tm_sec
+				);
+				req.writer.String(strBuf);
 				return 0;
 			}
 
@@ -212,6 +230,20 @@ namespace ijst{
 				char strBuf[32];
 				snprintf(strBuf, 32, "%04d-%02d-%02d %02d:%02d:%02d", year, mon, day, hour, min, sec);
 				req.buffer.SetString(strBuf, req.allocator);
+				return 0;
+			}
+
+			virtual int Write(const WriteReq &req, WriteResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				int year, mon, day, hour, min, sec;
+				const int64_t utcTimeStamp = *pField + kTimeZone * 3600;
+				// try use function pointer to prevent inlineing the function
+				void (*pParseTimeStamp)(int64_t, int&, int&, int&, int&, int&, int&) = fasttime::ParseTimeStamp;
+				pParseTimeStamp(utcTimeStamp, year, mon, day, hour, min, sec);
+				char strBuf[32];
+				snprintf(strBuf, 32, "%04d-%02d-%02d %02d:%02d:%02d", year, mon, day, hour, min, sec);
+				req.writer.String(strBuf);
 				return 0;
 			}
 
