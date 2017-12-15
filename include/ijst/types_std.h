@@ -22,10 +22,10 @@ namespace ijst{
 		enum _E {
 			Bool,
 			Int,
-			UInt32,
-			UInt64,
-			Int32,
 			Int64,
+			UInt,
+			UInt64,
+			Double,
 			Str,
 			Raw,
 		};
@@ -39,12 +39,12 @@ namespace ijst{
 		};
 	}	// namespace detail
 
-	typedef uint8_t FStoreBool; 		// Could not use bool type because std::vector<bool> is not a container!
-	typedef int FStoreInt;
-	typedef uint32_t FStoreUInt32;
-	typedef uint64_t FStoreUInt64;
-	typedef int32_t FStoreInt32;
-	typedef int64_t FStoreInt64;
+	typedef uint8_t 		FStoreBool; 		// Could not use bool type because std::vector<bool> is not a container!
+	typedef int 			FStoreInt;
+	typedef int64_t 		FStoreInt64;
+	typedef unsigned int 	FStoreUInt;
+	typedef uint64_t 		FStoreUInt64;
+	typedef double 			FStoreDouble;
 
 #if IJST_USE_SL_WRAPPER
 	typedef ijst::SLWrapper<std::string> FStoreString;
@@ -190,9 +190,43 @@ namespace ijst{
 		};
 
 		template<>
-		class FSerializer<TypeClassPrim<FType::UInt32> > : public SerializerInterface {
+		class FSerializer<TypeClassPrim<FType::Int64> > : public SerializerInterface {
 		public:
-			typedef ijst::FStoreUInt32 VarType;
+			typedef ijst::FStoreInt64 VarType;
+
+			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				return (req.writer.Int64(*pField) ? 0 : Err::kWriteFailed);
+			}
+
+			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+			{
+				if (!req.stream.IsInt64()) {
+					resp.fStatus = FStatus::kParseFailed;
+					resp.SetErrMsg("Value is not Int64");
+					return Err::kDeserializeValueTypeError;
+				}
+
+				VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
+				*pField = req.stream.GetInt64();
+				return 0;
+			}
+
+#if IJST_ENABLE_TO_JSON_STRUCT
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
+				{
+					const VarType *pField = static_cast<const VarType *>(req.pField);
+					req.buffer.SetInt64(*pField);
+					return 0;
+				}
+#endif
+		};
+
+	template<>
+		class FSerializer<TypeClassPrim<FType::UInt> > : public SerializerInterface {
+		public:
+			typedef ijst::FStoreUInt VarType;
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
@@ -259,72 +293,39 @@ namespace ijst{
 		};
 
 		template<>
-		class FSerializer<TypeClassPrim<FType::Int32> > : public SerializerInterface {
+		class FSerializer<TypeClassPrim<FType::Double> > : public SerializerInterface {
 		public:
-			typedef ijst::FStoreInt32 VarType;
+			typedef ijst::FStoreDouble VarType;
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
-				return (req.writer.Int(*pField) ? 0 : Err::kWriteFailed);
+				return (req.writer.Double(*pField) ? 0 : Err::kWriteFailed);
 			}
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
 			{
-				if (!req.stream.IsInt()) {
+				if (!req.stream.IsDouble()) {
 					resp.fStatus = FStatus::kParseFailed;
 					resp.SetErrMsg("Value is not Int");
 					return Err::kDeserializeValueTypeError;
 				}
 
 				VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
-				*pField = req.stream.GetInt();
+				*pField = req.stream.GetDouble();
 				return 0;
 			}
 
 #if IJST_ENABLE_TO_JSON_STRUCT
 			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
-			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
-				req.buffer.SetInt(*pField);
-				return 0;
-			}
-#endif
-		};
-
-		template<>
-		class FSerializer<TypeClassPrim<FType::Int64> > : public SerializerInterface {
-		public:
-			typedef ijst::FStoreInt64 VarType;
-
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
-			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
-				return (req.writer.Int64(*pField) ? 0 : Err::kWriteFailed);
-			}
-
-			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
-			{
-				if (!req.stream.IsInt64()) {
-					resp.fStatus = FStatus::kParseFailed;
-					resp.SetErrMsg("Value is not Int64");
-					return Err::kDeserializeValueTypeError;
+				{
+					const VarType *pField = static_cast<const VarType *>(req.pField);
+					req.buffer.SetDouble(*pField);
+					return 0;
 				}
-
-				VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
-				*pField = req.stream.GetInt64();
-				return 0;
-			}
-
-#if IJST_ENABLE_TO_JSON_STRUCT
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
-			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
-				req.buffer.SetInt64(*pField);
-				return 0;
-			}
 #endif
-		};
+	};
+
 
 		template<>
 		class FSerializer<TypeClassPrim<FType::Str> > : public SerializerInterface {
