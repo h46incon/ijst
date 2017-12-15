@@ -24,11 +24,20 @@
  */
 
 /*!
+ * IJST_ENABLE_TO_JSON_STRUCT
+ * 	By default, ijst can only serialize the structure to string.
+ * 	If users need to serialize the structure to a rapidjson::Value, specify this flag to 1.
+ */
+#ifndef IJST_ENABLE_TO_JSON_STRUCT
+	#define IJST_ENABLE_TO_JSON_STRUCT 		0
+#endif
+
+/*!
  * IJST_AUTO_META_INIT
  *	if define IJST_AUTO_META_INIT before include this header, the meta class information will init before main.
  *	That's will make it thread-safe to init meta class information before C++11.
  *	The feature is enable default before C++11. So set the value to 0 to force disable it.
-*/
+ */
 #ifndef IJST_AUTO_META_INIT
 	#if __cplusplus < 201103L
 		#define IJST_AUTO_META_INIT		1
@@ -41,7 +50,7 @@
  * IJST_ASSERT
  *	By default, ijst uses assert() for errors that indicate a bug.
  *	User can override it by defining IJST_ASSERT(x) macro.
-*/
+ */
 #ifndef IJST_ASSERT
 	#define IJST_ASSERT(x) assert(x)
 #endif
@@ -52,7 +61,7 @@
  *	computed by "((Struct*)0)->field".
  *	User can specify IJST_USE_SL_WRAPPER to 1 to use ijst::Vector, ijst::Map, ijst::SLWrapper<std::string> and offsetof()
  *	macro. This option will make the behaviour more standards-compliant, but will bring a little inconvenience when using.
-*/
+ */
 #ifndef IJST_USE_SL_WRAPPER
 	#define IJST_USE_SL_WRAPPER	0
 #endif
@@ -330,6 +339,8 @@ namespace ijst {
 
 		class SerializerInterface {
 		public:
+			virtual ~SerializerInterface() { }
+
 			struct SerializeReq {
 				// true if need serialize all field, false if serialize only valid field
 				bool pushAllField;
@@ -415,8 +426,7 @@ namespace ijst {
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)= 0;
 
-			virtual int SetAllocator(void *pField, JsonAllocator &allocator) {return 0;}
-
+#if IJST_ENABLE_TO_JSON_STRUCT
 			struct ToJsonReq {
 				// true if need serialize all field, false if serialize only valid field
 				bool pushAllField;
@@ -448,8 +458,9 @@ namespace ijst {
 
 			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp)= 0;
 
-			virtual ~SerializerInterface()
-			{ }
+			virtual int SetAllocator(void *pField, JsonAllocator &allocator) {return 0;}
+#endif
+
 		};
 
 		/**
@@ -471,9 +482,11 @@ namespace ijst {
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE = 0;
 
+#if IJST_ENABLE_TO_JSON_STRUCT
 			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE = 0;
 
 			virtual int SetAllocator(void *pField, JsonAllocator &allocator) IJSTI_OVERRIDE;
+#endif
 		};
 
 		#define IJSTI_FSERIALIZER_INS(_T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< _T> >::GetInstance()
@@ -503,6 +516,7 @@ namespace ijst {
 				return pField->_.IDeserialize(req, resp);
 			}
 
+#if IJST_ENABLE_TO_JSON_STRUCT
 			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				_T *pField = (_T *) req.pField;
@@ -514,6 +528,7 @@ namespace ijst {
 				_T *pFieldT = (_T *) pField;
 				return pFieldT->_.ISetAllocator(pField, allocator);
 			}
+#endif
 		};
 
 		/**
@@ -602,6 +617,7 @@ namespace ijst {
 				return 0;
 			}
 
+#if IJST_ENABLE_TO_JSON_STRUCT
 			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pFieldWrapper = static_cast<const VarType *>(req.pField);
@@ -643,6 +659,7 @@ namespace ijst {
 
 				return 0;
 			}
+#endif
 		};
 
 		/**
@@ -741,6 +758,7 @@ namespace ijst {
 				return 0;
 			}
 
+#if IJST_ENABLE_TO_JSON_STRUCT
 			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pFieldWrapper = static_cast<const VarType *>(req.pField);
@@ -795,6 +813,7 @@ namespace ijst {
 
 				return 0;
 			}
+#endif
 		};
 
 		struct MetaField { // NOLINT
@@ -959,12 +978,6 @@ namespace ijst {
 			m_isValid = rhs.m_isValid;
 
 			InitOuterPtr();
-		}
-
-		//! Init members allocator to m_pAllocator.
-		int InitMembersAllocator()
-		{
-			return SetMembersAllocator(*m_pAllocator);
 		}
 
 		inline bool IsValid() const { return m_isValid; }
@@ -1156,34 +1169,7 @@ namespace ijst {
 		}
 
 
-		//! Set Inner allocator.
-		//! @note Will not clear pervious allocator.
-		int SetMembersAllocator(JsonAllocator &allocator)
-		{
-			if (m_pAllocator != &allocator) {
-				// copy buffer when need
-				JsonValue temp;
-				temp = *m_pBuffer;
-				// The life cycle of const string in temp should be same as this object
-				m_pBuffer->CopyFrom(temp, allocator, false);
-			}
-
-			m_pAllocator = &allocator;
-
-			// Set allocator in members
-			for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
-				 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
-			{
-				void *pField = GetFieldByOffset(itMetaField->offset);
-				int ret = itMetaField->serializerInterface->SetAllocator(pField, allocator);
-				if (ret != 0) {
-					return ret;
-				}
-			}
-			return 0;
-		}
-
-
+#if IJST_ENABLE_TO_JSON_STRUCT
 		/**
 		 * Serialize the structure to a JsonValue object
 		 * @param pushAllField 		True if push all field, false if push only valid or null field
@@ -1230,6 +1216,40 @@ namespace ijst {
 					(*this, pushAllField, output, *m_pAllocator);
 		}
 
+		//! Init members allocator to m_pAllocator.
+		int InitMembersAllocator()
+		{
+			return SetMembersAllocator(*m_pAllocator);
+		}
+
+		//! Set Inner allocator.
+		//! @note Will not clear pervious allocator.
+		int SetMembersAllocator(JsonAllocator &allocator)
+		{
+			if (m_pAllocator != &allocator) {
+				// copy buffer when need
+				JsonValue temp;
+				temp = *m_pBuffer;
+				// The life cycle of const string in temp should be same as this object
+				m_pBuffer->CopyFrom(temp, allocator, false);
+			}
+
+			m_pAllocator = &allocator;
+
+			// Set allocator in members
+			for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
+				 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
+			{
+				void *pField = GetFieldByOffset(itMetaField->offset);
+				int ret = itMetaField->serializerInterface->SetAllocator(pField, allocator);
+				if (ret != 0) {
+					return ret;
+				}
+			}
+			return 0;
+		}
+#endif
+
 	private:
 		// #region Implement SerializeInterface
 		template <class _T> friend class detail::FSerializer;
@@ -1259,6 +1279,7 @@ namespace ijst {
 			}
 		}
 
+#if IJST_ENABLE_TO_JSON_STRUCT
 		typedef detail::SerializerInterface::ToJsonReq ToJsonReq;
 		typedef detail::SerializerInterface::ToJsonResp ToJsonResp;
 
@@ -1280,6 +1301,7 @@ namespace ijst {
 			assert(pField == this);
 			return SetMembersAllocator(allocator);
 		}
+#endif
 		// #endregion
 
 		inline void InitOuterPtr()
@@ -1293,151 +1315,6 @@ namespace ijst {
 			(IJST_ASSERT(m_pMetaClass->mapOffset.find(offset) != m_pMetaClass->mapOffset.end()));
 
 			(*m_pFieldStatus)[offset] = fStatus;
-		}
-
-		int DoAllFieldsToJson(bool pushAllField, bool canMoveSrc,
-							  IJST_OUT JsonValue &buffer, JsonAllocator &allocator) const
-		{
-			// Serialize fields to buffer
-			buffer.SetObject();
-
-			// Reserve space
-			do {
-				const size_t maxSize = m_pMetaClass->metaFields.size() + m_pBuffer->MemberCount();
-				if (buffer.MemberCapacity() >= maxSize) {
-					break;
-				}
-
-				size_t fieldSize;
-				if (pushAllField) {
-					fieldSize = maxSize;
-				}
-				else {
-					fieldSize = m_pBuffer->MemberCount();
-					for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
-						 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
-					{
-						EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
-						if (fstatus == FStatus::kValid || fstatus == FStatus::kNull) {
-							++fieldSize;
-						}
-					}
-
-				}
-				buffer.MemberReserve(fieldSize, allocator);
-			} while (false);
-
-			#ifndef NDEBUG
-			const rapidjson::SizeType oldCapcity = buffer.MemberCapacity();
-			#endif
-
-			for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
-				 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
-			{
-				// Check field state
-				EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
-				switch (fstatus) {
-					case FStatus::kValid:
-					case FStatus::kMissing:
-					case FStatus::kParseFailed:
-					{
-						if (fstatus != FStatus::kValid && !pushAllField) {
-							continue;
-						}
-						int ret = DoFieldToJson(itMetaField, canMoveSrc, pushAllField, buffer, allocator);
-						if (ret != 0) {
-							return ret;
-						}
-					}
-						break;
-
-					case FStatus::kNull:
-					{
-						int ret = DoNullFieldToJson(itMetaField, buffer, allocator);
-						if (ret != 0) {
-							return ret;
-						}
-					}
-						break;
-
-
-					case FStatus::kNotAField:
-					default:
-						// Error occurs
-						assert(false);
-						return Err::kInnerError;
-				}
-
-			}
-			// assert that buffer will not reallocate memory during serialization
-			assert(buffer.MemberCapacity() == oldCapcity);
-			return 0;
-		}
-
-		template <bool kCanMoveSrc, class _TAccessor>
-		static int DoToJson(_TAccessor &accessor, bool pushAllField, IJST_OUT JsonValue &buffer,
-							JsonAllocator &allocator)
-		{
-			const Accessor& rThis = accessor;
-			int iRet = rThis.DoAllFieldsToJson(pushAllField, kCanMoveSrc, buffer, allocator);
-			if (iRet != 0) {
-				return iRet;
-			}
-			Accessor::template AppendInnerToBuffer<kCanMoveSrc, _TAccessor>(accessor, buffer, allocator);
-			return 0;
-		}
-
-		template<bool kCanMoveSrc, class _TAccessor>
-		static inline void AppendInnerToBuffer(_TAccessor &accessor, JsonValue &buffer, JsonAllocator &allocator);
-
-
-		int DoFieldToJson(std::vector<detail::MetaField>::const_iterator itMetaField,
-						  bool canMoveSrc, bool pushAllField,
-						  JsonValue &buffer, JsonAllocator &allocator) const
-		{
-			// Init
-			const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
-
-			// Serialize field
-			JsonValue elemOutput;
-			ToJsonReq elemSerializeReq(elemOutput, allocator, pFieldValue, canMoveSrc, pushAllField);
-
-			ToJsonResp elemSerializeResp;
-			int ret = itMetaField->serializerInterface->ToJson(elemSerializeReq, elemSerializeResp);
-			if (ret != 0) {
-				return ret;
-			}
-
-			// Add member, copy field name because the fieldName store in Meta info maybe release when dynamical
-			// library unload, and the memory pool should be fast to copy field name
-			// Do not check existing key, that's a feature
-			rapidjson::GenericStringRef<char> fieldNameRef =
-					rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
-			buffer.AddMember(
-					rapidjson::Value().SetString(fieldNameRef, allocator),
-					elemOutput,
-					allocator
-			);
-			return 0;
-		}
-
-		int DoNullFieldToJson(std::vector<detail::MetaField>::const_iterator itMetaField,
-							  JsonValue &buffer, JsonAllocator &allocator) const
-		{
-			// Init
-			rapidjson::GenericStringRef<char> fieldNameRef =
-					rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
-			rapidjson::Value fieldNameVal;
-			fieldNameVal.SetString(fieldNameRef);
-
-			// Add member, field name is not need deep copy
-			// Do not check if there is a existing key, that's a feature
-			buffer.AddMember(
-					rapidjson::Value().SetString(fieldNameRef),
-					rapidjson::Value().SetNull(),
-					allocator
-			);
-			return 0;
 		}
 
 		/**
@@ -1691,6 +1568,152 @@ namespace ijst {
 			return 0;
 		}
 
+#if IJST_ENABLE_TO_JSON_STRUCT
+		int DoAllFieldsToJson(bool pushAllField, bool canMoveSrc,
+							  IJST_OUT JsonValue &buffer, JsonAllocator &allocator) const
+		{
+			// Serialize fields to buffer
+			buffer.SetObject();
+
+			// Reserve space
+			do {
+				const size_t maxSize = m_pMetaClass->metaFields.size() + m_pBuffer->MemberCount();
+				if (buffer.MemberCapacity() >= maxSize) {
+					break;
+				}
+
+				size_t fieldSize;
+				if (pushAllField) {
+					fieldSize = maxSize;
+				}
+				else {
+					fieldSize = m_pBuffer->MemberCount();
+					for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
+						 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
+					{
+						EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
+						if (fstatus == FStatus::kValid || fstatus == FStatus::kNull) {
+							++fieldSize;
+						}
+					}
+
+				}
+				buffer.MemberReserve(fieldSize, allocator);
+			} while (false);
+
+			#ifndef NDEBUG
+			const rapidjson::SizeType oldCapcity = buffer.MemberCapacity();
+			#endif
+
+			for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
+				 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
+			{
+				// Check field state
+				EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
+				switch (fstatus) {
+					case FStatus::kValid:
+					case FStatus::kMissing:
+					case FStatus::kParseFailed:
+					{
+						if (fstatus != FStatus::kValid && !pushAllField) {
+							continue;
+						}
+						int ret = DoFieldToJson(itMetaField, canMoveSrc, pushAllField, buffer, allocator);
+						if (ret != 0) {
+							return ret;
+						}
+					}
+						break;
+
+					case FStatus::kNull:
+					{
+						int ret = DoNullFieldToJson(itMetaField, buffer, allocator);
+						if (ret != 0) {
+							return ret;
+						}
+					}
+						break;
+
+
+					case FStatus::kNotAField:
+					default:
+						// Error occurs
+						assert(false);
+						return Err::kInnerError;
+				}
+
+			}
+			// assert that buffer will not reallocate memory during serialization
+			assert(buffer.MemberCapacity() == oldCapcity);
+			return 0;
+		}
+
+		template <bool kCanMoveSrc, class _TAccessor>
+		static int DoToJson(_TAccessor &accessor, bool pushAllField, IJST_OUT JsonValue &buffer,
+							JsonAllocator &allocator)
+		{
+			const Accessor& rThis = accessor;
+			int iRet = rThis.DoAllFieldsToJson(pushAllField, kCanMoveSrc, buffer, allocator);
+			if (iRet != 0) {
+				return iRet;
+			}
+			Accessor::template AppendInnerToBuffer<kCanMoveSrc, _TAccessor>(accessor, buffer, allocator);
+			return 0;
+		}
+
+		int DoFieldToJson(std::vector<detail::MetaField>::const_iterator itMetaField,
+						  bool canMoveSrc, bool pushAllField,
+						  JsonValue &buffer, JsonAllocator &allocator) const
+		{
+			// Init
+			const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
+
+			// Serialize field
+			JsonValue elemOutput;
+			ToJsonReq elemSerializeReq(elemOutput, allocator, pFieldValue, canMoveSrc, pushAllField);
+
+			ToJsonResp elemSerializeResp;
+			int ret = itMetaField->serializerInterface->ToJson(elemSerializeReq, elemSerializeResp);
+			if (ret != 0) {
+				return ret;
+			}
+
+			// Add member, copy field name because the fieldName store in Meta info maybe release when dynamical
+			// library unload, and the memory pool should be fast to copy field name
+			// Do not check existing key, that's a feature
+			rapidjson::GenericStringRef<char> fieldNameRef =
+					rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
+			buffer.AddMember(
+					rapidjson::Value().SetString(fieldNameRef, allocator),
+					elemOutput,
+					allocator
+			);
+			return 0;
+		}
+
+		int DoNullFieldToJson(std::vector<detail::MetaField>::const_iterator itMetaField,
+							  JsonValue &buffer, JsonAllocator &allocator) const
+		{
+			// Init
+			rapidjson::GenericStringRef<char> fieldNameRef =
+					rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
+			rapidjson::Value fieldNameVal;
+			fieldNameVal.SetString(fieldNameRef);
+
+			// Add member, field name is not need deep copy
+			// Do not check if there is a existing key, that's a feature
+			buffer.AddMember(
+					rapidjson::Value().SetString(fieldNameRef),
+					rapidjson::Value().SetNull(),
+					allocator
+			);
+			return 0;
+		}
+
+		template<bool kCanMoveSrc, class _TAccessor>
+		static inline void AppendInnerToBuffer(_TAccessor &accessor, JsonValue &buffer, JsonAllocator &allocator);
+#endif
+
 		int CheckFieldState(std::string *pErrMsgOut) const
 		{
 			// Check all required field status
@@ -1777,6 +1800,7 @@ namespace ijst {
 		//</editor-fold>
 	};
 
+#if IJST_ENABLE_TO_JSON_STRUCT
 	//! copy version of Accessor::AppendInnerToBuffer
 	template <>
 	inline void Accessor::template AppendInnerToBuffer<false, const Accessor>(
@@ -1820,6 +1844,7 @@ namespace ijst {
 
 		rThis.m_pBuffer->SetObject();
 	}
+#endif
 
 	//! Wrapper of IJST_DEFINE_STRUCT_IMPL_*
 	//! @param needGetter: must be T or F

@@ -126,13 +126,6 @@ namespace ijst{
 		public:
 			typedef ijst::FStoreBool VarType;
 
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
-			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
-				req.buffer.SetBool((*pField) != 0);
-				return 0;
-			}
-
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -152,19 +145,20 @@ namespace ijst{
 				return 0;
 			}
 
+#if IJST_ENABLE_TO_JSON_STRUCT
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				req.buffer.SetBool((*pField) != 0);
+				return 0;
+			}
+#endif
 		};
 
 		template<>
 		class FSerializer<TypeClassPrim<FType::Int> > : public SerializerInterface {
 		public:
 			typedef ijst::FStoreInt VarType;
-
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
-			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
-				req.buffer.SetInt(*pField);
-				return 0;
-			}
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
@@ -184,19 +178,21 @@ namespace ijst{
 				*pField = req.stream.GetInt();
 				return 0;
 			}
+
+#if IJST_ENABLE_TO_JSON_STRUCT
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				req.buffer.SetInt(*pField);
+				return 0;
+			}
+#endif
 		};
 
 		template<>
 		class FSerializer<TypeClassPrim<FType::UInt32> > : public SerializerInterface {
 		public:
 			typedef ijst::FStoreUInt32 VarType;
-
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
-			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
-				req.buffer.SetUint(*pField);
-				return 0;
-			}
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
@@ -216,19 +212,21 @@ namespace ijst{
 				*pField = req.stream.GetUint();
 				return 0;
 			}
+
+#if IJST_ENABLE_TO_JSON_STRUCT
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				req.buffer.SetUint(*pField);
+				return 0;
+			}
+#endif
 		};
 
 		template<>
 		class FSerializer<TypeClassPrim<FType::UInt64> > : public SerializerInterface {
 		public:
 			typedef ijst::FStoreUInt64 VarType;
-
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
-			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
-				req.buffer.SetUint64(*pField);
-				return 0;
-			}
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
@@ -248,19 +246,22 @@ namespace ijst{
 				*pField = req.stream.GetUint64();
 				return 0;
 			}
+
+#if IJST_ENABLE_TO_JSON_STRUCT
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				req.buffer.SetUint64(*pField);
+				return 0;
+			}
+#endif
+
 		};
 
 		template<>
 		class FSerializer<TypeClassPrim<FType::Int32> > : public SerializerInterface {
 		public:
 			typedef ijst::FStoreInt32 VarType;
-
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
-			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
-				req.buffer.SetInt(*pField);
-				return 0;
-			}
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
@@ -280,19 +281,21 @@ namespace ijst{
 				*pField = req.stream.GetInt();
 				return 0;
 			}
+
+#if IJST_ENABLE_TO_JSON_STRUCT
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				req.buffer.SetInt(*pField);
+				return 0;
+			}
+#endif
 		};
 
 		template<>
 		class FSerializer<TypeClassPrim<FType::Int64> > : public SerializerInterface {
 		public:
 			typedef ijst::FStoreInt64 VarType;
-
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
-			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
-				req.buffer.SetInt64(*pField);
-				return 0;
-			}
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
@@ -312,19 +315,21 @@ namespace ijst{
 				*pField = req.stream.GetInt64();
 				return 0;
 			}
+
+#if IJST_ENABLE_TO_JSON_STRUCT
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				req.buffer.SetInt64(*pField);
+				return 0;
+			}
+#endif
 		};
 
 		template<>
 		class FSerializer<TypeClassPrim<FType::Str> > : public SerializerInterface {
 		public:
 			typedef ijst::FStoreString VarType;
-
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
-			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
-				req.buffer.SetString(IJST_CONT_VAL(*pField).c_str(), IJST_CONT_VAL(*pField).length(), req.allocator);
-				return 0;
-			}
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
@@ -344,19 +349,21 @@ namespace ijst{
 				*pField = std::string(req.stream.GetString(), req.stream.GetStringLength());
 				return 0;
 			}
+
+#if IJST_ENABLE_TO_JSON_STRUCT
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				req.buffer.SetString(IJST_CONT_VAL(*pField).c_str(), IJST_CONT_VAL(*pField).length(), req.allocator);
+				return 0;
+			}
+#endif
 		};
 
 		template<>
 		class FSerializer<TypeClassPrim<FType::Raw> > : public SerializerInterface {
 		public:
 			typedef ijst::FStoreRaw VarType;
-
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
-			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
-				req.buffer.CopyFrom(pField->V(), req.allocator, true);
-				return 0;
-			}
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
@@ -378,6 +385,14 @@ namespace ijst{
 				return 0;
 			}
 
+#if IJST_ENABLE_TO_JSON_STRUCT
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				req.buffer.CopyFrom(pField->V(), req.allocator, true);
+				return 0;
+			}
+
 			virtual int SetAllocator(void *pField, JsonAllocator &allocator) IJSTI_OVERRIDE
 			{
 				VarType *pFieldT = static_cast<VarType *>(pField);
@@ -390,6 +405,7 @@ namespace ijst{
 				pFieldT->m_pAllocator = &allocator;
 				return 0;
 			}
+#endif
 		};
 
 	}	//namespace detail

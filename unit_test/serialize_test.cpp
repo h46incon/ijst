@@ -114,21 +114,22 @@ TEST(Serialize, AdditionalJsonField)
 	st.inner._.GetBuffer().AddMember("addi_i1", rapidjson::Value().SetString("str_i1").Move(), st.inner._.GetAllocator());
 	IJST_SET(st.inner, int_2, 11);
 
-	int ret;
 	rapidjson::Value jVal;
 	rapidjson::Document doc;
 	ijst::JsonAllocator allocator;
-	ret = st._.ToJson(true, jVal, allocator);
 
 	// Serialize
-	{
-		string json;
-		int ret = st._.Serialize(true, json);
-		ASSERT_EQ(ret, 0);
-		doc.Parse(json.c_str(), json.length());
-		ASSERT_FALSE(doc.HasParseError());
-		ASSERT_EQ((rapidjson::Value&)doc, jVal);
-	}
+	string json;
+	int ret = st._.Serialize(true, json);
+	ASSERT_EQ(ret, 0);
+	doc.Parse(json.c_str(), json.length());
+	ASSERT_FALSE(doc.HasParseError());
+
+#if IJST_ENABLE_TO_JSON_STRUCT
+	ret = st._.ToJson(true, jVal, allocator);
+	ASSERT_EQ((rapidjson::Value&)doc, jVal);
+#endif
+
 	// Check output
 	ASSERT_EQ(ret, 0);
 	ASSERT_STREQ(doc["addi_o1"].GetString(), "str_o1");
@@ -140,6 +141,7 @@ TEST(Serialize, AdditionalJsonField)
 	ASSERT_STREQ(st.inner._.GetBuffer()["addi_i1"].GetString(), "str_i1");
 }
 
+#if IJST_ENABLE_TO_JSON_STRUCT
 TEST(Serialize, AdditionalJsonFieldMoved)
 {
 	ObjRefSt st;
@@ -152,15 +154,16 @@ TEST(Serialize, AdditionalJsonFieldMoved)
 	rapidjson::Document doc;
 	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
 
+	// Check src
+	ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
+	ASSERT_EQ(st.inner._.GetBuffer().MemberCount(), 0u);
+
 	// Check output
 	ASSERT_STREQ(doc["addi_o1"].GetString(), "str_o1");
 	ASSERT_STREQ(doc["inner_val"]["addi_i1"].GetString(), "str_i1");
 	ASSERT_EQ(doc["inner_val"]["int_val_2"].GetInt(), 11);
-
-	// Check src
-	ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
-	ASSERT_EQ(st.inner._.GetBuffer().MemberCount(), 0u);
 }
+#endif
 
 IJST_DEFINE_STRUCT(
 		Complicate1

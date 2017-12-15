@@ -13,6 +13,8 @@
 #include <ijst/ijst.h>
 #include <ijst/types_std.h>
 
+#if IJST_ENABLE_TO_JSON_STRUCT
+
 #define UTEST_MOVE_TO_STRING_AND_CHECK(st, pushAllField, doc)				\
 {																			\
 	string json;															\
@@ -26,5 +28,18 @@
 	ASSERT_EQ((rapidjson::Value&)doc, _jVal);								\
 	ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);							\
 }
+
+#else
+
+#define UTEST_MOVE_TO_STRING_AND_CHECK(st, pushAllField, doc)				\
+{																			\
+	string json;															\
+	int toStrRet = st._.Serialize(pushAllField, json);						\
+	ASSERT_EQ(toStrRet, 0);													\
+	doc.Parse(json.c_str(), json.length());									\
+	ASSERT_FALSE(doc.HasParseError());										\
+}
+
+#endif
 
 #endif //UNIT_TEST_IJST_UTIL_H

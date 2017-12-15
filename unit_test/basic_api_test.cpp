@@ -436,6 +436,7 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TMAP(IJST_TOBJ(SimpleSt)), map, "map_v", 0)
 )
 
+#if IJST_ENABLE_TO_JSON_STRUCT
 TEST(BasicAPI, Allocator)
 {
 	Complicate cst;
@@ -461,6 +462,7 @@ TEST(BasicAPI, Allocator)
 	// Allocator is not same of fields not inited
 	ASSERT_NE(&cst._.GetAllocator(), &cst.map["v3"]._.GetAllocator());
 }
+#endif
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
 		SWGetter

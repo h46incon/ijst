@@ -154,21 +154,6 @@ namespace ijst{
 		public:
 			typedef ijst::FStoreTime VarType;
 
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
-			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
-				tm *p = localtime(pField);
-				if (p == IJST_NULL) {
-					return Err::kInnerError;
-				}
-				char strBuf[32];
-				snprintf(strBuf, 32, "%04d-%02d-%02d %02d:%02d:%02d", p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour,
-						 p->tm_min, p->tm_sec
-				);
-				req.buffer.SetString(strBuf, req.allocator);
-				return 0;
-			}
-
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -212,26 +197,29 @@ namespace ijst{
 				*pField = mktime(&t);
 				return 0;
 			}
+
+#if IJST_ENABLE_TO_JSON_STRUCT
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				tm *p = localtime(pField);
+				if (p == IJST_NULL) {
+					return Err::kInnerError;
+				}
+				char strBuf[32];
+				snprintf(strBuf, 32, "%04d-%02d-%02d %02d:%02d:%02d", p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour,
+						 p->tm_min, p->tm_sec
+				);
+				req.buffer.SetString(strBuf, req.allocator);
+				return 0;
+			}
+#endif
 		};
 
 		template<int kTimeZone>
 		class FSerializer<TypeClassFastTime<kTimeZone> > : public SerializerInterface {
 		public:
 			typedef ijst::FStoreFastTime VarType;
-
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
-			{
-				const VarType *pField = static_cast<const VarType *>(req.pField);
-				int year, mon, day, hour, min, sec;
-				const int64_t utcTimeStamp = *pField + kTimeZone * 3600;
-				// try use function pointer to prevent inlineing the function
-				void (*pParseTimeStamp)(int64_t, int&, int&, int&, int&, int&, int&) = fasttime::ParseTimeStamp;
-				pParseTimeStamp(utcTimeStamp, year, mon, day, hour, min, sec);
-				char strBuf[32];
-				snprintf(strBuf, 32, "%04d-%02d-%02d %02d:%02d:%02d", year, mon, day, hour, min, sec);
-				req.buffer.SetString(strBuf, req.allocator);
-				return 0;
-			}
 
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
@@ -275,6 +263,22 @@ namespace ijst{
 				*pField = timeStamp - kTimeZone * 3600;
 				return 0;
 			}
+
+#if IJST_ENABLE_TO_JSON_STRUCT
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
+			{
+				const VarType *pField = static_cast<const VarType *>(req.pField);
+				int year, mon, day, hour, min, sec;
+				const int64_t utcTimeStamp = *pField + kTimeZone * 3600;
+				// try use function pointer to prevent inlineing the function
+				void (*pParseTimeStamp)(int64_t, int&, int&, int&, int&, int&, int&) = fasttime::ParseTimeStamp;
+				pParseTimeStamp(utcTimeStamp, year, mon, day, hour, min, sec);
+				char strBuf[32];
+				snprintf(strBuf, 32, "%04d-%02d-%02d %02d:%02d:%02d", year, mon, day, hour, min, sec);
+				req.buffer.SetString(strBuf, req.allocator);
+				return 0;
+			}
+#endif
 		};
 
 	}	//namespace detail
