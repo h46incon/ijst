@@ -198,7 +198,7 @@ namespace ijst{
 				return 0;
 			}
 
-#if IJST_ENABLE_TO_JSON_STRUCT
+#if IJST_ENABLE_TO_JSON_OBJECT
 			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -264,7 +264,7 @@ namespace ijst{
 				return 0;
 			}
 
-#if IJST_ENABLE_TO_JSON_STRUCT
+#if IJST_ENABLE_TO_JSON_OBJECT
 			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);

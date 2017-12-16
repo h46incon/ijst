@@ -102,7 +102,8 @@ TEST(Deserialize, AdditionalFields)
 	}
 }
 
-TEST(Deserialize, CopySrc)
+#if IJST_ENABLE_FROM_JSON_OBJECT
+TEST(Deserialize, FromJson)
 {
 	SimpleSt st;
 	{
@@ -112,7 +113,7 @@ TEST(Deserialize, CopySrc)
 			doc.Parse(validJson.c_str(), validJson.length());
 			ASSERT_FALSE(doc.HasParseError());
 		}
-		int ret = st._.Deserialize(doc);
+		int ret = st._.FromJson(doc);
 		ASSERT_EQ(ret, 0);
 		// Check src
 		ASSERT_EQ(doc["int_val_2"].GetInt(), 1);
@@ -124,7 +125,7 @@ TEST(Deserialize, CopySrc)
 	ASSERT_STREQ(IJST_CONT_VAL(st.str_2).c_str(), "str2");
 }
 
-TEST(Deserialize, MoveSrc)
+TEST(Deserialize, MoveFromJson)
 {
 	SimpleSt st;
 	rapidjson::Document doc;
@@ -133,7 +134,7 @@ TEST(Deserialize, MoveSrc)
 		doc.Parse(validJson.c_str(), validJson.length());
 		ASSERT_FALSE(doc.HasParseError());
 	}
-	int ret = st._.MoveDeserialize(doc);
+	int ret = st._.MoveFromJson(doc);
 	ASSERT_EQ(ret, 0);
 
 	// Check src
@@ -143,6 +144,7 @@ TEST(Deserialize, MoveSrc)
 	ASSERT_EQ(st.int_2, 1);
 	ASSERT_STREQ(IJST_CONT_VAL(st.str_2).c_str(), "str2");
 }
+#endif
 
 TEST(Deserialize, Insitu)
 {

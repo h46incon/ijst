@@ -13,7 +13,7 @@
 #include <ijst/ijst.h>
 #include <ijst/types_std.h>
 
-#if IJST_ENABLE_TO_JSON_STRUCT
+#if IJST_ENABLE_TO_JSON_OBJECT
 
 #define UTEST_MOVE_TO_STRING_AND_CHECK(st, pushAllField, doc)				\
 {																			\

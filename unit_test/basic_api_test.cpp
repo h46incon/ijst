@@ -436,7 +436,7 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TMAP(IJST_TOBJ(SimpleSt)), map, "map_v", 0)
 )
 
-#if IJST_ENABLE_TO_JSON_STRUCT
+#if IJST_ENABLE_TO_JSON_OBJECT
 TEST(BasicAPI, Allocator)
 {
 	Complicate cst;

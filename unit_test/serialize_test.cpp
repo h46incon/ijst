@@ -125,7 +125,7 @@ TEST(Serialize, AdditionalJsonField)
 	doc.Parse(json.c_str(), json.length());
 	ASSERT_FALSE(doc.HasParseError());
 
-#if IJST_ENABLE_TO_JSON_STRUCT
+#if IJST_ENABLE_TO_JSON_OBJECT
 	ret = st._.ToJson(true, jVal, allocator);
 	ASSERT_EQ((rapidjson::Value&)doc, jVal);
 #endif
@@ -141,7 +141,7 @@ TEST(Serialize, AdditionalJsonField)
 	ASSERT_STREQ(st.inner._.GetBuffer()["addi_i1"].GetString(), "str_i1");
 }
 
-#if IJST_ENABLE_TO_JSON_STRUCT
+#if IJST_ENABLE_TO_JSON_OBJECT
 TEST(Serialize, AdditionalJsonFieldMoved)
 {
 	ObjRefSt st;
