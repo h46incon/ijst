@@ -7,11 +7,9 @@
 #define	_IJST_TYPES_STD_HPP_INCLUDE_
 
 #include "ijst.h"
-#if __cplusplus >= 201103L
-	#include <cstdint>
-#else
-	#include <stdint.h>
-#endif
+
+// Use int types declared in rapidjson
+#include <rapidjson/rapidjson.h>
 
 //! Declare a primitive type field. _T is a value in ijst::FType
 #define IJST_TPRI(_T)	::ijst::detail::TypeClassPrim< ::ijst::FType::_T>
