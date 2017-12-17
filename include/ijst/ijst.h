@@ -23,7 +23,7 @@
  *				Public Interface
  */
 
-/*!
+/**
  * IJST_ENABLE_TO_JSON_OBJECT
  * 	By default, ijst can only serialize the structure to string.
  * 	If users need to serialize the structure to a rapidjson::Value, specify this flag to 1.
@@ -32,7 +32,7 @@
 	#define IJST_ENABLE_TO_JSON_OBJECT 		0
 #endif
 
-/*!
+/**
  * IJST_ENABLE_FROM_JSON_OBJECT
  * 	By default, ijst can only deserialize the structure from string.
  * 	If users need to deserialize the structure from a rapidjson::Value, specify this flag to 1.
@@ -41,7 +41,7 @@
 	#define IJST_ENABLE_FROM_JSON_OBJECT 		0
 #endif
 
-/*!
+/**
  * IJST_AUTO_META_INIT
  *	if define IJST_AUTO_META_INIT before include this header, the meta class information will init before main.
  *	That's will make it thread-safe to init meta class information before C++11.
@@ -55,7 +55,7 @@
 	#endif
 #endif
 
-/*!
+/**
  * IJST_ASSERT
  *	By default, ijst uses assert() for errors that indicate a bug.
  *	User can override it by defining IJST_ASSERT(x) macro.
@@ -64,7 +64,7 @@
 	#define IJST_ASSERT(x) assert(x)
 #endif
 
-/*!
+/**
  * IJST_USE_SL_WRAPPER
  *	By default, ijst uses std::vector, std::map, and std::string when defining struct, and the offset of each field is
  *	computed by "((Struct*)0)->field".
@@ -899,7 +899,7 @@ namespace ijst {
 
 	/**
 	 * Struct Accessor.
-	 * User can access and modify fields in struct, serialize and deserialize a struct.
+	 * User can access and modify fields, serialize and deserialize of a structure.
 	 */
 	class Accessor {
 	public:
@@ -1177,7 +1177,7 @@ namespace ijst {
 		 * Serialize the structure with inner allocator.
 		 * @param pushAllField 		True if push all field, false if push only valid or null field
 		 * @param output 			The output of result
-		 * @return
+		 * @return					Error code
 		 *
 		 * @note The object may be invalid after serialization.
 		 * @note User should make sure the structure's life cycle is longer than output.
@@ -1188,14 +1188,22 @@ namespace ijst {
 					(*this, pushAllField, output, *m_pAllocator);
 		}
 
-		//! Init members allocator to m_pAllocator.
+		/**
+		* Init allocator of members to self's allocator.
+		* @return 					Error code
+		*/
 		int InitMembersAllocator()
 		{
 			return SetMembersAllocator(*m_pAllocator);
 		}
 
-		//! Set Inner allocator.
-		//! @note Will not clear pervious allocator.
+		/**
+		* Set Inner allocator of object and members.
+		* @param allocator			New allocator
+		* @return					Error code
+		*
+		* @note This method will NOT clear pervious allocator.
+		*/
 		int SetMembersAllocator(JsonAllocator &allocator)
 		{
 			if (m_pAllocator != &allocator) {
