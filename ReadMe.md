@@ -12,9 +12,11 @@ ijst (iJsonStruct) 一个是 C++ Json 序列化库：
 1. 将 rapidjson 加入头文件搜索路径
 2. 将 `include/ijst` 文件夹复制进工程
 
-注：ijst 需要依赖我给 rapidjson 提交的一小小段代码，但目前的 release 版本（v1.1.0）还未包含该提交，所以请通过 git 签出其 master 分支。
+注：ijst 需要依赖一些 rapidjson 中未 release 的提交，所以请通过 git 签出其 master 分支。
 
 ### 基本使用
+
+#### 定义结构体
 ```cpp
 #include <ijst/ijst.h>
 #include <ijst/types_std.h>
@@ -49,7 +51,10 @@ private:
     //... Some private methods
 };
 */
+```
 
+#### 字段访问及序列化
+```cpp
 //*** 定义一个 JsonStruct 对象
 JsonStruct jStruct;
 

@@ -106,40 +106,66 @@ json 中的健值。
 在定义了一个 ijst 结构体后，除了用户定义的字段，其还会添加一个名为 `_` 的 `Accessor` 类型成员。
 通过该成员可以完成对象的序列化、反序列化等操作。
 
+默认情况下，可以将结构体和 json 字符串间转换：
+
 ```cpp
+SampleStruct sampleStruct;
 int ret;
 
 // 序列化
 std::string strOut;
-ret = sampleStruct._.SerializeToString(/*pushAllField=*/true, strOut);
+ret = sampleStruct._.Serialize(/*pushAllField=*/true, strOut);
 
 // 反序列化
-std::string strJson = // Init...
+std::string strJson;    
+//... Init strJson
 ret = sampleStruct._.Deserialize(strJson);
+
+// Parse insitu 反序列化
+// 反序列化后源字符串会被修改，需注意其生命周期
+char* strJson = new char[N]; 
+//... Init
+ret = sampleStruct._.DeserializeInsitu(strJson);
+//... after sampleStruct.~SampleStruct()
+delete[] strJson;
 
 // 访问 Unknown 字段
 rapidjson::Value& jUnknown = sampleStruct._.GetBuffer();
 ```
 
-另外，在某些情况下，只需关心序列化/反序列后的结果，而不需关心其源对象是否会被破坏，则可以用 **Move** 类型的接口以提高效率。这些接口会尝试使用窃取资源的方式以减少拷贝（thanks rapidjson）：
+另外，也可以将结构体和 rapidjson::Value 间转换：
+
+```cpp
+SampleStruct sampleStruct;
+int ret;
+
+// ToJson
+// 编译时需启用 IJST_ENABLE_TO_JSON_OBJECT 宏
+rapidjson::Document doc;
+ret = sampleStruct._.ToJson(/*pushAllField*/=true, doc, doc.GetAllocator());
+
+// FromJson
+// 编译时需启用 IJST_ENABLE_From_JSON_OBJECT 宏
+rapidjson::Value jVal;
+ret = sampleStruct._.FromJson(jVal);
+
+```
+
+在某些情况下，只需关心序列化/反序列后的结果，而不需关心其源对象是否会被破坏，则可以用 **Move** 类型的接口以提高效率。这些接口会尝试使用窃取资源的方式以减少拷贝（thanks rapidjson）：
 
 ```cpp
 int ret;
 
 // Move 序列化，序列化后 sampleStruct 对象的 Unknown 会被窃取
-std::string strOut;
-ret = sampleStruct._.MoveSerializeToString(/*pushAllField=*/true, strOut);
+rapidjson::Value jVal;
+ret = sampleStruct._.MoveToJson(/*pushAllField=*/true, jVal, sampleStruct._.GetAllocator());
+// 因为使用了 sampleStruct 管理的 allocator，需要注意其生命周期
 
 // Move 反序列化，反序列化后 doc 对象的内容会被窃取
+// 因为需要由 ijst 结构体管理 allocator，但由于 rapidjson API 的限制，所以参数只支持 rapidjson::Document 对象
 rapidjson::Document doc;
-ret = sampleStruct._.MoveDeserialize(doc);
-
-// Parse insitu 的方式，从字符串中反序列化。
-// 反序列化后源字符串会被修改。需注意其生命周期
-char* strJson = new char[N]; //Init...
-ret = sampleStruct._.DeserializeInsitu(strJson);
-// ... after ~sampleStruct()
-delete[] strJson;
+//... Init doc
+ret = sampleStruct._.MoveFromJson(doc);
 
 ```
 
@@ -225,7 +251,7 @@ assert(jUnknown.IsObject() == true);
 ### Allocator
 
 和 rapidjson 一样，在修改原生的 `rapidjson::Value` 时，可能需要使用其配套的 allocator 对象。
-ijst 提供了相关的接口获取和设置 Allocator 对象：
+ijst 提供了相关的接口获取和设置 allocator 对象：
 
 ```cpp
 ijst::JsonValue& jUnknown = sampleStruct._.GetBuffer();
@@ -236,7 +262,7 @@ jUnknown.SetString("s", 1, alloc);
 ```
 
 如果定义了嵌套了的其他结构体的结构体，且需要修改其 unknown 字段。
-可以先将他们的 allocator 设置为相同的值，这样在 Move 序列化的时候，可以减少拷贝：
+可以先将他们的 allocator 设置为相同的值，这样在 MoveToJson 的时候，可以减少拷贝：
 
 ```cpp
 IJST_DEFINE_STRUCT (
@@ -251,6 +277,6 @@ ost._.SetMembersAllocator(otherAlloc);
 assert(&ost._.GetAllocator() == &ost.stSample._.GetAllocator());
 ```
 
-注：在反序列化的过程中，已经自动执行了相同效果的动作。
+注：反序列化时不需进行此操作。
 
 也和 rapidjson 一样，管理 allocator 是一个较为麻烦的事。ijst 中提供了 `GetOwnAllocator()` 接口以供有相关需求的使用者使用。
