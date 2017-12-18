@@ -77,41 +77,41 @@
 
 #define IJST_OUT
 
-//! Declare a ijst struct
+//! Declare a ijst struct.
 #define IJST_DEFINE_STRUCT(stName, ...) \
     IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(stName, ##__VA_ARGS__), stName, F, ##__VA_ARGS__)
-//! Declare a ijst struct with getter
+//! Declare a ijst struct with getter.
 #define IJST_DEFINE_STRUCT_WITH_GETTER(stName, ...) \
     IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(stName, ##__VA_ARGS__), stName, T, ##__VA_ARGS__)
 
-//! Declare a vector<_T> field
+//! Declare a vector<_T> field.
 #define IJST_TVEC(_T)	::ijst::detail::TypeClassVec< _T>
-//! Declare a map<_T> field
+//! Declare a map<_T> field.
 #define IJST_TMAP(_T)	::ijst::detail::TypeClassMap< _T>
-//! Declare a object field which _T is a ijst struct type
+//! Declare a object field which _T is a ijst struct type.
 #define IJST_TOBJ(_T)	::ijst::detail::TypeClassObj< _T>
 
-//! Get status of field in obj
+//! Get status of field in obj.
 #define IJST_GET_STATUS(obj, field)				obj._.GetStatus(& ((obj).field))
-//! Mark status of field in obj to FStatus::kValid
+//! Mark status of field in obj to FStatus::kValid.
 #define IJST_MARK_VALID(obj, field)				obj._.MarkValid(& ((obj).field))
-//! Mark status of field in obj to FStatus::kNull
+//! Mark status of field in obj to FStatus::kNull.
 #define IJST_MARK_NULL(obj, field)				obj._.MarkNull(& ((obj).field))
-//! Mark status of field in obj to FStatus::kMissing
+//! Mark status of field in obj to FStatus::kMissing.
 #define IJST_MARK_MISSING(obj, field)			obj._.MarkMissing(& ((obj).field))
 //! Set field in obj to val and mark it valid.
 #define IJST_SET(obj, field, val)				obj._.Set((obj).field, (val))
-//! Set field in obj to val and mark it valid. Type of field and val must be same
+//! Set field in obj to val and mark it valid. Type of field and val must be same.
 #define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
 
-//! IJST_NULL
+//! IJST_NULL.
 #if __cplusplus >= 201103L
 	#define IJST_NULL 			nullptr
 #else
 	#define IJST_NULL 			NULL
 #endif
 
-//! Wrappers
+//! Wrappers.
 #if IJST_USE_SL_WRAPPER
 	#define IJST_CONT_VEC(...)			ijst::Vector<__VA_ARGS__>
 	#define IJST_CONT_MAP(...)			ijst::Map<__VA_ARGS__>
@@ -129,7 +129,7 @@ namespace ijst {
 	typedef rapidjson::Value JsonValue;
 	typedef rapidjson::MemoryPoolAllocator<> 	JsonAllocator;
 
-	//! Field description
+	//! Field description.
 	struct FDesc {
 		static const unsigned int _MaskDesc 		= 0x000000FF;
 		static const unsigned int Optional 			= 0x00000001;
@@ -138,7 +138,7 @@ namespace ijst {
 		// FDesc of Element (i.e. Nullable, ElemNotEmpty) inside container is hard to represent, has not plan to implement it
 	};
 
-	//! Field status
+	//! Field status.
 	struct FStatus {
 	public:
 		enum _E {
@@ -151,7 +151,7 @@ namespace ijst {
 	};
 	typedef FStatus::_E EFStatus;
 
-	//! Error code
+	//! Error code.
 	struct Err {
 		static const int kSucc 							= 0x00000000;
 		static const int kDeserializeValueTypeError 	= 0x00001001;
@@ -163,7 +163,7 @@ namespace ijst {
 		static const int kWriteFailed					= 0x00003001;
 	};
 
-	//! Behaviour when meeting unknown member in json object
+	//! Behaviour when meeting unknown member in json object.
 	struct UnknownMode {
 	public:
 		enum _E {
@@ -994,7 +994,7 @@ namespace ijst {
 		/*
 		 * Field accessor.
 		 */
-		//! Check if pField is a filed in this object
+		//! Check if pField is a filed in this object.
 		inline bool HasField(const void *pField) const
 		{
 			size_t offset = GetFieldOffset(pField);
@@ -1009,21 +1009,21 @@ namespace ijst {
 			field = value;
 		}
 
-		//! Set field to val and mark it valid. The type of field and value must be same
+		//! Set field to val and mark it valid. The type of field and value must be same.
 		template<typename _T>
 		inline void SetStrict(_T &field, const _T &value)
 		{
 			Set(field, value);
 		}
 
-		//! Mark status of field to FStatus::kValid
+		//! Mark status of field to FStatus::kValid.
 		inline void MarkValid(const void* pField) { MarkFieldStatus(pField, FStatus::kValid); }
-		//! Mark status of field to FStatus::kNull
+		//! Mark status of field to FStatus::kNull.
 		inline void MarkNull(const void* pField) { MarkFieldStatus(pField, FStatus::kNull); }
-		//! Mark status of field to FStatus::kMissing
+		//! Mark status of field to FStatus::kMissing.
 		inline void MarkMissing(const void* pField) { MarkFieldStatus(pField, FStatus::kMissing); }
 
-		//! Get status of field
+		//! Get status of field.
 		inline EFStatus GetStatus(const void *pField) const
 		{
 			const size_t offset = GetFieldOffset(pField);
@@ -1046,7 +1046,7 @@ namespace ijst {
 		inline const JsonAllocator &GetOwnAllocator() const { return m_pOwnDoc->GetAllocator(); }
 
 		/**
-		 * Serialize the structure to string
+		 * Serialize the structure to string.
 		 * @param pushAllField 		True if push all field, false if push only valid or null field
 		 * @param strOutput 		The output of result
 		 * @return					Error code
@@ -1065,7 +1065,7 @@ namespace ijst {
 		}
 
 		/**
-		 * Deserialize from C-style string
+		 * Deserialize from C-style string.
 		 * @param cstrInput			Input C string
 		 * @param length			Length of string
 		 * @param unknownMode		Behaviour when meet unknown member in json
@@ -1097,7 +1097,7 @@ namespace ijst {
 		}
 
 		/**
-		 * Deserialize from std::string
+		 * Deserialize from std::string.
 		 * @param strInput			Input string
 		 * @param unknownMode		Behaviour when meet unknown member in json
 		 * @param pErrMsgOut		Error message output. Null if do not need error message
@@ -1110,7 +1110,7 @@ namespace ijst {
 		}
 
 		/**
-		 * Deserialize insitu from str
+		 * Deserialize insitu from str.
 		 * @param cstrInput			Input C string
 		 * @param unknownMode		Behaviour when meet unknown member in json
 		 * @param pErrMsgOut		Error message output. Null if do not need error message
@@ -1143,13 +1143,14 @@ namespace ijst {
 
 #if IJST_ENABLE_TO_JSON_OBJECT
 		/**
-		 * Serialize the structure to a JsonValue object
+		 * Serialize the structure to a JsonValue object.
 		 * @param pushAllField 		True if push all field, false if push only valid or null field
 		 * @param output 			The output of result
-		 * @param allocator	 		Allocator when adding members to output.
-		 * @return					Error code.
+		 * @param allocator	 		Allocator when adding members to output
+		 * @return					Error code
 		 *
-		 * @note If using inner allocator, user should carefully handler the structure's life cycle.
+		 * @note Need to set IJST_ENABLE_TO_JSON_OBJECT to 1 to enable this method
+		 * @note If using inner allocator, user should carefully handler the structure's life cycle
 		 */
 		inline int ToJson(bool pushAllField, IJST_OUT JsonValue &output, JsonAllocator &allocator) const
 		{
@@ -1158,14 +1159,15 @@ namespace ijst {
 		}
 
 		/**
-		 * Serialize the structure to a JsonValue object
+		 * Serialize the structure to a JsonValue object.
 		 * @note The object may be invalid after serialization
 		 * @param pushAllField 		True if push all field, false if push only valid or null field
 		 * @param output 			The output of result
 		 * @param allocator	 		Allocator when adding members to output.
 		 * @return					Error code
 		 *
-		 * @note If using inner allocator, user should carefully handler the structure's life cycle.
+		 * @note Need to set IJST_ENABLE_TO_JSON_OBJECT to 1 to enable this method
+		 * @note If using inner allocator, user should carefully handler the structure's life cycle
 		 */
 		inline int MoveToJson(bool pushAllField, IJST_OUT JsonValue &output, JsonAllocator &allocator)
 		{
@@ -1174,21 +1176,24 @@ namespace ijst {
 		}
 
 		/**
-		* Init allocator of members to self's allocator.
-		* @return 					Error code
-		*/
+		 * Init allocator of members to self's allocator.
+		 * @return 					Error code
+		 *
+		 * @note Need to set IJST_ENABLE_TO_JSON_OBJECT to 1 to enable this method
+		 */
 		int InitMembersAllocator()
 		{
 			return SetMembersAllocator(*m_pAllocator);
 		}
 
 		/**
-		* Set Inner allocator of object and members.
-		* @param allocator			New allocator
-		* @return					Error code
-		*
-		* @note This method will NOT clear pervious allocator.
-		*/
+		 * Set Inner allocator of object and members.
+		 * @param allocator			New allocator
+		 * @return					Error code
+		 *
+		 * @note Need to set IJST_ENABLE_TO_JSON_OBJECT to 1 to enable this method
+		 * @note This method will NOT clear pervious allocator
+		 */
 		int SetMembersAllocator(JsonAllocator &allocator)
 		{
 			if (m_pAllocator != &allocator) {
@@ -1217,11 +1222,13 @@ namespace ijst {
 
 #if IJST_ENABLE_FROM_JSON_OBJECT
 		/**
-		 * Deserialize from json object
+		 * Deserialize from json object.
 		 * @param stream			Input json object
 		 * @param unknownMode		Behaviour when meet unknown member in json
 		 * @param pErrMsgOut		Error message output. Null if do not need error message
 		 * @return					Error code
+		 *
+		 * @note Need to set IJST_ENABLE_FROM_JSON_OBJECT to 1 to enable this method
 		 */
 		inline int FromJson(const JsonValue &stream, EUnknownMode unknownMode = UnknownMode::kKeep,
 							std::string *pErrMsgOut = IJST_NULL)
@@ -1234,13 +1241,14 @@ namespace ijst {
 		 * Deserialize from json document. The source object may be stolen after deserialize.
 		 * Because the accessor need manager the input allocator, but the Allocator class has no Swap() interface,
 		 * so use document object instead.
-		 * @param srcDocStolen		Input document object.
+		 * @param srcDocStolen		Input document object
 		 * @param unknownMode		Behaviour when meet unknown member in json
 		 * @param pErrMsgOut		Error message output. Null if do not need error message
 		 * @return					Error code
 		 *
-		 * @note The source document may be changed after deserialize.
-		 * @note Make sure srcDocStolen use own allocator, or use allocator in this object.
+		 * @note Need to set IJST_ENABLE_FROM_JSON_OBJECT to 1 to enable this method
+		 * @note The source document may be changed after deserialize
+		 * @note Make sure srcDocStolen use own allocator, or use allocator in this object
 		 */
 		inline int MoveFromJson(rapidjson::Document &srcDocStolen, EUnknownMode unknownMode = UnknownMode::kKeep,
 								std::string *pErrMsgOut = IJST_NULL)
