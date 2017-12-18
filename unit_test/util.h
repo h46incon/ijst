@@ -23,7 +23,7 @@
 	doc.Parse(json.c_str(), json.length());									\
 	ASSERT_FALSE(doc.HasParseError());										\
 	rapidjson::Value _jVal;													\
-	int serRet = st._.MoveToJsonInInnerAlloc(pushAllField, _jVal);			\
+	int serRet = st._.MoveToJson(pushAllField, _jVal, st._.GetAllocator());	\
 	ASSERT_EQ(serRet, 0);													\
 	ASSERT_EQ((rapidjson::Value&)doc, _jVal);								\
 	ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);							\

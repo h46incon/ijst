@@ -1174,21 +1174,6 @@ namespace ijst {
 		}
 
 		/**
-		 * Serialize the structure with inner allocator.
-		 * @param pushAllField 		True if push all field, false if push only valid or null field
-		 * @param output 			The output of result
-		 * @return					Error code
-		 *
-		 * @note The object may be invalid after serialization.
-		 * @note User should make sure the structure's life cycle is longer than output.
-		 */
-		inline int MoveToJsonInInnerAlloc(bool pushAllField, IJST_OUT JsonValue &output)
-		{
-			return Accessor::template DoToJson<true, Accessor>
-					(*this, pushAllField, output, *m_pAllocator);
-		}
-
-		/**
 		* Init allocator of members to self's allocator.
 		* @return 					Error code
 		*/
