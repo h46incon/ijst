@@ -56,13 +56,6 @@ ijst 提供了一系列的原子类型，包括 `Int, Bool, Int, UInt32, UInt64,
 
 如果不能确定某个字段的类型，则可以使用 `Raw` 类型操作原始的 `rapidjson::Value` 对象。
 
-\*\* **时间原子类型**
-
-在 `ijst/types_time.h` 中定义。提供的宏为 `IJST_TTIME(), IJST_TFTIME(_time_zone)`。
-
-这两个类型会将格式为 *YYYY-MM-DD HH:MM:SS* 的字符串转换为 unix 时间戳。
-其中 `IJST_TTIME()` 会调用系统调用确定时区（**挺慢的**），`IJST_TFTIME(_time_zone)` 可以使用参数指定的时区，如 `IJST_TFTIME(8)` 指定时区为东八区。
-
 \*\* **容器类型**
 
 在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TVEC(_type), IJST_TMAP(_type)`。
