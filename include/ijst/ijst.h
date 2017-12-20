@@ -305,17 +305,17 @@ namespace ijst {
 			#define IJSTI_TRY_INIT_META_BEFORE_MAIN(_T)
 		#endif
 
-		template<class _T>
+		template<typename _T>
 		struct TypeClassVec {
 			// nothing
 		};
 
-		template<class _T>
+		template<typename _T>
 		struct TypeClassMap {
 			// nothing
 		};
 
-		template<class _T>
+		template<typename _T>
 		struct TypeClassObj {
 			// nothing
 		};
@@ -477,7 +477,7 @@ namespace ijst {
 		 * This template is unimplemented, and will throw a compile error when use it.
 		 * @tparam _T class
 		 */
-		template<class _T>
+		template<typename _T>
 		class FSerializer : public SerializerInterface {
 		public:
 			#if __cplusplus >= 201103L
@@ -508,7 +508,7 @@ namespace ijst {
 		 * Serialization class of Object types
 		 * @tparam _T class
 		 */
-		template<class _T>
+		template<typename _T>
 		class FSerializer<TypeClassObj<_T> > : public SerializerInterface {
 		public:
 			typedef _T VarType;
@@ -544,7 +544,7 @@ namespace ijst {
 		 * Serialization class of Vector types
 		 * @tparam _T class
 		 */
-		template<class _T>
+		template<typename _T>
 		class FSerializer<TypeClassVec<_T> > : public SerializerInterface {
 		private:
 			typedef typename FSerializer<_T>::VarType ElemVarType;
@@ -675,7 +675,7 @@ namespace ijst {
 		 * Serialization class of Map types
 		 * @tparam _T class
 		 */
-		template<class _T>
+		template<typename _T>
 		class FSerializer<TypeClassMap<_T> > : public SerializerInterface {
 		private:
 			typedef typename FSerializer<_T>::VarType ElemVarType;
@@ -881,7 +881,7 @@ namespace ijst {
 		 * Push meta class info of _T in specialized constructor MetaInfo<_T>().
 		 * @tparam _T: class. Concept require _T::InitMetaInfo(MetaInfo*)
 		 */
-		template<class _T>
+		template<typename _T>
 		class MetaInfo {
 		public:
 			MetaClass metaClass;
@@ -1263,7 +1263,7 @@ namespace ijst {
 
 	private:
 		// #region Implement SerializeInterface
-		template <class _T> friend class detail::FSerializer;
+		template <typename _T> friend class detail::FSerializer;
 		typedef detail::SerializerInterface::SerializeReq SerializeReq;
 		typedef detail::SerializerInterface::SerializeResp SerializeResp;
 		typedef detail::SerializerInterface::DeserializeReq DeserializeReq;
@@ -1486,7 +1486,7 @@ namespace ijst {
 			return 0;
 		}
 
-		template <bool kCanMoveSrc, class _TAccessor>
+		template <bool kCanMoveSrc, typename _TAccessor>
 		static int DoToJson(_TAccessor &accessor, bool pushAllField, IJST_OUT JsonValue &buffer,
 							JsonAllocator &allocator)
 		{
@@ -1548,7 +1548,7 @@ namespace ijst {
 			return 0;
 		}
 
-		template<bool kCanMoveSrc, class _TAccessor>
+		template<bool kCanMoveSrc, typename _TAccessor>
 		static inline void AppendInnerToBuffer(_TAccessor &accessor, JsonValue &buffer, JsonAllocator &allocator);
 #endif
 

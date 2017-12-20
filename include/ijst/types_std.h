@@ -18,13 +18,25 @@ namespace ijst{
 	//! Primitive field types
 	struct FType {
 		enum _E {
+			//! bool -> uint8_t
 			Bool,
+			//! bool -> bool. @note: Could not declare IJST_TVEC(IJST_TPRI(RBool)) now
+			RBool,
+			//! bool -> a wrapper of bool
+			WBool,
+			//! number -> int
 			Int,
+			//! number -> uint64_t
 			Int64,
+			//! number -> unsigned int
 			UInt,
+			//! number -> uint64_t
 			UInt64,
+			//! number -> double
 			Double,
+			//! string -> std::string
 			Str,
+			//! anything -> a wrapper of rapidjson::Value
 			Raw,
 		};
 	};
@@ -37,7 +49,8 @@ namespace ijst{
 		};
 	}	// namespace detail
 
-	typedef uint8_t 		FStoreBool; 		// Could not use bool type because std::vector<bool> is not a container!
+	typedef uint8_t 		FStoreBool;
+	typedef bool 			FStoreRBool;
 	typedef int 			FStoreInt;
 	typedef int64_t 		FStoreInt64;
 	typedef unsigned int 	FStoreUInt;
@@ -49,6 +62,17 @@ namespace ijst{
 #else
 	typedef std::string FStoreString;
 #endif
+
+	class FStoreWBool {
+	public:
+		FStoreWBool() : m_val(false) {}
+		FStoreWBool(bool _val) : m_val(_val) {}
+		operator bool() const { return m_val; }
+
+	private:
+		template <typename T> FStoreWBool(T);	// deleted
+		bool m_val;
+	};
 
 	class FStoreRaw {
 	public:
@@ -151,6 +175,54 @@ namespace ijst{
 				return 0;
 			}
 #endif
+		};
+
+		#define IJSTI_SERIALIZER_BOOL()																					\
+			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE							\
+			{																											\
+				const VarType *pField = static_cast<const VarType *>(req.pField);										\
+				return (req.writer.Bool(*pField) ? 0 : Err::kWriteFailed);												\
+			}																											\
+																														\
+			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE			\
+			{																											\
+				if (!req.stream.IsBool()) {																				\
+					resp.fStatus = FStatus::kParseFailed;																\
+					resp.SetErrMsg("Value is not Bool");																\
+					return Err::kDeserializeValueTypeError;																\
+				}																										\
+				VarType *pField = static_cast<VarType *>(req.pFieldBuffer);												\
+				*pField = req.stream.GetBool();																			\
+				return 0;																								\
+			}																											\
+
+#if IJST_ENABLE_TO_JSON_OBJECT
+		#define IJSTI_SERIALIZER_BOOL_TO_JSON()																			\
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE									\
+			{																											\
+				const VarType *pField = static_cast<const VarType *>(req.pField);										\
+				req.buffer.SetBool(*pField);																			\
+				return 0;																								\
+			}
+#else
+	#define IJSTI_SERIALIZER_BOOL_TO_JSON()				// empty
+#endif
+		template<>
+		class FSerializer<TypeClassPrim<FType::RBool> > : public SerializerInterface {
+		public:
+			typedef ijst::FStoreRBool VarType;
+
+			IJSTI_SERIALIZER_BOOL()
+			IJSTI_SERIALIZER_BOOL_TO_JSON()
+		};
+
+		template<>
+		class FSerializer<TypeClassPrim<FType::WBool> > : public SerializerInterface {
+		public:
+			typedef ijst::FStoreWBool VarType;
+
+			IJSTI_SERIALIZER_BOOL()
+			IJSTI_SERIALIZER_BOOL_TO_JSON()
 		};
 
 		template<>
@@ -333,7 +405,8 @@ namespace ijst{
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pField = static_cast<const VarType *>(req.pField);
-				return (req.writer.String(pField->c_str(), pField->length()) ? 0 : Err::kWriteFailed);
+				const std::string &field = IJST_CONT_VAL(*pField);
+				return (req.writer.String(field.c_str(), static_cast<rapidjson::SizeType>(field.length())) ? 0 : Err::kWriteFailed);
 			}
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
