@@ -51,16 +51,19 @@ SampleStruct sampleStruct;
 
 在 `ijst/types_std.h` 中定义。提供的宏为 `IJST_TPRI(_type)`。
 
-ijst 提供了一系列的原子类型，包括 `Int, Bool, Int, UInt32, UInt64, Int32, Int64, Str, Raw`。
-如 `IJST_TPRI(Int)` 即可声明一个 int 型字段。这些原子类型可以满足大部分的使用需求。
+ijst 提供了一系列的原子类型，包括 `Int, Bool, RBool, WBool, Int, UInt32, UInt64, Int32, Int64, Str, Raw`。
+如 `IJST_TPRI(Int)` 即可声明一个 int 型字段。
 
+因为 std::vector<bool> 的特殊性， ijst 提供了 `Bool(uint8_t), RBool(bool), WBool(BoolWrapper)` 这几种类型来储存 bool 变量。
+
+这些原子类型可以满足大部分的使用需求。
 如果不能确定某个字段的类型，则可以使用 `Raw` 类型操作原始的 `rapidjson::Value` 对象。
 
 \*\* **容器类型**
 
-在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TVEC(_type), IJST_TMAP(_type)`。
+在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TMAP(_type), IJST_TVEC(_type), IJST_TDEQUE(_type), IJST_TLIST(_type)`。
 
-ijst 分别使用这两个宏表达 json 中的 list 和任意键值的 object，和 json 中一样，容器的元素类型可以为原子类型和容器（即支持**嵌套**定义）。
+ijst 分别使用这几个宏表达 json 中的 list 和任意键值的 object，和 json 中一样，容器的元素类型可以为原子类型和容器（即支持**嵌套**定义）。
 如 `IJST_TVEC(IJST_TRPI(Int))` 可表达 json 值 *[1, 2, 3]*， `IJST_TMAP(IJST_TVEC(IJST_TPRI(Bool)))` 可表达 json 值 *{"key1": [true, true], "key2": [true, false]}*。
 
 \*\* **ijst 结构体类型**

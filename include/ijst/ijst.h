@@ -92,7 +92,7 @@
 #define IJST_TDEQUE(_T)	::ijst::detail::TypeClassDeque< _T>
 //! Declare a vector<_T> field.
 #define IJST_TLIST(_T)	::ijst::detail::TypeClassList< _T>
-//! Declare a map<_T> field.
+//! Declare a map<string, _T> field.
 #define IJST_TMAP(_T)	::ijst::detail::TypeClassMap< _T>
 //! Declare a object field which _T is a ijst struct type.
 #define IJST_TOBJ(_T)	::ijst::detail::TypeClassObj< _T>
