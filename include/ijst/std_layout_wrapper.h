@@ -7,17 +7,23 @@
 
 #include <vector>
 #include <map>
+#include <deque>
 #include <string>
 
 namespace ijst {
 	namespace detail {
 		//* SFINAE
 		template <typename T>
-		struct IsStdVector {
+		struct IsStdVectorOrDeque {
 		};
 
 		template<typename TElem>
-		struct IsStdVector<std::vector<TElem> > {
+		struct IsStdVectorOrDeque<std::vector<TElem> > {
+			static const bool value = true;
+		};
+
+		template<typename TElem>
+		struct IsStdVectorOrDeque<std::deque<TElem> > {
 			static const bool value = true;
 		};
 
@@ -91,11 +97,14 @@ namespace ijst {
 		T& operator*() { return *m_pVal; }
 		const T& operator*() const { return *m_pVal; }
 
+		bool operator== (const T& rhs) const { return *m_pVal == rhs; }
+		bool operator!= (const T& rhs) const { return *m_pVal != rhs; }
+
 #if __cplusplus >= 201103L
-		template <typename U=T, bool = detail::IsStdVector<U>::value>
+		template <typename U=T, bool = detail::IsStdVectorOrDeque<U>::value>
 		typename U::value_type& operator[](typename U::size_type i) { return (*m_pVal)[i]; }
 
-		template <typename U=T, bool = detail::IsStdVector<U>::value>
+		template <typename U=T, bool = detail::IsStdVectorOrDeque<U>::value>
 		const typename U::value_type& operator[](typename U::size_type i) const { return (*m_pVal)[i]; }
 
 		template <typename U=T, bool = detail::IsStdMap<U>::value>

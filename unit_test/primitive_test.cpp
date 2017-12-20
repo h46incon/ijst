@@ -10,6 +10,221 @@ using std::vector;
 using std::map;
 using std::string;
 
+
+template<typename jsonType>
+jsonType GetJsonVal(rapidjson::Value& jVal);
+
+template <>
+bool GetJsonVal<bool>(rapidjson::Value& jVal)
+{
+	return jVal.GetBool();
+}
+
+template <>
+int GetJsonVal<int>(rapidjson::Value& jVal)
+{
+	return jVal.GetInt();
+}
+
+template <>
+int64_t GetJsonVal<int64_t>(rapidjson::Value& jVal)
+{
+	return jVal.GetInt64();
+}
+
+template <>
+unsigned int GetJsonVal<unsigned int>(rapidjson::Value& jVal)
+{
+	return jVal.GetUint();
+}
+
+template <>
+uint64_t GetJsonVal<uint64_t>(rapidjson::Value& jVal)
+{
+	return jVal.GetUint64();
+}
+
+template <>
+double GetJsonVal<double>(rapidjson::Value& jVal)
+{
+	return jVal.GetDouble();
+}
+
+template <>
+string GetJsonVal<string>(rapidjson::Value& jVal)
+{
+	return string(jVal.GetString(), jVal.GetStringLength());
+}
+
+template <typename Struct, typename VT, typename JT>
+void TestSt(const string& json, VT vDefault
+			, VT v0, VT map1, VT map2, VT vec0, VT vec1
+			, VT nv0, VT nmap1, VT nmap3, VT nvec0, VT nvec1, VT nvec2
+			, JT sv0, JT smap1, JT smap2, JT smap3, JT svec0, JT svec1, JT svec2
+)
+{
+	Struct st;
+	// Default value
+	{
+		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
+		ASSERT_EQ(st.v, vDefault);
+	}
+
+	// Deserialize
+	{
+		int ret = st._.Deserialize(json);
+		ASSERT_EQ(ret, 0);
+		ASSERT_EQ(st.v, v0);
+		ASSERT_EQ(st.map_v["v1"], map1);
+		ASSERT_EQ(st.map_v["v2"], map2);
+		ASSERT_EQ(st.vec_v[0], vec0);
+		ASSERT_EQ(st.vec_v[1], vec1);
+	}
+
+	// Serialize
+	{
+		IJST_SET(st, v, nv0);
+		st.map_v["v1"] = nmap1;
+		st.map_v["v3"] = nmap3;
+		st.vec_v[0] = nvec0;
+		IJST_CONT_VAL(st.vec_v).pop_back();
+		IJST_CONT_VAL(st.vec_v).push_back(nvec1);
+		IJST_CONT_VAL(st.vec_v).push_back(nvec2);
+
+		rapidjson::Document doc;
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+		JT (*pGetJsonVal)(rapidjson::Value &) = GetJsonVal<JT>;
+		ASSERT_EQ(pGetJsonVal(doc["f_v"]), sv0);
+		ASSERT_EQ(doc["f_map"].MemberCount(), 3u);
+		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v1"]), smap1);
+		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v2"]), smap2);
+		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v3"]), smap3);
+		ASSERT_EQ(doc["f_vec"].Size(), 3u);
+		ASSERT_EQ(pGetJsonVal(doc["f_vec"][0]), svec0);
+		ASSERT_EQ(pGetJsonVal(doc["f_vec"][1]), svec1);
+		ASSERT_EQ(pGetJsonVal(doc["f_vec"][2]), svec2);
+	}
+
+};
+
+template <typename Struct, typename VT>
+void TestSt(const string& json, VT vDefault
+		, VT v0, VT map1, VT map2, VT vec0, VT vec1
+		, VT nv0, VT nmap1, VT nmap3, VT nvec0, VT nvec1, VT nvec2
+)
+{
+	TestSt<Struct, VT, VT>(
+			json, vDefault
+			, v0, map1, map2, vec0, vec1
+			, nv0, nmap1, nmap3, nvec0, nvec1, nvec2
+			, nv0, nmap1, map2, nmap3, nvec0, nvec1, nvec2
+	);
+};
+
+IJST_DEFINE_STRUCT(
+		StBool
+		, (IJST_TPRI(Bool), v, "f_v", 0)
+		, (IJST_TVEC(IJST_TPRI(Bool)), vec_v, "f_vec", 0)
+		, (IJST_TMAP(IJST_TPRI(Bool)), map_v, "f_map", 0)
+)
+
+TEST(Primitive, Bool)
+{
+	// Deserialize error
+	{
+		string errorJson = "{\"f_v\": \"1\"}";
+		StBool stErr;
+		int ret = stErr._.Deserialize(errorJson);
+		int retExpected = ijst::Err::kDeserializeValueTypeError;
+		ASSERT_EQ(ret, retExpected);
+	}
+
+	string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, \"f_vec\": [false, true]}";
+	TestSt<StBool, bool> (
+			json, false
+			, true, true, false, false, true
+			, false, false, false, true, false, true
+	);
+}
+
+IJST_DEFINE_STRUCT(
+		StRBool
+		, (IJST_TPRI(RBool), v, "f_v", 0)
+		, (IJST_TMAP(IJST_TPRI(RBool)), map_v, "f_map", 0)
+)
+
+TEST(Primitive, RBool)
+{
+	// Deserialize error
+	{
+		string errorJson = "{\"f_v\": \"1\"}";
+		StRBool stErr;
+		int ret = stErr._.Deserialize(errorJson);
+		int retExpected = ijst::Err::kDeserializeValueTypeError;
+		ASSERT_EQ(ret, retExpected);
+	}
+
+	StRBool st;
+	// Default value
+	{
+		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
+		ASSERT_EQ(st.v, false);
+	}
+
+
+	string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}}";
+	// Deserialize
+	{
+		int ret = st._.Deserialize(json);
+		ASSERT_EQ(ret, 0);
+		ASSERT_EQ(st.v, true);
+		ASSERT_EQ(st.map_v["v1"], true);
+		ASSERT_EQ(st.map_v["v2"], false);
+	}
+
+	// Serialize
+	{
+		IJST_SET(st, v, false);
+		st.map_v["v1"] = true;
+		st.map_v["v3"] = false;
+
+		rapidjson::Document doc;
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+		bool (*pGetJsonVal)(rapidjson::Value &) = GetJsonVal<bool>;
+		ASSERT_EQ(pGetJsonVal(doc["f_v"]), false);
+		ASSERT_EQ(doc["f_map"].MemberCount(), 3u);
+		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v1"]), true);
+		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v2"]), false);
+		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v3"]), false);
+	}
+}
+
+IJST_DEFINE_STRUCT(
+		StWBool
+		, (IJST_TPRI(WBool), v, "f_v", 0)
+		, (IJST_TVEC(IJST_TPRI(WBool)), vec_v, "f_vec", 0)
+		, (IJST_TMAP(IJST_TPRI(WBool)), map_v, "f_map", 0)
+)
+
+TEST(Primitive, WBool)
+{
+	// Deserialize error
+	{
+		string errorJson = "{\"f_v\": \"1\"}";
+		StWBool stErr;
+		int ret = stErr._.Deserialize(errorJson);
+		int retExpected = ijst::Err::kDeserializeValueTypeError;
+		ASSERT_EQ(ret, retExpected);
+	}
+
+	string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, \"f_vec\": [false, true]}";
+	TestSt<StWBool, bool> (
+			json, false
+			, true, true, false, false, true
+			, false, false, false, true, false, true
+	);
+}
+
 IJST_DEFINE_STRUCT(
 		StInt
 		, (IJST_TPRI(Int), v, "f_v", 0)
@@ -19,64 +234,25 @@ IJST_DEFINE_STRUCT(
 
 TEST(Primitive, Int)
 {
-	int ret;
-
 	// Deserialize error
 	{
 		string errorJson = "{\"f_v\": \"1\"}";
 		StInt stErr;
-		ret = stErr._.Deserialize(errorJson);
+		int ret = stErr._.Deserialize(errorJson);
 		int retExpected = ijst::Err::kDeserializeValueTypeError;
 		ASSERT_EQ(ret, retExpected);
 	}
 
 	StInt st;
 
-	// Default value
-	{
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
-		ASSERT_EQ(st.v, 0);
-	}
+	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": -65537, \"v2\": 65536}, \"f_vec\": [-2147483648, 2147483647]}";
 
-	// Deserialize
-	{
-		string json = "{\"f_v\": 0, \"f_vec\": [-1, 1], \"f_map\": {\"v1\": -2, \"v2\": 2}}";
-		ret = st._.Deserialize(json);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(st.v, 0);
-		ASSERT_EQ(st.vec_v[0], -1);
-		ASSERT_EQ(st.vec_v[1], 1);
-		ASSERT_EQ(st.map_v["v1"], -2);
-		ASSERT_EQ(st.map_v["v2"], 2);
-	}
-
-	// Serialize
-	{
-		IJST_SET(st, v, 100);
-		st.vec_v[0] = -100;
-		IJST_CONT_VAL(st.vec_v).push_back(100);
-		st.map_v["v1"] = -200;
-		st.map_v["v3"] = 200;
-
-		rapidjson::Document doc;
-		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
-		ASSERT_EQ(doc["f_v"].GetInt(), 100);
-		ASSERT_EQ(doc["f_vec"][0].GetInt(), -100);
-		ASSERT_EQ(doc["f_vec"][1].GetInt(), 1);
-		ASSERT_EQ(doc["f_vec"][2].GetInt(), 100);
-		ASSERT_EQ(doc["f_map"]["v1"].GetInt(), -200);
-		ASSERT_EQ(doc["f_map"]["v2"].GetInt(), 2);
-		ASSERT_EQ(doc["f_map"]["v3"].GetInt(), 200);
-	}
+	TestSt<StInt, int> (
+			json, 0
+			, 0, -65537, 65536, -2147483648, 2147483647
+			, -2147483648, 0, 65536, -65536, 2147483647, -2147483648
+	);
 }
-
-IJST_DEFINE_STRUCT(
-		StUInt
-		, (IJST_TPRI(UInt), v, "f_v", 0)
-		, (IJST_TVEC(IJST_TPRI(UInt)), vec_v, "f_vec", 0)
-		, (IJST_TMAP(IJST_TPRI(UInt)), map_v, "f_map", 0)
-)
-
 IJST_DEFINE_STRUCT(
 		StInt64
 		, (IJST_TPRI(Int64), v, "f_v", 0)
@@ -86,15 +262,13 @@ IJST_DEFINE_STRUCT(
 
 TEST(Primitive, Int64)
 {
-	int ret;
-
 	// Deserialize error
 	{
 		const int retExpected = ijst::Err::kDeserializeValueTypeError;
 		StInt64 stErr;
 
 		string errorJson = "{\"f_v\": -9223372036854775809}";
-		ret = stErr._.Deserialize(errorJson);
+		int ret = stErr._.Deserialize(errorJson);
 		ASSERT_EQ(ret, retExpected);
 
 		errorJson = "{\"f_v\": \"1\"}";
@@ -106,54 +280,30 @@ TEST(Primitive, Int64)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	StInt64 st;
+	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, \"f_vec\": [-9223372036854775808, 9223372036854775807]}";
 	const int64_t i64Min = std::numeric_limits<int64_t>::min();
+	const int64_t i64Max = std::numeric_limits<int64_t>::max();
 
-	// Default value
-	{
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
-		ASSERT_EQ(st.v, 0);
-	}
-
-	// Deserialize
-	{
-		string json = "{\"f_v\": 0, \"f_vec\": [-9223372036854775808, 9223372036854775807], \"f_map\": {\"v1\": 2, \"v2\": 4}}";
-		ret = st._.Deserialize(json);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(st.v, 0);
-		ASSERT_EQ(st.vec_v[0], i64Min);
-		ASSERT_EQ(st.vec_v[1], 9223372036854775807);
-		ASSERT_EQ(st.map_v["v1"], 2);
-		ASSERT_EQ(st.map_v["v2"], 4);
-	}
-
-	// Serialize
-	{
-		IJST_SET(st, v, 100);
-		st.vec_v[0] = 9223372036854775807;
-		st.vec_v[1] = i64Min;
-		IJST_CONT_VAL(st.vec_v).push_back(200);
-		st.map_v["v1"] = 200;
-		st.map_v["v3"] = 400;
-
-		rapidjson::Document doc;
-		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
-		ASSERT_EQ(doc["f_v"].GetInt64(), 100);
-		ASSERT_EQ(doc["f_vec"][0].GetInt64(), 9223372036854775807);
-		ASSERT_EQ(doc["f_vec"][1].GetInt64(), i64Min);
-		ASSERT_EQ(doc["f_vec"][2].GetInt64(), 200);
-		ASSERT_EQ(doc["f_map"]["v1"].GetInt64(), 200);
-		ASSERT_EQ(doc["f_map"]["v2"].GetInt64(), 4);
-		ASSERT_EQ(doc["f_map"]["v3"].GetInt64(), 400);
-	}
+	TestSt<StInt64, int64_t>(
+			json, 0
+			, 0, 2, 4, i64Min, 9223372036854775807
+			, i64Min, i64Min, i64Max, 0, i64Min, 9223372036854775807
+	);
 }
+
+
+IJST_DEFINE_STRUCT(
+		StUInt
+		, (IJST_TPRI(UInt), v, "f_v", 0)
+		, (IJST_TVEC(IJST_TPRI(UInt)), vec_v, "f_vec", 0)
+		, (IJST_TMAP(IJST_TPRI(UInt)), map_v, "f_map", 0)
+)
 
 TEST(Primitive, UInt)
 {
-	int ret;
-
 	// Deserialize error
 	{
+		int ret;
 		const int retExpected = ijst::Err::kDeserializeValueTypeError;
 		StUInt stErr;
 
@@ -170,44 +320,13 @@ TEST(Primitive, UInt)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	StUInt st;
+	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, \"f_vec\": [4294967295, 1]}";
 
-	// Default value
-	{
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
-		ASSERT_EQ(st.v, 0u);
-	}
-
-	// Deserialize
-	{
-		string json = "{\"f_v\": 0, \"f_vec\": [4294967295, 1], \"f_map\": {\"v1\": 2, \"v2\": 4}}";
-		ret = st._.Deserialize(json);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(st.v, 0u);
-		ASSERT_EQ(st.vec_v[0], 4294967295u);
-		ASSERT_EQ(st.vec_v[1], 1u);
-		ASSERT_EQ(st.map_v["v1"], 2u);
-		ASSERT_EQ(st.map_v["v2"], 4u);
-	}
-
-	// Serialize
-	{
-		IJST_SET(st, v, 100u);
-		st.vec_v[1] = 100u;
-		IJST_CONT_VAL(st.vec_v).push_back(200u);
-		st.map_v["v1"] = 200u;
-		st.map_v["v3"] = 400u;
-
-		rapidjson::Document doc;
-		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
-		ASSERT_EQ(doc["f_v"].GetUint(), 100u);
-		ASSERT_EQ(doc["f_vec"][0].GetUint(), 4294967295u);
-		ASSERT_EQ(doc["f_vec"][1].GetUint(), 100u);
-		ASSERT_EQ(doc["f_vec"][2].GetUint(), 200u);
-		ASSERT_EQ(doc["f_map"]["v1"].GetUint(), 200u);
-		ASSERT_EQ(doc["f_map"]["v2"].GetUint(), 4u);
-		ASSERT_EQ(doc["f_map"]["v3"].GetUint(), 400u);
-	}
+	TestSt<StUInt, unsigned int> (
+			json, 0
+			, 0, 2, 4, 4294967295, 1
+			, 4294967295, 200, 4294967295, 4294967295, 2, 4
+	);
 }
 
 IJST_DEFINE_STRUCT(
@@ -219,10 +338,9 @@ IJST_DEFINE_STRUCT(
 
 TEST(Primitive, UInt64)
 {
-	int ret;
-
 	// Deserialize error
 	{
+		int ret;
 		const int retExpected = ijst::Err::kDeserializeValueTypeError;
 		StUInt64 stErr;
 
@@ -239,45 +357,13 @@ TEST(Primitive, UInt64)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	StUInt64 st;
+	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, \"f_vec\": [18446744073709551615, 1]}";
 
-	// Default value
-	{
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
-		ASSERT_EQ(st.v, 0u);
-	}
-
-	// Deserialize
-	{
-		string json = "{\"f_v\": 0, \"f_vec\": [18446744073709551615, 1], \"f_map\": {\"v1\": 2, \"v2\": 4}}";
-		ret = st._.Deserialize(json);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(st.v, 0u);
-		ASSERT_EQ(st.vec_v[0], 18446744073709551615ul);
-		ASSERT_EQ(st.vec_v[1], 1u);
-		ASSERT_EQ(st.map_v["v1"], 2u);
-		ASSERT_EQ(st.map_v["v2"], 4u);
-	}
-
-	// Serialize
-	{
-		IJST_SET(st, v, 100u);
-		st.vec_v[1] = 100u;
-		IJST_CONT_VAL(st.vec_v).push_back(200u);
-		st.map_v["v1"] = 200u;
-		st.map_v["v3"] = 400u;
-
-		rapidjson::Document doc;
-		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(doc["f_v"].GetUint64(), 100u);
-		ASSERT_EQ(doc["f_vec"][0].GetUint64(), 18446744073709551615ul);
-		ASSERT_EQ(doc["f_vec"][1].GetUint64(), 100u);
-		ASSERT_EQ(doc["f_vec"][2].GetUint64(), 200u);
-		ASSERT_EQ(doc["f_map"]["v1"].GetUint64(), 200u);
-		ASSERT_EQ(doc["f_map"]["v2"].GetUint64(), 4u);
-		ASSERT_EQ(doc["f_map"]["v3"].GetUint64(), 400u);
-	}
+	TestSt<StUInt64, uint64_t> (
+			json, 0
+			, 0, 2, 4, 18446744073709551615ul, 1
+			, 18446744073709551615ul, 18446744073709551615ul, 0, 0, 18446744073709551615ul, 200
+	);
 }
 
 IJST_DEFINE_STRUCT(
@@ -289,10 +375,9 @@ IJST_DEFINE_STRUCT(
 
 TEST(Primitive, Double)
 {
-	int ret;
-
 	// Deserialize error
 	{
+		int ret;
 		const int retExpected = ijst::Err::kDeserializeValueTypeError;
 		StDouble stErr;
 
@@ -305,107 +390,16 @@ TEST(Primitive, Double)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	StDouble st;
+	string json = "{\"f_v\": 0.0, \"f_map\": {\"v1\": 2.2, \"v2\": 4.4}, \"f_vec\": [-0.1, 0.2]}";
 
-	// Default value
-	{
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
-		ASSERT_EQ(st.v, 0.0);
-	}
+	TestSt<StDouble, double> (
+			json, 0.0
+			, 0.0, 2.2, 4.4, -0.1, 0.2
+			, 1.1, 22.2, 44.4, 0.1, -100.2, 200.2
 
-	// Deserialize
-	{
-		string json = "{\"f_v\": 0.0, \"f_vec\": [-0.1, 0.2], \"f_map\": {\"v1\": 2.2, \"v2\": 4.4}}";
-		ret = st._.Deserialize(json);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(st.v, 0.0);
-		ASSERT_EQ(st.vec_v[0], -0.1);
-		ASSERT_EQ(st.vec_v[1], 0.2);
-		ASSERT_EQ(st.map_v["v1"], 2.2);
-		ASSERT_EQ(st.map_v["v2"], 4.4);
-	}
-
-	// Serialize
-	{
-		IJST_SET(st, v, 1.1);
-		st.vec_v[0] = 0.1;
-		st.vec_v[1] = 0.2;
-		IJST_CONT_VAL(st.vec_v).push_back(0.3);
-		st.map_v["v1"] = 22.2;
-		st.map_v["v3"] = 44.4;
-
-		rapidjson::Document doc;
-		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
-		ASSERT_EQ(doc["f_v"].GetDouble(), 1.1);
-		ASSERT_EQ(doc["f_vec"][0].GetDouble(), 0.1);
-		ASSERT_EQ(doc["f_vec"][1].GetDouble(), 0.2);
-		ASSERT_EQ(doc["f_vec"][2].GetDouble(), 0.3);
-		ASSERT_EQ(doc["f_map"]["v1"].GetDouble(), 22.2);
-		ASSERT_EQ(doc["f_map"]["v2"].GetDouble(), 4.4);
-		ASSERT_EQ(doc["f_map"]["v3"].GetDouble(), 44.4);
-	}
+	);
 }
 
-IJST_DEFINE_STRUCT(
-		StBool
-		, (IJST_TPRI(Bool), v, "f_v", 0)
-		, (IJST_TVEC(IJST_TPRI(Bool)), vec_v, "f_vec", 0)
-		, (IJST_TMAP(IJST_TPRI(Bool)), map_v, "f_map", 0)
-)
-
-TEST(Primitive, Bool)
-{
-	int ret;
-
-	// Deserialize error
-	{
-		string errorJson = "{\"f_v\": \"1\"}";
-		StBool stErr;
-		ret = stErr._.Deserialize(errorJson);
-		int retExpected = ijst::Err::kDeserializeValueTypeError;
-		ASSERT_EQ(ret, retExpected);
-	}
-
-	StBool st;
-
-	// Default value
-	{
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
-		ASSERT_EQ(st.v, 0);
-	}
-
-	// Deserialize
-	{
-		string json = "{\"f_v\": true, \"f_vec\": [true, false], \"f_map\": {\"v1\": true, \"v2\": false}}";
-		ret = st._.Deserialize(json);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(st.v, 1);
-		ASSERT_EQ(st.vec_v[0], 1);
-		ASSERT_EQ(st.vec_v[1], 0);
-		ASSERT_EQ(st.map_v["v1"], 1);
-		ASSERT_EQ(st.map_v["v2"], 0);
-	}
-
-	// Serialize
-	{
-		IJST_SET(st, v, 0);
-		st.vec_v[0] = 0;
-		IJST_CONT_VAL(st.vec_v).push_back(1);
-		st.map_v["v1"] = 0;
-		st.map_v["v3"] = 1;
-
-		rapidjson::Document doc;
-		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
-		ASSERT_EQ(doc["f_v"].GetBool(), false);
-		ASSERT_EQ(doc["f_vec"][0].GetBool(), false);
-		ASSERT_EQ(doc["f_vec"][1].GetBool(), false);
-		ASSERT_EQ(doc["f_vec"][2].GetBool(), true);
-		ASSERT_EQ(doc["f_map"]["v1"].GetBool(), false);
-		ASSERT_EQ(doc["f_map"]["v2"].GetBool(), false);
-		ASSERT_EQ(doc["f_map"]["v3"].GetBool(), true);
-	}
-
-}
 
 IJST_DEFINE_STRUCT(
 		StString
@@ -416,10 +410,10 @@ IJST_DEFINE_STRUCT(
 
 TEST(Primitive, Str)
 {
-	int ret;
-
 	// Deserialize error
 	{
+		int ret;
+
 		string errorJson = "{\"f_v\": 0}";
 		StString stErr;
 		ret = stErr._.Deserialize(errorJson);
@@ -427,44 +421,13 @@ TEST(Primitive, Str)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	StString st;
-	// Default value
-	{
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
-		ASSERT_TRUE(IJST_CONT_VAL(st.v).empty());
-	}
+	string json = "{\"f_v\": \"true\", \"f_map\": {\"v1\": \"false\", \"v2\": \"v22\"}, \"f_vec\": [\"0\", \"1\"]}";
 
-	// Deserialize
-	{
-		string json = "{\"f_v\": \"v1\", \"f_vec\": [\"v1\", \"v2\"], \"f_map\": {\"v1\": \"v11\", \"v2\": \"v22\"}}";
-		ret = st._.Deserialize(json);
-		ASSERT_EQ(ret, 0);
-		ASSERT_STREQ(IJST_CONT_VAL(st.v).c_str(), "v1");
-		ASSERT_STREQ(IJST_CONT_VAL(st.vec_v[0]).c_str(), "v1");
-		ASSERT_STREQ(IJST_CONT_VAL(st.vec_v[1]).c_str(),"v2");
-		ASSERT_STREQ(IJST_CONT_VAL(st.map_v["v1"]).c_str(), "v11");
-		ASSERT_STREQ(IJST_CONT_VAL(st.map_v["v2"]).c_str(), "v22");
-	}
-
-	// Serialize
-	{
-		IJST_SET(st, v, "v0");
-		st.vec_v[0] = "v01";
-		IJST_CONT_VAL(st.vec_v).push_back(std::string("v03"));
-		st.map_v["v1"] = "v011";
-		st.map_v["v3"] = "v033";
-
-		rapidjson::Document doc;
-		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
-		ASSERT_STREQ(doc["f_v"].GetString(), "v0");
-		ASSERT_STREQ(doc["f_vec"][0].GetString(), "v01");
-		ASSERT_STREQ(doc["f_vec"][1].GetString(), "v2");
-		ASSERT_STREQ(doc["f_vec"][2].GetString(), "v03");
-		ASSERT_STREQ(doc["f_map"]["v1"].GetString(), "v011");
-		ASSERT_STREQ(doc["f_map"]["v2"].GetString(), "v22");
-		ASSERT_STREQ(doc["f_map"]["v3"].GetString(), "v033");
-	}
-
+	TestSt<StString, string>(
+			json, ""
+			, "true", "false", "v22", "0", "1"
+			, "false", "0.2", "0.4", "map1", "true", "map3"
+	);
 }
 
 IJST_DEFINE_STRUCT(
