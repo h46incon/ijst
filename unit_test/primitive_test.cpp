@@ -58,9 +58,9 @@ string GetJsonVal<string>(rapidjson::Value& jVal)
 
 template <typename Struct, typename VT, typename JT>
 void TestSt(const string& json, VT vDefault
-			, VT v0, VT map1, VT map2, VT vec0, VT vec1
-			, VT nv0, VT nmap1, VT nmap3, VT nvec0, VT nvec1, VT nvec2
-			, JT sv0, JT smap1, JT smap2, JT smap3, JT svec0, JT svec1, JT svec2
+			, VT v0, VT map1, VT map2, VT vec0, VT vec1, VT deq0, VT deq1, VT lst0, VT lst1
+			, VT nv0, VT nmap1, VT nmap3, VT nvec0, VT nvec1, VT nvec2, VT ndeq0, VT ndeq1, VT nlst0, VT nlst1
+			, JT sv0, JT smap1, JT smap2, JT smap3, JT svec0, JT svec1, JT svec2, JT sdeq0, JT sdeq1, JT slst0, JT slst1
 )
 {
 	Struct st;
@@ -74,58 +74,94 @@ void TestSt(const string& json, VT vDefault
 	{
 		int ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
+		// v
 		ASSERT_EQ(st.v, v0);
+		// map
+		ASSERT_EQ(st.map_v.size(), 2u);
 		ASSERT_EQ(st.map_v["v1"], map1);
 		ASSERT_EQ(st.map_v["v2"], map2);
+		// vec
+		ASSERT_EQ(st.vec_v.size(), 2u);
 		ASSERT_EQ(st.vec_v[0], vec0);
 		ASSERT_EQ(st.vec_v[1], vec1);
+		// deq
+		ASSERT_EQ(st.deq_v.size(), 2u);
+		ASSERT_EQ(st.deq_v[0], deq0);
+		ASSERT_EQ(st.deq_v[1], deq1);
+		// list
+		ASSERT_EQ(st.list_v.size(), 2u);
+		ASSERT_EQ(st.list_v.front(), lst0);
+		ASSERT_EQ(st.list_v.back(), lst1);
 	}
+
+	// Fields modify
+	// v
+	IJST_SET(st, v, nv0);
+	// map
+	st.map_v["v1"] = nmap1;
+	st.map_v["v3"] = nmap3;
+	// vec
+	st.vec_v[0] = nvec0;
+	IJST_CONT_VAL(st.vec_v).pop_back();
+	IJST_CONT_VAL(st.vec_v).push_back(nvec1);
+	IJST_CONT_VAL(st.vec_v).push_back(nvec2);
+	// deque
+	IJST_CONT_VAL(st.deq_v).push_back(ndeq1);
+	IJST_CONT_VAL(st.deq_v).pop_front();
+	st.deq_v[0] = ndeq0;
+	// list
+	IJST_CONT_VAL(st.list_v).push_back(nlst1);
+	IJST_CONT_VAL(st.list_v).pop_front();
+	IJST_CONT_VAL(st.list_v).front() = (nlst0);
 
 	// Serialize
-	{
-		IJST_SET(st, v, nv0);
-		st.map_v["v1"] = nmap1;
-		st.map_v["v3"] = nmap3;
-		st.vec_v[0] = nvec0;
-		IJST_CONT_VAL(st.vec_v).pop_back();
-		IJST_CONT_VAL(st.vec_v).push_back(nvec1);
-		IJST_CONT_VAL(st.vec_v).push_back(nvec2);
-
-		rapidjson::Document doc;
-		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
-		JT (*pGetJsonVal)(rapidjson::Value &) = GetJsonVal<JT>;
-		ASSERT_EQ(pGetJsonVal(doc["f_v"]), sv0);
-		ASSERT_EQ(doc["f_map"].MemberCount(), 3u);
-		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v1"]), smap1);
-		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v2"]), smap2);
-		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v3"]), smap3);
-		ASSERT_EQ(doc["f_vec"].Size(), 3u);
-		ASSERT_EQ(pGetJsonVal(doc["f_vec"][0]), svec0);
-		ASSERT_EQ(pGetJsonVal(doc["f_vec"][1]), svec1);
-		ASSERT_EQ(pGetJsonVal(doc["f_vec"][2]), svec2);
-	}
+	rapidjson::Document doc;
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+	JT (*pGetJsonVal)(rapidjson::Value &) = GetJsonVal<JT>;
+	// v
+	ASSERT_EQ(pGetJsonVal(doc["f_v"]), sv0);
+	// map
+	ASSERT_EQ(doc["f_map"].MemberCount(), 3u);
+	ASSERT_EQ(pGetJsonVal(doc["f_map"]["v1"]), smap1);
+	ASSERT_EQ(pGetJsonVal(doc["f_map"]["v2"]), smap2);
+	ASSERT_EQ(pGetJsonVal(doc["f_map"]["v3"]), smap3);
+	// vec
+	ASSERT_EQ(doc["f_vec"].Size(), 3u);
+	ASSERT_EQ(pGetJsonVal(doc["f_vec"][0]), svec0);
+	ASSERT_EQ(pGetJsonVal(doc["f_vec"][1]), svec1);
+	ASSERT_EQ(pGetJsonVal(doc["f_vec"][2]), svec2);
+	// deq
+	ASSERT_EQ(doc["f_deq"].Size(), 2u);
+	ASSERT_EQ(pGetJsonVal(doc["f_deq"][0]), sdeq0);
+	ASSERT_EQ(pGetJsonVal(doc["f_deq"][1]), sdeq1);
+	// list
+	ASSERT_EQ(doc["f_list"].Size(), 2u);
+	ASSERT_EQ(pGetJsonVal(doc["f_list"][0]), slst0);
+	ASSERT_EQ(pGetJsonVal(doc["f_list"][1]), slst1);
 
 };
 
 template <typename Struct, typename VT>
 void TestSt(const string& json, VT vDefault
-		, VT v0, VT map1, VT map2, VT vec0, VT vec1
-		, VT nv0, VT nmap1, VT nmap3, VT nvec0, VT nvec1, VT nvec2
+		, VT v0, VT map1, VT map2, VT vec0, VT vec1, VT deq0, VT deq1, VT lst0, VT lst1
+		, VT nv0, VT nmap1, VT nmap3, VT nvec0, VT nvec1, VT nvec2, VT ndeq0, VT ndeq1, VT nlst0, VT nlst1
 )
 {
 	TestSt<Struct, VT, VT>(
 			json, vDefault
-			, v0, map1, map2, vec0, vec1
-			, nv0, nmap1, nmap3, nvec0, nvec1, nvec2
-			, nv0, nmap1, map2, nmap3, nvec0, nvec1, nvec2
+			, v0, map1, map2, vec0, vec1, deq0, deq1, lst0, lst1
+			, nv0, nmap1, nmap3, nvec0, nvec1, nvec2, ndeq0, ndeq1, nlst0, nlst1
+			, nv0, nmap1, map2, nmap3, nvec0, nvec1, nvec2, ndeq0, ndeq1, nlst0, nlst1
 	);
 };
 
 IJST_DEFINE_STRUCT(
 		StBool
 		, (IJST_TPRI(Bool), v, "f_v", 0)
-		, (IJST_TVEC(IJST_TPRI(Bool)), vec_v, "f_vec", 0)
 		, (IJST_TMAP(IJST_TPRI(Bool)), map_v, "f_map", 0)
+		, (IJST_TVEC(IJST_TPRI(Bool)), vec_v, "f_vec", 0)
+		, (IJST_TDEQUE(IJST_TPRI(Bool)), deq_v, "f_deq", 0)
+		, (IJST_TLIST(IJST_TPRI(Bool)), list_v, "f_list", 0)
 )
 
 TEST(Primitive, Bool)
@@ -139,11 +175,12 @@ TEST(Primitive, Bool)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, \"f_vec\": [false, true]}";
+	string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, "
+			"\"f_vec\": [false, true], \"f_deq\": [true, false], \"f_list\": [false, true]}";
 	TestSt<StBool, bool> (
 			json, false
-			, true, true, false, false, true
-			, false, false, false, true, false, true
+			, true, true, false, false, true, true, false, false, true
+			, false, false, false, true, false, true, false, true, true, false
 	);
 }
 
@@ -151,6 +188,8 @@ IJST_DEFINE_STRUCT(
 		StRBool
 		, (IJST_TPRI(RBool), v, "f_v", 0)
 		, (IJST_TMAP(IJST_TPRI(RBool)), map_v, "f_map", 0)
+		, (IJST_TDEQUE(IJST_TPRI(RBool)), deq_v, "f_deq", 0)
+		, (IJST_TLIST(IJST_TPRI(RBool)), list_v, "f_list", 0)
 )
 
 TEST(Primitive, RBool)
@@ -172,14 +211,22 @@ TEST(Primitive, RBool)
 	}
 
 
-	string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}}";
+	string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false},"
+			"\"f_deq\": [false, true], \"f_list\": [true, false]}";
 	// Deserialize
 	{
 		int ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(st.v, true);
+		ASSERT_EQ(IJST_CONT_VAL(st.map_v).size(), 2u);
 		ASSERT_EQ(st.map_v["v1"], true);
 		ASSERT_EQ(st.map_v["v2"], false);
+		ASSERT_EQ(IJST_CONT_VAL(st.deq_v).size(), 2u);
+		ASSERT_EQ(st.deq_v[0], false);
+		ASSERT_EQ(st.deq_v[1], true);
+		ASSERT_EQ(IJST_CONT_VAL(st.list_v).size(), 2u);
+		ASSERT_EQ(IJST_CONT_VAL(st.list_v).front(), true);
+		ASSERT_EQ(IJST_CONT_VAL(st.list_v).back(), false);
 	}
 
 	// Serialize
@@ -187,6 +234,12 @@ TEST(Primitive, RBool)
 		IJST_SET(st, v, false);
 		st.map_v["v1"] = true;
 		st.map_v["v3"] = false;
+		IJST_CONT_VAL(st.deq_v).clear();
+		IJST_CONT_VAL(st.deq_v).push_front(true);
+		IJST_CONT_VAL(st.deq_v).push_back(false);
+		IJST_CONT_VAL(st.list_v).clear();
+		IJST_CONT_VAL(st.list_v).push_front(true);
+		IJST_CONT_VAL(st.list_v).push_back(false);
 
 		rapidjson::Document doc;
 		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
@@ -196,6 +249,12 @@ TEST(Primitive, RBool)
 		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v1"]), true);
 		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v2"]), false);
 		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v3"]), false);
+		ASSERT_EQ(doc["f_deq"].Size(), 2u);
+		ASSERT_EQ(pGetJsonVal(doc["f_deq"][0]), true);
+		ASSERT_EQ(pGetJsonVal(doc["f_deq"][1]), false);
+		ASSERT_EQ(doc["f_list"].Size(), 2u);
+		ASSERT_EQ(pGetJsonVal(doc["f_list"][0]), true);
+		ASSERT_EQ(pGetJsonVal(doc["f_list"][1]), false);
 	}
 }
 
@@ -204,6 +263,8 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TPRI(WBool), v, "f_v", 0)
 		, (IJST_TVEC(IJST_TPRI(WBool)), vec_v, "f_vec", 0)
 		, (IJST_TMAP(IJST_TPRI(WBool)), map_v, "f_map", 0)
+		, (IJST_TDEQUE(IJST_TPRI(WBool)), deq_v, "f_deq", 0)
+		, (IJST_TLIST(IJST_TPRI(WBool)), list_v, "f_list", 0)
 )
 
 TEST(Primitive, WBool)
@@ -217,11 +278,12 @@ TEST(Primitive, WBool)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, \"f_vec\": [false, true]}";
+	string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, "
+			"\"f_vec\": [false, true], \"f_deq\": [true, false], \"f_list\": [false, true]}";
 	TestSt<StWBool, bool> (
 			json, false
-			, true, true, false, false, true
-			, false, false, false, true, false, true
+			, true, true, false, false, true, true, false, false, true
+			, false, false, false, true, false, true, false, true, true, false
 	);
 }
 
@@ -230,6 +292,8 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TPRI(Int), v, "f_v", 0)
 		, (IJST_TVEC(IJST_TPRI(Int)), vec_v, "f_vec", 0)
 		, (IJST_TMAP(IJST_TPRI(Int)), map_v, "f_map", 0)
+		, (IJST_TDEQUE(IJST_TPRI(Int)), deq_v, "f_deq", 0)
+		, (IJST_TLIST(IJST_TPRI(Int)), list_v, "f_list", 0)
 )
 
 TEST(Primitive, Int)
@@ -245,12 +309,13 @@ TEST(Primitive, Int)
 
 	StInt st;
 
-	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": -65537, \"v2\": 65536}, \"f_vec\": [-2147483648, 2147483647]}";
+	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": -65537, \"v2\": 65536}, "
+			"\"f_vec\": [-2147483648, 2147483647], \"f_deq\": [-1, 1], \"f_list\": [-2, 2]}";
 
 	TestSt<StInt, int> (
 			json, 0
-			, 0, -65537, 65536, -2147483648, 2147483647
-			, -2147483648, 0, 65536, -65536, 2147483647, -2147483648
+			, 0, -65537, 65536, -2147483648, 2147483647, -1, 1, -2, 2
+			, -2147483648, 0, 65536, -65536, 2147483647, -2147483648, 10, -10, 20, -20
 	);
 }
 IJST_DEFINE_STRUCT(
@@ -258,6 +323,8 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TPRI(Int64), v, "f_v", 0)
 		, (IJST_TVEC(IJST_TPRI(Int64)), vec_v, "f_vec", 0)
 		, (IJST_TMAP(IJST_TPRI(Int64)), map_v, "f_map", 0)
+		, (IJST_TDEQUE(IJST_TPRI(Int64)), deq_v, "f_deq", 0)
+		, (IJST_TLIST(IJST_TPRI(Int64)), list_v, "f_list", 0)
 )
 
 TEST(Primitive, Int64)
@@ -280,14 +347,15 @@ TEST(Primitive, Int64)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, \"f_vec\": [-9223372036854775808, 9223372036854775807]}";
+	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
+			"\"f_vec\": [-9223372036854775808, 9223372036854775807], \"f_deq\": [-1, 1], \"f_list\": [-2, 2]}";
 	const int64_t i64Min = std::numeric_limits<int64_t>::min();
 	const int64_t i64Max = std::numeric_limits<int64_t>::max();
 
 	TestSt<StInt64, int64_t>(
 			json, 0
-			, 0, 2, 4, i64Min, 9223372036854775807
-			, i64Min, i64Min, i64Max, 0, i64Min, 9223372036854775807
+			, 0, 2, 4, i64Min, 9223372036854775807, -1, 1, -2, 2
+			, i64Min, i64Min, i64Max, 0, i64Min, 9223372036854775807, 10, -10, 20, -20
 	);
 }
 
@@ -297,6 +365,8 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TPRI(UInt), v, "f_v", 0)
 		, (IJST_TVEC(IJST_TPRI(UInt)), vec_v, "f_vec", 0)
 		, (IJST_TMAP(IJST_TPRI(UInt)), map_v, "f_map", 0)
+		, (IJST_TDEQUE(IJST_TPRI(UInt)), deq_v, "f_deq", 0)
+		, (IJST_TLIST(IJST_TPRI(UInt)), list_v, "f_list", 0)
 )
 
 TEST(Primitive, UInt)
@@ -320,12 +390,13 @@ TEST(Primitive, UInt)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, \"f_vec\": [4294967295, 1]}";
+	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
+			"\"f_vec\": [4294967295, 1], \"f_deq\": [0, 1], \"f_list\": [2, 3]}";
 
 	TestSt<StUInt, unsigned int> (
 			json, 0
-			, 0, 2, 4, 4294967295, 1
-			, 4294967295, 200, 4294967295, 4294967295, 2, 4
+			, 0, 2, 4, 4294967295, 1, 0, 1, 2, 3
+			, 4294967295, 200, 4294967295, 4294967295, 2, 4, 4, 5, 6, 7
 	);
 }
 
@@ -334,6 +405,8 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TPRI(UInt64), v, "f_v", 0)
 		, (IJST_TVEC(IJST_TPRI(UInt64)), vec_v, "f_vec", 0)
 		, (IJST_TMAP(IJST_TPRI(UInt64)), map_v, "f_map", 0)
+		, (IJST_TDEQUE(IJST_TPRI(UInt64)), deq_v, "f_deq", 0)
+		, (IJST_TLIST(IJST_TPRI(UInt64)), list_v, "f_list", 0)
 )
 
 TEST(Primitive, UInt64)
@@ -357,12 +430,13 @@ TEST(Primitive, UInt64)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, \"f_vec\": [18446744073709551615, 1]}";
+	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
+			"\"f_vec\": [18446744073709551615, 1], \"f_deq\": [0, 1], \"f_list\": [2, 3]}";
 
 	TestSt<StUInt64, uint64_t> (
 			json, 0
-			, 0, 2, 4, 18446744073709551615ul, 1
-			, 18446744073709551615ul, 18446744073709551615ul, 0, 0, 18446744073709551615ul, 200
+			, 0, 2, 4, 18446744073709551615ul, 1, 0, 1, 2, 3
+			, 18446744073709551615ul, 18446744073709551615ul, 0, 0, 18446744073709551615ul, 200, 4, 5, 6, 7
 	);
 }
 
@@ -371,6 +445,8 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TPRI(Double), v, "f_v", 0)
 		, (IJST_TVEC(IJST_TPRI(Double)), vec_v, "f_vec", 0)
 		, (IJST_TMAP(IJST_TPRI(Double)), map_v, "f_map", 0)
+		, (IJST_TDEQUE(IJST_TPRI(Double)), deq_v, "f_deq", 0)
+		, (IJST_TLIST(IJST_TPRI(Double)), list_v, "f_list", 0)
 )
 
 TEST(Primitive, Double)
@@ -390,12 +466,13 @@ TEST(Primitive, Double)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	string json = "{\"f_v\": 0.0, \"f_map\": {\"v1\": 2.2, \"v2\": 4.4}, \"f_vec\": [-0.1, 0.2]}";
+	string json = "{\"f_v\": 0.0, \"f_map\": {\"v1\": 2.2, \"v2\": 4.4}, "
+			"\"f_vec\": [-0.1, 0.2], \"f_deq\": [1, -1], \"f_list\": [100, -100]}";
 
 	TestSt<StDouble, double> (
 			json, 0.0
-			, 0.0, 2.2, 4.4, -0.1, 0.2
-			, 1.1, 22.2, 44.4, 0.1, -100.2, 200.2
+			, 0.0, 2.2, 4.4, -0.1, 0.2, 1.0, -1.0, 100.0, -100.0
+			, 1.1, 22.2, 44.4, 0.1, -100.2, 200.2, 2.0, -2.0, -200.0, 200.0
 
 	);
 }
@@ -406,6 +483,8 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TPRI(Str), v, "f_v", 0)
 		, (IJST_TVEC(IJST_TPRI(Str)), vec_v, "f_vec", 0)
 		, (IJST_TMAP(IJST_TPRI(Str)), map_v, "f_map", 0)
+		, (IJST_TDEQUE(IJST_TPRI(Str)), deq_v, "f_deq", 0)
+		, (IJST_TLIST(IJST_TPRI(Str)), list_v, "f_list", 0)
 )
 
 TEST(Primitive, Str)
@@ -421,12 +500,13 @@ TEST(Primitive, Str)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	string json = "{\"f_v\": \"true\", \"f_map\": {\"v1\": \"false\", \"v2\": \"v22\"}, \"f_vec\": [\"0\", \"1\"]}";
+	string json = "{\"f_v\": \"true\", \"f_map\": {\"v1\": \"false\", \"v2\": \"v22\"}, "
+			"\"f_vec\": [\"0\", \"1\"], \"f_deq\": [\"\", \"null\"], \"f_list\": [\"0\", \"NaN\"]}";
 
 	TestSt<StString, string>(
 			json, ""
-			, "true", "false", "v22", "0", "1"
-			, "false", "0.2", "0.4", "map1", "true", "map3"
+			, "true", "false", "v22", "0", "1", "", "null", "0", "NaN"
+			, "false", "0.2", "0.4", "map1", "true", "map3", "", "0", "NaN", "null"
 	);
 }
 
@@ -435,6 +515,8 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TPRI(Raw), v, "f_v", 0)
 		, (IJST_TVEC(IJST_TPRI(Raw)), vec_v, "f_vec", 0)
 		, (IJST_TMAP(IJST_TPRI(Raw)), map_v, "f_map", 0)
+		, (IJST_TDEQUE(IJST_TPRI(Raw)), deq_v, "f_deq", 0)
+		, (IJST_TLIST(IJST_TPRI(Raw)), list_v, "f_list", 0)
 )
 
 TEST(Primitive, Raw)
@@ -458,7 +540,8 @@ TEST(Primitive, Raw)
 	// Deserialize copy form json
 	{
 		{
-			string json = "{\"f_v\": \"v1\", \"f_vec\": [\"v1\", 2], \"f_map\": {\"v1\": null, \"v2\": {\"v21\": false }}}";
+			string json = "{\"f_v\": \"v1\", \"f_map\": {\"v1\": null, \"v2\": {\"v21\": false }}, "
+					"\"f_vec\": [\"v1\", 2], \"f_deq\": [], \"f_list\": [null]}";
 			rapidjson::Document doc;
 			doc.Parse(json.c_str(), json.length());
 			ASSERT_FALSE(doc.HasParseError());

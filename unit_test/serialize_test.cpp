@@ -242,6 +242,35 @@ TEST(Serialize, Complicate)
 }
 
 IJST_DEFINE_STRUCT(
+	Container
+	, (IJST_TVEC(IJST_TPRI(Int)), dVector, "vec", 0)
+	, (IJST_TDEQUE(IJST_TPRI(Int)), dDeque, "deque", 0)
+	, (IJST_TLIST(IJST_TPRI(Int)), dList, "list", 0)
+)
+
+TEST(Serialize, Container)
+{
+	Container st;
+	IJST_CONT_VAL(st.dVector).push_back(1);
+	IJST_CONT_VAL(st.dDeque).push_back(1);
+	IJST_CONT_VAL(st.dDeque).push_front(0);
+	IJST_CONT_VAL(st.dList).push_back(-1);
+	IJST_CONT_VAL(st.dList).push_front(-2);
+
+	rapidjson::Document doc;
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+
+	ASSERT_EQ(doc["vec"].Size(), 1u);
+	ASSERT_EQ(doc["vec"][0].GetInt(), 1);
+	ASSERT_EQ(doc["deque"].Size(), 2u);
+	ASSERT_EQ(doc["deque"][0].GetInt(), 0);
+	ASSERT_EQ(doc["deque"][1].GetInt(), 1);
+	ASSERT_EQ(doc["list"].Size(), 2u);
+	ASSERT_EQ(doc["list"][0].GetInt(), -2);
+	ASSERT_EQ(doc["list"][1].GetInt(), -1);
+}
+
+IJST_DEFINE_STRUCT(
 	EmptySt
 );
 

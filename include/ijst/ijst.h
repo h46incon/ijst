@@ -16,6 +16,8 @@
 #include <cstddef>
 #include <map>
 #include <vector>
+#include <list>
+#include <deque>
 #include <string>
 #include <sstream>
 
@@ -86,6 +88,10 @@
 
 //! Declare a vector<_T> field.
 #define IJST_TVEC(_T)	::ijst::detail::TypeClassVec< _T>
+//! Declare a deque<_T> field.
+#define IJST_TDEQUE(_T)	::ijst::detail::TypeClassDeque< _T>
+//! Declare a vector<_T> field.
+#define IJST_TLIST(_T)	::ijst::detail::TypeClassList< _T>
 //! Declare a map<_T> field.
 #define IJST_TMAP(_T)	::ijst::detail::TypeClassMap< _T>
 //! Declare a object field which _T is a ijst struct type.
@@ -119,6 +125,8 @@
 	#define IJST_OFFSETOF(_T, member)	offsetof(_T, member)
 #else
 	#define IJST_CONT_VEC(...)			std::vector<__VA_ARGS__>
+	#define IJST_CONT_DEQUE(...)		std::deque<__VA_ARGS__>
+	#define IJST_CONT_LIST(...)			std::list<__VA_ARGS__>
 	#define IJST_CONT_MAP(...)			std::map<__VA_ARGS__>
 	#define IJST_CONT_VAL(_v)			(_v)
 	#define IJST_OFFSETOF(_T, member)	((size_t)&(((_T*)0)->member))
@@ -305,17 +313,27 @@ namespace ijst {
 			#define IJSTI_TRY_INIT_META_BEFORE_MAIN(_T)
 		#endif
 
-		template<typename _T>
+		template<class _T>
 		struct TypeClassVec {
 			// nothing
 		};
 
-		template<typename _T>
+		template<class _T>
+		struct TypeClassDeque {
+			// nothing
+		};
+
+		template<class _T>
+		struct TypeClassList {
+			// nothing
+		};
+
+		template<class _T>
 		struct TypeClassMap {
 			// nothing
 		};
 
-		template<typename _T>
+		template<class _T>
 		struct TypeClassObj {
 			// nothing
 		};
@@ -477,7 +495,7 @@ namespace ijst {
 		 * This template is unimplemented, and will throw a compile error when use it.
 		 * @tparam _T class
 		 */
-		template<typename _T>
+		template<class _T>
 		class FSerializer : public SerializerInterface {
 		public:
 			#if __cplusplus >= 201103L
@@ -508,7 +526,7 @@ namespace ijst {
 		 * Serialization class of Object types
 		 * @tparam _T class
 		 */
-		template<typename _T>
+		template<class _T>
 		class FSerializer<TypeClassObj<_T> > : public SerializerInterface {
 		public:
 			typedef _T VarType;
@@ -540,24 +558,15 @@ namespace ijst {
 #endif
 		};
 
-		/**
-		 * Serialization class of Vector types
-		 * @tparam _T class
-		 */
-		template<typename _T>
-		class FSerializer<TypeClassVec<_T> > : public SerializerInterface {
-		private:
-			typedef typename FSerializer<_T>::VarType ElemVarType;
-			typedef std::vector<ElemVarType> RealVarType;
+		template<typename DefType, typename VarType, typename RealVarType>
+		class ContainerSerializer : public SerializerInterface {
 		public:
-			typedef IJST_CONT_VEC(ElemVarType) VarType;
-
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
 			{
 				const VarType *pFieldWrapper = static_cast<const VarType *>(req.pField);
 				assert(pFieldWrapper != IJST_NULL);
 				const RealVarType& field = IJST_CONT_VAL(*pFieldWrapper);
-				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
+				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(DefType);
 
 				if (!req.writer.StartArray()) {
 					return Err::kWriteFailed;
@@ -579,7 +588,7 @@ namespace ijst {
 				return 0;
 			}
 
-			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+			virtual int Deserialize(const DeserializeReq &req, DeserializeResp &resp) IJSTI_OVERRIDE
 			{
 				if (!req.stream.IsArray()) {
 					resp.fStatus = FStatus::kParseFailed;
@@ -591,9 +600,8 @@ namespace ijst {
 				assert(pFieldWrapper != IJST_NULL);
 				RealVarType& field = IJST_CONT_VAL(*pFieldWrapper);
 				field.clear();
-				// field.shrink_to_fit();
-				field.reserve(req.stream.Size());
-				SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
+				ReserveWrapper<RealVarType>::Do(field, req.stream.Size());
+				SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(DefType);
 
 				for (rapidjson::Value::ValueIterator itVal = req.stream.Begin();
 					 itVal != req.stream.End(); ++itVal)
@@ -632,7 +640,7 @@ namespace ijst {
 				const VarType *pFieldWrapper = static_cast<const VarType *>(req.pField);
 				assert(pFieldWrapper != IJST_NULL);
 				const RealVarType& field = IJST_CONT_VAL(*pFieldWrapper);
-				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
+				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(DefType);
 				req.buffer.SetArray();
 				req.buffer.Reserve(static_cast<rapidjson::SizeType>(field.size()), req.allocator);
 
@@ -655,7 +663,7 @@ namespace ijst {
 				VarType *pFieldWrapper = static_cast<VarType *>(pField);
 				assert(pFieldWrapper != IJST_NULL);
 				RealVarType& field = IJST_CONT_VAL(*pFieldWrapper);
-				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
+				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(DefType);
 
 				// Loop
 				for (typename RealVarType::iterator itera = field.begin(); itera != field.end(); ++itera)
@@ -669,13 +677,99 @@ namespace ijst {
 				return 0;
 			}
 #endif
+		private:
+			template<typename Container>
+			struct ReserveWrapper {
+				static void Do(Container& container, size_t capacity) {}
+			};
+
+			template<typename _T>
+			struct ReserveWrapper<std::vector<_T> > {
+				static void Do(std::vector<_T>& container, size_t capacity)
+				{
+					// field.shrink_to_fit();
+					container.reserve(capacity);
+				}
+			};
+		};
+
+		#define IJSTI_SERIALIZER_CONTAINER_DEFINE()																		\
+			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE							\
+			{ return ContainerSerializerSingleton::GetInstance()->Serialize(req, resp); }								\
+			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE			\
+			{ return ContainerSerializerSingleton::GetInstance()->Deserialize(req, resp); }
+
+#if IJST_ENABLE_TO_JSON_OBJECT
+		#define IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()																\
+			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE									\
+			{ return ContainerSerializerSingleton::GetInstance()->ToJson(req, resp); }									\
+			virtual int SetAllocator(void *pField, JsonAllocator &allocator) IJSTI_OVERRIDE								\
+			{ return ContainerSerializerSingleton::GetInstance()->SetAllocator(pField, allocator); }
+#else
+		#define IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()		// empty
+#endif
+		/**
+		 * Serialization class of Vector types
+		 * @tparam _T class
+		 */
+		template<class _T>
+		class FSerializer<TypeClassVec<_T> > : public SerializerInterface {
+		public:
+			typedef typename FSerializer<_T>::VarType ElemVarType;
+			typedef IJST_CONT_VEC(ElemVarType) VarType;
+
+		private:
+			typedef std::vector<ElemVarType> RealVarType;
+			typedef Singleton<ContainerSerializer<_T, VarType, RealVarType> > ContainerSerializerSingleton;
+
+		public:
+			IJSTI_SERIALIZER_CONTAINER_DEFINE()
+			IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()
+		};
+
+		/**
+		 * Serialization class of Deque types
+		 * @tparam _T class
+		 */
+		template<class _T>
+		class FSerializer<TypeClassDeque<_T> > : public SerializerInterface {
+		public:
+			typedef typename FSerializer<_T>::VarType ElemVarType;
+			typedef IJST_CONT_DEQUE(ElemVarType) VarType;
+
+		private:
+			typedef std::deque<ElemVarType> RealVarType;
+			typedef Singleton<ContainerSerializer<_T, VarType, RealVarType> > ContainerSerializerSingleton;
+
+		public:
+			IJSTI_SERIALIZER_CONTAINER_DEFINE()
+			IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()
+		};
+
+		/**
+		 * Serialization class of Deque types
+		 * @tparam _T class
+		 */
+		template<class _T>
+		class FSerializer<TypeClassList<_T> > : public SerializerInterface {
+		public:
+			typedef typename FSerializer<_T>::VarType ElemVarType;
+			typedef IJST_CONT_LIST(ElemVarType) VarType;
+
+		private:
+			typedef std::list<ElemVarType> RealVarType;
+			typedef Singleton<ContainerSerializer<_T, VarType, RealVarType> > ContainerSerializerSingleton;
+
+		public:
+			IJSTI_SERIALIZER_CONTAINER_DEFINE()
+			IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()
 		};
 
 		/**
 		 * Serialization class of Map types
 		 * @tparam _T class
 		 */
-		template<typename _T>
+		template<class _T>
 		class FSerializer<TypeClassMap<_T> > : public SerializerInterface {
 		private:
 			typedef typename FSerializer<_T>::VarType ElemVarType;
@@ -881,7 +975,7 @@ namespace ijst {
 		 * Push meta class info of _T in specialized constructor MetaInfo<_T>().
 		 * @tparam _T: class. Concept require _T::InitMetaInfo(MetaInfo*)
 		 */
-		template<typename _T>
+		template<class _T>
 		class MetaInfo {
 		public:
 			MetaClass metaClass;
@@ -1263,7 +1357,7 @@ namespace ijst {
 
 	private:
 		// #region Implement SerializeInterface
-		template <typename _T> friend class detail::FSerializer;
+		template <class _T> friend class detail::FSerializer;
 		typedef detail::SerializerInterface::SerializeReq SerializeReq;
 		typedef detail::SerializerInterface::SerializeResp SerializeResp;
 		typedef detail::SerializerInterface::DeserializeReq DeserializeReq;
@@ -1486,7 +1580,7 @@ namespace ijst {
 			return 0;
 		}
 
-		template <bool kCanMoveSrc, typename _TAccessor>
+		template <bool kCanMoveSrc, class _TAccessor>
 		static int DoToJson(_TAccessor &accessor, bool pushAllField, IJST_OUT JsonValue &buffer,
 							JsonAllocator &allocator)
 		{
@@ -1548,7 +1642,7 @@ namespace ijst {
 			return 0;
 		}
 
-		template<bool kCanMoveSrc, typename _TAccessor>
+		template<bool kCanMoveSrc, class _TAccessor>
 		static inline void AppendInnerToBuffer(_TAccessor &accessor, JsonValue &buffer, JsonAllocator &allocator);
 #endif
 

@@ -177,7 +177,7 @@ namespace ijst{
 #endif
 		};
 
-		#define IJSTI_SERIALIZER_BOOL()																					\
+		#define IJSTI_SERIALIZER_BOOL_DEFINE()																			\
 			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE							\
 			{																											\
 				const VarType *pField = static_cast<const VarType *>(req.pField);										\
@@ -197,7 +197,7 @@ namespace ijst{
 			}																											\
 
 #if IJST_ENABLE_TO_JSON_OBJECT
-		#define IJSTI_SERIALIZER_BOOL_TO_JSON()																			\
+		#define IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()																	\
 			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE									\
 			{																											\
 				const VarType *pField = static_cast<const VarType *>(req.pField);										\
@@ -205,15 +205,15 @@ namespace ijst{
 				return 0;																								\
 			}
 #else
-	#define IJSTI_SERIALIZER_BOOL_TO_JSON()				// empty
+	#define IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()				// empty
 #endif
 		template<>
 		class FSerializer<TypeClassPrim<FType::RBool> > : public SerializerInterface {
 		public:
 			typedef ijst::FStoreRBool VarType;
 
-			IJSTI_SERIALIZER_BOOL()
-			IJSTI_SERIALIZER_BOOL_TO_JSON()
+			IJSTI_SERIALIZER_BOOL_DEFINE()
+			IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()
 		};
 
 		template<>
@@ -221,8 +221,8 @@ namespace ijst{
 		public:
 			typedef ijst::FStoreWBool VarType;
 
-			IJSTI_SERIALIZER_BOOL()
-			IJSTI_SERIALIZER_BOOL_TO_JSON()
+			IJSTI_SERIALIZER_BOOL_DEFINE()
+			IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()
 		};
 
 		template<>
@@ -375,9 +375,9 @@ namespace ijst{
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
 			{
-				if (!req.stream.IsDouble()) {
+				if (!req.stream.IsNumber()) {
 					resp.fStatus = FStatus::kParseFailed;
-					resp.SetErrMsg("Value is not Int");
+					resp.SetErrMsg("Value is not Number");
 					return Err::kDeserializeValueTypeError;
 				}
 
