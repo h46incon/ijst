@@ -77,21 +77,21 @@ void TestSt(const string& json, VT vDefault
 		// v
 		ASSERT_EQ(st.v, v0);
 		// map
-		ASSERT_EQ(st.map_v.size(), 2u);
+		ASSERT_EQ(IJST_CONT_VAL(st.map_v).size(), 2u);
 		ASSERT_EQ(st.map_v["v1"], map1);
 		ASSERT_EQ(st.map_v["v2"], map2);
 		// vec
-		ASSERT_EQ(st.vec_v.size(), 2u);
+		ASSERT_EQ(IJST_CONT_VAL(st.vec_v).size(), 2u);
 		ASSERT_EQ(st.vec_v[0], vec0);
 		ASSERT_EQ(st.vec_v[1], vec1);
 		// deq
-		ASSERT_EQ(st.deq_v.size(), 2u);
+		ASSERT_EQ(IJST_CONT_VAL(st.deq_v).size(), 2u);
 		ASSERT_EQ(st.deq_v[0], deq0);
 		ASSERT_EQ(st.deq_v[1], deq1);
 		// list
-		ASSERT_EQ(st.list_v.size(), 2u);
-		ASSERT_EQ(st.list_v.front(), lst0);
-		ASSERT_EQ(st.list_v.back(), lst1);
+		ASSERT_EQ(IJST_CONT_VAL(st.list_v).size(), 2u);
+		ASSERT_EQ(IJST_CONT_VAL(st.list_v).front(), lst0);
+		ASSERT_EQ(IJST_CONT_VAL(st.list_v).back(), lst1);
 	}
 
 	// Fields modify
@@ -175,7 +175,7 @@ TEST(Primitive, Bool)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, "
+	const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, "
 			"\"f_vec\": [false, true], \"f_deq\": [true, false], \"f_list\": [false, true]}";
 	TestSt<StBool, bool> (
 			json, false
@@ -211,7 +211,7 @@ TEST(Primitive, RBool)
 	}
 
 
-	string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false},"
+	const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false},"
 			"\"f_deq\": [false, true], \"f_list\": [true, false]}";
 	// Deserialize
 	{
@@ -278,7 +278,7 @@ TEST(Primitive, WBool)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, "
+	const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, "
 			"\"f_vec\": [false, true], \"f_deq\": [true, false], \"f_list\": [false, true]}";
 	TestSt<StWBool, bool> (
 			json, false
@@ -309,13 +309,13 @@ TEST(Primitive, Int)
 
 	StInt st;
 
-	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": -65537, \"v2\": 65536}, "
+	const string json = "{\"f_v\": 0, \"f_map\": {\"v1\": -65537, \"v2\": 65536}, "
 			"\"f_vec\": [-2147483648, 2147483647], \"f_deq\": [-1, 1], \"f_list\": [-2, 2]}";
 
 	TestSt<StInt, int> (
 			json, 0
-			, 0, -65537, 65536, -2147483648, 2147483647, -1, 1, -2, 2
-			, -2147483648, 0, 65536, -65536, 2147483647, -2147483648, 10, -10, 20, -20
+			, 0, -65537, 65536, -2147483647-1, 2147483647, -1, 1, -2, 2
+			, -2147483647-1, 0, 65536, -65536, 2147483647, -2147483647-1, 10, -10, 20, -20
 	);
 }
 IJST_DEFINE_STRUCT(
@@ -347,7 +347,7 @@ TEST(Primitive, Int64)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
+	const string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
 			"\"f_vec\": [-9223372036854775808, 9223372036854775807], \"f_deq\": [-1, 1], \"f_list\": [-2, 2]}";
 	const int64_t i64Min = std::numeric_limits<int64_t>::min();
 	const int64_t i64Max = std::numeric_limits<int64_t>::max();
@@ -390,13 +390,13 @@ TEST(Primitive, UInt)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
+	const string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
 			"\"f_vec\": [4294967295, 1], \"f_deq\": [0, 1], \"f_list\": [2, 3]}";
 
 	TestSt<StUInt, unsigned int> (
 			json, 0
-			, 0, 2, 4, 4294967295, 1, 0, 1, 2, 3
-			, 4294967295, 200, 4294967295, 4294967295, 2, 4, 4, 5, 6, 7
+			, 0, 2, 4, 4294967295U, 1, 0, 1, 2, 3
+			, 4294967295U, 200, 4294967295U, 4294967295U, 2, 4, 4, 5, 6, 7
 	);
 }
 
@@ -430,7 +430,7 @@ TEST(Primitive, UInt64)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
+	const string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
 			"\"f_vec\": [18446744073709551615, 1], \"f_deq\": [0, 1], \"f_list\": [2, 3]}";
 
 	TestSt<StUInt64, uint64_t> (
@@ -466,7 +466,7 @@ TEST(Primitive, Double)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	string json = "{\"f_v\": 0.0, \"f_map\": {\"v1\": 2.2, \"v2\": 4.4}, "
+	const string json = "{\"f_v\": 0.0, \"f_map\": {\"v1\": 2.2, \"v2\": 4.4}, "
 			"\"f_vec\": [-0.1, 0.2], \"f_deq\": [1, -1], \"f_list\": [100, -100]}";
 
 	TestSt<StDouble, double> (
@@ -500,7 +500,7 @@ TEST(Primitive, Str)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	string json = "{\"f_v\": \"true\", \"f_map\": {\"v1\": \"false\", \"v2\": \"v22\"}, "
+	const string json = "{\"f_v\": \"true\", \"f_map\": {\"v1\": \"false\", \"v2\": \"v22\"}, "
 			"\"f_vec\": [\"0\", \"1\"], \"f_deq\": [\"\", \"null\"], \"f_list\": [\"0\", \"NaN\"]}";
 
 	TestSt<StString, string>(
@@ -536,12 +536,12 @@ TEST(Primitive, Raw)
 		ASSERT_TRUE(st.v.V().IsNull());
 	}
 
+	const string json = "{\"f_v\": \"v1\", \"f_map\": {\"v1\": null, \"v2\": {\"v21\": false }}, "
+			"\"f_vec\": [\"v1\", 2], \"f_deq\": [], \"f_list\": [null]}";
 #if IJST_ENABLE_FROM_JSON_OBJECT
 	// Deserialize copy form json
 	{
 		{
-			string json = "{\"f_v\": \"v1\", \"f_map\": {\"v1\": null, \"v2\": {\"v21\": false }}, "
-					"\"f_vec\": [\"v1\", 2], \"f_deq\": [], \"f_list\": [null]}";
 			rapidjson::Document doc;
 			doc.Parse(json.c_str(), json.length());
 			ASSERT_FALSE(doc.HasParseError());
@@ -565,7 +565,6 @@ TEST(Primitive, Raw)
 
 	// Deserialize Move from json
 	{
-		string json = "{\"f_v\": \"v1\", \"f_vec\": [\"v1\", 2], \"f_map\": {\"v1\": null, \"v2\": {\"v21\": false }}}";
 		rapidjson::Document doc;
 		doc.Parse(json.c_str(), json.length());
 		ASSERT_FALSE(doc.HasParseError());
@@ -583,7 +582,6 @@ TEST(Primitive, Raw)
 #endif
 	// Deserialize
 	{
-		string json = "{\"f_v\": \"v1\", \"f_vec\": [\"v1\", 2], \"f_map\": {\"v1\": null, \"v2\": {\"v21\": false }}}";
 		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 		// Check st

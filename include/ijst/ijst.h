@@ -121,6 +121,8 @@
 #if IJST_USE_SL_WRAPPER
 	#define IJST_CONT_VEC(...)			ijst::Vector<__VA_ARGS__>
 	#define IJST_CONT_MAP(...)			ijst::Map<__VA_ARGS__>
+	#define IJST_CONT_DEQUE(...)		ijst::Deque<__VA_ARGS__>
+	#define IJST_CONT_LIST(...)			ijst::SLWrapper<std::list<__VA_ARGS__> >
 	#define IJST_CONT_VAL(_v)			(_v).Val()
 	#define IJST_OFFSETOF(_T, member)	offsetof(_T, member)
 #else
