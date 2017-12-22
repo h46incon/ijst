@@ -477,6 +477,7 @@ IJST_DEFINE_STRUCT_WITH_GETTER(
 		, (IJST_TOBJ(SimpleSt), sim, "sim_v", 0)
 		, (IJST_TOBJ(SWGetter), st, "st_v", 0)
 		, (IJST_TVEC(IJST_TOBJ(SWGetter)), vec, "vec_v", 0)
+		, (IJST_TDEQUE(IJST_TOBJ(SWGetter)), deq, "deq_v", 0)
 		, (IJST_TMAP(IJST_TOBJ(SWGetter)), map, "map_v", 0)
 )
 
@@ -488,6 +489,7 @@ IJST_DEFINE_STRUCT_WITH_GETTER(
 TEST(BasicAPI, ChainedOptional)
 {
 	CWGetter2 st;
+	const CWGetter2& cref = st;
 
 	// fields are missing:
 
@@ -498,6 +500,7 @@ TEST(BasicAPI, ChainedOptional)
 	// Long null chained
 	ASSERT_EQ(IJST_NULL, st.Getv()->Getsim().Ptr());
 	ASSERT_EQ(IJST_NULL, st.Getv()->Getvec()[0]->Getint_1().Ptr());
+	ASSERT_EQ(IJST_NULL, st.Getv()->Getdeq()[0]->Getint_1().Ptr());
 	ASSERT_EQ(IJST_NULL, st.Getv()->Getmap()[""]->Getint_1().Ptr());
 
 	// Get valid
@@ -517,6 +520,17 @@ TEST(BasicAPI, ChainedOptional)
 	ASSERT_EQ(st.v.Getvec()[0].Ptr(), &(st.v.vec[0]));
 	ASSERT_EQ(IJST_NULL, st.v.Getvec()[0]->Getint_1().Ptr());
 
+	// deq null
+	ASSERT_EQ(IJST_NULL, st.v.Getdeq()[0].Ptr());
+	// deq elem out of range
+	IJST_MARK_VALID(st.v, deq);
+	ASSERT_EQ(st.v.Getdeq().Ptr(), &(st.v.deq));
+	ASSERT_EQ(IJST_NULL, st.v.Getdeq()[0].Ptr());
+	// deq valid
+	IJST_CONT_VAL(st.v.deq).resize(1);
+	ASSERT_EQ(st.v.Getdeq()[0].Ptr(), &(st.v.deq[0]));
+	ASSERT_EQ(IJST_NULL, st.v.Getdeq()[0]->Getint_1().Ptr());
+
 	// map null
 	ASSERT_EQ(IJST_NULL, st.v.Getmap()[""].Ptr());
 	// map key not exist
@@ -531,8 +545,15 @@ TEST(BasicAPI, ChainedOptional)
 	// Long valid chained
 	IJST_MARK_VALID(st.v.vec[0], int_1);
 	ASSERT_EQ(st.Getv()->Getvec()[0]->Getint_1().Ptr(), &(st.v.vec[0].int_1));
+	IJST_MARK_VALID(st.v.deq[0], int_1);
+	ASSERT_EQ(st.Getv()->Getdeq()[0]->Getint_1().Ptr(), &(st.v.deq[0].int_1));
 	IJST_MARK_VALID(st.v.map[""], int_2);
 	ASSERT_EQ(st.Getv()->Getmap()[""]->Getint_2().Ptr(), &(st.v.map[""].int_2));
+
+	// Long valid chained of const
+	ASSERT_EQ(cref.Getv()->Getvec()[0]->Getint_1().Ptr(), &(cref.v.vec[0].int_1));
+	ASSERT_EQ(cref.Getv()->Getdeq()[0]->Getint_1().Ptr(), &(cref.v.deq[0].int_1));
+	ASSERT_EQ(cref.Getv()->Getmap()[""]->Getint_2().Ptr(), &(st.v.map[""].int_2));
 }
 
 struct DummySt {

@@ -210,38 +210,6 @@ namespace ijst {
 	};
 
 	template <typename _TElem>
-	class Optional <IJST_CONT_VEC(_TElem)>
-	{
-		typedef IJST_CONT_VEC(_TElem) ValType;
-		IJSTI_OPTIONAL_BASE_DEFINE(ValType)
-	public:
-		Optional<_TElem> operator[](typename std::vector<_TElem>::size_type i) const
-		{
-			if (m_pVal == IJST_NULL || IJST_CONT_VAL(*m_pVal).size() <= i) {
-				return Optional<_TElem>(IJST_NULL);
-			}
-			return Optional<_TElem>(&(*m_pVal)[i]);
-		}
-
-	};
-
-	template <typename _TElem>
-	class Optional <const IJST_CONT_VEC(_TElem)>
-	{
-		typedef const IJST_CONT_VEC(_TElem) ValType;
-		IJSTI_OPTIONAL_BASE_DEFINE(ValType)
-	public:
-		Optional<const _TElem> operator[](typename std::vector<_TElem>::size_type i) const
-		{
-			if (m_pVal == IJST_NULL || IJST_CONT_VAL(*m_pVal).size() <= i) {
-				return Optional<const _TElem>(IJST_NULL);
-			}
-			return Optional<const _TElem>(&(*m_pVal)[i]);
-		}
-
-	};
-
-	template <typename _TElem>
 	class Optional <IJST_CONT_MAP(std::string, _TElem)>
 	{
 		typedef IJST_CONT_MAP(std::string, _TElem) ValType;
@@ -260,7 +228,6 @@ namespace ijst {
 				return Optional<_TElem>(&it->second);
 			}
 		}
-
 	};
 
 	template <typename _TElem>
@@ -282,8 +249,29 @@ namespace ijst {
 				return Optional<const _TElem>(&it->second);
 			}
 		}
-
 	};
+
+	#define IJSTI_OPTIONAL_ARRAY_DEFINE(is_const, CONT_WRAPPER, Container)										\
+		template<typename _TElem>																				\
+		class Optional<is_const CONT_WRAPPER(_TElem)>															\
+		{ 																										\
+			typedef is_const CONT_WRAPPER(_TElem) ValType;														\
+			IJSTI_OPTIONAL_BASE_DEFINE(ValType)																	\
+		public:																									\
+			Optional<is_const _TElem> operator[](typename Container<_TElem>::size_type i) const					\
+			{																									\
+				if (m_pVal == IJST_NULL || IJST_CONT_VAL(*m_pVal).size() <= i) {								\
+					return Optional<is_const _TElem>(IJST_NULL);												\
+				}																								\
+				return Optional<is_const _TElem>(&(*m_pVal)[i]);												\
+			}																									\
+		};
+
+	IJSTI_OPTIONAL_ARRAY_DEFINE(, IJST_CONT_VEC, std::vector)
+	IJSTI_OPTIONAL_ARRAY_DEFINE(const, IJST_CONT_VEC, std::vector)
+	IJSTI_OPTIONAL_ARRAY_DEFINE(, IJST_CONT_DEQUE, std::deque)
+	IJSTI_OPTIONAL_ARRAY_DEFINE(const, IJST_CONT_DEQUE, std::deque)
+
 	/**	========================================================================================
 	 *				Inner Interface
 	 */
