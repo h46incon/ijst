@@ -85,6 +85,8 @@
 //! Declare a ijst struct with getter.
 #define IJST_DEFINE_STRUCT_WITH_GETTER(stName, ...) \
     IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(stName, ##__VA_ARGS__), stName, T, ##__VA_ARGS__)
+//!
+#define IJST_DEFINE_VALUE(stName, type, fname, sName, desc)
 
 //! Declare a vector<_T> field.
 #define IJST_TVEC(_T)	::ijst::detail::TypeClassVec< _T>
@@ -286,6 +288,12 @@ namespace ijst {
 				}													\
 			} while (false)
 
+		//! return Err::kWriteFailed if action return false
+		#define IJSTI_RET_WHEN_WRITE_FAILD(action) 					\
+			do { if(!(action)) return Err::kWriteFailed; } while (false)
+		//! return if action return non-0
+		#define IJSTI_RET_WHEN_NOT_ZERO(action) 					\
+			do { int ret = (action); if(ret != 0) return (ret); } while (false)
 
 		#if __cplusplus >= 201103L
 			#define IJSTI_MOVE(val) 	std::move((val))
@@ -558,23 +566,16 @@ namespace ijst {
 				const RealVarType& field = IJST_CONT_VAL(*pFieldWrapper);
 				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(DefType);
 
-				if (!req.writer.StartArray()) {
-					return Err::kWriteFailed;
-				}
+				IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartArray());
 
 				for (typename RealVarType::const_iterator itera = field.begin(); itera != field.end(); ++itera) {
 					SerializeReq elemReq(req.writer, &(*itera), req.pushAllField);
 					SerializeResp elemResp;
-					int ret = interface->Serialize(elemReq, elemResp);
-
-					if (ret != 0) {
-						return ret;
-					}
+					IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq, elemResp));
 				}
 
-				if (!req.writer.EndArray()) {
-					return Err::kWriteFailed;
-				}
+				IJSTI_RET_WHEN_WRITE_FAILD(req.writer.EndArray());
+
 				return 0;
 			}
 
@@ -638,11 +639,7 @@ namespace ijst {
 					JsonValue newElem;
 					ToJsonReq elemReq(newElem, req.allocator, &(*itera), req.canMoveSrc, req.pushAllField);
 					ToJsonResp elemResp;
-					int ret = interface->ToJson(elemReq, elemResp);
-
-					if (ret != 0) {
-						return ret;
-					}
+					IJSTI_RET_WHEN_NOT_ZERO(interface->ToJson(elemReq, elemResp));
 					req.buffer.PushBack(newElem, req.allocator);
 				}
 				return 0;
@@ -658,10 +655,7 @@ namespace ijst {
 				// Loop
 				for (typename RealVarType::iterator itera = field.begin(); itera != field.end(); ++itera)
 				{
-					int ret = interface->SetAllocator(&(*itera), allocator);
-					if (ret != 0) {
-						return ret;
-					}
+					IJSTI_RET_WHEN_NOT_ZERO(interface->SetAllocator(&(*itera), allocator));
 				}
 
 				return 0;
@@ -774,28 +768,19 @@ namespace ijst {
 				const RealVarType& field = IJST_CONT_VAL(*pFieldWrapper);
 				SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 
-				if (!req.writer.StartObject()) {
-					return Err::kWriteFailed;
-				}
+				IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartObject());
 
 				for (typename RealVarType::const_iterator itFieldMember = field.begin(); itFieldMember != field.end(); ++itFieldMember) {
 					const std::string& key = itFieldMember->first;
-					if (!req.writer.Key(key.c_str(), static_cast<rapidjson::SizeType>(key.length()))) {
-						return Err::kWriteFailed;
-					}
+					IJSTI_RET_WHEN_WRITE_FAILD(
+							req.writer.Key(key.c_str(), static_cast<rapidjson::SizeType>(key.length())) );
 
 					SerializeReq elemReq(req.writer, &(itFieldMember->second), req.pushAllField);
 					SerializeResp elemResp;
-					int ret = interface->Serialize(elemReq, elemResp);
-
-					if (ret != 0) {
-						return ret;
-					}
+					IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq, elemResp));
 				}
 
-				if (!req.writer.EndObject()) {
-					return Err::kWriteFailed;
-				}
+				IJSTI_RET_WHEN_WRITE_FAILD(req.writer.EndObject());
 				return 0;
 			}
 
@@ -869,12 +854,7 @@ namespace ijst {
 					JsonValue newElem;
 					ToJsonReq elemReq(newElem, req.allocator, pFieldValue, req.canMoveSrc, req.pushAllField);
 					ToJsonResp elemResp;
-					int ret = interface->ToJson(elemReq, elemResp);
-
-					// Check return
-					if (ret != 0) {
-						return ret;
-					}
+					IJSTI_RET_WHEN_NOT_ZERO(interface->ToJson(elemReq, elemResp));
 
 					// Add member by copy key name
 					rapidjson::GenericStringRef<char> fieldNameRef =
@@ -898,10 +878,7 @@ namespace ijst {
 				// Reset member
 				for (typename RealVarType::iterator itera = field.begin(); itera != field.end(); ++itera)
 				{
-					int ret = interface->SetAllocator(&(itera->second), allocator);
-					if (ret != 0) {
-						return ret;
-					}
+					IJSTI_RET_WHEN_NOT_ZERO(interface->SetAllocator(&(itera->second), allocator));
 				}
 
 				return 0;
@@ -1139,10 +1116,7 @@ namespace ijst {
 		{
 			rapidjson::StringBuffer buffer;
 			detail::JsonWriter writer(buffer);
-			int iRet = DoSerialize(writer, pushAllField);
-			if (iRet != 0) {
-				return iRet;
-			}
+			IJSTI_RET_WHEN_NOT_ZERO(DoSerialize(writer, pushAllField));
 
 			strOutput = std::string(buffer.GetString(), buffer.GetLength());
 			return 0;
@@ -1295,10 +1269,9 @@ namespace ijst {
 				 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
 			{
 				void *pField = GetFieldByOffset(itMetaField->offset);
-				int ret = itMetaField->serializerInterface->SetAllocator(pField, allocator);
-				if (ret != 0) {
-					return ret;
-				}
+				IJSTI_RET_WHEN_NOT_ZERO(
+						itMetaField->serializerInterface->SetAllocator(pField, allocator)
+				);
 			}
 			return 0;
 		}
@@ -1417,10 +1390,31 @@ namespace ijst {
 		 */
 		int DoSerialize(detail::JsonWriter &writer, bool pushAllField) const
 		{
-			if (!writer.StartObject()) {
-				return Err::kWriteFailed;
-			}
+			IJSTI_RET_WHEN_WRITE_FAILD(writer.StartObject());
+
 			// Write fields
+			IJSTI_RET_WHEN_NOT_ZERO(DoSerializeFields(writer, pushAllField));
+
+			// Write Buffer
+			assert(m_pBuffer->IsObject());
+			for (rapidjson::Value::ConstMemberIterator itMember = m_pBuffer->MemberBegin();
+				 itMember != m_pBuffer->MemberEnd(); ++itMember)
+			{
+				// Write key
+				const JsonValue& key = itMember->name;
+				IJSTI_RET_WHEN_WRITE_FAILD(
+						writer.Key(key.GetString(), key.GetStringLength()) );
+				// Write value
+				IJSTI_RET_WHEN_WRITE_FAILD(
+						itMember->value.Accept(writer) );
+			}
+
+			IJSTI_RET_WHEN_WRITE_FAILD(writer.EndObject());
+			return 0;
+		}
+
+		int DoSerializeFields(detail::JsonWriter &writer, bool pushAllField) const
+		{
 			for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
 				 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
 			{
@@ -1436,26 +1430,24 @@ namespace ijst {
 						}
 
 						const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
-						if(!writer.Key(itMetaField->name.c_str(), itMetaField->name.length())) {
-							return Err::kWriteFailed;
-						}
+						// write key
+						IJSTI_RET_WHEN_WRITE_FAILD(
+								writer.Key(itMetaField->name.c_str(), itMetaField->name.length()) );
+						// write value
 						SerializeReq req(writer, pFieldValue, pushAllField);
 						SerializeResp resp;
-						int ret = itMetaField->serializerInterface->Serialize(req, resp);
-						if (ret != 0) {
-							return ret;
-						}
+						IJSTI_RET_WHEN_NOT_ZERO(
+								itMetaField->serializerInterface->Serialize(req, resp));
 					}
 						break;
 
 					case FStatus::kNull:
 					{
-						if(!writer.Key(itMetaField->name.c_str(), itMetaField->name.length())) {
-							return Err::kWriteFailed;
-						}
-						if (!writer.Null()) {
-							return Err::kWriteFailed;
-						}
+						// write key
+						IJSTI_RET_WHEN_WRITE_FAILD(
+								writer.Key(itMetaField->name.c_str(), itMetaField->name.length()) );
+						// write value
+						IJSTI_RET_WHEN_WRITE_FAILD(writer.Null());
 					}
 						break;
 
@@ -1465,27 +1457,6 @@ namespace ijst {
 						assert(false);
 						return Err::kInnerError;
 				}
-
-			}
-
-			// Write Buffer
-			assert(m_pBuffer->IsObject());
-			for (rapidjson::Value::ConstMemberIterator itMember = m_pBuffer->MemberBegin();
-				 itMember != m_pBuffer->MemberEnd(); ++itMember)
-			{
-				// Write key
-				const JsonValue& key = itMember->name;
-				if (!writer.Key(key.GetString(), key.GetStringLength())) {
-					return Err::kWriteFailed;
-				}
-				// Write value
-				if (!itMember->value.Accept(writer)) {
-					return Err::kWriteFailed;
-				}
-			}
-
-			if (!writer.EndObject()) {
-				return Err::kWriteFailed;
 			}
 			return 0;
 		}
@@ -1540,19 +1511,15 @@ namespace ijst {
 						if (fstatus != FStatus::kValid && !pushAllField) {
 							continue;
 						}
-						int ret = DoFieldToJson(itMetaField, canMoveSrc, pushAllField, buffer, allocator);
-						if (ret != 0) {
-							return ret;
-						}
+						IJSTI_RET_WHEN_NOT_ZERO(
+								DoFieldToJson(itMetaField, canMoveSrc, pushAllField, buffer, allocator) );
 					}
 						break;
 
 					case FStatus::kNull:
 					{
-						int ret = DoNullFieldToJson(itMetaField, buffer, allocator);
-						if (ret != 0) {
-							return ret;
-						}
+						IJSTI_RET_WHEN_NOT_ZERO(
+								DoNullFieldToJson(itMetaField, buffer, allocator) );
 					}
 						break;
 
@@ -1575,10 +1542,8 @@ namespace ijst {
 							JsonAllocator &allocator)
 		{
 			const Accessor& rThis = accessor;
-			int iRet = rThis.DoAllFieldsToJson(pushAllField, kCanMoveSrc, buffer, allocator);
-			if (iRet != 0) {
-				return iRet;
-			}
+			IJSTI_RET_WHEN_NOT_ZERO(
+					rThis.DoAllFieldsToJson(pushAllField, kCanMoveSrc, buffer, allocator) );
 			Accessor::template AppendInnerToBuffer<kCanMoveSrc, _TAccessor>(accessor, buffer, allocator);
 			return 0;
 		}
@@ -1595,10 +1560,8 @@ namespace ijst {
 			ToJsonReq elemSerializeReq(elemOutput, allocator, pFieldValue, canMoveSrc, pushAllField);
 
 			ToJsonResp elemSerializeResp;
-			int ret = itMetaField->serializerInterface->ToJson(elemSerializeReq, elemSerializeResp);
-			if (ret != 0) {
-				return ret;
-			}
+			IJSTI_RET_WHEN_NOT_ZERO(
+					itMetaField->serializerInterface->ToJson(elemSerializeReq, elemSerializeResp) );
 
 			// Add member, copy field name because the fieldName store in Meta info maybe release when dynamical
 			// library unload, and the memory pool should be fast to copy field name
@@ -1688,12 +1651,8 @@ namespace ijst {
 				JsonValue memberStream(rapidjson::kNullType);
 				memberStream.Swap(itMember->value);
 
-				int ret = DoFieldFromJson(itMetaField, memberStream, unknownMode, /*canMoveSrc=*/true,
-										  pErrMsgOut
-				);
-				if (ret != 0) {
-					return ret;
-				}
+				IJSTI_RET_WHEN_NOT_ZERO(
+						DoFieldFromJson(itMetaField, memberStream, unknownMode, /*canMoveSrc=*/true, pErrMsgOut) );
 				++fieldCountOut;
 			}
 
@@ -1755,12 +1714,8 @@ namespace ijst {
 				}
 
 				JsonValue& memberStream = const_cast<JsonValue&>(itMember->value);
-				int ret = DoFieldFromJson(itMetaField, memberStream,
-										  unknownMode, /*canMoveSrc=*/false, pErrMsgOut
-				);
-				if (ret != 0) {
-					return ret;
-				}
+				IJSTI_RET_WHEN_NOT_ZERO(
+						DoFieldFromJson(itMetaField, memberStream, unknownMode, /*canMoveSrc=*/false, pErrMsgOut) );
 				++fieldCountOut;
 			}
 
