@@ -64,14 +64,15 @@
 		BOOST_PP_REPEAT(n, IJSTM_FIELD_GETTER, _)
 
 	//* Define Struct
-	IJSTM_HASH define IJSTM_DEFINE_STRUCT(n)(stName, needGetter BOOST_PP_ENUM_TRAILING_PARAMS(n, f)) 		IJSTM_BSLASH
+	IJSTM_HASH define IJSTM_DEFINE_STRUCT(n)( 																IJSTM_BSLASH
+						stName, isRawVal, needGetter BOOST_PP_ENUM_TRAILING_PARAMS(n, f)) 					IJSTM_BSLASH
 	class stName{	 																						IJSTM_BSLASH
 	public:	 																								IJSTM_BSLASH
 		::ijst::Accessor _;			 																		IJSTM_BSLASH
 		BOOST_PP_REPEAT(n, IJSTM_DEFINE_FIELD, ~)															IJSTM_BSLASH
 		IJSTI_PP_CONCAT(IJSTI_DEFINE_GETTER_, needGetter) (n BOOST_PP_ENUM_TRAILING_PARAMS(n,f))			IJSTM_BSLASH
 		explicit stName(bool isValid = true): 	 															IJSTM_BSLASH
-			_(&(MetaInfoS::GetInstance()->metaClass), isValid)	 											IJSTM_BSLASH
+			_(&(MetaInfoS::GetInstance()->metaClass), isRawVal, isValid)	 								IJSTM_BSLASH
 			BOOST_PP_REPEAT(n, IJSTM_FIELD_INIT, ~)															IJSTM_BSLASH
 			{}	 																							IJSTM_BSLASH
 	private:	 																							IJSTM_BSLASH

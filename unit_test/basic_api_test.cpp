@@ -2,9 +2,7 @@
 // Created by h46incon on 2017/9/29.
 //
 
-#include <ijst/ijst.h>
-#include <ijst/types_std.h>
-#include <gtest/gtest.h>
+#include "util.h"
 
 namespace dummy_ns {
 
@@ -271,6 +269,66 @@ TEST(BasicAPI, WrapperMap)
 		ASSERT_EQ(val2["k"], 2);
 	}
 #endif
+}
+
+IJST_DEFINE_VALUE(
+		ValVec, IJST_TVEC(IJST_TPRI(Int)), v, 0
+)
+
+TEST(BasicAPI, DefineValueStVec)
+{
+	int ret;
+	ValVec st;
+
+	// Deserialize
+	const std::string json = "[0, 1, 2]";
+	ret = st._.Deserialize(json);
+	ASSERT_EQ(ret, 0);
+	std::vector<int>& vRef = IJST_CONT_VAL(st.v);
+	ASSERT_EQ(vRef.size(), 3u);
+	ASSERT_EQ(vRef[0], 0);
+	ASSERT_EQ(vRef[1], 1);
+	ASSERT_EQ(vRef[2], 2);
+
+	// Serialize
+	vRef.push_back(3);
+	rapidjson::Document doc;
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+	ASSERT_TRUE(doc.IsArray());
+	ASSERT_EQ(doc.Size(), 4u);
+	ASSERT_EQ(doc[0].GetInt(), 0);
+	ASSERT_EQ(doc[1].GetInt(), 1);
+	ASSERT_EQ(doc[2].GetInt(), 2);
+	ASSERT_EQ(doc[3].GetInt(), 3);
+}
+
+IJST_DEFINE_VALUE_WITH_GETTER(
+		ValMap, IJST_TMAP(IJST_TPRI(Int)), v, 0
+)
+
+TEST(BasicAPI, DefineValueStMap)
+{
+	int ret;
+	ValMap st;
+
+	// Deserialize
+	const std::string json = "{\"v1\": 1, \"v2\": 2}";
+	ret = st._.Deserialize(json);
+	ASSERT_EQ(ret, 0);
+	std::map<std::string, int>& vRef = IJST_CONT_VAL(*st.Getv().Ptr());
+	ASSERT_EQ(vRef.size(), 2u);
+	ASSERT_EQ(vRef["v1"], 1);
+	ASSERT_EQ(vRef["v2"], 2);
+
+	// Serialize
+	vRef["v3"] = 3;
+	rapidjson::Document doc;
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+	ASSERT_TRUE(doc.IsObject());
+	ASSERT_EQ(doc.MemberCount(), 3u);
+	ASSERT_EQ(doc["v1"].GetInt(), 1);
+	ASSERT_EQ(doc["v2"].GetInt(), 2);
+	ASSERT_EQ(doc["v3"].GetInt(), 3);
 }
 
 IJST_DEFINE_STRUCT(

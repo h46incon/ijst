@@ -81,12 +81,16 @@
 
 //! Declare a ijst struct.
 #define IJST_DEFINE_STRUCT(stName, ...) \
-    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(stName, ##__VA_ARGS__), stName, F, ##__VA_ARGS__)
+    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(stName, ##__VA_ARGS__), stName, false, F, ##__VA_ARGS__)
 //! Declare a ijst struct with getter.
 #define IJST_DEFINE_STRUCT_WITH_GETTER(stName, ...) \
-    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(stName, ##__VA_ARGS__), stName, T, ##__VA_ARGS__)
-//!
-#define IJST_DEFINE_VALUE(stName, type, fname, sName, desc)
+    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(stName, ##__VA_ARGS__), stName, false, T, ##__VA_ARGS__)
+//! Declare a ijst struct which represent a value instead of members insides a object
+#define IJST_DEFINE_VALUE(stName, type, fName, desc)	\
+    IJSTI_DEFINE_STRUCT_IMPL(1, stName, true, F, (type, fName, "JSON_ITSELF", desc))
+//! Declare a ijst struct which represent a value instead of members insides a object with getter
+#define IJST_DEFINE_VALUE_WITH_GETTER(stName, type, fName, desc)	\
+    IJSTI_DEFINE_STRUCT_IMPL(1, stName, true, T, (type, fName, "JSON_ITSELF", desc))
 
 //! Declare a vector<_T> field.
 #define IJST_TVEC(_T)	::ijst::detail::TypeClassVec< _T>
@@ -965,9 +969,10 @@ namespace ijst {
 	class Accessor {
 	public:
 		//region constructors
-		explicit Accessor(const detail::MetaClass *pMetaClass, bool isValid) :
-				m_pMetaClass(pMetaClass), m_isValid(isValid)
+		explicit Accessor(const detail::MetaClass *pMetaClass, bool isParentVal, bool isValid) :
+				m_pMetaClass(pMetaClass), m_isValid(isValid), m_isParentVal(isParentVal)
 		{
+			IJST_ASSERT(!m_isParentVal || m_pMetaClass->metaFields.size() != 0);
 			m_pFieldStatus = new FieldStatusType();
 			m_pBuffer = new rapidjson::Value(rapidjson::kObjectType);
 			m_pOwnDoc = new rapidjson::Document();
@@ -980,6 +985,7 @@ namespace ijst {
 			assert(this != &rhs);
 
 			m_isValid = rhs.m_isValid;
+			m_isParentVal = rhs.m_isParentVal;
 
 			m_pFieldStatus = new FieldStatusType(*rhs.m_pFieldStatus);
 			m_pBuffer = new rapidjson::Value(rapidjson::kObjectType);
@@ -1046,11 +1052,13 @@ namespace ijst {
 			rhs.m_pAllocator = IJST_NULL;
 
 			m_isValid = rhs.m_isValid;
+			m_isParentVal = rhs.m_isParentVal;
 
 			InitOuterPtr();
 		}
 
 		inline bool IsValid() const { return m_isValid; }
+		inline bool IsParentVal() const { return m_isParentVal; }
 
 		/*
 		 * Field accessor.
@@ -1385,17 +1393,20 @@ namespace ijst {
 			(*m_pFieldStatus)[offset] = fStatus;
 		}
 
-		/**
-		 * Write to string
-		 */
+		//! Serialize to string using SAX API
 		int DoSerialize(detail::JsonWriter &writer, bool pushAllField) const
 		{
+			if (m_isParentVal) {
+				return DoSerializeFields(writer, pushAllField);
+				// buffer will be ignored
+			}
+
 			IJSTI_RET_WHEN_WRITE_FAILD(writer.StartObject());
 
 			// Write fields
 			IJSTI_RET_WHEN_NOT_ZERO(DoSerializeFields(writer, pushAllField));
 
-			// Write Buffer
+			// Write buffer
 			assert(m_pBuffer->IsObject());
 			for (rapidjson::Value::ConstMemberIterator itMember = m_pBuffer->MemberBegin();
 				 itMember != m_pBuffer->MemberEnd(); ++itMember)
@@ -1415,6 +1426,7 @@ namespace ijst {
 
 		int DoSerializeFields(detail::JsonWriter &writer, bool pushAllField) const
 		{
+			IJST_ASSERT(!m_isParentVal || m_pMetaClass->metaFields.size() == 1);
 			for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
 				 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
 			{
@@ -1430,9 +1442,11 @@ namespace ijst {
 						}
 
 						const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
-						// write key
-						IJSTI_RET_WHEN_WRITE_FAILD(
-								writer.Key(itMetaField->name.c_str(), itMetaField->name.length()) );
+						if (!m_isParentVal) {
+							// write key
+							IJSTI_RET_WHEN_WRITE_FAILD(
+									writer.Key(itMetaField->name.c_str(), itMetaField->name.length()) );
+						}
 						// write value
 						SerializeReq req(writer, pFieldValue, pushAllField);
 						SerializeResp resp;
@@ -1443,9 +1457,11 @@ namespace ijst {
 
 					case FStatus::kNull:
 					{
-						// write key
-						IJSTI_RET_WHEN_WRITE_FAILD(
-								writer.Key(itMetaField->name.c_str(), itMetaField->name.length()) );
+						if (!m_isParentVal) {
+							// write key
+							IJSTI_RET_WHEN_WRITE_FAILD(
+									writer.Key(itMetaField->name.c_str(), itMetaField->name.length()) );
+						}
 						// write value
 						IJSTI_RET_WHEN_WRITE_FAILD(writer.Null());
 					}
@@ -1466,36 +1482,42 @@ namespace ijst {
 							  IJST_OUT JsonValue &buffer, JsonAllocator &allocator) const
 		{
 			// Serialize fields to buffer
-			buffer.SetObject();
 
-			// Reserve space
-			do {
-				const size_t maxSize = m_pMetaClass->metaFields.size() + m_pBuffer->MemberCount();
-				if (buffer.MemberCapacity() >= maxSize) {
-					break;
-				}
+			if (!m_isParentVal)
+			{
+				// Init buffer to object and reserve space
+				buffer.SetObject();
 
-				size_t fieldSize;
-				if (pushAllField) {
-					fieldSize = maxSize;
-				}
-				else {
-					fieldSize = m_pBuffer->MemberCount();
-					for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
-						 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
-					{
-						EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
-						if (fstatus == FStatus::kValid || fstatus == FStatus::kNull) {
-							++fieldSize;
-						}
+				do {
+					const size_t selfBufferSize = m_pBuffer->MemberCount();
+					const size_t maxSize = m_pMetaClass->metaFields.size() + selfBufferSize;
+					if (buffer.MemberCapacity() >= maxSize) {
+						break;
 					}
 
-				}
-				buffer.MemberReserve(fieldSize, allocator);
-			} while (false);
+					size_t fieldSize;
+					if (pushAllField) {
+						fieldSize = maxSize;
+					}
+					else {
+						fieldSize = selfBufferSize;
+						for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
+							 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
+						{
+							EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
+							if (fstatus == FStatus::kValid || fstatus == FStatus::kNull) {
+								++fieldSize;
+							}
+						}
+
+					}
+					buffer.MemberReserve(fieldSize, allocator);
+				} while (false);
+			}
 
 			#ifndef NDEBUG
-			const rapidjson::SizeType oldCapcity = buffer.MemberCapacity();
+			// assert that buffer will not reallocate memory during serialization
+			const rapidjson::SizeType oldCapcity = m_isParentVal ? 0 : buffer.MemberCapacity();
 			#endif
 
 			for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
@@ -1532,8 +1554,8 @@ namespace ijst {
 				}
 
 			}
-			// assert that buffer will not reallocate memory during serialization
-			assert(buffer.MemberCapacity() == oldCapcity);
+
+			assert(m_isParentVal || buffer.MemberCapacity() == oldCapcity);
 			return 0;
 		}
 
@@ -1555,16 +1577,23 @@ namespace ijst {
 			// Init
 			const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
 
+			if (m_isParentVal) {
+				// Set buffer itself to json value
+				ToJsonReq elemSerializeReq(buffer, allocator, pFieldValue, canMoveSrc, pushAllField);
+				ToJsonResp elemSerializeResp;
+				return itMetaField->serializerInterface->ToJson(elemSerializeReq, elemSerializeResp);
+			}
+			// Add a member to buffer
+
 			// Serialize field
 			JsonValue elemOutput;
 			ToJsonReq elemSerializeReq(elemOutput, allocator, pFieldValue, canMoveSrc, pushAllField);
-
 			ToJsonResp elemSerializeResp;
 			IJSTI_RET_WHEN_NOT_ZERO(
 					itMetaField->serializerInterface->ToJson(elemSerializeReq, elemSerializeResp) );
 
 			// Add member, copy field name because the fieldName store in Meta info maybe release when dynamical
-			// library unload, and the memory pool should be fast to copy field name
+			// library unload, and the memory pool should be fast to copy field name.
 			// Do not check existing key, that's a feature
 			rapidjson::GenericStringRef<char> fieldNameRef =
 					rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
@@ -1579,6 +1608,11 @@ namespace ijst {
 		int DoNullFieldToJson(std::vector<detail::MetaField>::const_iterator itMetaField,
 							  JsonValue &buffer, JsonAllocator &allocator) const
 		{
+			if (m_isParentVal) {
+				buffer.SetNull();
+				return 0;
+			}
+
 			// Init
 			rapidjson::GenericStringRef<char> fieldNameRef =
 					rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
@@ -1606,8 +1640,15 @@ namespace ijst {
 		int DoMoveFromJson(JsonValue &stream, EUnknownMode unknownMode,
 						   std::string *pErrMsgOut, IJST_OUT size_t &fieldCountOut)
 		{
-			if (!stream.IsObject())
-			{
+			if (m_isParentVal) {
+				// Set field by stream itself
+				assert(m_pMetaClass->metaFields.size() == 1);
+				return DoFieldFromJson(
+						&m_pMetaClass->metaFields[0], stream, unknownMode, /*canMoveSrc=*/true, pErrMsgOut);
+			}
+
+			// Set fields by members of stream
+			if (!stream.IsObject()) {
 				IJSTI_SET_ERRMSG(pErrMsgOut, "value is not object");
 				return Err::kDeserializeValueTypeError;
 			}
@@ -1652,7 +1693,7 @@ namespace ijst {
 				memberStream.Swap(itMember->value);
 
 				IJSTI_RET_WHEN_NOT_ZERO(
-						DoFieldFromJson(itMetaField, memberStream, unknownMode, /*canMoveSrc=*/true, pErrMsgOut) );
+						DoFieldFromJson(itMetaField->second, memberStream, unknownMode, /*canMoveSrc=*/true, pErrMsgOut) );
 				++fieldCountOut;
 			}
 
@@ -1675,6 +1716,14 @@ namespace ijst {
 		int DoFromJson(const JsonValue &stream, EUnknownMode unknownMode,
 					   std::string *pErrMsgOut, IJST_OUT size_t &fieldCountOut)
 		{
+			if (m_isParentVal) {
+				// Serialize field by stream itself
+				assert(m_pMetaClass->metaFields.size() == 1);
+				return DoFieldFromJson(
+						&m_pMetaClass->metaFields[0], const_cast<JsonValue &>(stream), unknownMode, /*canMoveSrc=*/true, pErrMsgOut);
+			}
+
+			// Serialize fields by members of stream
 			if (!stream.IsObject()) {
 				IJSTI_SET_ERRMSG(pErrMsgOut, "value is not object");
 				return Err::kDeserializeValueTypeError;
@@ -1715,7 +1764,7 @@ namespace ijst {
 
 				JsonValue& memberStream = const_cast<JsonValue&>(itMember->value);
 				IJSTI_RET_WHEN_NOT_ZERO(
-						DoFieldFromJson(itMetaField, memberStream, unknownMode, /*canMoveSrc=*/false, pErrMsgOut) );
+						DoFieldFromJson(itMetaField->second, memberStream, unknownMode, /*canMoveSrc=*/false, pErrMsgOut) );
 				++fieldCountOut;
 			}
 
@@ -1723,11 +1772,11 @@ namespace ijst {
 			return ret;
 		}
 
-		int DoFieldFromJson(std::map<std::string, const detail::MetaField *>::const_iterator itMetaField,
+
+		int DoFieldFromJson(const detail::MetaField* metaField,
 							JsonValue &stream, EUnknownMode unknownMode, bool canMoveSrc,
 							std::string *pErrMsgOut)
 		{
-			const detail::MetaField *metaField = itMetaField->second;
 			// Check nullable
 			if (isBitSet(metaField->desc, FDesc::Nullable)
 				&& stream.IsNull())
@@ -1849,6 +1898,7 @@ namespace ijst {
 		const unsigned char *m_pOuter;
 
 		bool m_isValid;
+		bool m_isParentVal;
 		//</editor-fold>
 	};
 
@@ -1900,8 +1950,8 @@ namespace ijst {
 
 	//! Wrapper of IJST_DEFINE_STRUCT_IMPL_*
 	//! @param needGetter: must be T or F
-	#define IJSTI_DEFINE_STRUCT_IMPL(N, stName, needGetter, ...) \
-		IJSTI_PP_CONCAT(IJSTI_DEFINE_STRUCT_IMPL_, N)(stName, needGetter, ##__VA_ARGS__)
+	#define IJSTI_DEFINE_STRUCT_IMPL(N, stName, isRawVal, needGetter, ...) \
+		IJSTI_PP_CONCAT(IJSTI_DEFINE_STRUCT_IMPL_, N)(stName, isRawVal, needGetter, ##__VA_ARGS__)
 
 	//! Define getter of fields
 	#define IJSTI_DEFINE_GETTER_T(N, ...)	\

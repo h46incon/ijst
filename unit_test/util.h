@@ -17,7 +17,7 @@
 
 #define UTEST_MOVE_TO_STRING_AND_CHECK(st, pushAllField, doc)				\
 {																			\
-	string json;															\
+	std::string json;														\
 	int toStrRet = st._.Serialize(pushAllField, json);						\
 	ASSERT_EQ(toStrRet, 0);													\
 	doc.Parse(json.c_str(), json.length());									\
@@ -33,7 +33,7 @@
 
 #define UTEST_MOVE_TO_STRING_AND_CHECK(st, pushAllField, doc)				\
 {																			\
-	string json;															\
+	std::string json;														\
 	int toStrRet = st._.Serialize(pushAllField, json);						\
 	ASSERT_EQ(toStrRet, 0);													\
 	doc.Parse(json.c_str(), json.length());									\
