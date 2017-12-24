@@ -3,6 +3,7 @@ project(IJST)
 
 set(CMAKE_CXX_STANDARD 11)
 add_definitions(-Wall)
+add_definitions(-Wunused-parameter)
 #add_definitions(-DIJST_USE_SL_WRAPPER)
 #add_definitions(-DIJST_ENABLE_TO_JSON_OBJECT)
 #add_definitions(-DIJST_ENABLE_FROM_JSON_OBJECT)

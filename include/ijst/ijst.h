@@ -192,7 +192,7 @@ namespace ijst {
 
 	#define IJSTI_OPTIONAL_BASE_DEFINE(_T)						\
 		public:													\
-			Optional(_T* _pVal) : m_pVal(_pVal) {}				\
+			explicit Optional(_T* _pVal) : m_pVal(_pVal) {}		\
 			_T* Ptr() const { return m_pVal; }					\
 		private:												\
 			_T* const m_pVal;
@@ -387,9 +387,6 @@ namespace ijst {
 				{ }
 			};
 
-			struct SerializeResp {
-			};
-
 			struct DeserializeReq {
 				// Pointer of deserialize output.
 				// The instance should deserialize in this object
@@ -451,7 +448,7 @@ namespace ijst {
 				}
 			};
 
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) = 0;
+			virtual int Serialize(const SerializeReq &req) = 0;
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp)= 0;
 
@@ -482,12 +479,10 @@ namespace ijst {
 				{ }
 			};
 
-			struct ToJsonResp {
-			};
+			virtual int ToJson(const ToJsonReq &req)= 0;
 
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp)= 0;
-
-			virtual int SetAllocator(void *pField, JsonAllocator &allocator) {return 0;}
+			virtual int SetAllocator(void *pField, JsonAllocator &allocator)
+			{ (void) pField; (void) allocator; return 0; }
 #endif
 
 		};
@@ -507,12 +502,12 @@ namespace ijst {
 
 			typedef void VarType;
 
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE = 0;
+			virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE = 0;
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE = 0;
 
 #if IJST_ENABLE_TO_JSON_OBJECT
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE = 0;
+			virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE = 0;
 
 			virtual int SetAllocator(void *pField, JsonAllocator &allocator) IJSTI_OVERRIDE;
 #endif
@@ -533,10 +528,10 @@ namespace ijst {
 		public:
 			typedef _T VarType;
 
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+			virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 			{
 				_T *pField = (_T *) req.pField;
-				return pField->_.ISerialize(req, resp);
+				return pField->_.ISerialize(req);
 			}
 
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
@@ -546,10 +541,10 @@ namespace ijst {
 			}
 
 #if IJST_ENABLE_TO_JSON_OBJECT
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
+			virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
 			{
 				_T *pField = (_T *) req.pField;
-				return pField->_.IToJson(req, resp);
+				return pField->_.IToJson(req);
 			}
 
 			virtual int SetAllocator(void* pField, JsonAllocator& allocator) IJSTI_OVERRIDE
@@ -563,7 +558,7 @@ namespace ijst {
 		template<typename DefType, typename VarType, typename RealVarType>
 		class ContainerSerializer : public SerializerInterface {
 		public:
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+			virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 			{
 				const VarType *pFieldWrapper = static_cast<const VarType *>(req.pField);
 				assert(pFieldWrapper != IJST_NULL);
@@ -574,8 +569,7 @@ namespace ijst {
 
 				for (typename RealVarType::const_iterator itera = field.begin(); itera != field.end(); ++itera) {
 					SerializeReq elemReq(req.writer, &(*itera), req.pushAllField);
-					SerializeResp elemResp;
-					IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq, elemResp));
+					IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq));
 				}
 
 				IJSTI_RET_WHEN_WRITE_FAILD(req.writer.EndArray());
@@ -630,7 +624,7 @@ namespace ijst {
 			}
 
 #if IJST_ENABLE_TO_JSON_OBJECT
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
+			virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
 			{
 				const VarType *pFieldWrapper = static_cast<const VarType *>(req.pField);
 				assert(pFieldWrapper != IJST_NULL);
@@ -642,8 +636,7 @@ namespace ijst {
 				for (typename RealVarType::const_iterator itera = field.begin(); itera != field.end(); ++itera) {
 					JsonValue newElem;
 					ToJsonReq elemReq(newElem, req.allocator, &(*itera), req.canMoveSrc, req.pushAllField);
-					ToJsonResp elemResp;
-					IJSTI_RET_WHEN_NOT_ZERO(interface->ToJson(elemReq, elemResp));
+					IJSTI_RET_WHEN_NOT_ZERO(interface->ToJson(elemReq));
 					req.buffer.PushBack(newElem, req.allocator);
 				}
 				return 0;
@@ -668,7 +661,8 @@ namespace ijst {
 		private:
 			template<typename Container>
 			struct ReserveWrapper {
-				static void Do(Container& container, size_t capacity) {}
+				static void Do(Container& container, size_t capacity)
+				{ (void)container; (void) capacity; }
 			};
 
 			template<typename _T>
@@ -682,15 +676,15 @@ namespace ijst {
 		};
 
 		#define IJSTI_SERIALIZER_CONTAINER_DEFINE()																		\
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE							\
-			{ return ContainerSerializerSingleton::GetInstance()->Serialize(req, resp); }								\
+			virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE												\
+			{ return ContainerSerializerSingleton::GetInstance()->Serialize(req); }										\
 			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE			\
 			{ return ContainerSerializerSingleton::GetInstance()->Deserialize(req, resp); }
 
 #if IJST_ENABLE_TO_JSON_OBJECT
 		#define IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()																\
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE									\
-			{ return ContainerSerializerSingleton::GetInstance()->ToJson(req, resp); }									\
+			virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE														\
+			{ return ContainerSerializerSingleton::GetInstance()->ToJson(req); }										\
 			virtual int SetAllocator(void *pField, JsonAllocator &allocator) IJSTI_OVERRIDE								\
 			{ return ContainerSerializerSingleton::GetInstance()->SetAllocator(pField, allocator); }
 #else
@@ -765,7 +759,7 @@ namespace ijst {
 		public:
 			typedef IJST_CONT_MAP(std::string, ElemVarType) VarType;
 
-			virtual int Serialize(const SerializeReq &req, SerializeResp &resp) IJSTI_OVERRIDE
+			virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 			{
 				const VarType *pFieldWrapper = static_cast<const VarType *>(req.pField);
 				assert(pFieldWrapper != IJST_NULL);
@@ -780,8 +774,7 @@ namespace ijst {
 							req.writer.Key(key.c_str(), static_cast<rapidjson::SizeType>(key.length())) );
 
 					SerializeReq elemReq(req.writer, &(itFieldMember->second), req.pushAllField);
-					SerializeResp elemResp;
-					IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq, elemResp));
+					IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq));
 				}
 
 				IJSTI_RET_WHEN_WRITE_FAILD(req.writer.EndObject());
@@ -841,7 +834,7 @@ namespace ijst {
 			}
 
 #if IJST_ENABLE_TO_JSON_OBJECT
-			virtual int ToJson(const ToJsonReq &req, ToJsonResp &resp) IJSTI_OVERRIDE
+			virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
 			{
 				const VarType *pFieldWrapper = static_cast<const VarType *>(req.pField);
 				assert(pFieldWrapper != IJST_NULL);
@@ -857,8 +850,7 @@ namespace ijst {
 					const void* pFieldValue = &itFieldMember->second;
 					JsonValue newElem;
 					ToJsonReq elemReq(newElem, req.allocator, pFieldValue, req.canMoveSrc, req.pushAllField);
-					ToJsonResp elemResp;
-					IJSTI_RET_WHEN_NOT_ZERO(interface->ToJson(elemReq, elemResp));
+					IJSTI_RET_WHEN_NOT_ZERO(interface->ToJson(elemReq));
 
 					// Add member by copy key name
 					rapidjson::GenericStringRef<char> fieldNameRef =
@@ -1330,11 +1322,10 @@ namespace ijst {
 		// #region Implement SerializeInterface
 		template <class _T> friend class detail::FSerializer;
 		typedef detail::SerializerInterface::SerializeReq SerializeReq;
-		typedef detail::SerializerInterface::SerializeResp SerializeResp;
 		typedef detail::SerializerInterface::DeserializeReq DeserializeReq;
 		typedef detail::SerializerInterface::DeserializeResp DeserializeResp;
 
-		inline int ISerialize(const SerializeReq &req, SerializeResp &resp) const
+		inline int ISerialize(const SerializeReq &req) const
 		{
 			assert(req.pField == this);
 			return DoSerialize(req.writer, req.pushAllField);
@@ -1357,9 +1348,8 @@ namespace ijst {
 
 #if IJST_ENABLE_TO_JSON_OBJECT
 		typedef detail::SerializerInterface::ToJsonReq ToJsonReq;
-		typedef detail::SerializerInterface::ToJsonResp ToJsonResp;
 
-		inline int IToJson(const ToJsonReq &req, ToJsonResp &resp)
+		inline int IToJson(const ToJsonReq &req)
 		{
 			assert(req.pField == this);
 			if (req.canMoveSrc) {
@@ -1374,6 +1364,7 @@ namespace ijst {
 
 		inline int ISetAllocator(void* pField, JsonAllocator& allocator)
 		{
+			(void) pField;
 			assert(pField == this);
 			return SetMembersAllocator(allocator);
 		}
@@ -1449,9 +1440,8 @@ namespace ijst {
 						}
 						// write value
 						SerializeReq req(writer, pFieldValue, pushAllField);
-						SerializeResp resp;
 						IJSTI_RET_WHEN_NOT_ZERO(
-								itMetaField->serializerInterface->Serialize(req, resp));
+								itMetaField->serializerInterface->Serialize(req));
 					}
 						break;
 
@@ -1580,17 +1570,15 @@ namespace ijst {
 			if (m_isParentVal) {
 				// Set buffer itself to json value
 				ToJsonReq elemSerializeReq(buffer, allocator, pFieldValue, canMoveSrc, pushAllField);
-				ToJsonResp elemSerializeResp;
-				return itMetaField->serializerInterface->ToJson(elemSerializeReq, elemSerializeResp);
+				return itMetaField->serializerInterface->ToJson(elemSerializeReq);
 			}
 			// Add a member to buffer
 
 			// Serialize field
 			JsonValue elemOutput;
 			ToJsonReq elemSerializeReq(elemOutput, allocator, pFieldValue, canMoveSrc, pushAllField);
-			ToJsonResp elemSerializeResp;
 			IJSTI_RET_WHEN_NOT_ZERO(
-					itMetaField->serializerInterface->ToJson(elemSerializeReq, elemSerializeResp) );
+					itMetaField->serializerInterface->ToJson(elemSerializeReq));
 
 			// Add member, copy field name because the fieldName store in Meta info maybe release when dynamical
 			// library unload, and the memory pool should be fast to copy field name.
