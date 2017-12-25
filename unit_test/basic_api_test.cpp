@@ -390,7 +390,7 @@ TEST(BasicAPI, Constructor4LValue)
 	{
 		SimpleSt temp1;
 		IJST_SET(temp1, int_1, 0x5A5A);
-		temp1._.GetBuffer().AddMember("k", rapidjson::Value().SetInt(0xA5A5).Move(), temp1._.GetAllocator());
+		temp1._.GetUnknown().AddMember("k", rapidjson::Value().SetInt(0xA5A5).Move(), temp1._.GetAllocator());
 
 		// copy
 		SimpleSt st1(temp1);
@@ -398,11 +398,11 @@ TEST(BasicAPI, Constructor4LValue)
 		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), FStatus::kValid);
 		ASSERT_EQ(st1.int_1, 0x5A5A);
 		// copy inner stream
-		ASSERT_EQ(st1._.GetBuffer()["k"].GetInt(), 0xA5A5);
+		ASSERT_EQ(st1._.GetUnknown()["k"].GetInt(), 0xA5A5);
 		// new inner stream and allocator
 		ASSERT_NE(&st1._.GetAllocator(), &temp1._.GetAllocator());
 		ASSERT_NE(&st1._.GetOwnAllocator(), &temp1._.GetOwnAllocator());
-		ASSERT_NE(&st1._.GetBuffer(), &temp1._.GetBuffer());
+		ASSERT_NE(&st1._.GetUnknown(), &temp1._.GetUnknown());
 		// new metaField
 		IJST_SET(temp1, int_2, 0xA5A5);
 		ASSERT_EQ(IJST_GET_STATUS(st1, int_2), FStatus::kMissing);
@@ -415,7 +415,7 @@ TEST(BasicAPI, Constructor4LValue)
 	{
 		SimpleSt temp2;
 		IJST_SET(temp2, int_1, 0x5A5A);
-		temp2._.GetBuffer().AddMember("k", rapidjson::Value().SetInt(0xA5A5).Move(), temp2._.GetAllocator());
+		temp2._.GetUnknown().AddMember("k", rapidjson::Value().SetInt(0xA5A5).Move(), temp2._.GetAllocator());
 
 		SimpleSt st2;
 		IJST_SET(st2, int_2, 0x5A5A);
@@ -425,11 +425,11 @@ TEST(BasicAPI, Constructor4LValue)
 		ASSERT_EQ(st2.int_1, 0x5A5A);
 		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), FStatus::kMissing);
 		// copy inner stream
-		ASSERT_EQ(st2._.GetBuffer()["k"].GetInt(), 0xA5A5);
+		ASSERT_EQ(st2._.GetUnknown()["k"].GetInt(), 0xA5A5);
 		// new inner stream and allocator
 		ASSERT_NE(&st2._.GetAllocator(), &temp2._.GetAllocator());
 		ASSERT_NE(&st2._.GetOwnAllocator(), &temp2._.GetOwnAllocator());
-		ASSERT_NE(&st2._.GetBuffer(), &temp2._.GetBuffer());
+		ASSERT_NE(&st2._.GetUnknown(), &temp2._.GetUnknown());
 		// new metaField
 		IJST_SET(temp2, int_2, 0xA5A5);
 		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), FStatus::kMissing);
@@ -448,7 +448,7 @@ TEST(BasicAPI, Constructor4RValue)
 	{
 		SimpleSt temp1;
 		IJST_SET(temp1, int_1, 0x5A5A);
-		void* streamTemp1 = &temp1._.GetBuffer();
+		void* streamTemp1 = &temp1._.GetUnknown();
 		void* allocatorTemp1 = &temp1._.GetAllocator();
 		void* ownAllocatorTemp1 = &temp1._.GetOwnAllocator();
 
@@ -457,17 +457,17 @@ TEST(BasicAPI, Constructor4RValue)
 		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), FStatus::kValid);
 		ASSERT_EQ(st1.int_1, 0x5A5A);
 		// inner stream
-		ASSERT_EQ(&st1._.GetBuffer(), streamTemp1);
+		ASSERT_EQ(&st1._.GetUnknown(), streamTemp1);
 		ASSERT_EQ(&st1._.GetAllocator(), allocatorTemp1);
 		ASSERT_EQ(&st1._.GetOwnAllocator(), ownAllocatorTemp1);
-		//	ASSERT_ANY_THROW(temp3._.GetBuffer());
+		//	ASSERT_ANY_THROW(temp3._.GetUnknown());
 	}
 
 	// assign
 	{
 		SimpleSt temp2;
 		IJST_SET(temp2, int_1, 0x5A5A);
-		void* streamTemp2 = &temp2._.GetBuffer();
+		void* streamTemp2 = &temp2._.GetUnknown();
 		void* allocatorTemp2 = &temp2._.GetAllocator();
 		void* ownAllocatorTemp2 = &temp2._.GetOwnAllocator();
 
@@ -477,10 +477,10 @@ TEST(BasicAPI, Constructor4RValue)
 		ASSERT_EQ(IJST_GET_STATUS(st2, int_1), FStatus::kValid);
 		ASSERT_EQ(st2.int_1, 0x5A5A);
 		// inner stream
-		ASSERT_EQ(&st2._.GetBuffer(), streamTemp2);
+		ASSERT_EQ(&st2._.GetUnknown(), streamTemp2);
 		ASSERT_EQ(&st2._.GetAllocator(), allocatorTemp2);
 		ASSERT_EQ(&st2._.GetOwnAllocator(), ownAllocatorTemp2);
-		//	ASSERT_ANY_THROW(temp3._.GetBuffer());
+		//	ASSERT_ANY_THROW(temp3._.GetUnknown());
 	}
 }
 

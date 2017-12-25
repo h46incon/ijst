@@ -27,7 +27,7 @@ do {																				\
 	ASSERT_EQ(serRet, 0);															\
 	ASSERT_EQ((rapidjson::Value&)doc, _jVal);										\
 	if (((fieldPushMode) & ijst::FPush::kPushUnknown) != 0)							\
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);								\
+		ASSERT_EQ(st._.GetUnknown().MemberCount(), 0u);								\
 } while (false)
 
 #else

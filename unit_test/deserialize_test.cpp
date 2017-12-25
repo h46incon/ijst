@@ -76,10 +76,10 @@ TEST(Deserialize, AdditionalFields)
 		ASSERT_EQ(st.int_1, 1);
 		ASSERT_EQ(st.int_2, 2);
 		ASSERT_STREQ(IJST_CONT_VAL(st.str_2).c_str(), "str2");
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 3u);
-		ASSERT_STREQ(st._.GetBuffer()["addi_field1"].GetString(), "a_field1");
-		ASSERT_STREQ(st._.GetBuffer()["addi_field2"].GetString(), "a_field2");
-		ASSERT_STREQ(st._.GetBuffer()["addi_field3"].GetString(), "a_field3");
+		ASSERT_EQ(st._.GetUnknown().MemberCount(), 3u);
+		ASSERT_STREQ(st._.GetUnknown()["addi_field1"].GetString(), "a_field1");
+		ASSERT_STREQ(st._.GetUnknown()["addi_field2"].GetString(), "a_field2");
+		ASSERT_STREQ(st._.GetUnknown()["addi_field3"].GetString(), "a_field3");
 	}
 
 	// throw unknown
@@ -92,7 +92,7 @@ TEST(Deserialize, AdditionalFields)
 		ASSERT_EQ(st.int_1, 1);
 		ASSERT_EQ(st.int_2, 2);
 		ASSERT_STREQ(IJST_CONT_VAL(st.str_2).c_str(), "str2");
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
+		ASSERT_EQ(st._.GetUnknown().MemberCount(), 0u);
 	}
 
 	// error when unknown

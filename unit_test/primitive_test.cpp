@@ -67,7 +67,7 @@ void TestSt(const string& json, VT vDefault
 	Struct st;
 	// Default value
 	{
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
+		ASSERT_EQ(st._.GetUnknown().MemberCount(), 0u);
 		ASSERT_EQ(st.v, vDefault);
 	}
 
@@ -207,7 +207,7 @@ TEST(Primitive, RBool)
 	StRBool st;
 	// Default value
 	{
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
+		ASSERT_EQ(st._.GetUnknown().MemberCount(), 0u);
 		ASSERT_EQ(st.v, false);
 	}
 
@@ -533,7 +533,7 @@ TEST(Primitive, Raw)
 	StRaw st;
 	// Default value
 	{
-		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
+		ASSERT_EQ(st._.GetUnknown().MemberCount(), 0u);
 		ASSERT_TRUE(st.v.V().IsNull());
 	}
 

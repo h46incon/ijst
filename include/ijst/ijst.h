@@ -1104,9 +1104,9 @@ namespace ijst {
 			return GetStatusByOffset(offset);
 		}
 
-		//! Get inner buffer.
-		inline JsonValue &GetBuffer() { return *m_pUnknown; }
-		inline const JsonValue &GetBuffer() const { return *m_pUnknown; }
+		//! Get unknwon fields
+		inline JsonValue &GetUnknown() { return *m_pUnknown; }
+		inline const JsonValue &GetUnknown() const { return *m_pUnknown; }
 
 		//! Get allocator used in object.
 		//! The inner allocator is own allocator when init, but may change to other allocator
