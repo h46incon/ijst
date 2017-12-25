@@ -15,30 +15,31 @@
 
 #if IJST_ENABLE_TO_JSON_OBJECT
 
-#define UTEST_MOVE_TO_STRING_AND_CHECK(st, pushAllField, doc)				\
-{																			\
-	std::string json;														\
-	int toStrRet = st._.Serialize(pushAllField, json);						\
-	ASSERT_EQ(toStrRet, 0);													\
-	doc.Parse(json.c_str(), json.length());									\
-	ASSERT_FALSE(doc.HasParseError());										\
-	rapidjson::Value _jVal;													\
-	int serRet = st._.MoveToJson(pushAllField, _jVal, st._.GetAllocator());	\
-	ASSERT_EQ(serRet, 0);													\
-	ASSERT_EQ((rapidjson::Value&)doc, _jVal);								\
-	ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);							\
-}
+#define UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, fieldPushMode)						\
+do {																				\
+	std::string json;																\
+	int toStrRet = st._.Serialize(json, (fieldPushMode));							\
+	ASSERT_EQ(toStrRet, 0);															\
+	doc.Parse(json.c_str(), json.length());											\
+	ASSERT_FALSE(doc.HasParseError());												\
+	rapidjson::Value _jVal;															\
+	int serRet = st._.MoveToJson(_jVal, st._.GetAllocator(), (fieldPushMode));		\
+	ASSERT_EQ(serRet, 0);															\
+	ASSERT_EQ((rapidjson::Value&)doc, _jVal);										\
+	if (((fieldPushMode) & ijst::FPush::kPushUnknown) != 0)							\
+		ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);								\
+} while (false)
 
 #else
 
-#define UTEST_MOVE_TO_STRING_AND_CHECK(st, pushAllField, doc)				\
-{																			\
+#define UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, fieldPushMode)				\
+do {																		\
 	std::string json;														\
-	int toStrRet = st._.Serialize(pushAllField, json);						\
+	int toStrRet = st._.Serialize(json, (fieldPushMode));					\
 	ASSERT_EQ(toStrRet, 0);													\
 	doc.Parse(json.c_str(), json.length());									\
 	ASSERT_FALSE(doc.HasParseError());										\
-}
+} while (false)
 
 #endif
 

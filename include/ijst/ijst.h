@@ -147,10 +147,11 @@ namespace ijst {
 
 	//! Field description.
 	struct FDesc {
-		static const unsigned int _MaskDesc 		= 0x000000FF;
-		static const unsigned int Optional 			= 0x00000001;
-		static const unsigned int Nullable 			= 0x00000002;
-		static const unsigned int ElemNotEmpty 		= 0x00000004;
+		typedef unsigned int Mode;
+		static const Mode _MaskDesc 		= 0x000000FF;
+		static const Mode Optional 			= 0x00000001;
+		static const Mode Nullable 			= 0x00000002;
+		static const Mode ElemNotEmpty 		= 0x00000004;
 		// FDesc of Element (i.e. Nullable, ElemNotEmpty) inside container is hard to represent, has not plan to implement it
 	};
 
@@ -167,16 +168,16 @@ namespace ijst {
 	};
 	typedef FStatus::_E EFStatus;
 
-	//! Error code.
-	struct Err {
-		static const int kSucc 							= 0x00000000;
-		static const int kDeserializeValueTypeError 	= 0x00001001;
-		static const int kDeserializeSomeFiledsInvalid 	= 0x00001002;
-		static const int kDeserializeParseFaild 		= 0x00001003;
-		static const int kDeserializeElemEmpty 			= 0x00001004;
-		static const int kDeserializeSomeUnknownMember	= 0x00001005;
-		static const int kInnerError 					= 0x00002001;
-		static const int kWriteFailed					= 0x00003001;
+	//! Serialization options about fields.
+	//! Options can be combined by bitwise OR operator (|).
+	struct FPush {
+		typedef unsigned int Mode;
+		//! does not set any option
+		static const Mode kZero								= 0x00000000;
+		//! set if need serialize all field, otherwise will serialize only valid field
+		static const Mode kPushAllFields					= 0x00000001;
+		//! set if need serialize unknown field
+		static const Mode kPushUnknown						= 0x00000002;
 	};
 
 	//! Behaviour when meeting unknown member in json object.
@@ -189,6 +190,18 @@ namespace ijst {
 		};
 	};
 	typedef UnknownMode::_E EUnknownMode;
+
+	//! Error code.
+	struct Err {
+		static const int kSucc 							= 0x00000000;
+		static const int kDeserializeValueTypeError 	= 0x00001001;
+		static const int kDeserializeSomeFiledsInvalid 	= 0x00001002;
+		static const int kDeserializeParseFaild 		= 0x00001003;
+		static const int kDeserializeElemEmpty 			= 0x00001004;
+		static const int kDeserializeSomeUnknownMember	= 0x00001005;
+		static const int kInnerError 					= 0x00002001;
+		static const int kWriteFailed					= 0x00003001;
+	};
 
 	#define IJSTI_OPTIONAL_BASE_DEFINE(_T)						\
 		public:													\
@@ -371,8 +384,8 @@ namespace ijst {
 			virtual ~SerializerInterface() { }
 
 			struct SerializeReq {
-				// true if need serialize all field, false if serialize only valid field
-				bool pushAllField;
+				// Serialize option about fields
+				FPush::Mode fPushMode;
 
 				// Pointer of field to serialize.
 				// The actual type of field should be decide in the derived class
@@ -380,8 +393,8 @@ namespace ijst {
 
 				JsonWriter& writer;
 
-				SerializeReq(JsonWriter& _writer, const void *_pField, bool _pushAllField)
-						: pushAllField(_pushAllField)
+				SerializeReq(JsonWriter& _writer, const void *_pField, FPush::Mode _fPushMode)
+						: fPushMode(_fPushMode)
 						, pField(_pField)
 						, writer(_writer)
 				{ }
@@ -454,8 +467,8 @@ namespace ijst {
 
 #if IJST_ENABLE_TO_JSON_OBJECT
 			struct ToJsonReq {
-				// true if need serialize all field, false if serialize only valid field
-				bool pushAllField;
+				// ToJson option about fields
+				FPush::Mode fPushMode;
 
 				// Pointer of field to serialize.
 				// The actual type of field should be decide in the derived class
@@ -470,8 +483,8 @@ namespace ijst {
 
 				ToJsonReq(JsonValue &_buffer, JsonAllocator &_allocator,
 						  const void *_pField, bool _canMoveSrc,
-						  bool _pushAllField)
-						: pushAllField(_pushAllField)
+						  FPush::Mode _fPushMode)
+						: fPushMode(_fPushMode)
 						  , pField(_pField)
 						  , canMoveSrc(_canMoveSrc)
 						  , buffer(_buffer)
@@ -568,7 +581,7 @@ namespace ijst {
 				IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartArray());
 
 				for (typename RealVarType::const_iterator itera = field.begin(); itera != field.end(); ++itera) {
-					SerializeReq elemReq(req.writer, &(*itera), req.pushAllField);
+					SerializeReq elemReq(req.writer, &(*itera), req.fPushMode);
 					IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq));
 				}
 
@@ -635,7 +648,7 @@ namespace ijst {
 
 				for (typename RealVarType::const_iterator itera = field.begin(); itera != field.end(); ++itera) {
 					JsonValue newElem;
-					ToJsonReq elemReq(newElem, req.allocator, &(*itera), req.canMoveSrc, req.pushAllField);
+					ToJsonReq elemReq(newElem, req.allocator, &(*itera), req.canMoveSrc, req.fPushMode);
 					IJSTI_RET_WHEN_NOT_ZERO(interface->ToJson(elemReq));
 					req.buffer.PushBack(newElem, req.allocator);
 				}
@@ -773,7 +786,7 @@ namespace ijst {
 					IJSTI_RET_WHEN_WRITE_FAILD(
 							req.writer.Key(key.c_str(), static_cast<rapidjson::SizeType>(key.length())) );
 
-					SerializeReq elemReq(req.writer, &(itFieldMember->second), req.pushAllField);
+					SerializeReq elemReq(req.writer, &(itFieldMember->second), req.fPushMode);
 					IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq));
 				}
 
@@ -849,7 +862,7 @@ namespace ijst {
 					// Init
 					const void* pFieldValue = &itFieldMember->second;
 					JsonValue newElem;
-					ToJsonReq elemReq(newElem, req.allocator, pFieldValue, req.canMoveSrc, req.pushAllField);
+					ToJsonReq elemReq(newElem, req.allocator, pFieldValue, req.canMoveSrc, req.fPushMode);
 					IJSTI_RET_WHEN_NOT_ZERO(interface->ToJson(elemReq));
 
 					// Add member by copy key name
@@ -885,7 +898,7 @@ namespace ijst {
 		struct MetaField { // NOLINT
 			std::string name;
 			std::size_t offset;
-			unsigned int desc;
+			FDesc::Mode desc;
 			SerializerInterface *serializerInterface;
 		};
 
@@ -894,7 +907,7 @@ namespace ijst {
 			MetaClass() : accessorOffset(0), mapInited(false) { }
 
 			void PushMetaField(const std::string &name, std::size_t offset,
-							   unsigned int desc, SerializerInterface *serializerInterface)
+							   FDesc::Mode desc, SerializerInterface *serializerInterface)
 			{
 				MetaField metaField;
 				metaField.name = name;
@@ -966,7 +979,7 @@ namespace ijst {
 		{
 			IJST_ASSERT(!m_isParentVal || m_pMetaClass->metaFields.size() != 0);
 			m_pFieldStatus = new FieldStatusType();
-			m_pBuffer = new rapidjson::Value(rapidjson::kObjectType);
+			m_pUnknown = new rapidjson::Value(rapidjson::kObjectType);
 			m_pOwnDoc = new rapidjson::Document();
 			m_pAllocator = &m_pOwnDoc->GetAllocator();
 			InitOuterPtr();
@@ -980,20 +993,20 @@ namespace ijst {
 			m_isParentVal = rhs.m_isParentVal;
 
 			m_pFieldStatus = new FieldStatusType(*rhs.m_pFieldStatus);
-			m_pBuffer = new rapidjson::Value(rapidjson::kObjectType);
+			m_pUnknown = new rapidjson::Value(rapidjson::kObjectType);
 			m_pOwnDoc = new rapidjson::Document();
 			m_pAllocator = &m_pOwnDoc->GetAllocator();
 
 			m_pMetaClass = rhs.m_pMetaClass;
 			InitOuterPtr();
 
-			m_pBuffer->CopyFrom(*rhs.m_pBuffer, *m_pAllocator, true);
+			m_pUnknown->CopyFrom(*rhs.m_pUnknown, *m_pAllocator, true);
 		}
 
 		#if __cplusplus >= 201103L
 		Accessor(Accessor &&rhs) IJSTI_NOEXCEPT
 		{
-			m_pBuffer = IJST_NULL;
+			m_pUnknown = IJST_NULL;
 			m_pOwnDoc = IJST_NULL;
 			m_pFieldStatus = IJST_NULL;
 			Steal(rhs);
@@ -1008,8 +1021,8 @@ namespace ijst {
 
 		~Accessor() IJSTI_NOEXCEPT
 		{
-			delete m_pBuffer;
-			m_pBuffer = IJST_NULL;
+			delete m_pUnknown;
+			m_pUnknown = IJST_NULL;
 			delete m_pOwnDoc;
 			m_pOwnDoc = IJST_NULL;
 			delete m_pFieldStatus;
@@ -1025,9 +1038,9 @@ namespace ijst {
 			}
 
 			// Handler resource
-			delete m_pBuffer;
-			m_pBuffer = rhs.m_pBuffer;
-			rhs.m_pBuffer = IJST_NULL;
+			delete m_pUnknown;
+			m_pUnknown = rhs.m_pUnknown;
+			rhs.m_pUnknown = IJST_NULL;
 
 			delete m_pOwnDoc;
 			m_pOwnDoc = rhs.m_pOwnDoc;
@@ -1092,8 +1105,8 @@ namespace ijst {
 		}
 
 		//! Get inner buffer.
-		inline JsonValue &GetBuffer() { return *m_pBuffer; }
-		inline const JsonValue &GetBuffer() const { return *m_pBuffer; }
+		inline JsonValue &GetBuffer() { return *m_pUnknown; }
+		inline const JsonValue &GetBuffer() const { return *m_pUnknown; }
 
 		//! Get allocator used in object.
 		//! The inner allocator is own allocator when init, but may change to other allocator
@@ -1108,15 +1121,15 @@ namespace ijst {
 
 		/**
 		 * Serialize the structure to string.
-		 * @param pushAllField 		True if push all field, false if push only valid or null field
 		 * @param strOutput 		The output of result
+		 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
 		 * @return					Error code
 		 */
-		int Serialize(bool pushAllField, IJST_OUT std::string &strOutput) const
+		int Serialize(IJST_OUT std::string &strOutput, FPush::Mode fieldPushMode = FPush::kPushAllFields | FPush::kPushUnknown)  const
 		{
 			rapidjson::StringBuffer buffer;
 			detail::JsonWriter writer(buffer);
-			IJSTI_RET_WHEN_NOT_ZERO(DoSerialize(writer, pushAllField));
+			IJSTI_RET_WHEN_NOT_ZERO(DoSerialize(writer, fieldPushMode));
 
 			strOutput = std::string(buffer.GetString(), buffer.GetLength());
 			return 0;
@@ -1202,35 +1215,37 @@ namespace ijst {
 #if IJST_ENABLE_TO_JSON_OBJECT
 		/**
 		 * Serialize the structure to a JsonValue object.
-		 * @param pushAllField 		True if push all field, false if push only valid or null field
 		 * @param output 			The output of result
 		 * @param allocator	 		Allocator when adding members to output
+		 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
 		 * @return					Error code
 		 *
 		 * @note Need to set IJST_ENABLE_TO_JSON_OBJECT to 1 to enable this method
 		 * @note If using inner allocator, user should carefully handler the structure's life cycle
 		 */
-		inline int ToJson(bool pushAllField, IJST_OUT JsonValue &output, JsonAllocator &allocator) const
+		inline int ToJson(IJST_OUT JsonValue &output, JsonAllocator &allocator,
+						  FPush::Mode fieldPushMode = FPush::kPushUnknown | FPush::kPushAllFields) const
 		{
 			return Accessor::template DoToJson<false, const Accessor>
-					(*this, pushAllField, output, allocator);
+					(*this, fieldPushMode, output, allocator);
 		}
 
 		/**
 		 * Serialize the structure to a JsonValue object.
 		 * @note The object may be invalid after serialization
-		 * @param pushAllField 		True if push all field, false if push only valid or null field
 		 * @param output 			The output of result
 		 * @param allocator	 		Allocator when adding members to output.
+		 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
 		 * @return					Error code
 		 *
 		 * @note Need to set IJST_ENABLE_TO_JSON_OBJECT to 1 to enable this method
 		 * @note If using inner allocator, user should carefully handler the structure's life cycle
 		 */
-		inline int MoveToJson(bool pushAllField, IJST_OUT JsonValue &output, JsonAllocator &allocator)
+		inline int MoveToJson(IJST_OUT JsonValue &output, JsonAllocator &allocator,
+						  FPush::Mode fieldPushMode = FPush::kPushUnknown | FPush::kPushAllFields)
 		{
 			return Accessor::template DoToJson<true, Accessor>
-					(*this, pushAllField, output, allocator);
+					(*this, fieldPushMode, output, allocator);
 		}
 
 		/**
@@ -1257,9 +1272,9 @@ namespace ijst {
 			if (m_pAllocator != &allocator) {
 				// copy buffer when need
 				JsonValue temp;
-				temp = *m_pBuffer;
+				temp = *m_pUnknown;
 				// The life cycle of const string in temp should be same as this object
-				m_pBuffer->CopyFrom(temp, allocator, false);
+				m_pUnknown->CopyFrom(temp, allocator, false);
 			}
 
 			m_pAllocator = &allocator;
@@ -1328,7 +1343,7 @@ namespace ijst {
 		inline int ISerialize(const SerializeReq &req) const
 		{
 			assert(req.pField == this);
-			return DoSerialize(req.writer, req.pushAllField);
+			return DoSerialize(req.writer, req.fPushMode);
 		}
 
 		inline int IDeserialize(const DeserializeReq &req, IJST_OUT DeserializeResp& resp)
@@ -1354,11 +1369,11 @@ namespace ijst {
 			assert(req.pField == this);
 			if (req.canMoveSrc) {
 				return Accessor::template DoToJson<true, Accessor>
-						(*this, req.pushAllField, req.buffer, req.allocator);
+						(*this, req.fPushMode, req.buffer, req.allocator);
 			}
 			else {
 				return Accessor::template DoToJson<false, const Accessor>
-						(*this, req.pushAllField, req.buffer, req.allocator);
+						(*this, req.fPushMode, req.buffer, req.allocator);
 			}
 		}
 
@@ -1385,37 +1400,40 @@ namespace ijst {
 		}
 
 		//! Serialize to string using SAX API
-		int DoSerialize(detail::JsonWriter &writer, bool pushAllField) const
+		int DoSerialize(detail::JsonWriter &writer, FPush::Mode fPushMode) const
 		{
 			if (m_isParentVal) {
-				return DoSerializeFields(writer, pushAllField);
-				// buffer will be ignored
+				return DoSerializeFields(writer, fPushMode);
+				// Unknown will be ignored
 			}
 
 			IJSTI_RET_WHEN_WRITE_FAILD(writer.StartObject());
 
 			// Write fields
-			IJSTI_RET_WHEN_NOT_ZERO(DoSerializeFields(writer, pushAllField));
+			IJSTI_RET_WHEN_NOT_ZERO(DoSerializeFields(writer, fPushMode));
 
-			// Write buffer
-			assert(m_pBuffer->IsObject());
-			for (rapidjson::Value::ConstMemberIterator itMember = m_pBuffer->MemberBegin();
-				 itMember != m_pBuffer->MemberEnd(); ++itMember)
+			// Write buffer if need
+			if (isBitSet(fPushMode, FPush::kPushUnknown))
 			{
-				// Write key
-				const JsonValue& key = itMember->name;
-				IJSTI_RET_WHEN_WRITE_FAILD(
-						writer.Key(key.GetString(), key.GetStringLength()) );
-				// Write value
-				IJSTI_RET_WHEN_WRITE_FAILD(
-						itMember->value.Accept(writer) );
+				assert(m_pUnknown->IsObject());
+				for (rapidjson::Value::ConstMemberIterator itMember = m_pUnknown->MemberBegin();
+					 itMember != m_pUnknown->MemberEnd(); ++itMember)
+				{
+					// Write key
+					const JsonValue& key = itMember->name;
+					IJSTI_RET_WHEN_WRITE_FAILD(
+							writer.Key(key.GetString(), key.GetStringLength()) );
+					// Write value
+					IJSTI_RET_WHEN_WRITE_FAILD(
+							itMember->value.Accept(writer) );
+				}
 			}
 
 			IJSTI_RET_WHEN_WRITE_FAILD(writer.EndObject());
 			return 0;
 		}
 
-		int DoSerializeFields(detail::JsonWriter &writer, bool pushAllField) const
+		int DoSerializeFields(detail::JsonWriter &writer, FPush::Mode fPushMode) const
 		{
 			IJST_ASSERT(!m_isParentVal || m_pMetaClass->metaFields.size() == 1);
 			for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
@@ -1428,7 +1446,7 @@ namespace ijst {
 					case FStatus::kMissing:
 					case FStatus::kParseFailed:
 					{
-						if (fstatus != FStatus::kValid && !pushAllField) {
+						if (fstatus != FStatus::kValid && !isBitSet(fPushMode, FPush::kPushAllFields)) {
 							continue;
 						}
 
@@ -1439,7 +1457,7 @@ namespace ijst {
 									writer.Key(itMetaField->name.c_str(), itMetaField->name.length()) );
 						}
 						// write value
-						SerializeReq req(writer, pFieldValue, pushAllField);
+						SerializeReq req(writer, pFieldValue, fPushMode);
 						IJSTI_RET_WHEN_NOT_ZERO(
 								itMetaField->serializerInterface->Serialize(req));
 					}
@@ -1468,7 +1486,7 @@ namespace ijst {
 		}
 
 #if IJST_ENABLE_TO_JSON_OBJECT
-		int DoAllFieldsToJson(bool pushAllField, bool canMoveSrc,
+		int DoAllFieldsToJson(FPush::Mode fPushMode, bool canMoveSrc,
 							  IJST_OUT JsonValue &buffer, JsonAllocator &allocator) const
 		{
 			// Serialize fields to buffer
@@ -1479,18 +1497,18 @@ namespace ijst {
 				buffer.SetObject();
 
 				do {
-					const size_t selfBufferSize = m_pBuffer->MemberCount();
-					const size_t maxSize = m_pMetaClass->metaFields.size() + selfBufferSize;
+					const size_t unknwonSize = isBitSet(fPushMode, FPush::kPushUnknown) ? m_pUnknown->MemberCount() : 0;
+					const size_t maxSize = m_pMetaClass->metaFields.size() + unknwonSize;
 					if (buffer.MemberCapacity() >= maxSize) {
 						break;
 					}
 
 					size_t fieldSize;
-					if (pushAllField) {
+					if (isBitSet(fPushMode, FPush::kPushAllFields)) {
 						fieldSize = maxSize;
 					}
 					else {
-						fieldSize = selfBufferSize;
+						fieldSize = unknwonSize;
 						for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
 							 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
 						{
@@ -1520,11 +1538,11 @@ namespace ijst {
 					case FStatus::kMissing:
 					case FStatus::kParseFailed:
 					{
-						if (fstatus != FStatus::kValid && !pushAllField) {
+						if (fstatus != FStatus::kValid && !isBitSet(fPushMode, FPush::kPushAllFields)) {
 							continue;
 						}
 						IJSTI_RET_WHEN_NOT_ZERO(
-								DoFieldToJson(itMetaField, canMoveSrc, pushAllField, buffer, allocator) );
+								DoFieldToJson(itMetaField, canMoveSrc, fPushMode, buffer, allocator) );
 					}
 						break;
 
@@ -1546,22 +1564,25 @@ namespace ijst {
 			}
 
 			assert(m_isParentVal || buffer.MemberCapacity() == oldCapcity);
+			// Unknown fields will be add in AppendUnknownToBuffer
 			return 0;
 		}
 
 		template <bool kCanMoveSrc, class _TAccessor>
-		static int DoToJson(_TAccessor &accessor, bool pushAllField, IJST_OUT JsonValue &buffer,
+		static int DoToJson(_TAccessor &accessor, FPush::Mode fPushMode, IJST_OUT JsonValue &buffer,
 							JsonAllocator &allocator)
 		{
 			const Accessor& rThis = accessor;
 			IJSTI_RET_WHEN_NOT_ZERO(
-					rThis.DoAllFieldsToJson(pushAllField, kCanMoveSrc, buffer, allocator) );
-			Accessor::template AppendInnerToBuffer<kCanMoveSrc, _TAccessor>(accessor, buffer, allocator);
+					rThis.DoAllFieldsToJson(fPushMode, kCanMoveSrc, buffer, allocator) );
+			if (isBitSet(fPushMode, FPush::kPushUnknown)) {
+				Accessor::template AppendUnknownToBuffer<kCanMoveSrc, _TAccessor>(accessor, buffer, allocator);
+			}
 			return 0;
 		}
 
 		int DoFieldToJson(std::vector<detail::MetaField>::const_iterator itMetaField,
-						  bool canMoveSrc, bool pushAllField,
+						  bool canMoveSrc, unsigned fPushMode,
 						  JsonValue &buffer, JsonAllocator &allocator) const
 		{
 			// Init
@@ -1569,14 +1590,14 @@ namespace ijst {
 
 			if (m_isParentVal) {
 				// Set buffer itself to json value
-				ToJsonReq elemSerializeReq(buffer, allocator, pFieldValue, canMoveSrc, pushAllField);
+				ToJsonReq elemSerializeReq(buffer, allocator, pFieldValue, canMoveSrc, fPushMode);
 				return itMetaField->serializerInterface->ToJson(elemSerializeReq);
 			}
 			// Add a member to buffer
 
 			// Serialize field
 			JsonValue elemOutput;
-			ToJsonReq elemSerializeReq(elemOutput, allocator, pFieldValue, canMoveSrc, pushAllField);
+			ToJsonReq elemSerializeReq(elemOutput, allocator, pFieldValue, canMoveSrc, fPushMode);
 			IJSTI_RET_WHEN_NOT_ZERO(
 					itMetaField->serializerInterface->ToJson(elemSerializeReq));
 
@@ -1618,7 +1639,7 @@ namespace ijst {
 		}
 
 		template<bool kCanMoveSrc, class _TAccessor>
-		static inline void AppendInnerToBuffer(_TAccessor &accessor, JsonValue &buffer, JsonAllocator &allocator);
+		static inline void AppendUnknownToBuffer(_TAccessor &accessor, JsonValue &buffer, JsonAllocator &allocator);
 #endif
 
 		/**
@@ -1690,10 +1711,10 @@ namespace ijst {
 				stream.EraseMember(itNextRemain, stream.MemberEnd());
 			}
 			if (unknownMode == UnknownMode::kKeep) {
-				m_pBuffer->SetNull().Swap(stream);
+				m_pUnknown->SetNull().Swap(stream);
 			}
 			else {
-				m_pBuffer->SetObject();
+				m_pUnknown->SetObject();
 			}
 
 			int ret = CheckFieldState(pErrMsgOut);
@@ -1717,7 +1738,7 @@ namespace ijst {
 				return Err::kDeserializeValueTypeError;
 			}
 
-			m_pBuffer->SetObject();
+			m_pUnknown->SetObject();
 			fieldCountOut = 0;
 			// For each member
 			for (rapidjson::Value::ConstMemberIterator itMember = stream.MemberBegin();
@@ -1733,7 +1754,7 @@ namespace ijst {
 					// Not a field in struct
 					switch (unknownMode) {
 						case UnknownMode::kKeep:
-							m_pBuffer->AddMember(
+							m_pUnknown->AddMember(
 									rapidjson::Value().SetString(fieldName.c_str(), fieldName.length(), *m_pAllocator),
 									rapidjson::Value().CopyFrom(itMember->value, *m_pAllocator, true),
 									*m_pAllocator
@@ -1878,7 +1899,7 @@ namespace ijst {
 		FieldStatusType* m_pFieldStatus;
 		const detail::MetaClass* m_pMetaClass;
 
-		rapidjson::Value* m_pBuffer;
+		rapidjson::Value* m_pUnknown;
 		// Should use document instead of Allocator because document can swap allocator
 		rapidjson::Document* m_pOwnDoc;
 
@@ -1893,13 +1914,13 @@ namespace ijst {
 #if IJST_ENABLE_TO_JSON_OBJECT
 	//! copy version of Accessor::AppendInnerToBuffer
 	template <>
-	inline void Accessor::template AppendInnerToBuffer<false, const Accessor>(
-			const Accessor& accessor, JsonValue&buffer, JsonAllocator& allocator)
+	inline void Accessor::template AppendUnknownToBuffer<false, const Accessor>(
+			const Accessor &accessor, JsonValue &buffer, JsonAllocator &allocator)
 	{
 		const Accessor& rThis = accessor;
 		// Copy
-		for (rapidjson::Value::ConstMemberIterator itMember = rThis.m_pBuffer->MemberBegin();
-			 itMember != rThis.m_pBuffer->MemberEnd(); ++itMember)
+		for (rapidjson::Value::ConstMemberIterator itMember = rThis.m_pUnknown->MemberBegin();
+			 itMember != rThis.m_pUnknown->MemberEnd(); ++itMember)
 		{
 			rapidjson::Value name;
 			rapidjson::Value val;
@@ -1911,15 +1932,15 @@ namespace ijst {
 
 	//! move version of Accessor::AppendInnerToBuffer
 	template <>
-	inline void Accessor::template AppendInnerToBuffer<true, Accessor>(
+	inline void Accessor::template AppendUnknownToBuffer<true, Accessor>(
 			Accessor& accessor, JsonValue&buffer, JsonAllocator& allocator)
 	{
 		Accessor& rThis = accessor;
 		// append inner data to buffer
 		if (&allocator == rThis.m_pAllocator) {
 			// Move
-			for (rapidjson::Value::MemberIterator itMember = rThis.m_pBuffer->MemberBegin();
-				 itMember != rThis.m_pBuffer->MemberEnd(); ++itMember)
+			for (rapidjson::Value::MemberIterator itMember = rThis.m_pUnknown->MemberBegin();
+				 itMember != rThis.m_pUnknown->MemberEnd(); ++itMember)
 			{
 				buffer.AddMember(itMember->name, itMember->value, allocator);
 				// both itMember->name, itMember->value are null now
@@ -1928,11 +1949,11 @@ namespace ijst {
 		else
 		{
 			// Copy
-			Accessor::template AppendInnerToBuffer<false, const Accessor>(accessor, buffer, allocator);
+			Accessor::template AppendUnknownToBuffer<false, const Accessor>(accessor, buffer, allocator);
 			// The object will be release after serialize in most suitation, so do not need clear own allocator
 		}
 
-		rThis.m_pBuffer->SetObject();
+		rThis.m_pUnknown->SetObject();
 	}
 #endif
 

@@ -9,6 +9,7 @@
 using std::vector;
 using std::map;
 using std::string;
+using namespace ijst;
 
 
 template<typename jsonType>
@@ -116,7 +117,7 @@ void TestSt(const string& json, VT vDefault
 
 	// Serialize
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
 	JT (*pGetJsonVal)(rapidjson::Value &) = GetJsonVal<JT>;
 	// v
 	ASSERT_EQ(pGetJsonVal(doc["f_v"]), sv0);
@@ -171,7 +172,7 @@ TEST(Primitive, Bool)
 		string errorJson = "{\"f_v\": \"1\"}";
 		StBool stErr;
 		int ret = stErr._.Deserialize(errorJson);
-		int retExpected = ijst::Err::kDeserializeValueTypeError;
+		int retExpected = Err::kDeserializeValueTypeError;
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -199,7 +200,7 @@ TEST(Primitive, RBool)
 		string errorJson = "{\"f_v\": \"1\"}";
 		StRBool stErr;
 		int ret = stErr._.Deserialize(errorJson);
-		int retExpected = ijst::Err::kDeserializeValueTypeError;
+		int retExpected = Err::kDeserializeValueTypeError;
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -242,7 +243,7 @@ TEST(Primitive, RBool)
 		IJST_CONT_VAL(st.list_v).push_back(false);
 
 		rapidjson::Document doc;
-		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
 		bool (*pGetJsonVal)(rapidjson::Value &) = GetJsonVal<bool>;
 		ASSERT_EQ(pGetJsonVal(doc["f_v"]), false);
 		ASSERT_EQ(doc["f_map"].MemberCount(), 3u);
@@ -274,7 +275,7 @@ TEST(Primitive, WBool)
 		string errorJson = "{\"f_v\": \"1\"}";
 		StWBool stErr;
 		int ret = stErr._.Deserialize(errorJson);
-		int retExpected = ijst::Err::kDeserializeValueTypeError;
+		int retExpected = Err::kDeserializeValueTypeError;
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -303,7 +304,7 @@ TEST(Primitive, Int)
 		string errorJson = "{\"f_v\": \"1\"}";
 		StInt stErr;
 		int ret = stErr._.Deserialize(errorJson);
-		int retExpected = ijst::Err::kDeserializeValueTypeError;
+		int retExpected = Err::kDeserializeValueTypeError;
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -331,7 +332,7 @@ TEST(Primitive, Int64)
 {
 	// Deserialize error
 	{
-		const int retExpected = ijst::Err::kDeserializeValueTypeError;
+		const int retExpected = Err::kDeserializeValueTypeError;
 		StInt64 stErr;
 
 		string errorJson = "{\"f_v\": -9223372036854775809}";
@@ -374,7 +375,7 @@ TEST(Primitive, UInt)
 	// Deserialize error
 	{
 		int ret;
-		const int retExpected = ijst::Err::kDeserializeValueTypeError;
+		const int retExpected = Err::kDeserializeValueTypeError;
 		StUInt stErr;
 
 		string errorJson = "{\"f_v\": -1}";
@@ -414,7 +415,7 @@ TEST(Primitive, UInt64)
 	// Deserialize error
 	{
 		int ret;
-		const int retExpected = ijst::Err::kDeserializeValueTypeError;
+		const int retExpected = Err::kDeserializeValueTypeError;
 		StUInt64 stErr;
 
 		string errorJson = "{\"f_v\": -1}";
@@ -454,7 +455,7 @@ TEST(Primitive, Double)
 	// Deserialize error
 	{
 		int ret;
-		const int retExpected = ijst::Err::kDeserializeValueTypeError;
+		const int retExpected = Err::kDeserializeValueTypeError;
 		StDouble stErr;
 
 		string errorJson = "{\"f_v\": true}";
@@ -496,7 +497,7 @@ TEST(Primitive, Str)
 		string errorJson = "{\"f_v\": 0}";
 		StString stErr;
 		ret = stErr._.Deserialize(errorJson);
-		int retExpected = ijst::Err::kDeserializeValueTypeError;
+		int retExpected = Err::kDeserializeValueTypeError;
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -597,7 +598,7 @@ TEST(Primitive, Raw)
 		st.v.V().SetInt(0);
 		IJST_MARK_VALID(st, v);
 
-		ijst::FStoreRaw raw;
+		FStoreRaw raw;
 		raw.V().SetNull();
 		st.vec_v[0] = raw;
 		raw.V().SetString("v03");
@@ -610,7 +611,7 @@ TEST(Primitive, Raw)
 		st.map_v["v3"] = raw;
 
 		rapidjson::Document doc;
-		UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
 		ASSERT_EQ(doc["f_v"].GetInt(), 0);
 		ASSERT_TRUE(doc["f_vec"][0].IsNull());
 		ASSERT_EQ(doc["f_vec"][1].GetInt(), 2);
@@ -625,10 +626,10 @@ TEST(Primitive, Raw_BasicAPI)
 {
 	{
 		// Copy constructor
-		ijst::FStoreRaw src;
+		FStoreRaw src;
 		src.V().SetString("src_v", src.GetAllocator());
 
-		ijst::FStoreRaw dst(src);
+		FStoreRaw dst(src);
 		ASSERT_STREQ(src.V().GetString(), "src_v");
 		ASSERT_STREQ(dst.V().GetString(), "src_v");
 		ASSERT_NE(&src.GetAllocator(), &dst.GetAllocator());
@@ -636,10 +637,10 @@ TEST(Primitive, Raw_BasicAPI)
 
 	{
 		// assignment
-		ijst::FStoreRaw src;
+		FStoreRaw src;
 		src.V().SetString("src_v", src.GetAllocator());
 
-		ijst::FStoreRaw dst;
+		FStoreRaw dst;
 		dst = src;
 		ASSERT_STREQ(src.V().GetString(), "src_v");
 		ASSERT_STREQ(dst.V().GetString(), "src_v");
@@ -649,11 +650,11 @@ TEST(Primitive, Raw_BasicAPI)
 #if __cplusplus >= 201103L
 	{
 		// Rvalue Copy constructor
-		ijst::FStoreRaw src;
+		FStoreRaw src;
 		src.V().SetString("src_v", src.GetAllocator());
-		ijst::JsonAllocator* pSrcAlloc = &src.GetAllocator();
+		JsonAllocator* pSrcAlloc = &src.GetAllocator();
 
-		ijst::FStoreRaw dst(std::move(src));
+		FStoreRaw dst(std::move(src));
 		ASSERT_STREQ(dst.V().GetString(), "src_v");
 		ASSERT_EQ(&dst.GetAllocator(), pSrcAlloc);
 		ASSERT_EQ(&src.GetAllocator(), nullptr);
@@ -661,11 +662,11 @@ TEST(Primitive, Raw_BasicAPI)
 
 	{
 		// Rvalue assignment
-		ijst::FStoreRaw src;
+		FStoreRaw src;
 		src.V().SetString("src_v", src.GetAllocator());
-		ijst::JsonAllocator* pSrcAlloc = &src.GetAllocator();
+		JsonAllocator* pSrcAlloc = &src.GetAllocator();
 
-		ijst::FStoreRaw dst;
+		FStoreRaw dst;
 		dst = std::move(src);
 		ASSERT_STREQ(dst.V().GetString(), "src_v");
 		ASSERT_EQ(&dst.GetAllocator(), pSrcAlloc);

@@ -8,12 +8,13 @@
 using std::vector;
 using std::map;
 using std::string;
+using namespace ijst;
 
 IJST_DEFINE_STRUCT(
 		SimpleSt
-		, (IJST_TPRI(Int), int_1, "int_val_1", ijst::FDesc::Optional)
+		, (IJST_TPRI(Int), int_1, "int_val_1", FDesc::Optional)
 		, (IJST_TPRI(Int), int_2, "int_val_2", 0)
-		, (IJST_TPRI(Str), str_1, "str_val_1", ijst::FDesc::Optional)
+		, (IJST_TPRI(Str), str_1, "str_val_1", FDesc::Optional)
 		, (IJST_TPRI(Str), str_2, "str_val_2", 0)
 )
 
@@ -22,7 +23,7 @@ TEST(Deserialize, Empty)
 	string emptyJson = "{}";
 	SimpleSt st;
 	int ret = st._.Deserialize(emptyJson);
-	int retExpected = ijst::Err::kDeserializeSomeFiledsInvalid;
+	int retExpected = Err::kDeserializeSomeFiledsInvalid;
 	ASSERT_EQ(ret, retExpected);
 }
 
@@ -32,7 +33,7 @@ TEST(Deserialize, ParseError)
 	string errJson = "{withoutQuote:1}";
 	SimpleSt st;
 	int ret = st._.Deserialize(errJson);
-	int retExpected = ijst::Err::kDeserializeParseFaild;
+	int retExpected = Err::kDeserializeParseFaild;
 	ASSERT_EQ(ret, retExpected);
 }
 
@@ -41,7 +42,7 @@ TEST(Deserialize, TypeError)
 	string errJson = "{\"int_val_2\":\"str\"}";
 	SimpleSt st;
 	int ret = st._.Deserialize(errJson);
-	int retExpected = ijst::Err::kDeserializeValueTypeError;
+	int retExpected = Err::kDeserializeValueTypeError;
 	ASSERT_EQ(ret, retExpected);
 }
 
@@ -52,8 +53,8 @@ TEST(Deserialize, RequiredFields)
 	int ret = st._.Deserialize(validJson);
 	ASSERT_EQ(ret, 0);
 
-	ASSERT_EQ(IJST_GET_STATUS(st, int_1), ijst::FStatus::kMissing);
-	ASSERT_EQ(IJST_GET_STATUS(st, str_1), ijst::FStatus::kMissing);
+	ASSERT_EQ(IJST_GET_STATUS(st, int_1), FStatus::kMissing);
+	ASSERT_EQ(IJST_GET_STATUS(st, str_1), FStatus::kMissing);
 	ASSERT_EQ(st.int_2, 1);
 	ASSERT_STREQ(IJST_CONT_VAL(st.str_2).c_str(), "str2");
 }
@@ -70,8 +71,8 @@ TEST(Deserialize, AdditionalFields)
 		int ret = st._.Deserialize(validJson);
 		ASSERT_EQ(ret, 0);
 
-		ASSERT_EQ(IJST_GET_STATUS(st, int_1), ijst::FStatus::kValid);
-		ASSERT_EQ(IJST_GET_STATUS(st, str_1), ijst::FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_1), FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st, str_1), FStatus::kMissing);
 		ASSERT_EQ(st.int_1, 1);
 		ASSERT_EQ(st.int_2, 2);
 		ASSERT_STREQ(IJST_CONT_VAL(st.str_2).c_str(), "str2");
@@ -83,11 +84,11 @@ TEST(Deserialize, AdditionalFields)
 
 	// throw unknown
 	{
-		int ret = st._.Deserialize(validJson, ijst::UnknownMode::kIgnore, 0);
+		int ret = st._.Deserialize(validJson, UnknownMode::kIgnore, 0);
 		ASSERT_EQ(ret, 0);
 
-		ASSERT_EQ(IJST_GET_STATUS(st, int_1), ijst::FStatus::kValid);
-		ASSERT_EQ(IJST_GET_STATUS(st, str_1), ijst::FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_1), FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st, str_1), FStatus::kMissing);
 		ASSERT_EQ(st.int_1, 1);
 		ASSERT_EQ(st.int_2, 2);
 		ASSERT_STREQ(IJST_CONT_VAL(st.str_2).c_str(), "str2");
@@ -96,8 +97,8 @@ TEST(Deserialize, AdditionalFields)
 
 	// error when unknown
 	{
-		int ret = st._.Deserialize(validJson, ijst::UnknownMode::kError, 0);
-		const int retExpect = ijst::Err::kDeserializeSomeUnknownMember;
+		int ret = st._.Deserialize(validJson, UnknownMode::kError, 0);
+		const int retExpect = Err::kDeserializeSomeUnknownMember;
 		ASSERT_EQ(ret, retExpect);
 	}
 }
@@ -162,9 +163,9 @@ TEST(Deserialize, Insitu)
 }
 IJST_DEFINE_STRUCT(
 		NullableSt
-		, (IJST_TPRI(Int), int_1, "int_val_1", ijst::FDesc::Optional)
-		, (IJST_TPRI(Int), int_2, "int_val_2", ijst::FDesc::Nullable)
-		, (IJST_TPRI(Int), int_3, "int_val_3", ijst::FDesc::Nullable | ijst::FDesc::Optional)
+		, (IJST_TPRI(Int), int_1, "int_val_1", FDesc::Optional)
+		, (IJST_TPRI(Int), int_2, "int_val_2", FDesc::Nullable)
+		, (IJST_TPRI(Int), int_3, "int_val_3", FDesc::Nullable | FDesc::Optional)
 )
 
 TEST(Deserialize, NullValue)
@@ -177,7 +178,7 @@ TEST(Deserialize, NullValue)
 	{
 		string json = "{}";
 		ret = st._.Deserialize(json);
-		retExpected = ijst::Err::kDeserializeSomeFiledsInvalid;
+		retExpected = Err::kDeserializeSomeFiledsInvalid;
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -186,7 +187,7 @@ TEST(Deserialize, NullValue)
 		string json = "{\"int_val_2\": null}";
 		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(IJST_GET_STATUS(st, int_2), ijst::FStatus::kNull);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kNull);
 	}
 
 	// require filed is valid
@@ -201,7 +202,7 @@ TEST(Deserialize, NullValue)
 	{
 		string json = "{\"int_val_2\": 2, \"int_val_1\": null}";
 		ret = st._.Deserialize(json);
-		retExpected = ijst::Err::kDeserializeValueTypeError;
+		retExpected = Err::kDeserializeValueTypeError;
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -211,7 +212,7 @@ TEST(Deserialize, NullValue)
 		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(st.int_2, 2);
-		ASSERT_EQ(IJST_GET_STATUS(st, int_3), ijst::FStatus::kNull);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_3), FStatus::kNull);
 	}
 
 	// optional | nullable filed is valid
@@ -227,8 +228,8 @@ TEST(Deserialize, NullValue)
 
 IJST_DEFINE_STRUCT(
 		NotEmptySt
-		, (IJST_TVEC(IJST_TPRI(Int)), vec_v, "vec", ijst::FDesc::ElemNotEmpty | ijst::FDesc::Optional)
-		, (IJST_TMAP(IJST_TPRI(Int)), map_v, "map", ijst::FDesc::ElemNotEmpty | ijst::FDesc::Optional)
+		, (IJST_TVEC(IJST_TPRI(Int)), vec_v, "vec", FDesc::ElemNotEmpty | FDesc::Optional)
+		, (IJST_TMAP(IJST_TPRI(Int)), map_v, "map", FDesc::ElemNotEmpty | FDesc::Optional)
 )
 
 TEST(Deserialize, NotEmpty)
@@ -248,7 +249,7 @@ TEST(Deserialize, NotEmpty)
 	{
 		string json = "{\"vec\": [], \"map\": {\"v\": 1}}";
 		ret = st._.Deserialize(json);
-		retExpected = ijst::Err::kDeserializeElemEmpty;
+		retExpected = Err::kDeserializeElemEmpty;
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -256,7 +257,7 @@ TEST(Deserialize, NotEmpty)
 	{
 		string json = "{\"vec\": [1], \"map\": {}}";
 		ret = st._.Deserialize(json);
-		retExpected = ijst::Err::kDeserializeElemEmpty;
+		retExpected = Err::kDeserializeElemEmpty;
 		ASSERT_EQ(ret, retExpected);
 	}
 

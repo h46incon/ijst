@@ -3,37 +3,38 @@
 //
 
 #include "util.h"
+using namespace ijst;
 
 namespace dummy_ns {
 
 TEST(BasicAPI, WrapperCommon)
 {
 	// default constructor
-	ijst::SLWrapper<std::string> val;
+	SLWrapper<std::string> val;
 	ASSERT_TRUE(val.Val().empty());
 
 	val.Val() = "Val";
 	{
-		const ijst::SLWrapper<std::string>& valRef = val;
+		const SLWrapper<std::string>& valRef = val;
 		ASSERT_EQ(valRef.Val(), "Val");
 	}
 
 	// Copy constructor
 	{
-		ijst::SLWrapper<std::string> val2 (val);
+		SLWrapper<std::string> val2 (val);
 		ASSERT_EQ(val2.Val(), "Val");
 	}
 
 	// Copy constructor for TVal
 	{
 		std::string innerV = val.Val();
-		ijst::SLWrapper<std::string> val2(innerV);
+		SLWrapper<std::string> val2(innerV);
 		ASSERT_EQ(val2.Val(), "Val");
 	}
 
 	// Assignment
 	{
-		ijst::SLWrapper<std::string> val2;
+		SLWrapper<std::string> val2;
 		val2 = val;
 		ASSERT_EQ(val2.Val(), "Val");
 	}
@@ -41,7 +42,7 @@ TEST(BasicAPI, WrapperCommon)
 	// Assignment for TVal
 	{
 		std::string innerV = val.Val();
-		ijst::SLWrapper<std::string> val2;
+		SLWrapper<std::string> val2;
 		val2 = innerV;
 		ASSERT_EQ(val2.Val(), "Val");
 	}
@@ -52,22 +53,22 @@ TEST(BasicAPI, WrapperCommon)
 #if __cplusplus >= 201103L
 	// Copy constructor for RValue
 	{
-		ijst::SLWrapper<std::string> valTemp (val);
-		ijst::SLWrapper<std::string> val2 (std::move(valTemp));
+		SLWrapper<std::string> valTemp (val);
+		SLWrapper<std::string> val2 (std::move(valTemp));
 		ASSERT_EQ(val2.Val(), "Val");
 	}
 
 	// Copy constructor for TVal RValue
 	{
 		std::string innerV = val.Val();
-		ijst::SLWrapper<std::string> val2(std::move(innerV));
+		SLWrapper<std::string> val2(std::move(innerV));
 		ASSERT_EQ(val2.Val(), "Val");
 	}
 
 	// Assignment for RValue
 	{
-		ijst::SLWrapper<std::string> valTemp (val);
-		ijst::SLWrapper<std::string> val2;
+		SLWrapper<std::string> valTemp (val);
+		SLWrapper<std::string> val2;
 		val2 = std::move(valTemp);
 		ASSERT_EQ(val2.Val(), "Val");
 	}
@@ -75,7 +76,7 @@ TEST(BasicAPI, WrapperCommon)
 	// Assignment for TVal
 	{
 		std::string innerV = val.Val();
-		ijst::SLWrapper<std::string> val2;
+		SLWrapper<std::string> val2;
 		val2 = std::move(innerV);
 		ASSERT_EQ(val2.Val(), "Val");
 	}
@@ -84,16 +85,16 @@ TEST(BasicAPI, WrapperCommon)
 #if __cplusplus >= 201103L
 	// operator [] for vector
 	{
-		ijst::SLWrapper<std::vector<int> > val;
+		SLWrapper<std::vector<int> > val;
 		val->push_back(2);
 		val[0] = 3;
-		const ijst::SLWrapper<std::vector<int> >& valRef = val;
+		const SLWrapper<std::vector<int> >& valRef = val;
 		ASSERT_EQ(valRef[0], 3);
 	}
 
 	// operator [] for map
 	{
-		ijst::SLWrapper<std::map<int, std::string> > val;
+		SLWrapper<std::map<int, std::string> > val;
 		int key = 42;
 		val[key] = "value";
 		ASSERT_STREQ(val[key].c_str(), "value");
@@ -105,18 +106,18 @@ TEST(BasicAPI, WrapperCommon)
 TEST(BasicAPI, WrapperVector)
 {
 	// default constructor
-	ijst::Vector<int> val;
+	Vector<int> val;
 	ASSERT_TRUE(val->empty());
 
 	// operator []
 	val->push_back(1);
 	val[0] = 2;
-	const ijst::Vector<int>& vecRef = val;
+	const Vector<int>& vecRef = val;
 	ASSERT_EQ(vecRef[0], 2);
 
 	// Copy constructor
 	{
-		ijst::Vector<int> val2 (val);
+		Vector<int> val2 (val);
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2[0], 2);
 	}
@@ -124,14 +125,14 @@ TEST(BasicAPI, WrapperVector)
 	// Copy constructor for TVal
 	{
 		std::vector<int> innerV = val.Val();
-		ijst::Vector<int> val2(innerV);
+		Vector<int> val2(innerV);
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2[0], 2);
 	}
 
 	// Assignment
 	{
-		ijst::Vector<int> val2;
+		Vector<int> val2;
 		val2 = val;
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2[0], 2);
@@ -140,7 +141,7 @@ TEST(BasicAPI, WrapperVector)
 	// Assignment for TVal
 	{
 		std::vector<int> innerV = val.Val();
-		ijst::Vector<int> val2;
+		Vector<int> val2;
 		val2 = innerV;
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2[0], 2);
@@ -153,8 +154,8 @@ TEST(BasicAPI, WrapperVector)
 #if __cplusplus >= 201103L
 	// Copy constructor for RValue
 	{
-		ijst::Vector<int> valTemp (val);
-		ijst::Vector<int> val2 (std::move(valTemp));
+		Vector<int> valTemp (val);
+		Vector<int> val2 (std::move(valTemp));
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2[0], 2);
 	}
@@ -162,15 +163,15 @@ TEST(BasicAPI, WrapperVector)
 	// Copy constructor for TVal RValue
 	{
 		std::vector<int> innerV = val.Val();
-		ijst::Vector<int> val2(std::move(innerV));
+		Vector<int> val2(std::move(innerV));
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2[0], 2);
 	}
 
 	// Assignment for RValue
 	{
-		ijst::Vector<int> valTemp (val);
-		ijst::Vector<int> val2;
+		Vector<int> valTemp (val);
+		Vector<int> val2;
 		val2 = std::move(valTemp);
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2[0], 2);
@@ -179,7 +180,7 @@ TEST(BasicAPI, WrapperVector)
 	// Assignment for TVal
 	{
 		std::vector<int> innerV = val.Val();
-		ijst::Vector<int> val2;
+		Vector<int> val2;
 		val2 = std::move(innerV);
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2[0], 2);
@@ -191,7 +192,7 @@ TEST(BasicAPI, WrapperVector)
 TEST(BasicAPI, WrapperMap)
 {
 	// default constructor
-	ijst::Map<std::string, int> val;
+	Map<std::string, int> val;
 	ASSERT_TRUE(val->empty());
 
 	// operator []
@@ -200,7 +201,7 @@ TEST(BasicAPI, WrapperMap)
 
 	// Copy constructor
 	{
-		ijst::Map<std::string, int> val2 (val);
+		Map<std::string, int> val2 (val);
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2["k"], 2);
 	}
@@ -208,14 +209,14 @@ TEST(BasicAPI, WrapperMap)
 	// Copy constructor for TVal
 	{
 		std::map<std::string, int> innerV = val.Val();
-		ijst::Map<std::string, int> val2(innerV);
+		Map<std::string, int> val2(innerV);
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2["k"], 2);
 	}
 
 	// Assignment
 	{
-		ijst::Map<std::string, int> val2;
+		Map<std::string, int> val2;
 		val2 = val;
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2["k"], 2);
@@ -224,7 +225,7 @@ TEST(BasicAPI, WrapperMap)
 	// Assignment for TVal
 	{
 		std::map<std::string, int> innerV = val.Val();
-		ijst::Map<std::string, int> val2;
+		Map<std::string, int> val2;
 		val2 = innerV;
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2["k"], 2);
@@ -237,8 +238,8 @@ TEST(BasicAPI, WrapperMap)
 #if __cplusplus >= 201103L
 	// Copy constructor for RValue
 	{
-		ijst::Map<std::string, int> valTemp (val);
-		ijst::Map<std::string, int> val2 (std::move(valTemp));
+		Map<std::string, int> valTemp (val);
+		Map<std::string, int> val2 (std::move(valTemp));
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2["k"], 2);
 	}
@@ -246,15 +247,15 @@ TEST(BasicAPI, WrapperMap)
 	// Copy constructor for TVal RValue
 	{
 		std::map<std::string, int> innerV = val.Val();
-		ijst::Map<std::string, int> val2(std::move(innerV));
+		Map<std::string, int> val2(std::move(innerV));
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2["k"], 2);
 	}
 
 	// Assignment for RValue
 	{
-		ijst::Map<std::string, int> valTemp (val);
-		ijst::Map<std::string, int> val2;
+		Map<std::string, int> valTemp (val);
+		Map<std::string, int> val2;
 		val2 = std::move(valTemp);
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2["k"], 2);
@@ -263,7 +264,7 @@ TEST(BasicAPI, WrapperMap)
 	// Assignment for TVal
 	{
 		std::map<std::string, int> innerV = val.Val();
-		ijst::Map<std::string, int> val2;
+		Map<std::string, int> val2;
 		val2 = std::move(innerV);
 		ASSERT_EQ(val2->size(), 1u);
 		ASSERT_EQ(val2["k"], 2);
@@ -293,7 +294,7 @@ TEST(BasicAPI, DefineValueStVec)
 	// Serialize
 	vRef.push_back(3);
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
 	ASSERT_TRUE(doc.IsArray());
 	ASSERT_EQ(doc.Size(), 4u);
 	ASSERT_EQ(doc[0].GetInt(), 0);
@@ -323,7 +324,7 @@ TEST(BasicAPI, DefineValueStMap)
 	// Serialize
 	vRef["v3"] = 3;
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
 	ASSERT_TRUE(doc.IsObject());
 	ASSERT_EQ(doc.MemberCount(), 3u);
 	ASSERT_EQ(doc["v1"].GetInt(), 1);
@@ -344,22 +345,22 @@ TEST(BasicAPI, FieldStatus)
 	SimpleSt simpleSt;
 
 	// Accessor
-	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), ijst::FStatus::kMissing);
+	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), FStatus::kMissing);
 	simpleSt._.SetStrict(simpleSt.int_1, 0x5A5A);
 	ASSERT_EQ(simpleSt.int_1, 0x5A5A);
-	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), ijst::FStatus::kValid);
+	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), FStatus::kValid);
 
 	// IJST_* macro
-	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), ijst::FStatus::kMissing);
-	IJST_SET_STRICT(simpleSt, str_1, ijst::FStoreString(std::string("str1")));
+	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), FStatus::kMissing);
+	IJST_SET_STRICT(simpleSt, str_1, FStoreString(std::string("str1")));
 	ASSERT_STREQ(IJST_CONT_VAL(simpleSt.str_1).c_str(), "str1");
-	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), ijst::FStatus::kValid);
+	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), FStatus::kValid);
 
 	// Mark valid
 	simpleSt.int_2 = 0xA5A5;
-	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), ijst::FStatus::kMissing);
+	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), FStatus::kMissing);
 	IJST_MARK_VALID(simpleSt, int_2);
-	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), ijst::FStatus::kValid);
+	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), FStatus::kValid);
 
 	// IsField
 	ASSERT_TRUE(simpleSt._.HasField(&simpleSt.int_1));
@@ -374,7 +375,7 @@ TEST(BasicAPI, FieldValue)
 	simpleSt._.SetStrict(simpleSt.int_1, 0x5A5A);
 	IJST_SET(simpleSt, int_2, 0xA5A5);
 	simpleSt._.Set(simpleSt.str_1, "str1");
-	IJST_SET_STRICT(simpleSt, str_2, ijst::FStoreString(std::string("str2")));
+	IJST_SET_STRICT(simpleSt, str_2, FStoreString(std::string("str2")));
 
 	// Check
 	ASSERT_EQ(simpleSt.int_1, 0x5A5A);
@@ -394,7 +395,7 @@ TEST(BasicAPI, Constructor4LValue)
 		// copy
 		SimpleSt st1(temp1);
 		// copy value
-		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), ijst::FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), FStatus::kValid);
 		ASSERT_EQ(st1.int_1, 0x5A5A);
 		// copy inner stream
 		ASSERT_EQ(st1._.GetBuffer()["k"].GetInt(), 0xA5A5);
@@ -404,7 +405,7 @@ TEST(BasicAPI, Constructor4LValue)
 		ASSERT_NE(&st1._.GetBuffer(), &temp1._.GetBuffer());
 		// new metaField
 		IJST_SET(temp1, int_2, 0xA5A5);
-		ASSERT_EQ(IJST_GET_STATUS(st1, int_2), ijst::FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st1, int_2), FStatus::kMissing);
 		// Avoid make temp1 become rvalue before
 		temp1._.MarkValid(&temp1.int_1);
 	}
@@ -420,9 +421,9 @@ TEST(BasicAPI, Constructor4LValue)
 		IJST_SET(st2, int_2, 0x5A5A);
 		st2 = temp2;
 		// copy value
-		ASSERT_EQ(IJST_GET_STATUS(st2, int_1), ijst::FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st2, int_1), FStatus::kValid);
 		ASSERT_EQ(st2.int_1, 0x5A5A);
-		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), ijst::FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), FStatus::kMissing);
 		// copy inner stream
 		ASSERT_EQ(st2._.GetBuffer()["k"].GetInt(), 0xA5A5);
 		// new inner stream and allocator
@@ -431,7 +432,7 @@ TEST(BasicAPI, Constructor4LValue)
 		ASSERT_NE(&st2._.GetBuffer(), &temp2._.GetBuffer());
 		// new metaField
 		IJST_SET(temp2, int_2, 0xA5A5);
-		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), ijst::FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), FStatus::kMissing);
 		// Avoid make temp2 become rvalue
 		temp2._.MarkValid(&temp2.int_1);
 	}
@@ -453,7 +454,7 @@ TEST(BasicAPI, Constructor4RValue)
 
 		SimpleSt st1(std::move(temp1));
 		// value
-		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), ijst::FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), FStatus::kValid);
 		ASSERT_EQ(st1.int_1, 0x5A5A);
 		// inner stream
 		ASSERT_EQ(&st1._.GetBuffer(), streamTemp1);
@@ -473,7 +474,7 @@ TEST(BasicAPI, Constructor4RValue)
 		SimpleSt st2;
 		st2 = std::move(temp2);
 		// value
-		ASSERT_EQ(IJST_GET_STATUS(st2, int_1), ijst::FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st2, int_1), FStatus::kValid);
 		ASSERT_EQ(st2.int_1, 0x5A5A);
 		// inner stream
 		ASSERT_EQ(&st2._.GetBuffer(), streamTemp2);

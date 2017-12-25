@@ -10,6 +10,7 @@
 using std::vector;
 using std::map;
 using std::string;
+using namespace ijst;
 
 IJST_DEFINE_STRUCT(
 		Inner
@@ -33,7 +34,7 @@ TEST(Serialize, EmptyValue)
 
 	// Empty struct
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(nestSt, false, doc);
+	UTEST_MOVE_TO_STRING_AND_CHECK(nestSt, doc, 0);
 	ASSERT_TRUE(doc.IsObject());
 	ASSERT_TRUE(doc.MemberCount() == 0);
 }
@@ -44,7 +45,7 @@ TEST(Serialize, EmptyValue_PushAllField)
 	// Empty struct
 
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(nestSt, true, doc);
+	UTEST_MOVE_TO_STRING_AND_CHECK(nestSt, doc, FPush::kPushAllFields | FPush::kPushUnknown);
 
 	// Check
 	ASSERT_TRUE(doc["vec_val_1"].IsArray());
@@ -77,9 +78,9 @@ TEST(Serialize, NullValue)
 	IJST_MARK_NULL(innerSt, int_2);
 
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(innerSt, true, doc);
+	UTEST_MOVE_TO_STRING_AND_CHECK(innerSt, doc, FPush::kPushAllFields | FPush::kPushUnknown);
 
-	ASSERT_EQ(IJST_GET_STATUS(innerSt, int_2), ijst::FStatus::kNull);
+	ASSERT_EQ(IJST_GET_STATUS(innerSt, int_2), FStatus::kNull);
 	ASSERT_EQ(doc["int_val_1"].GetInt(), 1);
 	ASSERT_TRUE(doc["int_val_2"].IsNull());
 }
@@ -92,7 +93,7 @@ TEST(Serialize, MarkMissing)
 	IJST_MARK_MISSING(innerSt, int_2);
 
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(innerSt, false, doc);
+	UTEST_MOVE_TO_STRING_AND_CHECK(innerSt, doc, 0);
 
 	ASSERT_EQ(doc["int_val_1"].GetInt(), 1);
 	ASSERT_FALSE(doc.HasMember("int_val_2"));
@@ -112,33 +113,59 @@ TEST(Serialize, AdditionalJsonField)
 
 	st._.GetBuffer().AddMember("addi_o1", rapidjson::Value().SetString("str_o1").Move(), st._.GetAllocator());
 	st.inner._.GetBuffer().AddMember("addi_i1", rapidjson::Value().SetString("str_i1").Move(), st.inner._.GetAllocator());
+	IJST_MARK_VALID(st, inner);
 	IJST_SET(st.inner, int_2, 11);
 
-	rapidjson::Value jVal;
-	rapidjson::Document doc;
-	ijst::JsonAllocator allocator;
-
-	// Serialize
-	string json;
-	int ret = st._.Serialize(true, json);
-	ASSERT_EQ(ret, 0);
-	doc.Parse(json.c_str(), json.length());
-	ASSERT_FALSE(doc.HasParseError());
+	// Serialize without additional field
+	{
+		rapidjson::Document doc;
+		string json;
+		int ret = st._.Serialize(json, 0);
+		ASSERT_EQ(ret, 0);
+		doc.Parse(json.c_str(), json.length());
+		ASSERT_FALSE(doc.HasParseError());
 
 #if IJST_ENABLE_TO_JSON_OBJECT
-	ret = st._.ToJson(true, jVal, allocator);
-	ASSERT_EQ((rapidjson::Value&)doc, jVal);
+		rapidjson::Value jVal;
+		JsonAllocator allocator;
+		ret = st._.ToJson(jVal, allocator, FPush::kZero);
+		ASSERT_EQ(ret, 0);
+		ASSERT_EQ((rapidjson::Value&)doc, jVal);
 #endif
 
-	// Check output
-	ASSERT_EQ(ret, 0);
-	ASSERT_STREQ(doc["addi_o1"].GetString(), "str_o1");
-	ASSERT_STREQ(doc["inner_val"]["addi_i1"].GetString(), "str_i1");
-	ASSERT_EQ(doc["inner_val"]["int_val_2"].GetInt(), 11);
+		ASSERT_EQ(doc.MemberCount(), 1u);
+		ASSERT_TRUE(doc.HasMember("inner_val"));
+		ASSERT_FALSE(doc.HasMember("addi_o1"));
+		ASSERT_FALSE(doc["inner_val"].GetObject().HasMember("inner_val"));
+	}
 
-	// Check src
-	ASSERT_STREQ(st._.GetBuffer()["addi_o1"].GetString(), "str_o1");
-	ASSERT_STREQ(st.inner._.GetBuffer()["addi_i1"].GetString(), "str_i1");
+	// Serialize with additional field
+	{
+		rapidjson::Document doc;
+		string json;
+		int ret = st._.Serialize(json);
+		ASSERT_EQ(ret, 0);
+		doc.Parse(json.c_str(), json.length());
+		ASSERT_FALSE(doc.HasParseError());
+
+#if IJST_ENABLE_TO_JSON_OBJECT
+		rapidjson::Value jVal;
+		JsonAllocator allocator;
+		ret = st._.ToJson(jVal, allocator);
+		ASSERT_EQ(ret, 0);
+		ASSERT_EQ((rapidjson::Value&)doc, jVal);
+#endif
+
+		// Check output
+		ASSERT_EQ(ret, 0);
+		ASSERT_STREQ(doc["addi_o1"].GetString(), "str_o1");
+		ASSERT_STREQ(doc["inner_val"]["addi_i1"].GetString(), "str_i1");
+		ASSERT_EQ(doc["inner_val"]["int_val_2"].GetInt(), 11);
+
+		// Check src
+		ASSERT_STREQ(st._.GetBuffer()["addi_o1"].GetString(), "str_o1");
+		ASSERT_STREQ(st.inner._.GetBuffer()["addi_i1"].GetString(), "str_i1");
+	}
 }
 
 #if IJST_ENABLE_TO_JSON_OBJECT
@@ -148,11 +175,25 @@ TEST(Serialize, AdditionalJsonFieldMoved)
 
 	st._.GetBuffer().AddMember("addi_o1", rapidjson::Value().SetString("str_o1").Move(), st._.GetAllocator());
 	st.inner._.GetBuffer().AddMember("addi_i1", rapidjson::Value().SetString("str_i1").Move(), st.inner._.GetAllocator());
+	IJST_MARK_VALID(st, inner);
 	IJST_SET(st.inner, int_2, 11);
 
-	// Serialize in place
+	// Move Serialize without additional field
+	{
+		ObjRefSt st2 = st;
+		// Serialize
+		rapidjson::Document doc;
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kZero);
+
+		// Check output
+		ASSERT_EQ(doc.MemberCount(), 1u);
+		ASSERT_TRUE(doc.HasMember("inner_val"));
+		ASSERT_FALSE(doc.HasMember("addi_o1"));
+		ASSERT_FALSE(doc["inner_val"].GetObject().HasMember("inner_val"));
+	}
+	// Serialize
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
 
 	// Check src
 	ASSERT_EQ(st._.GetBuffer().MemberCount(), 0u);
@@ -191,16 +232,16 @@ TEST(Serialize, Complicate)
 	st.c1.i3.str_1 = "str1";
 	st.c1.i4.str_2 = "str2";
 	// vms
-	map<string, ijst::FStoreString> ms1;
+	map<string, FStoreString> ms1;
 	ms1["k1"] = "v1";
 	ms1["k2"] = "v2";
-	map<string, ijst::FStoreString> ms2;
+	map<string, FStoreString> ms2;
 	ms2["k1"] = "v3";
 	ms2["k3"] = "v4";
 	IJST_CONT_VAL(st.vms).push_back(ms1);
 	IJST_CONT_VAL(st.vms).push_back(ms2);
 	// mvs
-	vector<ijst::FStoreString> vs1;
+	vector<FStoreString> vs1;
 	vs1.push_back(string("s1"));
 	vs1.push_back(string("s2"));
 	st.mvs["mk1"] = vs1;
@@ -218,7 +259,7 @@ TEST(Serialize, Complicate)
 
 	// Value Check
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
 	// c1
 	ASSERT_EQ(doc["c1_v"]["i1_v"]["int_val_1"].GetInt(), 1);
 	ASSERT_EQ(doc["c1_v"]["i2_v"]["int_val_2"].GetInt(), 2);
@@ -258,7 +299,7 @@ TEST(Serialize, Container)
 	IJST_CONT_VAL(st.dList).push_front(-2);
 
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
 
 	ASSERT_EQ(doc["vec"].Size(), 1u);
 	ASSERT_EQ(doc["vec"][0].GetInt(), 1);
@@ -278,7 +319,7 @@ TEST(Serialize, EmptyStruct)
 {
 	EmptySt st;
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
 	ASSERT_EQ(doc.MemberCount(), 0u);
 }
 
@@ -354,7 +395,7 @@ TEST(Serialize, BigStruct)
 {
 	Complicate3 st;
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, true, doc);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
 	ASSERT_EQ(doc["i1_v"].GetInt(), 0);
 	ASSERT_EQ(doc["i64_v"].GetInt(), 0);
 }
