@@ -110,7 +110,7 @@ int ret;
 
 // 序列化
 std::string strOut;
-ret = sampleStruct._.Serialize(/*pushAllField=*/true, strOut);
+ret = sampleStruct._.Serialize(strOut);
 
 // 反序列化
 std::string strJson;    
@@ -126,7 +126,7 @@ ret = sampleStruct._.DeserializeInsitu(strJson);
 delete[] strJson;
 
 // 访问 Unknown 字段
-rapidjson::Value& jUnknown = sampleStruct._.GetBuffer();
+rapidjson::Value& jUnknown = sampleStruct._.GetUnknown();
 ```
 
 另外，也可以将结构体和 rapidjson::Value 间转换：
@@ -138,7 +138,7 @@ int ret;
 // ToJson
 // 编译时需启用 IJST_ENABLE_TO_JSON_OBJECT 宏
 rapidjson::Document doc;
-ret = sampleStruct._.ToJson(/*pushAllField*/=true, doc, doc.GetAllocator());
+ret = sampleStruct._.ToJson(doc, doc.GetAllocator());
 
 // FromJson
 // 编译时需启用 IJST_ENABLE_From_JSON_OBJECT 宏
@@ -154,7 +154,7 @@ int ret;
 
 // Move 序列化，序列化后 sampleStruct 对象的 Unknown 会被窃取
 rapidjson::Value jVal;
-ret = sampleStruct._.MoveToJson(/*pushAllField=*/true, jVal, sampleStruct._.GetAllocator());
+ret = sampleStruct._.MoveToJson(jVal, sampleStruct._.GetAllocator());
 // 因为使用了 sampleStruct 管理的 allocator，需要注意其生命周期
 
 // Move 反序列化，反序列化后 doc 对象的内容会被窃取
@@ -175,10 +175,12 @@ ret = sampleStruct._.MoveFromJson(doc);
 
 ijst 会记录每个字段的状态，这些状态会影响**序列化**时的行为。可能的状态如下：
 
-- kMissing：未设置有效值。如指定 `pushAllField=false`，则不参与序列化。
-- kParseFailed：解析该字段时出错。如指定 `pushAllField=false`，则不参与序列化。
+- kMissing：未设置有效值。如序列化时未启用 `FPush::kPushAllFields`(*)选项，则不参与序列化。
+- kParseFailed：解析该字段时出错。如序列化未启用 `FPush::kPushAllFields`(*)选项，则不参与序列化。
 - kNull：值为 null。序列化时值为 null。
 - kValid：已设置为有效值。按实际值序列化。
+
+*：该选项默认启用
 
 ijst 初始化时，所有字段都是 `kMissing` 状态。可通过相关宏获取或改变其状态：
 
@@ -233,14 +235,14 @@ std::string strJson = // Init...
 int ret = sampleStruct._.Deserialize(strJson, ijst::UnknownMode::kIgnore);
 ```
 
-在序列化时，会输出对象保存的所有 unknown 字段。
+在序列化时，如启用 `FPush::kPushUnknown` 选项时，会保存的所有 unknown 字段（该选项默认启用）。
 
 ### 访问 Unknown 字段
 
-可以通过 ijst 提供的 `GetBuffer()` 接口**访问和修改** Unknown 字段：
+可以通过 ijst 提供的 `GetUnknown()` 接口**访问和修改** Unknown 字段：
 
 ```cpp
-rapidjson::Value& jUnknown = sampleStruct._.GetBuffer();
+rapidjson::Value& jUnknown = sampleStruct._.GetUnknown();
 assert(jUnknown.IsObject() == true);
 ```
 
@@ -250,7 +252,7 @@ assert(jUnknown.IsObject() == true);
 ijst 提供了相关的接口获取和设置 allocator 对象：
 
 ```cpp
-ijst::JsonValue& jUnknown = sampleStruct._.GetBuffer();
+ijst::JsonValue& jUnknown = sampleStruct._.GetUnknown();
 
 // 获取当前使用的 allocator 
 ijst::JsonAllocator& alloc = sampleStruct._.GetAllocator();
