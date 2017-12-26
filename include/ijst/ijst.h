@@ -20,6 +20,7 @@
 #include <deque>
 #include <string>
 #include <sstream>
+#include <algorithm>
 
 /**	========================================================================================
  *				Public Interface
@@ -896,15 +897,22 @@ namespace ijst {
 		};
 
 		struct MetaField { // NOLINT
-			std::string name;
 			std::size_t offset;
-			FDesc::Mode desc;
 			SerializerInterface *serializerInterface;
+			FDesc::Mode desc;
+			std::string name;
 		};
 
 		class MetaClass {
 		public:
 			MetaClass() : accessorOffset(0), mapInited(false) { }
+
+			void InitBegin(const std::string& _tag, std::size_t _fieldCount, std::size_t _accessorOffset)
+			{
+				tag = _tag;
+				accessorOffset = _accessorOffset;
+				metaFields.reserve(_fieldCount);
+			}
 
 			void PushMetaField(const std::string &name, std::size_t offset,
 							   FDesc::Mode desc, SerializerInterface *serializerInterface)
@@ -914,34 +922,101 @@ namespace ijst {
 				metaField.offset = offset;
 				metaField.desc = desc;
 				metaField.serializerInterface = serializerInterface;
-
 				metaFields.push_back(IJSTI_MOVE(metaField));
 			}
 
-			void InitMap()
+			void InitEnd()
 			{
 				// assert MetaClass's map has not inited before
 				assert(!mapInited);
+				SortMetaFieldsByOffset();
+
+				m_nameMap.reserve(metaFields.size());
+				m_offsets.reserve(metaFields.size());
 
 				for (size_t i = 0; i < metaFields.size(); ++i) {
 					const MetaField *ptrMetaField = &(metaFields[i]);
-					// Assert field offset not exist before
-					assert(mapOffset.find(ptrMetaField->offset) == mapOffset.end());
-					// Make sure field json name not exist before
-					IJST_ASSERT(mapName.find(ptrMetaField->name) == mapName.end());
+					m_nameMap.push_back(NameMap(&(ptrMetaField->name), ptrMetaField));
+					m_offsets.push_back(ptrMetaField->offset);
 
-					mapName[ptrMetaField->name] = ptrMetaField;
-					mapOffset[ptrMetaField->offset] = ptrMetaField;
+					// Assert field offset is sorted and not exist before
+					assert(i == 0 || m_offsets[i]  > m_offsets[i-1]);
 				}
+
+				std::sort(m_nameMap.begin(), m_nameMap.end());
+				IJST_ASSERT(CheckNameMapSortedAndUnique());
 				mapInited = true;
 			}
 
+			int FindIndex(size_t offset) const
+			{
+				std::vector<size_t>::const_iterator it =
+						std::lower_bound(m_offsets.begin(), m_offsets.end(), offset);
+				if (it != m_offsets.end() && *it == offset) {
+					return static_cast<int>(it - m_offsets.begin());
+				}
+				else {
+					return -1;
+				}
+			}
+
+			const MetaField* FindByName(const std::string &name) const
+			{
+				std::vector<NameMap>::const_iterator it =
+						std::lower_bound(m_nameMap.begin(), m_nameMap.end(), name, NameMapComp);
+				if (it != m_nameMap.end() && (*it->pName) == name) {
+					return it->metaField;
+				}
+				else {
+					return IJST_NULL;
+				}
+			}
+
 			std::vector<MetaField> metaFields;
-			std::map<std::string, const MetaField *> mapName;
-			std::map<std::size_t, const MetaField *> mapOffset;
 			std::string tag;
 			std::size_t accessorOffset;
+
 		private:
+			struct NameMap {
+				NameMap(const std::string* _pName, const MetaField* _metaField)
+						: pName(_pName), metaField(_metaField) {}
+
+				bool operator<(const NameMap &r) const
+				{ return (*pName) < (*r.pName); }
+
+				const std::string* pName;
+				const MetaField* metaField;
+			};
+
+			static bool NameMapComp(const NameMap &l, const std::string &name)
+			{
+				return (*l.pName) < name;
+			}
+
+			void SortMetaFieldsByOffset()
+			{
+				// metaFields is already sorted in most case, use insertion sort
+				const size_t n = metaFields.size();
+				for (size_t i = 1; i < n; i++) {
+					for (size_t j = i; j > 0 && metaFields[j - 1].offset > metaFields[j].offset; j--) {
+						std::swap(metaFields[j], metaFields[j - 1]);
+					}
+				}
+			}
+
+			bool CheckNameMapSortedAndUnique() const
+			{
+				for (size_t i = 1; i < m_nameMap.size(); ++i) {
+					if (!((*m_nameMap[i - 1].pName) < (*m_nameMap[i].pName))) {
+						return false;		// Maybe the field's json name is duplicate
+					}
+				}
+				return true;
+			}
+
+			std::vector<NameMap> m_nameMap;
+			std::vector<size_t> m_offsets;
+
 			bool mapInited;
 
 		};
@@ -1072,7 +1147,7 @@ namespace ijst {
 		inline bool HasField(const void *pField) const
 		{
 			size_t offset = GetFieldOffset(pField);
-			return (m_pMetaClass->mapOffset.find(offset) != m_pMetaClass->mapOffset.end());
+			return (m_pMetaClass->FindIndex(offset) != -1);
 		}
 
 		//! Set field to val and mark it valid.
@@ -1394,7 +1469,7 @@ namespace ijst {
 		void MarkFieldStatus(const void* field, EFStatus fStatus)
 		{
 			const std::size_t offset = GetFieldOffset(field);
-			(IJST_ASSERT(m_pMetaClass->mapOffset.find(offset) != m_pMetaClass->mapOffset.end()));
+			IJST_ASSERT(HasField(field));
 
 			(*m_pFieldStatus)[offset] = fStatus;
 		}
@@ -1671,10 +1746,9 @@ namespace ijst {
 
 				// Get related field info
 				const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-				std::map<std::string, const detail::MetaField *>::const_iterator
-						itMetaField = m_pMetaClass->mapName.find(fieldName);
+				const detail::MetaField *pMetaField = m_pMetaClass->FindByName(fieldName);
 
-				if (itMetaField == m_pMetaClass->mapName.end()) {
+				if (pMetaField == IJST_NULL) {
 					// Not a field in struct
 					switch (unknownMode) {
 						case UnknownMode::kKeep:
@@ -1702,7 +1776,7 @@ namespace ijst {
 				memberStream.Swap(itMember->value);
 
 				IJSTI_RET_WHEN_NOT_ZERO(
-						DoFieldFromJson(itMetaField->second, memberStream, unknownMode, /*canMoveSrc=*/true, pErrMsgOut) );
+						DoFieldFromJson(pMetaField, memberStream, unknownMode, /*canMoveSrc=*/true, pErrMsgOut) );
 				++fieldCountOut;
 			}
 
@@ -1746,10 +1820,9 @@ namespace ijst {
 			{
 				// Get related field info
 				const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-				std::map<std::string, const detail::MetaField *>::const_iterator
-						itMetaField = m_pMetaClass->mapName.find(fieldName);
+				const detail::MetaField *pMetaField = m_pMetaClass->FindByName(fieldName);
 
-				if (itMetaField == m_pMetaClass->mapName.end())
+				if (pMetaField == IJST_NULL)
 				{
 					// Not a field in struct
 					switch (unknownMode) {
@@ -1773,7 +1846,7 @@ namespace ijst {
 
 				JsonValue& memberStream = const_cast<JsonValue&>(itMember->value);
 				IJSTI_RET_WHEN_NOT_ZERO(
-						DoFieldFromJson(itMetaField->second, memberStream, unknownMode, /*canMoveSrc=*/false, pErrMsgOut) );
+						DoFieldFromJson(pMetaField, memberStream, unknownMode, /*canMoveSrc=*/false, pErrMsgOut) );
 				++fieldCountOut;
 			}
 
@@ -1882,10 +1955,9 @@ namespace ijst {
 				return itera->second;
 			}
 
-			if (m_pMetaClass->mapOffset.find(offset) != m_pMetaClass->mapOffset.end()) {
+			if (m_pMetaClass->FindIndex(offset) != -1) {
 				return FStatus::kMissing;
 			}
-
 			return FStatus::kNotAField;
 		}
 
@@ -2010,9 +2082,7 @@ namespace ijst {
 			{																					\
 				IJSTI_TRY_INIT_META_BEFORE_MAIN(MetaInfoT);										\
 				/*Do not call MetaInfoS::GetInstance() int this function */			 			\
-				metaInfo->metaClass.tag = #stName;												\
-				metaInfo->metaClass.accessorOffset = IJST_OFFSETOF(stName, _);					\
-				metaInfo->metaClass.metaFields.reserve(N);
+				metaInfo->metaClass.InitBegin(#stName, N, IJST_OFFSETOF(stName, _));			\
 
 	#define IJSTI_METAINFO_ADD(stName, fDef)  								\
 			metaInfo->metaClass.PushMetaField(								\
@@ -2023,7 +2093,7 @@ namespace ijst {
 			);
 
 	#define IJSTI_METAINFO_DEFINE_END()															\
-				metaInfo->metaClass.InitMap();													\
+				metaInfo->metaClass.InitEnd();													\
 			}
 
 }	// namespace ijst
