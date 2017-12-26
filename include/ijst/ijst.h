@@ -32,7 +32,7 @@
  * 	If users need to serialize the structure to a rapidjson::Value, specify this flag to 1.
  */
 #ifndef IJST_ENABLE_TO_JSON_OBJECT
-	#define IJST_ENABLE_TO_JSON_OBJECT 		0
+	#define IJST_ENABLE_TO_JSON_OBJECT 			0
 #endif
 
 /**
@@ -897,9 +897,10 @@ namespace ijst {
 		};
 
 		struct MetaField { // NOLINT
+			int index;
+			FDesc::Mode desc;
 			std::size_t offset;
 			SerializerInterface *serializerInterface;
-			FDesc::Mode desc;
 			std::string name;
 		};
 
@@ -935,7 +936,9 @@ namespace ijst {
 				m_offsets.reserve(metaFields.size());
 
 				for (size_t i = 0; i < metaFields.size(); ++i) {
-					const MetaField *ptrMetaField = &(metaFields[i]);
+					MetaField *ptrMetaField = &(metaFields[i]);
+					ptrMetaField->index = static_cast<int>(i);
+
 					m_nameMap.push_back(NameMap(&(ptrMetaField->name), ptrMetaField));
 					m_offsets.push_back(ptrMetaField->offset);
 
@@ -1018,7 +1021,6 @@ namespace ijst {
 			std::vector<size_t> m_offsets;
 
 			bool mapInited;
-
 		};
 
 		/**
@@ -1052,8 +1054,8 @@ namespace ijst {
 		explicit Accessor(const detail::MetaClass *pMetaClass, bool isParentVal, bool isValid) :
 				m_pMetaClass(pMetaClass), m_isValid(isValid), m_isParentVal(isParentVal)
 		{
-			IJST_ASSERT(!m_isParentVal || m_pMetaClass->metaFields.size() != 0);
-			m_pFieldStatus = new FieldStatusType();
+			IJST_ASSERT(!m_isParentVal || m_pMetaClass->metaFields.size() == 1);
+			m_pFieldStatus = new FieldStatusType(m_pMetaClass->metaFields.size(), FStatus::kMissing);
 			m_pUnknown = new rapidjson::Value(rapidjson::kObjectType);
 			m_pOwnDoc = new rapidjson::Document();
 			m_pAllocator = &m_pOwnDoc->GetAllocator();
@@ -1176,7 +1178,8 @@ namespace ijst {
 		inline EFStatus GetStatus(const void *pField) const
 		{
 			const size_t offset = GetFieldOffset(pField);
-			return GetStatusByOffset(offset);
+			const int index = m_pMetaClass->FindIndex(offset);
+			return index == -1 ? FStatus::kNotAField : (*m_pFieldStatus)[index];
 		}
 
 		//! Get unknwon fields
@@ -1469,9 +1472,9 @@ namespace ijst {
 		void MarkFieldStatus(const void* field, EFStatus fStatus)
 		{
 			const std::size_t offset = GetFieldOffset(field);
-			IJST_ASSERT(HasField(field));
-
-			(*m_pFieldStatus)[offset] = fStatus;
+			const int index = m_pMetaClass->FindIndex(offset);
+			IJST_ASSERT(index >= 0 && (unsigned int)index < m_pFieldStatus->size());
+			(*m_pFieldStatus)[index] = fStatus;
 		}
 
 		//! Serialize to string using SAX API
@@ -1515,7 +1518,7 @@ namespace ijst {
 				 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
 			{
 				// Check field state
-				EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
+				const EFStatus fstatus = (*m_pFieldStatus)[itMetaField->index];
 				switch (fstatus) {
 					case FStatus::kValid:
 					case FStatus::kMissing:
@@ -1587,7 +1590,7 @@ namespace ijst {
 						for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
 							 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
 						{
-							EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
+							const EFStatus fstatus = (*m_pFieldStatus)[itMetaField->index];
 							if (fstatus == FStatus::kValid || fstatus == FStatus::kNull) {
 								++fieldSize;
 							}
@@ -1607,7 +1610,7 @@ namespace ijst {
 				 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
 			{
 				// Check field state
-				EFStatus fstatus = GetStatusByOffset(itMetaField->offset);
+				const EFStatus fstatus = (*m_pFieldStatus)[itMetaField->index];
 				switch (fstatus) {
 					case FStatus::kValid:
 					case FStatus::kMissing:
@@ -1863,7 +1866,7 @@ namespace ijst {
 			if (isBitSet(metaField->desc, FDesc::Nullable)
 				&& stream.IsNull())
 			{
-				(*m_pFieldStatus)[metaField->offset] = FStatus::kNull;
+				(*m_pFieldStatus)[metaField->index] = FStatus::kNull;
 			}
 			else
 			{
@@ -1874,7 +1877,7 @@ namespace ijst {
 				int ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
 				// Check return
 				if (ret != 0) {
-					(*m_pFieldStatus)[metaField->offset] = FStatus::kParseFailed;
+					(*m_pFieldStatus)[metaField->index] = FStatus::kParseFailed;
 					IJSTI_SET_ERRMSG(
 							pErrMsgOut,
 							("Deserialize field error. name: " + metaField->name + ", err: " + elemResp.errMsg)
@@ -1892,7 +1895,7 @@ namespace ijst {
 					return Err::kDeserializeElemEmpty;
 				}
 				// succ
-				(*m_pFieldStatus)[metaField->offset] = FStatus::kValid;
+				(*m_pFieldStatus)[metaField->index] = FStatus::kValid;
 			}
 			return 0;
 		}
@@ -1911,7 +1914,7 @@ namespace ijst {
 					continue;
 				}
 
-				EFStatus fStatus = GetStatusByOffset(itField->offset);
+				const EFStatus fStatus = (*m_pFieldStatus)[itField->index];
 				if (fStatus == FStatus::kValid
 					|| fStatus == FStatus::kNull)
 				{
@@ -1948,26 +1951,13 @@ namespace ijst {
 			return (void *) (m_pOuter + offset);
 		}
 
-		EFStatus GetStatusByOffset(const size_t offset) const
-		{
-			FieldStatusType::const_iterator itera = m_pFieldStatus->find(offset);
-			if (itera != m_pFieldStatus->end()) {
-				return itera->second;
-			}
-
-			if (m_pMetaClass->FindIndex(offset) != -1) {
-				return FStatus::kMissing;
-			}
-			return FStatus::kNotAField;
-		}
-
 		static inline bool isBitSet(unsigned int val, unsigned int bit)
 		{
 			return (val & bit) != 0;
 		}
 
-		// Use pointers to make class Accessor be a standard-layout type struct
-		typedef std::map<std::size_t, EFStatus> FieldStatusType;
+		// Note: Use pointers to make class Accessor be a standard-layout type struct
+		typedef std::vector<EFStatus> FieldStatusType;
 		FieldStatusType* m_pFieldStatus;
 		const detail::MetaClass* m_pMetaClass;
 
