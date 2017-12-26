@@ -7,6 +7,9 @@
 #define _IJST_TYPES_CONTAINER_HPP_INCLUDE_
 
 #include "ijst.h"
+#include <map>
+#include <list>
+#include <deque>
 
 //! Declare a vector<_T> field.
 #define IJST_TVEC(_T)	::ijst::detail::TypeClassVec< _T>

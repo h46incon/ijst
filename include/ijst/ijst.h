@@ -12,15 +12,12 @@
 #include <rapidjson/writer.h>
 #include <rapidjson/error/en.h>
 
-#include <cassert>
-#include <cstddef>
-#include <map>
+#include <cassert>		// assert
+#include <cstddef>		// NULL, size_t, offsetof
+#include <algorithm>	// std::sort, std::lower_bound
 #include <vector>
-#include <list>
-#include <deque>
 #include <string>
 #include <sstream>
-#include <algorithm>
 
 /**	========================================================================================
  *				Public Interface
