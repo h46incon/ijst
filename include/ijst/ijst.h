@@ -6,6 +6,7 @@
 #define _IJST_HPP_INCLUDE_
 
 #include "std_layout_wrapper.h"
+#include "detail/detail.h"
 
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -247,47 +248,11 @@ namespace ijst {
 		#define IJSTI_RET_WHEN_NOT_ZERO(action) 					\
 			do { int ret = (action); if(ret != 0) return (ret); } while (false)
 
-		#if __cplusplus >= 201103L
-			#define IJSTI_MOVE(val) 	std::move((val))
-			#define IJSTI_OVERRIDE		override
-			#define IJSTI_NOEXCEPT		noexcept
-		#else
-			#define IJSTI_MOVE(val) 	(val)
-			#define IJSTI_OVERRIDE
-			#define IJSTI_NOEXCEPT
-		#endif
-
 		#if IJST_AUTO_META_INIT
 			#define IJSTI_TRY_INIT_META_BEFORE_MAIN(_T)			::ijst::detail::Singleton< _T>::InitInstanceBeforeMain();
 		#else
 			#define IJSTI_TRY_INIT_META_BEFORE_MAIN(_T)
 		#endif
-
-		/**
-		 * Singleton interface
-		 * @tparam _T type
-		 */
-		template<typename _T>
-		class Singleton {
-		public:
-			inline static _T *GetInstance()
-			{
-				static _T instance;
-				return &instance;
-			}
-
-			inline static void InitInstanceBeforeMain()
-			{
-				// When accessing initInstanceTag in code, the GetInstance() function will be called before main
-				volatile void* dummy = initInstanceTag;
-				(void)dummy;
-			}
-
-		private:
-			static void* initInstanceTag;
-		};
-		template<typename _T> void *Singleton<_T>::initInstanceTag = Singleton<_T>::GetInstance();
-
 
 		class SerializerInterface {
 		public:
