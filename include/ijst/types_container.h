@@ -41,7 +41,7 @@ template <typename _TElem>
 class Optional <IJST_CONT_MAP(std::string, _TElem)>
 {
 	typedef IJST_CONT_MAP(std::string, _TElem) ValType;
-IJSTI_OPTIONAL_BASE_DEFINE(ValType)
+	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 public:
 	Optional<_TElem> operator[](const std::string& key) const
 	{
@@ -62,7 +62,7 @@ template <typename _TElem>
 class Optional <const IJST_CONT_MAP(std::string, _TElem)>
 {
 	typedef const IJST_CONT_MAP(std::string, _TElem) ValType;
-IJSTI_OPTIONAL_BASE_DEFINE(ValType)
+	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 public:
 	Optional<const _TElem> operator[](const std::string& key) const
 	{
@@ -80,20 +80,20 @@ public:
 };
 
 #define IJSTI_OPTIONAL_ARRAY_DEFINE(is_const, CONT_WRAPPER, Container)										\
-		template<typename _TElem>																				\
-		class Optional<is_const CONT_WRAPPER(_TElem)>															\
-		{ 																										\
-			typedef is_const CONT_WRAPPER(_TElem) ValType;														\
-			IJSTI_OPTIONAL_BASE_DEFINE(ValType)																	\
-		public:																									\
-			Optional<is_const _TElem> operator[](typename Container<_TElem>::size_type i) const					\
-			{																									\
-				if (m_pVal == IJST_NULL || IJST_CONT_VAL(*m_pVal).size() <= i) {								\
-					return Optional<is_const _TElem>(IJST_NULL);												\
-				}																								\
-				return Optional<is_const _TElem>(&(*m_pVal)[i]);												\
-			}																									\
-		};
+	template<typename _TElem>																				\
+	class Optional<is_const CONT_WRAPPER(_TElem)>															\
+	{ 																										\
+		typedef is_const CONT_WRAPPER(_TElem) ValType;														\
+		IJSTI_OPTIONAL_BASE_DEFINE(ValType)																	\
+	public:																									\
+		Optional<is_const _TElem> operator[](typename Container<_TElem>::size_type i) const					\
+		{																									\
+			if (m_pVal == IJST_NULL || IJST_CONT_VAL(*m_pVal).size() <= i) {								\
+				return Optional<is_const _TElem>(IJST_NULL);												\
+			}																								\
+			return Optional<is_const _TElem>(&(*m_pVal)[i]);												\
+		}																									\
+	};
 
 IJSTI_OPTIONAL_ARRAY_DEFINE(, IJST_CONT_VEC, std::vector)
 IJSTI_OPTIONAL_ARRAY_DEFINE(const, IJST_CONT_VEC, std::vector)
@@ -288,20 +288,21 @@ private:
 };
 
 #define IJSTI_SERIALIZER_CONTAINER_DEFINE()																		\
-			virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE												\
-			{ return ContainerSerializerSingleton::GetInstance()->Serialize(req); }										\
-			virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE			\
-			{ return ContainerSerializerSingleton::GetInstance()->Deserialize(req, resp); }
+	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE												\
+	{ return ContainerSerializerSingleton::GetInstance()->Serialize(req); }										\
+	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE			\
+	{ return ContainerSerializerSingleton::GetInstance()->Deserialize(req, resp); }
 
 #if IJST_ENABLE_TO_JSON_OBJECT
 	#define IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()																\
-			virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE														\
-			{ return ContainerSerializerSingleton::GetInstance()->ToJson(req); }										\
-			virtual int SetAllocator(void *pField, JsonAllocator &allocator) IJSTI_OVERRIDE								\
-			{ return ContainerSerializerSingleton::GetInstance()->SetAllocator(pField, allocator); }
+		virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE														\
+		{ return ContainerSerializerSingleton::GetInstance()->ToJson(req); }										\
+		virtual int SetAllocator(void *pField, JsonAllocator &allocator) IJSTI_OVERRIDE								\
+		{ return ContainerSerializerSingleton::GetInstance()->SetAllocator(pField, allocator); }
 #else
 	#define IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()		// empty
 #endif
+
 /**
  * Serialization class of Vector types
  * @tparam _T class
@@ -496,4 +497,5 @@ public:
 
 }	// namespace detail
 }	// namespace ijst
+
 #endif //_IJST_TYPES_CONTAINER_HPP_INCLUDE_
