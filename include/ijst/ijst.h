@@ -2088,6 +2088,6 @@ namespace ijst {
 
 }	// namespace ijst
 
-#include "ijst_repeat_def.inc"
+#include "detail/ijst_repeat_def.inc"
 
 #endif //_IJST_HPP_INCLUDE_
