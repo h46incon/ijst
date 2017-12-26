@@ -12,6 +12,7 @@
 #include <rapidjson/writer.h>
 #include <ijst/ijst.h>
 #include <ijst/types_std.h>
+#include <ijst/types_container.h>
 
 #if IJST_ENABLE_TO_JSON_OBJECT
 
