@@ -6,7 +6,7 @@
 #define _IJST_HPP_INCLUDE_
 
 #include "std_layout_wrapper.h"
-#include "detail/detail.h"
+#include "ijst/detail/detail.h"
 
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>

@@ -13,6 +13,7 @@ set(TEST_SRC
         serialize_test.cpp
         deserialize_test.cpp
         primitive_test.cpp
+        detail.cpp
         )
 # NOTE: Please check output target here
 # if target is executable:
