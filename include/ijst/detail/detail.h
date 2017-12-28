@@ -6,6 +6,7 @@
 #define _IJST_DETAIL_HPP_INCLUDE_
 
 #include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
 #include <string>
 
 namespace ijst{
@@ -15,10 +16,12 @@ namespace detail{
 	#define IJSTI_MOVE(val) 	std::move((val))
 	#define IJSTI_OVERRIDE		override
 	#define IJSTI_NOEXCEPT		noexcept
+	#define IJSTI_NULL 			nullptr
 #else
 	#define IJSTI_MOVE(val) 	(val)
 	#define IJSTI_OVERRIDE
 	#define IJSTI_NOEXCEPT
+	#define IJSTI_NULL 			NULL
 #endif
 
 /**
@@ -48,10 +51,10 @@ template<typename _T> void *Singleton<_T>::initInstanceTag = Singleton<_T>::GetI
 
 
 template<typename _Ch>
-class GenericCancelableOStream {
+class GenericHeadOStream {
 public:
-	explicit GenericCancelableOStream(size_t _capacity)
-			: m_capacity (_capacity), m_IsDone(false) { str.reserve(m_capacity); }
+	explicit GenericHeadOStream(size_t _capacity)
+			: m_capacity (_capacity), m_headOnly(true) { str.reserve(m_capacity + kEllipseSize); }
 
 	typedef _Ch Ch;
 	//! Write a character.
@@ -61,56 +64,60 @@ public:
 			str.push_back(c);
 		}
 		else {
-			m_IsDone = true;
+			if (m_headOnly) {
+				str.append("...");
+				m_headOnly = false;
+			}
 		}
 	}
 
 	//! Flush the buffer.
 	void Flush() {;}
 
-	bool IsDone() const { return m_IsDone; }
+	bool HeadOnly() const { return m_headOnly; }
 
 	std::basic_string<Ch> str;
 private:
+	static const size_t kEllipseSize = 3;
 	const size_t m_capacity;
-	bool m_IsDone;
+	bool m_headOnly;
 };
 
-typedef GenericCancelableOStream<char> CancelableOStream;
+typedef GenericHeadOStream<char> HeadOStream;
 
 /**
- * Cancelable Writer, implement rapidjson::Handler concept
+ * Head Writer that only write heading string. Implement rapidjson::Handler concept
  * It will return false when OutputStream.IsDone() return true
  *
- * @tparam OutputStream		Should implement rapidjson::OutputStream concept, and bool IsDone() interface
- * @tparam BaseWriter		Should implement rapidjson::Handler concept, and BaseWriter(OutputStream&) consturctor
+ * @tparam OutputStream		Should implement rapidjson::OutputStream concept, and bool HeadOnly() interface
+ * @tparam BaseWriter		Should implement rapidjson::Handler concept, and BaseWriter(OutputStream&) constructor
  */
 template<typename OutputStream, typename BaseWriter>
-class CancelableWriter {
+class HeadWriter {
 public:
-	CancelableWriter(OutputStream& stream) : m_stream(stream), m_baseWriter(stream) {}
+	HeadWriter(OutputStream& stream) : m_stream(stream), m_baseWriter(stream) {}
 
 	typedef typename BaseWriter::Ch Ch;
-	bool Null() { return m_baseWriter.Null() && !m_stream.IsDone(); }
-	bool Bool(bool b) { return m_baseWriter.Bool(b) && !m_stream.IsDone(); }
-	bool Int(int i) { return m_baseWriter.Int(i) && !m_stream.IsDone(); }
-	bool Uint(unsigned i) { return m_baseWriter.Uint(i) && !m_stream.IsDone(); }
-	bool Int64(int64_t i) { return m_baseWriter.Int64(i) && !m_stream.IsDone(); }
-	bool Uint64(uint64_t i) { return m_baseWriter.Uint64(i) && !m_stream.IsDone(); }
-	bool Double(double d) { return m_baseWriter.Double(d) && !m_stream.IsDone(); }
+	bool Null() { return m_baseWriter.Null() && m_stream.HeadOnly(); }
+	bool Bool(bool b) { return m_baseWriter.Bool(b) && m_stream.HeadOnly(); }
+	bool Int(int i) { return m_baseWriter.Int(i) && m_stream.HeadOnly(); }
+	bool Uint(unsigned i) { return m_baseWriter.Uint(i) && m_stream.HeadOnly(); }
+	bool Int64(int64_t i) { return m_baseWriter.Int64(i) && m_stream.HeadOnly(); }
+	bool Uint64(uint64_t i) { return m_baseWriter.Uint64(i) && m_stream.HeadOnly(); }
+	bool Double(double d) { return m_baseWriter.Double(d) && m_stream.HeadOnly(); }
 	/// enabled via kParseNumbersAsStringsFlag, string is not null-terminated (use length)
 	bool RawNumber(const Ch* str, rapidjson::SizeType length, bool copy = false)
-	{ return m_baseWriter.RawNumber(str, length, copy) && !m_stream.IsDone(); }
+	{ return m_baseWriter.RawNumber(str, length, copy) && m_stream.HeadOnly(); }
 	bool String(const Ch* str, rapidjson::SizeType length, bool copy = false)
-	{ return m_baseWriter.String(str, length, copy) && !m_stream.IsDone(); }
-	bool StartObject() { return m_baseWriter.StartObject() && !m_stream.IsDone(); }
+	{ return m_baseWriter.String(str, length, copy) && m_stream.HeadOnly(); }
+	bool StartObject() { return m_baseWriter.StartObject() && m_stream.HeadOnly(); }
 	bool Key(const Ch* str, rapidjson::SizeType length, bool copy = false)
-	{ return m_baseWriter.Key(str, length, copy) && !m_stream.IsDone(); }
+	{ return m_baseWriter.Key(str, length, copy) && m_stream.HeadOnly(); }
 	bool EndObject(rapidjson::SizeType memberCount = 0)
-	{ return m_baseWriter.EndObject(memberCount) && !m_stream.IsDone(); }
-	bool StartArray() { return m_baseWriter.StartArray() && !m_stream.IsDone(); }
+	{ return m_baseWriter.EndObject(memberCount) && m_stream.HeadOnly(); }
+	bool StartArray() { return m_baseWriter.StartArray() && m_stream.HeadOnly(); }
 	bool EndArray(rapidjson::SizeType elementCount = 0)
-	{ return m_baseWriter.EndArray(elementCount) && !m_stream.IsDone(); }
+	{ return m_baseWriter.EndArray(elementCount) && m_stream.HeadOnly(); }
 
 private:
 	OutputStream& m_stream;
