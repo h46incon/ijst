@@ -156,6 +156,17 @@ void TestSt(const string& json, VT vDefault
 	);
 };
 
+template<typename Struct>
+void TestMemberTypeMismatch(const string& errJson, const char* type)
+{
+	Struct stErr;
+	string errMsg;
+	int ret = stErr._.Deserialize(errJson, ijst::UnknownMode::kKeep, &errMsg);
+	int retExpected = Err::kDeserializeValueTypeError;
+	ASSERT_EQ(ret, retExpected);
+	CheckMemberTypeMismatch(errMsg, "f_v", type);
+}
+
 IJST_DEFINE_STRUCT(
 		StBool
 		, (IJST_TPRI(Bool), v, "f_v", 0)
@@ -168,13 +179,8 @@ IJST_DEFINE_STRUCT(
 TEST(Primitive, Bool)
 {
 	// Deserialize error
-	{
-		string errorJson = "{\"f_v\": \"1\"}";
-		StBool stErr;
-		int ret = stErr._.Deserialize(errorJson);
-		int retExpected = Err::kDeserializeValueTypeError;
-		ASSERT_EQ(ret, retExpected);
-	}
+	string errorJson = "{\"f_v\": \"1\"}";
+	TestMemberTypeMismatch<StBool>(errorJson, "bool");
 
 	const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, "
 			"\"f_vec\": [false, true], \"f_deq\": [true, false], \"f_list\": [false, true]}";
@@ -196,13 +202,8 @@ IJST_DEFINE_STRUCT(
 TEST(Primitive, RBool)
 {
 	// Deserialize error
-	{
-		string errorJson = "{\"f_v\": \"1\"}";
-		StRBool stErr;
-		int ret = stErr._.Deserialize(errorJson);
-		int retExpected = Err::kDeserializeValueTypeError;
-		ASSERT_EQ(ret, retExpected);
-	}
+	string errorJson = "{\"f_v\": \"1\"}";
+	TestMemberTypeMismatch<StRBool>(errorJson, "bool");
 
 	StRBool st;
 	// Default value
@@ -271,13 +272,8 @@ IJST_DEFINE_STRUCT(
 TEST(Primitive, WBool)
 {
 	// Deserialize error
-	{
-		string errorJson = "{\"f_v\": \"1\"}";
-		StWBool stErr;
-		int ret = stErr._.Deserialize(errorJson);
-		int retExpected = Err::kDeserializeValueTypeError;
-		ASSERT_EQ(ret, retExpected);
-	}
+	string errorJson = "{\"f_v\": \"1\"}";
+	TestMemberTypeMismatch<StWBool>(errorJson, "bool");
 
 	const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, "
 			"\"f_vec\": [false, true], \"f_deq\": [true, false], \"f_list\": [false, true]}";
@@ -300,13 +296,8 @@ IJST_DEFINE_STRUCT(
 TEST(Primitive, Int)
 {
 	// Deserialize error
-	{
-		string errorJson = "{\"f_v\": \"1\"}";
-		StInt stErr;
-		int ret = stErr._.Deserialize(errorJson);
-		int retExpected = Err::kDeserializeValueTypeError;
-		ASSERT_EQ(ret, retExpected);
-	}
+	string errorJson = "{\"f_v\": \"1\"}";
+	TestMemberTypeMismatch<StInt>(errorJson, "int");
 
 	StInt st;
 
@@ -332,20 +323,14 @@ TEST(Primitive, Int64)
 {
 	// Deserialize error
 	{
-		const int retExpected = Err::kDeserializeValueTypeError;
-		StInt64 stErr;
-
 		string errorJson = "{\"f_v\": -9223372036854775809}";
-		int ret = stErr._.Deserialize(errorJson);
-		ASSERT_EQ(ret, retExpected);
+		TestMemberTypeMismatch<StInt64>(errorJson, "int64");
 
 		errorJson = "{\"f_v\": \"1\"}";
-		ret = stErr._.Deserialize(errorJson);
-		ASSERT_EQ(ret, retExpected);
+		TestMemberTypeMismatch<StInt64>(errorJson, "int64");
 
 		errorJson = "{\"f_v\": 9223372036854775808}";
-		ret = stErr._.Deserialize(errorJson);
-		ASSERT_EQ(ret, retExpected);
+		TestMemberTypeMismatch<StInt64>(errorJson, "int64");
 	}
 
 	const string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
@@ -374,21 +359,14 @@ TEST(Primitive, UInt)
 {
 	// Deserialize error
 	{
-		int ret;
-		const int retExpected = Err::kDeserializeValueTypeError;
-		StUInt stErr;
-
 		string errorJson = "{\"f_v\": -1}";
-		ret = stErr._.Deserialize(errorJson);
-		ASSERT_EQ(ret, retExpected);
+		TestMemberTypeMismatch<StUInt>(errorJson, "uint");
 
 		errorJson = "{\"f_v\": \"1\"}";
-		ret = stErr._.Deserialize(errorJson);
-		ASSERT_EQ(ret, retExpected);
+		TestMemberTypeMismatch<StUInt>(errorJson, "uint");
 
 		errorJson = "{\"f_v\": 4294967296}";
-		ret = stErr._.Deserialize(errorJson);
-		ASSERT_EQ(ret, retExpected);
+		TestMemberTypeMismatch<StUInt>(errorJson, "uint");
 	}
 
 	const string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
@@ -414,21 +392,14 @@ TEST(Primitive, UInt64)
 {
 	// Deserialize error
 	{
-		int ret;
-		const int retExpected = Err::kDeserializeValueTypeError;
-		StUInt64 stErr;
-
 		string errorJson = "{\"f_v\": -1}";
-		ret = stErr._.Deserialize(errorJson);
-		ASSERT_EQ(ret, retExpected);
+		TestMemberTypeMismatch<StUInt64>(errorJson, "uint64");
 
 		errorJson = "{\"f_v\": \"1\"}";
-		ret = stErr._.Deserialize(errorJson);
-		ASSERT_EQ(ret, retExpected);
+		TestMemberTypeMismatch<StUInt64>(errorJson, "uint64");
 
 		errorJson = "{\"f_v\": 18446744073709551616}";
-		ret = stErr._.Deserialize(errorJson);
-		ASSERT_EQ(ret, retExpected);
+		TestMemberTypeMismatch<StUInt64>(errorJson, "uint64");
 	}
 
 	const string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
@@ -454,17 +425,11 @@ TEST(Primitive, Double)
 {
 	// Deserialize error
 	{
-		int ret;
-		const int retExpected = Err::kDeserializeValueTypeError;
-		StDouble stErr;
-
 		string errorJson = "{\"f_v\": true}";
-		ret = stErr._.Deserialize(errorJson);
-		ASSERT_EQ(ret, retExpected);
+		TestMemberTypeMismatch<StDouble>(errorJson, "number");
 
 		errorJson = "{\"f_v\": \"1\"}";
-		ret = stErr._.Deserialize(errorJson);
-		ASSERT_EQ(ret, retExpected);
+		TestMemberTypeMismatch<StDouble>(errorJson, "number");
 	}
 
 	const string json = "{\"f_v\": 0.0, \"f_map\": {\"v1\": 2.2, \"v2\": 4.4}, "
@@ -492,13 +457,8 @@ TEST(Primitive, Str)
 {
 	// Deserialize error
 	{
-		int ret;
-
 		string errorJson = "{\"f_v\": 0}";
-		StString stErr;
-		ret = stErr._.Deserialize(errorJson);
-		int retExpected = Err::kDeserializeValueTypeError;
-		ASSERT_EQ(ret, retExpected);
+		TestMemberTypeMismatch<StString>(errorJson, "string");
 	}
 
 	const string json = "{\"f_v\": \"true\", \"f_map\": {\"v1\": \"false\", \"v2\": \"v22\"}, "

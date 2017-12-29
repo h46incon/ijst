@@ -7,6 +7,7 @@
 
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
+#include <rapidjson/writer.h>
 #include <string>
 
 namespace ijst{
@@ -23,6 +24,14 @@ namespace detail{
 	#define IJSTI_NOEXCEPT
 	#define IJSTI_NULL 			NULL
 #endif
+
+// Expands to the concatenation of its two arguments.
+#define IJSTI_PP_CONCAT(x, y) IJSTI_PP_CONCAT_PRIMITIVE(x, y)
+#define IJSTI_PP_CONCAT_PRIMITIVE(x, y) x ## y
+
+#define IJSTI_NEW_ELEM_ERR_DOC(pErrDoc, pElemErrDoc)									\
+	rapidjson::Document* pElemErrDoc = detail::ErrDoc::NewErrDoc(pErrDoc);				\
+	detail::MemoryGuarder<rapidjson::Document> IJSTI_PP_CONCAT(ptrGuarder_, __LINE__) (pElemErrDoc)
 
 /**
  * Singleton interface
@@ -49,6 +58,9 @@ private:
 };
 template<typename _T> void *Singleton<_T>::initInstanceTag = Singleton<_T>::GetInstance();
 
+
+template< class T > struct RemoveConst          { typedef T type; };
+template< class T > struct RemoveConst<const T> { typedef T type; };
 
 template<typename _Ch>
 class GenericHeadOStream {
@@ -93,9 +105,9 @@ typedef GenericHeadOStream<char> HeadOStream;
  * @tparam BaseWriter		Should implement rapidjson::Handler concept, and BaseWriter(OutputStream&) constructor
  */
 template<typename OutputStream, typename BaseWriter>
-class HeadWriter {
+class GenericHeadWriter {
 public:
-	HeadWriter(OutputStream& stream) : m_stream(stream), m_baseWriter(stream) {}
+	GenericHeadWriter(OutputStream& stream) : m_stream(stream), m_baseWriter(stream) {}
 
 	typedef typename BaseWriter::Ch Ch;
 	bool Null() { return m_baseWriter.Null() && m_stream.HeadOnly(); }
@@ -122,6 +134,105 @@ public:
 private:
 	OutputStream& m_stream;
 	BaseWriter m_baseWriter;
+};
+
+typedef GenericHeadWriter<HeadOStream, rapidjson::Writer<HeadOStream>> HeadWriter;
+
+template<typename T>
+class MemoryGuarder {
+public:
+	explicit MemoryGuarder(T* ptr) : m_Ptr (ptr) {}
+	~MemoryGuarder() { delete m_Ptr; }
+
+private:
+	MemoryGuarder& operator= (const MemoryGuarder&);
+	MemoryGuarder(const MemoryGuarder&);
+	T* const m_Ptr;
+};
+
+struct ErrDoc {
+	//! New a error document according to pErrDoc
+	//!@note The caller should delete the return pointer
+	static rapidjson::Document* NewErrDoc(rapidjson::Document* pErrDoc)
+	{
+		if (pErrDoc == IJSTI_NULL) { return IJSTI_NULL; }
+		return new rapidjson::Document(&pErrDoc->GetAllocator());
+	}
+
+	static void TypeMismatch(rapidjson::Document *pErrDoc, const char *expectedType, const rapidjson::Value &errVal)
+	{
+		if (pErrDoc == IJSTI_NULL) { return; }
+
+		HeadOStream ostream(16);
+		HeadWriter writer(ostream);
+		errVal.Accept(writer);
+
+		pErrDoc->SetObject();
+		pErrDoc->AddMember("type", rapidjson::StringRef("TypeMismatch"), pErrDoc->GetAllocator());
+		pErrDoc->AddMember("expectedType",
+						   rapidjson::Value().SetString(expectedType, pErrDoc->GetAllocator()),
+						   pErrDoc->GetAllocator());
+		pErrDoc->AddMember("json",
+						   rapidjson::Value().SetString(ostream.str.c_str(), ostream.str.length(), pErrDoc->GetAllocator()),
+						   pErrDoc->GetAllocator());
+	}
+
+	//! Set error message about error of member in object
+	static void ErrorInObject(rapidjson::Document* pErrDoc, const char* type, const std::string& memberName, rapidjson::Value* errDetail = IJSTI_NULL)
+	{
+		if (pErrDoc == IJSTI_NULL) { return; }
+
+		pErrDoc->SetObject();
+		pErrDoc->AddMember("type",
+						   rapidjson::Value().SetString(type, pErrDoc->GetAllocator()),
+						   pErrDoc->GetAllocator());
+		pErrDoc->AddMember("member",
+						   rapidjson::Value().SetString(memberName.c_str(), memberName.length(), pErrDoc->GetAllocator()),
+						   pErrDoc->GetAllocator());
+		if (errDetail != IJSTI_NULL) {
+			pErrDoc->AddMember("err", *errDetail, pErrDoc->GetAllocator());
+		}
+	}
+
+	//! Set error message about error of member in array
+	static void ErrorInArray(rapidjson::Document* pErrDoc, const char* type, unsigned index, rapidjson::Value* errDetail = IJSTI_NULL)
+	{
+		if (pErrDoc == IJSTI_NULL) { return; }
+
+		pErrDoc->SetObject();
+		pErrDoc->AddMember("type",
+						   rapidjson::Value().SetString(type, pErrDoc->GetAllocator()),
+						   pErrDoc->GetAllocator());
+		pErrDoc->AddMember("index",
+						   rapidjson::Value().SetUint(index),
+						   pErrDoc->GetAllocator());
+		if (errDetail != IJSTI_NULL) {
+			pErrDoc->AddMember("err", *errDetail, pErrDoc->GetAllocator());
+		}
+	}
+
+	static void MissingMember(rapidjson::Document *pErrDoc, rapidjson::Document *pMembers)
+	{
+		if (pErrDoc == IJSTI_NULL) { return; }
+		assert(pMembers != IJSTI_NULL);
+		assert(&pErrDoc->GetAllocator() == &pMembers->GetAllocator());
+
+		pErrDoc->SetObject();
+		pErrDoc->AddMember("type", rapidjson::StringRef("MissingMember"), pErrDoc->GetAllocator());
+		pErrDoc->AddMember("members", pMembers->Move(), pErrDoc->GetAllocator());
+	}
+
+	static void PushMemberName(rapidjson::Document *pErrDoc, const std::string &memberName)
+	{
+		if (pErrDoc == IJSTI_NULL) { return; }
+		assert(pErrDoc->IsArray());
+
+		pErrDoc->PushBack(
+				rapidjson::Value().SetString(memberName.c_str(), memberName.length(), pErrDoc->GetAllocator()),
+				pErrDoc->GetAllocator()
+		);
+	}
+
 };
 
 }	// namespace detail

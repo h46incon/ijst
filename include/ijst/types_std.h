@@ -164,7 +164,7 @@ public:
 	{
 		if (!req.stream.IsBool()) {
 			resp.fStatus = FStatus::kParseFailed;
-			resp.SetErrMsg("Value is not Bool");
+			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "bool", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -194,7 +194,7 @@ public:
 	{																											\
 		if (!req.stream.IsBool()) {																				\
 			resp.fStatus = FStatus::kParseFailed;																\
-			resp.SetErrMsg("Value is not Bool");																\
+			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "bool", req.stream);										\
 			return Err::kDeserializeValueTypeError;																\
 		}																										\
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);												\
@@ -247,7 +247,7 @@ public:
 	{
 		if (!req.stream.IsInt()) {
 			resp.fStatus = FStatus::kParseFailed;
-			resp.SetErrMsg("Value is not Int");
+			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "int", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -281,7 +281,7 @@ public:
 	{
 		if (!req.stream.IsInt64()) {
 			resp.fStatus = FStatus::kParseFailed;
-			resp.SetErrMsg("Value is not Int64");
+			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "int64", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -315,7 +315,7 @@ public:
 	{
 		if (!req.stream.IsUint()) {
 			resp.fStatus = FStatus::kParseFailed;
-			resp.SetErrMsg("Value is not Uint");
+			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "uint", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -349,7 +349,7 @@ public:
 	{
 		if (!req.stream.IsUint64()) {
 			resp.fStatus = FStatus::kParseFailed;
-			resp.SetErrMsg("Value is not Uint64");
+			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "uint64", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -384,7 +384,7 @@ public:
 	{
 		if (!req.stream.IsNumber()) {
 			resp.fStatus = FStatus::kParseFailed;
-			resp.SetErrMsg("Value is not Number");
+			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "number", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -420,7 +420,7 @@ public:
 	{
 		if (!req.stream.IsString()) {
 			resp.fStatus = FStatus::kParseFailed;
-			resp.SetErrMsg("Value is not String");
+			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "string", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 

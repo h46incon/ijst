@@ -193,7 +193,7 @@ public:
 	{
 		if (!req.stream.IsArray()) {
 			resp.fStatus = FStatus::kParseFailed;
-			resp.SetErrMsg("Value is not a Array");
+			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "array", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -211,21 +211,16 @@ public:
 			// New a elem buffer in container first to avoid copy
 			// Use resize() instead of push_back() to avoid copy constructor in C++11
 			field.resize(field.size() + 1);
+			IJSTI_NEW_ELEM_ERR_DOC(resp.pErrDoc, pElemErrDoc);
 			DeserializeReq elemReq(*itVal, req.allocator,
 								   req.unknownMode, req.canMoveSrc, &field.back());
-
+			DeserializeResp elemResp(pElemErrDoc);
 			// Deserialize
-			DeserializeResp elemResp(resp.needErrMsg);
 			int ret = serializerInterface->Deserialize(elemReq, elemResp);
 			if (ret != 0)
 			{
 				field.pop_back();
-				if (resp.needErrMsg)
-				{
-					std::stringstream oss;
-					oss << "Deserialize elem error. index: " << field.size() << ", err: ";
-					resp.CombineErrMsg(oss.str(), elemResp);
-				}
+				detail::ErrDoc::ErrorInArray(resp.pErrDoc, "ErrInArray", field.size());
 				return ret;
 			}
 			resp.fStatus = FStatus::kParseFailed;
@@ -398,7 +393,7 @@ public:
 	{
 		if (!req.stream.IsObject()) {
 			resp.fStatus = FStatus::kParseFailed;
-			resp.SetErrMsg("Value is not a Object");
+			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "object", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -425,7 +420,8 @@ public:
 								   req.unknownMode, req.canMoveSrc, &elemBuffer);
 
 			// Deserialize
-			DeserializeResp elemResp(resp.needErrMsg);
+			IJSTI_NEW_ELEM_ERR_DOC(resp.pErrDoc, pElemErrDoc);
+			DeserializeResp elemResp(pElemErrDoc);
 			int ret = serializerInterface->Deserialize(elemReq, elemResp);
 			if (ret != 0)
 			{
@@ -433,10 +429,7 @@ public:
 				{
 					field.erase(fieldName);
 				}
-				resp.needErrMsg &&
-				resp.CombineErrMsg("Deserialize elem error. key: " + fieldName + ", err: ",
-								   elemResp
-				);
+				detail::ErrDoc::ErrorInObject(resp.pErrDoc, "ErrInMap", fieldName, pElemErrDoc);
 				resp.fStatus = FStatus::kParseFailed;
 				return ret;
 			}

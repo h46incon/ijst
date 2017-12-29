@@ -119,11 +119,7 @@
 #define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
 
 //! IJST_NULL.
-#if __cplusplus >= 201103L
-	#define IJST_NULL 			nullptr
-#else
-	#define IJST_NULL 			NULL
-#endif
+#define IJST_NULL				IJSTI_NULL
 
 //! Wrappers.
 #if IJST_USE_SL_WRAPPER
@@ -232,14 +228,6 @@ namespace ijst {
 	 */
 	namespace detail {
 		typedef rapidjson::Writer<rapidjson::StringBuffer> JsonWriter;
-		//! Set errMsg to pErrMsgOut when not null.
-		//! Use macro instead of function to avoid compute errMsg when pErrMsgOut is null.
-		#define IJSTI_SET_ERRMSG(pErrMsgOut, errMsg)				\
-			do {													\
-				if ((pErrMsgOut) != IJST_NULL) {					\
-					*(pErrMsgOut) = (errMsg);						\
-				}													\
-			} while (false)
 
 		//! return Err::kWriteFailed if action return false
 		#define IJSTI_RET_WHEN_WRITE_FAILD(action) 					\
@@ -303,37 +291,17 @@ namespace ijst {
 			struct DeserializeResp {
 				EFStatus fStatus;
 				size_t fieldCount;
-				const bool needErrMsg;
-				std::string errMsg;
 
-				explicit DeserializeResp(bool _needErrMsg = false) :
+				// Pointer to Document holding the error message
+				// Use nullptr if do not need error message
+				rapidjson::Document* pErrDoc;
+
+				explicit DeserializeResp(rapidjson::Document* _pErrDoc) :
 						fStatus(FStatus::kMissing),
 						fieldCount(0),
-						needErrMsg(_needErrMsg)
+						pErrDoc(_pErrDoc)
 				{ }
 
-				template<typename _T>
-				bool SetErrMsg(const _T &_errMsg)
-				{
-					if (!needErrMsg) {
-						return false;
-					}
-					errMsg = _errMsg;
-					return true;
-				}
-
-				template<typename _T>
-				bool CombineErrMsg(const _T & _errMsg, const DeserializeResp& childResp)
-				{
-					if (!needErrMsg) {
-						return false;
-					}
-
-					std::stringstream oss;
-					oss << _errMsg << "[" << childResp.errMsg << "]";
-					errMsg = oss.str();
-					return true;
-				}
 			};
 
 			virtual int Serialize(const SerializeReq &req) = 0;
@@ -752,8 +720,8 @@ namespace ijst {
 				}
 				return Err::kDeserializeParseFaild;
 			}
-			size_t fieldCount;
-			return DoMoveFromJson(doc, unknownMode, pErrMsgOut, fieldCount);
+
+			return DoFromJsonWrap<JsonValue>(DoMoveFromJson, doc, unknownMode, pErrMsgOut);
 		}
 
 		/**
@@ -797,8 +765,7 @@ namespace ijst {
 				}
 				return Err::kDeserializeParseFaild;
 			}
-			size_t fieldCount;
-			return DoMoveFromJson(doc, unknownMode, pErrMsgOut, fieldCount);
+			return DoFromJsonWrap<JsonValue>(DoMoveFromJson, doc, unknownMode, pErrMsgOut);
 		}
 
 #if IJST_ENABLE_TO_JSON_OBJECT
@@ -894,8 +861,7 @@ namespace ijst {
 		inline int FromJson(const JsonValue &stream, EUnknownMode unknownMode = UnknownMode::kKeep,
 							std::string *pErrMsgOut = IJST_NULL)
 		{
-			size_t fieldCount;
-			return DoFromJson(stream, unknownMode, pErrMsgOut, fieldCount);
+			return DoFromJsonWrap<const JsonValue>(DoFromJson, stream, unknownMode, pErrMsgOut);
 		}
 
 		/**
@@ -917,8 +883,7 @@ namespace ijst {
 			// Store document to manager allocator
 			m_pOwnDoc->Swap(srcDocStolen);
 			m_pAllocator = &m_pOwnDoc->GetAllocator();
-			size_t fieldCount;
-			return DoMoveFromJson(*m_pOwnDoc, unknownMode, pErrMsgOut, fieldCount);
+			return DoFromJsonWrap<JsonValue>(DoMoveFromJson, *m_pOwnDoc, unknownMode, pErrMsgOut);
 		}
 #endif
 
@@ -939,14 +904,13 @@ namespace ijst {
 		{
 			assert(req.pFieldBuffer == this);
 
-			std::string *pErrMsg = resp.needErrMsg ? &resp.errMsg : IJST_NULL;
 			m_pAllocator = &req.allocator;
 
 			if (req.canMoveSrc) {
-				return DoMoveFromJson(req.stream, req.unknownMode, pErrMsg, resp.fieldCount);
+				return DoMoveFromJson(req.stream, req.unknownMode, resp.pErrDoc, resp.fieldCount);
 			}
 			else {
-				return DoFromJson(req.stream, req.unknownMode, pErrMsg, resp.fieldCount);
+				return DoFromJson(req.stream, req.unknownMode, resp.pErrDoc, resp.fieldCount);
 			}
 		}
 
@@ -1227,27 +1191,45 @@ namespace ijst {
 			return 0;
 		}
 
-		template<bool kCanMoveSrc, class _TAccessor>
+		template<bool kCanMoveSrc, typename _TAccessor>
 		static inline void AppendUnknownToBuffer(_TAccessor &accessor, JsonValue &buffer, JsonAllocator &allocator);
 #endif
+
+
+		template<typename TJsonValue, typename Func>
+		int DoFromJsonWrap(Func func, TJsonValue &stream, EUnknownMode unknownMode, std::string* pErrMsgOut)
+		{
+			size_t fieldCount;
+			rapidjson::Document* pErrDoc = (pErrMsgOut == IJSTI_NULL) ? IJSTI_NULL : new rapidjson::Document();
+			detail::MemoryGuarder<rapidjson::Document> ptrGuarder(pErrDoc);
+			int ret = (this->*func)(stream, unknownMode, pErrDoc, fieldCount);
+			if (ret != 0 && pErrMsgOut != IJSTI_NULL) {
+				assert(pErrDoc != IJSTI_NULL);
+				rapidjson::StringBuffer sb;
+				detail::JsonWriter writer(sb);
+				pErrDoc->Accept(writer);
+				(*pErrMsgOut) = std::string(sb.GetString(), sb.GetLength());
+			}
+			return ret;
+		}
 
 		/**
 		 * Deserialize move from json object
 		 * @note Make sure the lifecycle of allocator of the stream is longer than this object
 		 */
 		int DoMoveFromJson(JsonValue &stream, EUnknownMode unknownMode,
-						   std::string *pErrMsgOut, IJST_OUT size_t &fieldCountOut)
+						   rapidjson::Document *pErrDoc, IJST_OUT size_t &fieldCountOut)
 		{
 			if (m_isParentVal) {
 				// Set field by stream itself
 				assert(m_pMetaClass->metaFields.size() == 1);
 				return DoFieldFromJson(
-						&m_pMetaClass->metaFields[0], stream, unknownMode, /*canMoveSrc=*/true, pErrMsgOut);
+						&m_pMetaClass->metaFields[0], stream, unknownMode, /*canMoveSrc=*/true, pErrDoc);
 			}
 
 			// Set fields by members of stream
 			if (!stream.IsObject()) {
-				IJSTI_SET_ERRMSG(pErrMsgOut, "value is not object");
+				detail::ErrDoc::TypeMismatch(pErrDoc, "object", stream);
 				return Err::kDeserializeValueTypeError;
 			}
 
@@ -1275,7 +1257,7 @@ namespace ijst {
 							++itNextRemain;
 							break;
 						case UnknownMode::kError:
-							IJSTI_SET_ERRMSG(pErrMsgOut, "Member in object is unknown" + fieldName);
+							detail::ErrDoc::ErrorInObject(pErrDoc, "UnknownMember", fieldName);
 							return Err::kDeserializeSomeUnknownMember;
 						case UnknownMode::kIgnore:
 							break;
@@ -1290,7 +1272,7 @@ namespace ijst {
 				memberStream.Swap(itMember->value);
 
 				IJSTI_RET_WHEN_NOT_ZERO(
-						DoFieldFromJson(pMetaField, memberStream, unknownMode, /*canMoveSrc=*/true, pErrMsgOut) );
+						DoFieldFromJson(pMetaField, memberStream, unknownMode, /*canMoveSrc=*/true, pErrDoc) );
 				++fieldCountOut;
 			}
 
@@ -1305,24 +1287,24 @@ namespace ijst {
 				m_pUnknown->SetObject();
 			}
 
-			int ret = CheckFieldState(pErrMsgOut);
+			int ret = CheckFieldState(pErrDoc);
 			return ret;
 		}
 
 		//! Deserialize from stream
 		int DoFromJson(const JsonValue &stream, EUnknownMode unknownMode,
-					   std::string *pErrMsgOut, IJST_OUT size_t &fieldCountOut)
+					   rapidjson::Document *pErrDoc, IJST_OUT size_t &fieldCountOut)
 		{
 			if (m_isParentVal) {
 				// Serialize field by stream itself
 				assert(m_pMetaClass->metaFields.size() == 1);
 				return DoFieldFromJson(
-						&m_pMetaClass->metaFields[0], const_cast<JsonValue &>(stream), unknownMode, /*canMoveSrc=*/true, pErrMsgOut);
+						&m_pMetaClass->metaFields[0], const_cast<JsonValue &>(stream), unknownMode, /*canMoveSrc=*/true, pErrDoc);
 			}
 
 			// Serialize fields by members of stream
 			if (!stream.IsObject()) {
-				IJSTI_SET_ERRMSG(pErrMsgOut, "value is not object");
+				detail::ErrDoc::TypeMismatch(pErrDoc, "object", stream);
 				return Err::kDeserializeValueTypeError;
 			}
 
@@ -1350,7 +1332,7 @@ namespace ijst {
 						case UnknownMode::kIgnore:
 							break;
 						case UnknownMode::kError:
-							IJSTI_SET_ERRMSG(pErrMsgOut, "Member in object is unknown" + fieldName);
+							detail::ErrDoc::ErrorInObject(pErrDoc, "UnknownMember", fieldName);
 							return Err::kDeserializeSomeUnknownMember;
 						default:
 							assert(false);
@@ -1360,18 +1342,18 @@ namespace ijst {
 
 				JsonValue& memberStream = const_cast<JsonValue&>(itMember->value);
 				IJSTI_RET_WHEN_NOT_ZERO(
-						DoFieldFromJson(pMetaField, memberStream, unknownMode, /*canMoveSrc=*/false, pErrMsgOut) );
+						DoFieldFromJson(pMetaField, memberStream, unknownMode, /*canMoveSrc=*/false, pErrDoc) );
 				++fieldCountOut;
 			}
 
-			int ret = CheckFieldState(pErrMsgOut);
+			int ret = CheckFieldState(pErrDoc);
 			return ret;
 		}
 
 
 		int DoFieldFromJson(const detail::MetaField* metaField,
 							JsonValue &stream, EUnknownMode unknownMode, bool canMoveSrc,
-							std::string *pErrMsgOut)
+							rapidjson::Document *pErrDoc)
 		{
 			// Check nullable
 			if (isBitSet(metaField->desc, FDesc::Nullable)
@@ -1383,26 +1365,20 @@ namespace ijst {
 			{
 				void *pField = GetFieldByOffset(metaField->offset);
 				DeserializeReq elemReq(stream, *m_pAllocator, unknownMode, canMoveSrc, pField);
-				const bool needErrMsg = pErrMsgOut != IJST_NULL;
-				DeserializeResp elemResp(needErrMsg);
+				IJSTI_NEW_ELEM_ERR_DOC(pErrDoc, pElemErrDoc);
+				DeserializeResp elemResp(pElemErrDoc);
 				int ret = metaField->serializerInterface->Deserialize(elemReq, elemResp);
 				// Check return
 				if (ret != 0) {
 					(*m_pFieldStatus)[metaField->index] = FStatus::kParseFailed;
-					IJSTI_SET_ERRMSG(
-							pErrMsgOut,
-							("Deserialize field error. name: " + metaField->name + ", err: " + elemResp.errMsg)
-					);
+					detail::ErrDoc::ErrorInObject(pErrDoc, "ErrInObject", metaField->name, pElemErrDoc);
 					return ret;
 				}
 				// Check elem size
 				if (isBitSet(metaField->desc, FDesc::ElemNotEmpty)
 					&& elemResp.fieldCount == 0)
 				{
-					IJSTI_SET_ERRMSG(
-							pErrMsgOut,
-							"Elem in field is empty. name: " + metaField->name
-					);
+					detail::ErrDoc::ErrorInObject(pErrDoc, "ElemIsEmpty", metaField->name);
 					return Err::kDeserializeElemEmpty;
 				}
 				// succ
@@ -1411,11 +1387,17 @@ namespace ijst {
 			return 0;
 		}
 
-		int CheckFieldState(std::string *pErrMsgOut) const
+		int CheckFieldState(rapidjson::Document *pErrDoc) const
 		{
 			// Check all required field status
 			std::stringstream invalidNameOss;
 			bool hasErr = false;
+
+			IJSTI_NEW_ELEM_ERR_DOC(pErrDoc, missingFields);
+			if (missingFields != IJSTI_NULL) {
+				missingFields->SetArray();
+			}
+
 			for (std::vector<detail::MetaField>::const_iterator itField = m_pMetaClass->metaFields.begin();
 				 itField != m_pMetaClass->metaFields.end(); ++itField)
 			{
@@ -1435,17 +1417,11 @@ namespace ijst {
 
 				// Has error
 				hasErr = true;
-				if (pErrMsgOut != IJST_NULL)
-				{
-					invalidNameOss << itField->name << ", ";
-				}
+				detail::ErrDoc::PushMemberName(missingFields, itField->name);
 			}
 			if (hasErr)
 			{
-				IJSTI_SET_ERRMSG(
-						pErrMsgOut,
-						"Some fields are invalid: " + invalidNameOss.str()
-				);
+				detail::ErrDoc::MissingMember(pErrDoc, missingFields);
 				return Err::kDeserializeSomeFiledsInvalid;
 			}
 			return 0;
@@ -1539,10 +1515,6 @@ namespace ijst {
 	#define IJSTI_DEFINE_GETTER_T(N, ...)	\
 		IJSTI_PP_CONCAT(IJSTI_DEFINE_GETTER_IMPL_, N) (__VA_ARGS__)
 	#define IJSTI_DEFINE_GETTER_F(N, ...)	// empty
-
-	// Expands to the concatenation of its two arguments.
-	#define IJSTI_PP_CONCAT(x, y) IJSTI_PP_CONCAT_PRIMITIVE(x, y)
-	#define IJSTI_PP_CONCAT_PRIMITIVE(x, y) x ## y
 
 	#define IJSTI_IDL_FTYPE(fType, fName, sName, desc)		fType
 	#define IJSTI_IDL_FNAME(fType, fName, sName, desc)		fName

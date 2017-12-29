@@ -44,4 +44,15 @@ do {																		\
 
 #endif
 
+inline void CheckMemberTypeMismatch(const std::string& errMsg, const char* fieldName, const char* expectedType)
+{
+	rapidjson::Document doc;
+	doc.Parse(errMsg.c_str(), errMsg.length());
+	ASSERT_FALSE(doc.HasParseError());
+	ASSERT_STREQ(doc["type"].GetString(), "ErrInObject");
+	ASSERT_STREQ(doc["member"].GetString(), fieldName);
+	ASSERT_STREQ(doc["err"]["type"].GetString(), "TypeMismatch");
+	ASSERT_STREQ(doc["err"]["expectedType"].GetString(), expectedType);
+}
+
 #endif //UNIT_TEST_IJST_UTIL_H
