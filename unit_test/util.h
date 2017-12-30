@@ -13,6 +13,7 @@
 #include <ijst/ijst.h>
 #include <ijst/types_std.h>
 #include <ijst/types_container.h>
+#include <ijst/detail/detail.h>
 
 #if IJST_ENABLE_TO_JSON_OBJECT
 
@@ -44,15 +45,30 @@ do {																		\
 
 #endif
 
-inline void CheckMemberTypeMismatch(const std::string& errMsg, const char* fieldName, const char* expectedType)
+inline void CheckMemberTypeMismatch(const std::string& errMsg, const char* fieldName, const char* expectedType, const char* value)
 {
 	rapidjson::Document doc;
 	doc.Parse(errMsg.c_str(), errMsg.length());
 	ASSERT_FALSE(doc.HasParseError());
+
+	ASSERT_TRUE(doc.IsObject());
 	ASSERT_STREQ(doc["type"].GetString(), "ErrInObject");
 	ASSERT_STREQ(doc["member"].GetString(), fieldName);
+
+	ASSERT_TRUE(doc["err"].IsObject());
 	ASSERT_STREQ(doc["err"]["type"].GetString(), "TypeMismatch");
 	ASSERT_STREQ(doc["err"]["expectedType"].GetString(), expectedType);
+
+	// The test of HeadOStream is in detail_test.cpp
+	// The capacity of ostream must be same as ijst/detail/detail.h
+	ijst::detail::HeadOStream ostream(16);
+	const char* pc = value;
+	while (*pc != '\0')
+	{
+		ostream.Put(*pc);
+		++pc;
+	}
+	ASSERT_STREQ(ostream.str.c_str(), doc["err"]["json"].GetString());
 }
 
 #endif //UNIT_TEST_IJST_UTIL_H

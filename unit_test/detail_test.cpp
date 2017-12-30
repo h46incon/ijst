@@ -45,8 +45,7 @@ TEST(Detail, CancelableOStream)
 TEST(Detail, CancelableWriter)
 {
 	detail::HeadOStream ostream(4096);
-	typedef detail::GenericHeadWriter<detail::HeadOStream, rapidjson::Writer<detail::HeadOStream> > Writer;
-	Writer writer(ostream);
+	detail::HeadWriter writer(ostream);
 
 	writer.StartObject();
 	writer.Key("k1", 2);
@@ -72,7 +71,7 @@ TEST(Detail, CancelableWriter)
 	// Accept
 	{
 		detail::HeadOStream ostream2(4096);
-		Writer writer2(ostream2);
+		detail::HeadWriter writer2(ostream2);
 		doc.Accept(writer2);
 		rapidjson::Document doc2;
 		doc2.Parse(ostream2.str.c_str(), ostream2.str.length());

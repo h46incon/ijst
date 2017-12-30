@@ -157,14 +157,14 @@ void TestSt(const string& json, VT vDefault
 };
 
 template<typename Struct>
-void TestMemberTypeMismatch(const string& errJson, const char* type)
+void TestMemberTypeMismatch(const string& errJson, const char* type, const char* value)
 {
 	Struct stErr;
 	string errMsg;
 	int ret = stErr._.Deserialize(errJson, ijst::UnknownMode::kKeep, &errMsg);
 	int retExpected = Err::kDeserializeValueTypeError;
 	ASSERT_EQ(ret, retExpected);
-	CheckMemberTypeMismatch(errMsg, "f_v", type);
+	CheckMemberTypeMismatch(errMsg, "f_v", type, value);
 }
 
 IJST_DEFINE_STRUCT(
@@ -180,7 +180,7 @@ TEST(Primitive, Bool)
 {
 	// Deserialize error
 	string errorJson = "{\"f_v\": \"1\"}";
-	TestMemberTypeMismatch<StBool>(errorJson, "bool");
+	TestMemberTypeMismatch<StBool>(errorJson, "bool", "\"1\"");
 
 	const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, "
 			"\"f_vec\": [false, true], \"f_deq\": [true, false], \"f_list\": [false, true]}";
@@ -203,7 +203,7 @@ TEST(Primitive, RBool)
 {
 	// Deserialize error
 	string errorJson = "{\"f_v\": \"1\"}";
-	TestMemberTypeMismatch<StRBool>(errorJson, "bool");
+	TestMemberTypeMismatch<StRBool>(errorJson, "bool", "\"1\"");
 
 	StRBool st;
 	// Default value
@@ -273,7 +273,7 @@ TEST(Primitive, WBool)
 {
 	// Deserialize error
 	string errorJson = "{\"f_v\": \"1\"}";
-	TestMemberTypeMismatch<StWBool>(errorJson, "bool");
+	TestMemberTypeMismatch<StWBool>(errorJson, "bool", "\"1\"");
 
 	const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, "
 			"\"f_vec\": [false, true], \"f_deq\": [true, false], \"f_list\": [false, true]}";
@@ -297,7 +297,7 @@ TEST(Primitive, Int)
 {
 	// Deserialize error
 	string errorJson = "{\"f_v\": \"1\"}";
-	TestMemberTypeMismatch<StInt>(errorJson, "int");
+	TestMemberTypeMismatch<StInt>(errorJson, "int", "\"1\"");
 
 	StInt st;
 
@@ -324,13 +324,13 @@ TEST(Primitive, Int64)
 	// Deserialize error
 	{
 		string errorJson = "{\"f_v\": -9223372036854775809}";
-		TestMemberTypeMismatch<StInt64>(errorJson, "int64");
+		TestMemberTypeMismatch<StInt64>(errorJson, "int64", "-9223372036854775809");
 
 		errorJson = "{\"f_v\": \"1\"}";
-		TestMemberTypeMismatch<StInt64>(errorJson, "int64");
+		TestMemberTypeMismatch<StInt64>(errorJson, "int64", "\"1\"");
 
 		errorJson = "{\"f_v\": 9223372036854775808}";
-		TestMemberTypeMismatch<StInt64>(errorJson, "int64");
+		TestMemberTypeMismatch<StInt64>(errorJson, "int64", "9223372036854775808");
 	}
 
 	const string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
@@ -360,13 +360,13 @@ TEST(Primitive, UInt)
 	// Deserialize error
 	{
 		string errorJson = "{\"f_v\": -1}";
-		TestMemberTypeMismatch<StUInt>(errorJson, "uint");
+		TestMemberTypeMismatch<StUInt>(errorJson, "uint", "-1");
 
 		errorJson = "{\"f_v\": \"1\"}";
-		TestMemberTypeMismatch<StUInt>(errorJson, "uint");
+		TestMemberTypeMismatch<StUInt>(errorJson, "uint", "\"1\"");
 
 		errorJson = "{\"f_v\": 4294967296}";
-		TestMemberTypeMismatch<StUInt>(errorJson, "uint");
+		TestMemberTypeMismatch<StUInt>(errorJson, "uint", "4294967296");
 	}
 
 	const string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
@@ -393,13 +393,13 @@ TEST(Primitive, UInt64)
 	// Deserialize error
 	{
 		string errorJson = "{\"f_v\": -1}";
-		TestMemberTypeMismatch<StUInt64>(errorJson, "uint64");
+		TestMemberTypeMismatch<StUInt64>(errorJson, "uint64", "-1");
 
 		errorJson = "{\"f_v\": \"1\"}";
-		TestMemberTypeMismatch<StUInt64>(errorJson, "uint64");
+		TestMemberTypeMismatch<StUInt64>(errorJson, "uint64", "\"1\"");
 
 		errorJson = "{\"f_v\": 18446744073709551616}";
-		TestMemberTypeMismatch<StUInt64>(errorJson, "uint64");
+		TestMemberTypeMismatch<StUInt64>(errorJson, "uint64", "18446744073709551616");
 	}
 
 	const string json = "{\"f_v\": 0, \"f_map\": {\"v1\": 2, \"v2\": 4}, "
@@ -426,10 +426,10 @@ TEST(Primitive, Double)
 	// Deserialize error
 	{
 		string errorJson = "{\"f_v\": true}";
-		TestMemberTypeMismatch<StDouble>(errorJson, "number");
+		TestMemberTypeMismatch<StDouble>(errorJson, "number", "true");
 
 		errorJson = "{\"f_v\": \"1\"}";
-		TestMemberTypeMismatch<StDouble>(errorJson, "number");
+		TestMemberTypeMismatch<StDouble>(errorJson, "number", "\"1\"");
 	}
 
 	const string json = "{\"f_v\": 0.0, \"f_map\": {\"v1\": 2.2, \"v2\": 4.4}, "
@@ -458,7 +458,7 @@ TEST(Primitive, Str)
 	// Deserialize error
 	{
 		string errorJson = "{\"f_v\": 0}";
-		TestMemberTypeMismatch<StString>(errorJson, "string");
+		TestMemberTypeMismatch<StString>(errorJson, "string", "0");
 	}
 
 	const string json = "{\"f_v\": \"true\", \"f_map\": {\"v1\": \"false\", \"v2\": \"v22\"}, "
