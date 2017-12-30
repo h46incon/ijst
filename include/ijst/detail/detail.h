@@ -58,9 +58,17 @@ private:
 };
 template<typename _T> void *Singleton<_T>::initInstanceTag = Singleton<_T>::GetInstance();
 
+template<typename T>
+class MemoryGuarder {
+public:
+	explicit MemoryGuarder(T* ptr) : m_Ptr (ptr) {}
+	~MemoryGuarder() { delete m_Ptr; }
 
-template< class T > struct RemoveConst          { typedef T type; };
-template< class T > struct RemoveConst<const T> { typedef T type; };
+private:
+	MemoryGuarder& operator= (const MemoryGuarder&);
+	MemoryGuarder(const MemoryGuarder&);
+	T* const m_Ptr;
+};
 
 template<typename _Ch>
 class GenericHeadOStream {
@@ -138,18 +146,6 @@ private:
 
 typedef GenericHeadWriter<HeadOStream, rapidjson::Writer<HeadOStream>> HeadWriter;
 
-template<typename T>
-class MemoryGuarder {
-public:
-	explicit MemoryGuarder(T* ptr) : m_Ptr (ptr) {}
-	~MemoryGuarder() { delete m_Ptr; }
-
-private:
-	MemoryGuarder& operator= (const MemoryGuarder&);
-	MemoryGuarder(const MemoryGuarder&);
-	T* const m_Ptr;
-};
-
 struct ErrDoc {
 	//! New a error document according to pErrDoc
 	//!@note The caller should delete the return pointer
@@ -195,9 +191,10 @@ struct ErrDoc {
 	}
 
 	//! Set error message about error of member in array
-	static void ErrorInArray(rapidjson::Document* pErrDoc, const char* type, unsigned index, rapidjson::Value* errDetail = IJSTI_NULL)
+	static void ErrorInArray(rapidjson::Document* pErrDoc, const char* type, unsigned index, rapidjson::Value* errDetail)
 	{
 		if (pErrDoc == IJSTI_NULL) { return; }
+		assert(errDetail != IJSTI_NULL);
 
 		pErrDoc->SetObject();
 		pErrDoc->AddMember("type",
@@ -206,9 +203,7 @@ struct ErrDoc {
 		pErrDoc->AddMember("index",
 						   rapidjson::Value().SetUint(index),
 						   pErrDoc->GetAllocator());
-		if (errDetail != IJSTI_NULL) {
-			pErrDoc->AddMember("err", *errDetail, pErrDoc->GetAllocator());
-		}
+		pErrDoc->AddMember("err", *errDetail, pErrDoc->GetAllocator());
 	}
 
 	static void MissingMember(rapidjson::Document *pErrDoc, rapidjson::Document *pMembers)

@@ -220,7 +220,7 @@ public:
 			if (ret != 0)
 			{
 				field.pop_back();
-				detail::ErrDoc::ErrorInArray(resp.pErrDoc, "ErrInArray", field.size());
+				detail::ErrDoc::ErrorInArray(resp.pErrDoc, "ErrInArray", field.size(), pElemErrDoc);
 				return ret;
 			}
 			resp.fStatus = FStatus::kParseFailed;

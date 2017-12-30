@@ -6,7 +6,7 @@
 #define _IJST_HPP_INCLUDE_
 
 #include "std_layout_wrapper.h"
-#include "ijst/detail/detail.h"
+#include "detail/detail.h"
 
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -735,6 +735,18 @@ namespace ijst {
 							   std::string *pErrMsgOut = IJST_NULL)
 		{
 			return Deserialize(strInput.c_str(), strInput.length(), unknownMode, pErrMsgOut);
+		}
+
+		/**
+		 * Deserialize from std::string.
+		 * @param strInput			Input string
+		 * @param errMsgOut			Error message output
+		 * @param unknownMode		Behaviour when meet unknown member in json
+		 * @return					Error code
+		 */
+		inline int Deserialize(const std::string &strInput, IJST_OUT std::string& errMsgOut, EUnknownMode unknownMode = UnknownMode::kKeep)
+		{
+			return Deserialize(strInput.c_str(), strInput.length(), unknownMode, &errMsgOut);
 		}
 
 		/**

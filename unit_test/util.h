@@ -45,19 +45,16 @@ do {																		\
 
 #endif
 
-inline void CheckMemberTypeMismatch(const std::string& errMsg, const char* fieldName, const char* expectedType, const char* value)
+#define UTEST_PARSE_STR_TO_JSON(str, jsonOutput)								\
+	rapidjson::Document jsonOutput;												\
+	jsonOutput.Parse(str.c_str(), str.length());								\
+	ASSERT_FALSE(jsonOutput.HasParseError());
+
+inline void CheckTypeMismatch(const rapidjson::Value& errDoc, const char* expectedType, const char* value)
 {
-	rapidjson::Document doc;
-	doc.Parse(errMsg.c_str(), errMsg.length());
-	ASSERT_FALSE(doc.HasParseError());
-
-	ASSERT_TRUE(doc.IsObject());
-	ASSERT_STREQ(doc["type"].GetString(), "ErrInObject");
-	ASSERT_STREQ(doc["member"].GetString(), fieldName);
-
-	ASSERT_TRUE(doc["err"].IsObject());
-	ASSERT_STREQ(doc["err"]["type"].GetString(), "TypeMismatch");
-	ASSERT_STREQ(doc["err"]["expectedType"].GetString(), expectedType);
+	ASSERT_TRUE(errDoc.IsObject());
+	ASSERT_STREQ(errDoc["type"].GetString(), "TypeMismatch");
+	ASSERT_STREQ(errDoc["expectedType"].GetString(), expectedType);
 
 	// The test of HeadOStream is in detail_test.cpp
 	// The capacity of ostream must be same as ijst/detail/detail.h
@@ -68,7 +65,18 @@ inline void CheckMemberTypeMismatch(const std::string& errMsg, const char* field
 		ostream.Put(*pc);
 		++pc;
 	}
-	ASSERT_STREQ(ostream.str.c_str(), doc["err"]["json"].GetString());
+	ASSERT_STREQ(ostream.str.c_str(), errDoc["json"].GetString());
+}
+
+inline void CheckMemberTypeMismatch(const std::string& errMsg, const char* fieldName, const char* expectedType, const char* value)
+{
+	UTEST_PARSE_STR_TO_JSON(errMsg, doc)
+
+	ASSERT_TRUE(doc.IsObject());
+	ASSERT_STREQ(doc["type"].GetString(), "ErrInObject");
+	ASSERT_STREQ(doc["member"].GetString(), fieldName);
+
+	CheckTypeMismatch(doc["err"], expectedType, value);
 }
 
 #endif //UNIT_TEST_IJST_UTIL_H
