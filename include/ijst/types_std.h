@@ -160,7 +160,17 @@ public:
 		return (req.writer.Bool((*pField) != 0) ? 0 : Err::kWriteFailed);
 	}
 
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+#if IJST_ENABLE_TO_JSON_OBJECT
+	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
+	{
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.SetBool((*pField) != 0);
+		return 0;
+	}
+#endif
+
+#if IJST_ENABLE_FROM_JSON_OBJECT
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsBool()) {
 			resp.fStatus = FStatus::kParseFailed;
@@ -170,14 +180,6 @@ public:
 
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = static_cast<VarType >(req.stream.GetBool() ? 1 : 0);
-		return 0;
-	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetBool((*pField) != 0);
 		return 0;
 	}
 #endif
@@ -190,17 +192,6 @@ public:
 		return (req.writer.Bool(*pField) ? 0 : Err::kWriteFailed);												\
 	}																											\
 																												\
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE			\
-	{																											\
-		if (!req.stream.IsBool()) {																				\
-			resp.fStatus = FStatus::kParseFailed;																\
-			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "bool", req.stream);										\
-			return Err::kDeserializeValueTypeError;																\
-		}																										\
-		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);												\
-		*pField = req.stream.GetBool();																			\
-		return 0;																								\
-	}																											\
 
 #if IJST_ENABLE_TO_JSON_OBJECT
 	#define IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()																	\
@@ -214,6 +205,24 @@ public:
 	#define IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()				// empty
 #endif
 
+#if IJST_ENABLE_FROM_JSON_OBJECT
+	#define IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()																\
+		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE					\
+		{																											\
+			if (!req.stream.IsBool()) {																				\
+				resp.fStatus = FStatus::kParseFailed;																\
+				detail::ErrDoc::TypeMismatch(resp.pErrDoc, "bool", req.stream);										\
+				return Err::kDeserializeValueTypeError;																\
+			}																										\
+			VarType *pField = static_cast<VarType *>(req.pFieldBuffer);												\
+			*pField = req.stream.GetBool();																			\
+			return 0;																								\
+		}
+#else
+	#define IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()			// empty
+#endif
+
+
 template<>
 class FSerializer<TypeClassPrim<FType::RBool> > : public SerializerInterface {
 public:
@@ -221,6 +230,7 @@ public:
 
 	IJSTI_SERIALIZER_BOOL_DEFINE()
 	IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()
+	IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()
 };
 
 template<>
@@ -230,6 +240,7 @@ public:
 
 	IJSTI_SERIALIZER_BOOL_DEFINE()
 	IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()
+	IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()
 };
 
 template<>
@@ -243,7 +254,17 @@ public:
 		return (req.writer.Int(*pField) ? 0 : Err::kWriteFailed);
 	}
 
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+#if IJST_ENABLE_TO_JSON_OBJECT
+	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
+	{
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.SetInt(*pField);
+		return 0;
+	}
+#endif
+
+#if IJST_ENABLE_FROM_JSON_OBJECT
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsInt()) {
 			resp.fStatus = FStatus::kParseFailed;
@@ -255,15 +276,8 @@ public:
 		*pField = req.stream.GetInt();
 		return 0;
 	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetInt(*pField);
-		return 0;
-	}
 #endif
+
 };
 
 template<>
@@ -277,7 +291,17 @@ public:
 		return (req.writer.Int64(*pField) ? 0 : Err::kWriteFailed);
 	}
 
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+#if IJST_ENABLE_TO_JSON_OBJECT
+	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
+	{
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.SetInt64(*pField);
+		return 0;
+	}
+#endif
+
+#if IJST_ENABLE_FROM_JSON_OBJECT
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsInt64()) {
 			resp.fStatus = FStatus::kParseFailed;
@@ -289,15 +313,8 @@ public:
 		*pField = req.stream.GetInt64();
 		return 0;
 	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetInt64(*pField);
-		return 0;
-	}
 #endif
+
 };
 
 template<>
@@ -311,7 +328,17 @@ public:
 		return (req.writer.Uint(*pField) ? 0 : Err::kWriteFailed);
 	}
 
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+#if IJST_ENABLE_TO_JSON_OBJECT
+	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
+	{
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.SetUint(*pField);
+		return 0;
+	}
+#endif
+
+#if IJST_ENABLE_FROM_JSON_OBJECT
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsUint()) {
 			resp.fStatus = FStatus::kParseFailed;
@@ -323,15 +350,8 @@ public:
 		*pField = req.stream.GetUint();
 		return 0;
 	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetUint(*pField);
-		return 0;
-	}
 #endif
+
 };
 
 template<>
@@ -345,7 +365,17 @@ public:
 		return (req.writer.Uint64(*pField) ? 0 : Err::kWriteFailed);
 	}
 
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+#if IJST_ENABLE_TO_JSON_OBJECT
+	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
+	{
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.SetUint64(*pField);
+		return 0;
+	}
+#endif
+
+#if IJST_ENABLE_FROM_JSON_OBJECT
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsUint64()) {
 			resp.fStatus = FStatus::kParseFailed;
@@ -355,14 +385,6 @@ public:
 
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = req.stream.GetUint64();
-		return 0;
-	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetUint64(*pField);
 		return 0;
 	}
 #endif
@@ -380,7 +402,17 @@ public:
 		return (req.writer.Double(*pField) ? 0 : Err::kWriteFailed);
 	}
 
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+#if IJST_ENABLE_TO_JSON_OBJECT
+	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
+	{
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.SetDouble(*pField);
+		return 0;
+	}
+#endif
+
+#if IJST_ENABLE_FROM_JSON_OBJECT
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsNumber()) {
 			resp.fStatus = FStatus::kParseFailed;
@@ -392,15 +424,8 @@ public:
 		*pField = req.stream.GetDouble();
 		return 0;
 	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetDouble(*pField);
-		return 0;
-	}
 #endif
+
 };
 
 
@@ -416,7 +441,17 @@ public:
 		return (req.writer.String(field.c_str(), static_cast<rapidjson::SizeType>(field.length())) ? 0 : Err::kWriteFailed);
 	}
 
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
+#if IJST_ENABLE_TO_JSON_OBJECT
+	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
+	{
+		const VarType *pField = static_cast<const VarType *>(req.pField);
+		req.buffer.SetString(IJST_CONT_VAL(*pField).c_str(), IJST_CONT_VAL(*pField).length(), req.allocator);
+		return 0;
+	}
+#endif
+
+#if IJST_ENABLE_FROM_JSON_OBJECT
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsString()) {
 			resp.fStatus = FStatus::kParseFailed;
@@ -428,15 +463,8 @@ public:
 		*pField = std::string(req.stream.GetString(), req.stream.GetStringLength());
 		return 0;
 	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetString(IJST_CONT_VAL(*pField).c_str(), IJST_CONT_VAL(*pField).length(), req.allocator);
-		return 0;
-	}
 #endif
+
 };
 
 template<>
@@ -448,21 +476,6 @@ public:
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
 		return (pField->V().Accept(req.writer) ? 0 : Err::kWriteFailed);
-	}
-
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
-	{
-		(void) resp;
-		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
-
-		if (req.canMoveSrc) {
-			pField->v.Swap(req.stream);
-			pField->m_pAllocator = &req.allocator;
-		}
-		else {
-			pField->v.CopyFrom(req.stream, *pField->m_pAllocator, true);
-		}
-		return 0;
 	}
 
 #if IJST_ENABLE_TO_JSON_OBJECT
@@ -486,6 +499,24 @@ public:
 		return 0;
 	}
 #endif
+
+#if IJST_ENABLE_FROM_JSON_OBJECT
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
+	{
+		(void) resp;
+		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
+
+		if (req.canMoveSrc) {
+			pField->v.Swap(req.stream);
+			pField->m_pAllocator = &req.allocator;
+		}
+		else {
+			pField->v.CopyFrom(req.stream, *pField->m_pAllocator, true);
+		}
+		return 0;
+	}
+#endif
+
 };
 
 }	//namespace detail

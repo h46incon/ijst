@@ -146,12 +146,6 @@ public:
 		return pField->_.ISerialize(req);
 	}
 
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
-	{
-		_T *pField = (_T *) req.pFieldBuffer;
-		return pField->_.IDeserialize(req, resp);
-	}
-
 #if IJST_ENABLE_TO_JSON_OBJECT
 	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
 	{
@@ -165,6 +159,15 @@ public:
 		return pFieldT->_.ISetAllocator(pField, allocator);
 	}
 #endif
+
+#if IJST_ENABLE_FROM_JSON_OBJECT
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
+	{
+		_T *pField = (_T *) req.pFieldBuffer;
+		return pField->_.IFromJson(req, resp);
+	}
+#endif
+
 };
 
 template<typename DefType, typename VarType, typename RealVarType>
@@ -189,7 +192,7 @@ public:
 		return 0;
 	}
 
-	virtual int Deserialize(const DeserializeReq &req, DeserializeResp &resp) IJSTI_OVERRIDE
+	virtual int FromJson(const FromJsonReq &req, FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsArray()) {
 			resp.fStatus = FStatus::kParseFailed;
@@ -212,11 +215,11 @@ public:
 			// Use resize() instead of push_back() to avoid copy constructor in C++11
 			field.resize(field.size() + 1);
 			IJSTI_NEW_ELEM_ERR_DOC(resp.pErrDoc, pElemErrDoc);
-			DeserializeReq elemReq(*itVal, req.allocator,
+			FromJsonReq elemReq(*itVal, req.allocator,
 								   req.unknownMode, req.canMoveSrc, &field.back());
-			DeserializeResp elemResp(pElemErrDoc);
-			// Deserialize
-			int ret = serializerInterface->Deserialize(elemReq, elemResp);
+			FromJsonResp elemResp(pElemErrDoc);
+			// FromJson
+			int ret = serializerInterface->FromJson(elemReq, elemResp);
 			if (ret != 0)
 			{
 				field.pop_back();
@@ -284,9 +287,7 @@ private:
 
 #define IJSTI_SERIALIZER_CONTAINER_DEFINE()																		\
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE												\
-	{ return ContainerSerializerSingleton::GetInstance()->Serialize(req); }										\
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE			\
-	{ return ContainerSerializerSingleton::GetInstance()->Deserialize(req, resp); }
+	{ return ContainerSerializerSingleton::GetInstance()->Serialize(req); }
 
 #if IJST_ENABLE_TO_JSON_OBJECT
 	#define IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()																\
@@ -296,6 +297,14 @@ private:
 		{ return ContainerSerializerSingleton::GetInstance()->SetAllocator(pField, allocator); }
 #else
 	#define IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()		// empty
+#endif
+
+#if IJST_ENABLE_FROM_JSON_OBJECT
+	#define IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()															\
+		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE					\
+		{ return ContainerSerializerSingleton::GetInstance()->FromJson(req, resp); }
+#else
+	#define IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()		// empty
 #endif
 
 /**
@@ -315,6 +324,7 @@ private:
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
 	IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()
+	IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()
 };
 
 /**
@@ -334,6 +344,7 @@ private:
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
 	IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()
+	IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()
 };
 
 /**
@@ -353,6 +364,7 @@ private:
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
 	IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()
+	IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()
 };
 
 /**
@@ -386,56 +398,6 @@ public:
 		}
 
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.EndObject());
-		return 0;
-	}
-
-	virtual int Deserialize(const DeserializeReq &req, IJST_OUT DeserializeResp &resp) IJSTI_OVERRIDE
-	{
-		if (!req.stream.IsObject()) {
-			resp.fStatus = FStatus::kParseFailed;
-			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "object", req.stream);
-			return Err::kDeserializeValueTypeError;
-		}
-
-		VarType *pFieldWrapper = static_cast<VarType *>(req.pFieldBuffer);
-		assert(pFieldWrapper != IJST_NULL);
-		RealVarType&field = IJST_CONT_VAL(*pFieldWrapper);
-		field.clear();
-		// pField->shrink_to_fit();
-		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
-
-		for (rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
-			 itMember != req.stream.MemberEnd(); ++itMember)
-		{
-			// Get information
-			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-			// New a elem buffer in container first to avoid copy
-			bool hasAlloc = false;
-			if (field.find(fieldName) == field.end()) {
-				hasAlloc = true;
-			}
-
-			ElemVarType &elemBuffer = field[fieldName];
-			DeserializeReq elemReq(itMember->value, req.allocator,
-								   req.unknownMode, req.canMoveSrc, &elemBuffer);
-
-			// Deserialize
-			IJSTI_NEW_ELEM_ERR_DOC(resp.pErrDoc, pElemErrDoc);
-			DeserializeResp elemResp(pElemErrDoc);
-			int ret = serializerInterface->Deserialize(elemReq, elemResp);
-			if (ret != 0)
-			{
-				if (hasAlloc)
-				{
-					field.erase(fieldName);
-				}
-				detail::ErrDoc::ErrorInObject(resp.pErrDoc, "ErrInMap", fieldName, pElemErrDoc);
-				resp.fStatus = FStatus::kParseFailed;
-				return ret;
-			}
-			++resp.fieldCount;
-		}
-		resp.fStatus = FStatus::kValid;
 		return 0;
 	}
 
@@ -486,6 +448,59 @@ public:
 		return 0;
 	}
 #endif
+
+#if IJST_ENABLE_FROM_JSON_OBJECT
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
+	{
+		if (!req.stream.IsObject()) {
+			resp.fStatus = FStatus::kParseFailed;
+			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "object", req.stream);
+			return Err::kDeserializeValueTypeError;
+		}
+
+		VarType *pFieldWrapper = static_cast<VarType *>(req.pFieldBuffer);
+		assert(pFieldWrapper != IJST_NULL);
+		RealVarType&field = IJST_CONT_VAL(*pFieldWrapper);
+		field.clear();
+		// pField->shrink_to_fit();
+		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
+
+		for (rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
+			 itMember != req.stream.MemberEnd(); ++itMember)
+		{
+			// Get information
+			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
+			// New a elem buffer in container first to avoid copy
+			bool hasAlloc = false;
+			if (field.find(fieldName) == field.end()) {
+				hasAlloc = true;
+			}
+
+			ElemVarType &elemBuffer = field[fieldName];
+			FromJsonReq elemReq(itMember->value, req.allocator,
+								req.unknownMode, req.canMoveSrc, &elemBuffer);
+
+			// FromJson
+			IJSTI_NEW_ELEM_ERR_DOC(resp.pErrDoc, pElemErrDoc);
+			FromJsonResp elemResp(pElemErrDoc);
+			int ret = serializerInterface->FromJson(elemReq, elemResp);
+			if (ret != 0)
+			{
+				if (hasAlloc)
+				{
+					field.erase(fieldName);
+				}
+				detail::ErrDoc::ErrorInObject(resp.pErrDoc, "ErrInMap", fieldName, pElemErrDoc);
+				resp.fStatus = FStatus::kParseFailed;
+				return ret;
+			}
+			++resp.fieldCount;
+		}
+		resp.fStatus = FStatus::kValid;
+		return 0;
+	}
+#endif
+
 };
 
 }	// namespace detail
