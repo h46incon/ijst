@@ -726,7 +726,7 @@ public:
 			return Err::kDeserializeParseFaild;
 		}
 
-		return DoFromJsonWrap<JsonValue>(DoMoveFromJson, doc, unknownMode, pErrMsgOut);
+		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, unknownMode, pErrMsgOut);
 	}
 
 	/**
@@ -782,7 +782,7 @@ public:
 			}
 			return Err::kDeserializeParseFaild;
 		}
-		return DoFromJsonWrap<JsonValue>(DoMoveFromJson, doc, unknownMode, pErrMsgOut);
+		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, unknownMode, pErrMsgOut);
 	}
 
 #if IJST_ENABLE_TO_JSON_OBJECT
@@ -878,7 +878,7 @@ public:
 	inline int FromJson(const JsonValue &stream, EUnknownMode unknownMode = UnknownMode::kKeep,
 						std::string *pErrMsgOut = IJST_NULL)
 	{
-		return DoFromJsonWrap<const JsonValue>(DoFromJson, stream, unknownMode, pErrMsgOut);
+		return DoFromJsonWrap<const JsonValue>(&Accessor::DoFromJson, stream, unknownMode, pErrMsgOut);
 	}
 
 	/**
@@ -900,7 +900,7 @@ public:
 		// Store document to manager allocator
 		m_pOwnDoc->Swap(srcDocStolen);
 		m_pAllocator = &m_pOwnDoc->GetAllocator();
-		return DoFromJsonWrap<JsonValue>(DoMoveFromJson, *m_pOwnDoc, unknownMode, pErrMsgOut);
+		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, *m_pOwnDoc, unknownMode, pErrMsgOut);
 	}
 #endif
 

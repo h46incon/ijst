@@ -137,7 +137,6 @@ public:
 	const JsonAllocator& GetOwnAllocator() const {return m_pOwnDoc->GetAllocator();}
 
 private:
-	template <typename T> friend class detail::TypeClassPrim;
 	friend class detail::FSerializer<detail::TypeClassPrim<FType::Raw> >;
 	JsonValue v;
 	JsonAllocator* m_pAllocator;
