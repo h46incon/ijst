@@ -144,7 +144,7 @@ private:
 	BaseWriter m_baseWriter;
 };
 
-typedef GenericHeadWriter<HeadOStream, rapidjson::Writer<HeadOStream>> HeadWriter;
+typedef GenericHeadWriter<HeadOStream, rapidjson::Writer<HeadOStream> > HeadWriter;
 
 struct ErrDoc {
 	//! New a error document according to pErrDoc

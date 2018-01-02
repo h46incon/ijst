@@ -95,17 +95,17 @@
 #define IJST_OUT
 
 //! Declare a ijst struct.
-#define IJST_DEFINE_STRUCT(stName, ...) \
-    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(stName, ##__VA_ARGS__), stName, false, F, ##__VA_ARGS__)
+#define IJST_DEFINE_STRUCT(...) \
+    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), false, F, __VA_ARGS__)
 //! Declare a ijst struct with getter.
-#define IJST_DEFINE_STRUCT_WITH_GETTER(stName, ...) \
-    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(stName, ##__VA_ARGS__), stName, false, T, ##__VA_ARGS__)
+#define IJST_DEFINE_STRUCT_WITH_GETTER(...) \
+    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), false, T, __VA_ARGS__)
 //! Declare a ijst struct which represent a value instead of members insides a object
 #define IJST_DEFINE_VALUE(stName, type, fName, desc)	\
-    IJSTI_DEFINE_STRUCT_IMPL(1, stName, true, F, (type, fName, "JSON_ITSELF", desc))
+    IJSTI_DEFINE_STRUCT_IMPL(1, true, F, stName, (type, fName, "JSON_ITSELF", desc))
 //! Declare a ijst struct which represent a value instead of members insides a object with getter
 #define IJST_DEFINE_VALUE_WITH_GETTER(stName, type, fName, desc)	\
-    IJSTI_DEFINE_STRUCT_IMPL(1, stName, true, T, (type, fName, "JSON_ITSELF", desc))
+    IJSTI_DEFINE_STRUCT_IMPL(1, true, T, stName, (type, fName, "JSON_ITSELF", desc))
 
 //! Get status of field in obj.
 #define IJST_GET_STATUS(obj, field)				obj._.GetStatus(& ((obj).field))
@@ -1529,8 +1529,8 @@ inline void Accessor::template AppendUnknownToBuffer<true, Accessor>(
 
 	//! Wrapper of IJST_DEFINE_STRUCT_IMPL_*
 	//! @param needGetter: must be T or F
-	#define IJSTI_DEFINE_STRUCT_IMPL(N, stName, isRawVal, needGetter, ...) \
-		IJSTI_PP_CONCAT(IJSTI_DEFINE_STRUCT_IMPL_, N)(stName, isRawVal, needGetter, ##__VA_ARGS__)
+	#define IJSTI_DEFINE_STRUCT_IMPL(N, isRawVal, needGetter, ...) \
+		IJSTI_PP_CONCAT(IJSTI_DEFINE_STRUCT_IMPL_, N)(isRawVal, needGetter, __VA_ARGS__)
 
 	//! Define getter of fields
 	#define IJSTI_DEFINE_GETTER_T(N, ...)	\

@@ -65,7 +65,7 @@
 
 	//* Define Struct
 	IJSTM_HASH define IJSTM_DEFINE_STRUCT(n)( 																IJSTM_BSLASH
-						stName, isRawVal, needGetter BOOST_PP_ENUM_TRAILING_PARAMS(n, f)) 					IJSTM_BSLASH
+						isRawVal, needGetter, stName BOOST_PP_ENUM_TRAILING_PARAMS(n, f)) 					IJSTM_BSLASH
 	class stName{	 																						IJSTM_BSLASH
 	public:	 																								IJSTM_BSLASH
 		::ijst::Accessor _;			 																		IJSTM_BSLASH
