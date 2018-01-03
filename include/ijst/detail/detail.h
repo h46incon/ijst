@@ -26,8 +26,8 @@ namespace detail{
 #endif
 
 // Expands to the concatenation of its two arguments.
-#define IJSTI_PP_CONCAT(x, y) IJSTI_PP_CONCAT_PRIMITIVE(x, y)
-#define IJSTI_PP_CONCAT_PRIMITIVE(x, y) x ## y
+#define IJSTI_PP_CONCAT(x, y) 		IJSTI_PP_CONCAT_I(x, y)
+#define IJSTI_PP_CONCAT_I(x, y) 	x ## y
 
 #define IJSTI_NEW_ELEM_ERR_DOC(pErrDoc, pElemErrDoc)									\
 	rapidjson::Document* pElemErrDoc = detail::ErrDoc::NewErrDoc(pErrDoc);				\

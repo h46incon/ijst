@@ -125,7 +125,6 @@
 
 //! Wrappers.
 #if IJST_USE_SL_WRAPPER
-#define IJST_CONT_VEC(...)			ijst::Vector<__VA_ARGS__>
 	#define IJST_CONT_VAL(_v)			(_v).Val()
 #else
 	#define IJST_CONT_VAL(_v)			(_v)
@@ -1527,14 +1526,33 @@ inline void Accessor::template AppendUnknownToBuffer<true, Accessor>(
 }
 #endif
 
+//! IJSTI_DEFINE_STRUCT_IMPL
+//! Wrapper of IJST_DEFINE_STRUCT_IMPL_*
+//! @param N			fields size
+//! @param isRawVal		is struct a raw value: true/false
+//! @param needGetter	need Get* function: T/F
+//! @param stName		struct name
+//! @param ...			fields define: [(fType, fName, sName, desc)]*
+#ifdef _MSC_VER
+	//! @params	N, isRawVal, needGetter, stName, ...
+	#define IJSTI_DEFINE_STRUCT_IMPL(N, ...) \
+		IJSTI_PP_CONCAT(IJSTI_PP_CONCAT(IJSTI_DEFINE_STRUCT_IMPL_, N)(__VA_ARGS__), )
+#else
 	//! Wrapper of IJST_DEFINE_STRUCT_IMPL_*
 	//! @param needGetter: must be T or F
 	#define IJSTI_DEFINE_STRUCT_IMPL(N, isRawVal, needGetter, ...) \
 		IJSTI_PP_CONCAT(IJSTI_DEFINE_STRUCT_IMPL_, N)(isRawVal, needGetter, __VA_ARGS__)
+#endif
 
-	//! Define getter of fields
+//! IJSTI_DEFINE_GETTER_T
+//! Define getter of fields
+#ifdef _MSC_VER
 	#define IJSTI_DEFINE_GETTER_T(N, ...)	\
-		IJSTI_PP_CONCAT(IJSTI_DEFINE_GETTER_IMPL_, N) (__VA_ARGS__)
+		IJSTI_PP_CONCAT(IJSTI_PP_CONCAT(IJSTI_DEFINE_GETTER_IMPL_, N)(__VA_ARGS__), )
+#else
+	#define IJSTI_DEFINE_GETTER_T(N, ...)	\
+		IJSTI_PP_CONCAT(IJSTI_DEFINE_GETTER_IMPL_, N)(__VA_ARGS__)
+#endif
 	#define IJSTI_DEFINE_GETTER_F(N, ...)	// empty
 
 	#define IJSTI_IDL_FTYPE(fType, fName, sName, desc)		fType
