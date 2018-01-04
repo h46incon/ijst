@@ -173,7 +173,7 @@ public:
 	{
 		if (!req.stream.IsBool()) {
 			resp.fStatus = FStatus::kParseFailed;
-			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "bool", req.stream);
+			resp.errDoc.TypeMismatch("bool", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -210,7 +210,7 @@ public:
 		{																											\
 			if (!req.stream.IsBool()) {																				\
 				resp.fStatus = FStatus::kParseFailed;																\
-				detail::ErrDoc::TypeMismatch(resp.pErrDoc, "bool", req.stream);										\
+				resp.errDoc.TypeMismatch("bool", req.stream);										\
 				return Err::kDeserializeValueTypeError;																\
 			}																										\
 			VarType *pField = static_cast<VarType *>(req.pFieldBuffer);												\
@@ -267,7 +267,7 @@ public:
 	{
 		if (!req.stream.IsInt()) {
 			resp.fStatus = FStatus::kParseFailed;
-			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "int", req.stream);
+			resp.errDoc.TypeMismatch("int", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -304,7 +304,7 @@ public:
 	{
 		if (!req.stream.IsInt64()) {
 			resp.fStatus = FStatus::kParseFailed;
-			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "int64", req.stream);
+			resp.errDoc.TypeMismatch("int64", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -341,7 +341,7 @@ public:
 	{
 		if (!req.stream.IsUint()) {
 			resp.fStatus = FStatus::kParseFailed;
-			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "uint", req.stream);
+			resp.errDoc.TypeMismatch("uint", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -378,7 +378,7 @@ public:
 	{
 		if (!req.stream.IsUint64()) {
 			resp.fStatus = FStatus::kParseFailed;
-			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "uint64", req.stream);
+			resp.errDoc.TypeMismatch("uint64", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -415,7 +415,7 @@ public:
 	{
 		if (!req.stream.IsNumber()) {
 			resp.fStatus = FStatus::kParseFailed;
-			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "number", req.stream);
+			resp.errDoc.TypeMismatch("number", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -454,7 +454,7 @@ public:
 	{
 		if (!req.stream.IsString()) {
 			resp.fStatus = FStatus::kParseFailed;
-			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "string", req.stream);
+			resp.errDoc.TypeMismatch("string", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 

@@ -146,88 +146,90 @@ private:
 
 typedef GenericHeadWriter<HeadOStream, rapidjson::Writer<HeadOStream> > HeadWriter;
 
-struct ErrDoc {
-	//! New a error document according to pErrDoc
-	//!@note The caller should delete the return pointer
-	static rapidjson::Document* NewErrDoc(rapidjson::Document* pErrDoc)
-	{
-		if (pErrDoc == IJSTI_NULL) { return IJSTI_NULL; }
-		return new rapidjson::Document(&pErrDoc->GetAllocator());
-	}
+struct DeserializeErrDoc {
+	//! New a DeserializeErrDoc
+	//! @param _pAllocator		allocator. set to nullptr if do not need to enable error message
+	explicit DeserializeErrDoc(rapidjson::MemoryPoolAllocator<>* _pAllocator):
+			pAllocator(_pAllocator) {}
 
-	static void TypeMismatch(rapidjson::Document *pErrDoc, const char *expectedType, const rapidjson::Value &errVal)
+	void TypeMismatch(const char *expectedType, const rapidjson::Value &errVal)
 	{
-		if (pErrDoc == IJSTI_NULL) { return; }
+		if (pAllocator == IJSTI_NULL) { return; }
 
 		HeadOStream ostream(16);
 		HeadWriter writer(ostream);
 		errVal.Accept(writer);
 
-		pErrDoc->SetObject();
-		pErrDoc->AddMember("type", rapidjson::StringRef("TypeMismatch"), pErrDoc->GetAllocator());
-		pErrDoc->AddMember("expectedType",
-						   rapidjson::Value().SetString(expectedType, pErrDoc->GetAllocator()),
-						   pErrDoc->GetAllocator());
-		pErrDoc->AddMember("json",
-						   rapidjson::Value().SetString(ostream.str.c_str(), ostream.str.length(), pErrDoc->GetAllocator()),
-						   pErrDoc->GetAllocator());
+		errMsg.SetObject();
+		errMsg.AddMember("type", rapidjson::StringRef("TypeMismatch"), *pAllocator);
+		errMsg.AddMember("expectedType",
+						 rapidjson::Value().SetString(expectedType, *pAllocator),
+						 *pAllocator);
+		errMsg.AddMember("json",
+						 rapidjson::Value().SetString(ostream.str.c_str(), ostream.str.length(), *pAllocator),
+						 *pAllocator);
 	}
 
 	//! Set error message about error of member in object
-	static void ErrorInObject(rapidjson::Document* pErrDoc, const char* type, const std::string& memberName, rapidjson::Value* errDetail = IJSTI_NULL)
+	void ErrorInObject(const char* type, const std::string& memberName, DeserializeErrDoc* errDetail = IJSTI_NULL)
 	{
-		if (pErrDoc == IJSTI_NULL) { return; }
+		if (pAllocator == IJSTI_NULL) { return; }
 
-		pErrDoc->SetObject();
-		pErrDoc->AddMember("type",
-						   rapidjson::Value().SetString(type, pErrDoc->GetAllocator()),
-						   pErrDoc->GetAllocator());
-		pErrDoc->AddMember("member",
-						   rapidjson::Value().SetString(memberName.c_str(), memberName.length(), pErrDoc->GetAllocator()),
-						   pErrDoc->GetAllocator());
+		errMsg.SetObject();
+		errMsg.AddMember("type",
+						 rapidjson::Value().SetString(type, *pAllocator),
+						 *pAllocator);
+		errMsg.AddMember("member",
+						 rapidjson::Value().SetString(memberName.c_str(), memberName.length(), *pAllocator),
+						 *pAllocator);
 		if (errDetail != IJSTI_NULL) {
-			pErrDoc->AddMember("err", *errDetail, pErrDoc->GetAllocator());
+			assert(pAllocator == errDetail->pAllocator);
+			errMsg.AddMember("err", errDetail->errMsg, *pAllocator);
 		}
 	}
 
 	//! Set error message about error of member in array
-	static void ErrorInArray(rapidjson::Document* pErrDoc, const char* type, unsigned index, rapidjson::Value* errDetail)
+	void ErrorInArray(const char* type, unsigned index, DeserializeErrDoc* errDetail)
 	{
-		if (pErrDoc == IJSTI_NULL) { return; }
+		if (pAllocator == IJSTI_NULL) { return; }
 		assert(errDetail != IJSTI_NULL);
+		assert(errDetail->pAllocator == pAllocator);
 
-		pErrDoc->SetObject();
-		pErrDoc->AddMember("type",
-						   rapidjson::Value().SetString(type, pErrDoc->GetAllocator()),
-						   pErrDoc->GetAllocator());
-		pErrDoc->AddMember("index",
-						   rapidjson::Value().SetUint(index),
-						   pErrDoc->GetAllocator());
-		pErrDoc->AddMember("err", *errDetail, pErrDoc->GetAllocator());
+		errMsg.SetObject();
+		errMsg.AddMember("type",
+						 rapidjson::Value().SetString(type, *pAllocator),
+						 *pAllocator);
+		errMsg.AddMember("index",
+						 rapidjson::Value().SetUint(index),
+						 *pAllocator);
+		errMsg.AddMember("err", errDetail->errMsg, *pAllocator);
 	}
 
-	static void MissingMember(rapidjson::Document *pErrDoc, rapidjson::Document *pMembers)
+	void MissingMember(DeserializeErrDoc& members)
 	{
-		if (pErrDoc == IJSTI_NULL) { return; }
-		assert(pMembers != IJSTI_NULL);
-		assert(&pErrDoc->GetAllocator() == &pMembers->GetAllocator());
+		if (pAllocator == IJSTI_NULL) { return; }
+		assert(pAllocator == members.pAllocator);
 
-		pErrDoc->SetObject();
-		pErrDoc->AddMember("type", rapidjson::StringRef("MissingMember"), pErrDoc->GetAllocator());
-		pErrDoc->AddMember("members", pMembers->Move(), pErrDoc->GetAllocator());
+		errMsg.SetObject();
+		errMsg.AddMember("type", rapidjson::StringRef("MissingMember"), *pAllocator);
+		errMsg.AddMember("members", members.errMsg, *pAllocator);
 	}
 
-	static void PushMemberName(rapidjson::Document *pErrDoc, const std::string &memberName)
+	void PushMemberName(const std::string &memberName)
 	{
-		if (pErrDoc == IJSTI_NULL) { return; }
-		assert(pErrDoc->IsArray());
+		if (pAllocator == IJSTI_NULL) { return; }
+		assert(errMsg.IsArray());
 
-		pErrDoc->PushBack(
-				rapidjson::Value().SetString(memberName.c_str(), memberName.length(), pErrDoc->GetAllocator()),
-				pErrDoc->GetAllocator()
+		errMsg.PushBack(
+				rapidjson::Value().SetString(memberName.c_str(), memberName.length(), *pAllocator),
+				*pAllocator
 		);
 	}
 
+	// Pointer to allocator that used to setting error message
+	// Use nullptr if do not need error message
+	rapidjson::MemoryPoolAllocator<>* const pAllocator;
+	rapidjson::Value errMsg;
 };
 
 }	// namespace detail

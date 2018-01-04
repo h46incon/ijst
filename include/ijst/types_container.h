@@ -196,7 +196,7 @@ public:
 	{
 		if (!req.stream.IsArray()) {
 			resp.fStatus = FStatus::kParseFailed;
-			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "array", req.stream);
+			resp.errDoc.TypeMismatch("array", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -214,16 +214,15 @@ public:
 			// New a elem buffer in container first to avoid copy
 			// Use resize() instead of push_back() to avoid copy constructor in C++11
 			field.resize(field.size() + 1);
-			IJSTI_NEW_ELEM_ERR_DOC(resp.pErrDoc, pElemErrDoc);
 			FromJsonReq elemReq(*itVal, req.allocator,
 								   req.unknownMode, req.canMoveSrc, &field.back());
-			FromJsonResp elemResp(pElemErrDoc);
+			FromJsonResp elemResp(resp.errDoc.pAllocator);
 			// FromJson
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
 			if (ret != 0)
 			{
 				field.pop_back();
-				detail::ErrDoc::ErrorInArray(resp.pErrDoc, "ErrInArray", field.size(), pElemErrDoc);
+				resp.errDoc.ErrorInArray("ErrInArray", field.size(), &elemResp.errDoc);
 				return ret;
 			}
 			resp.fStatus = FStatus::kParseFailed;
@@ -454,7 +453,7 @@ public:
 	{
 		if (!req.stream.IsObject()) {
 			resp.fStatus = FStatus::kParseFailed;
-			detail::ErrDoc::TypeMismatch(resp.pErrDoc, "object", req.stream);
+			resp.errDoc.TypeMismatch("object", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -481,8 +480,7 @@ public:
 								req.unknownMode, req.canMoveSrc, &elemBuffer);
 
 			// FromJson
-			IJSTI_NEW_ELEM_ERR_DOC(resp.pErrDoc, pElemErrDoc);
-			FromJsonResp elemResp(pElemErrDoc);
+			FromJsonResp elemResp(resp.errDoc.pAllocator);
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
 			if (ret != 0)
 			{
@@ -490,7 +488,7 @@ public:
 				{
 					field.erase(fieldName);
 				}
-				detail::ErrDoc::ErrorInObject(resp.pErrDoc, "ErrInMap", fieldName, pElemErrDoc);
+				resp.errDoc.ErrorInObject("ErrInMap", fieldName, &elemResp.errDoc);
 				resp.fStatus = FStatus::kParseFailed;
 				return ret;
 			}

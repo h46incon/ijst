@@ -328,15 +328,12 @@ namespace detail {
 	struct FromJsonResp {
 		EFStatus fStatus;
 		size_t fieldCount;
+		DeserializeErrDoc errDoc;
 
-		// Pointer to Document holding the error message
-		// Use nullptr if do not need error message
-		rapidjson::Document* pErrDoc;
-
-		explicit FromJsonResp(rapidjson::Document* _pErrDoc) :
+		explicit FromJsonResp(JsonAllocator* _pAllocator) :
 				fStatus(FStatus::kMissing),
 				fieldCount(0),
-				pErrDoc(_pErrDoc)
+				errDoc(_pAllocator)
 		{ }
 
 	};
@@ -938,20 +935,20 @@ private:
 #endif
 
 #if IJST_ENABLE_FROM_JSON_OBJECT
-	typedef detail::SerializerInterface::FromJsonReq FromReq;
-	typedef detail::SerializerInterface::FromJsonResp FromResp;
+	typedef detail::SerializerInterface::FromJsonReq FromJsonReq;
+	typedef detail::SerializerInterface::FromJsonResp FromJsonResp;
 
-	inline int IFromJson(const FromReq &req, IJST_OUT FromResp& resp)
+	inline int IFromJson(const FromJsonReq &req, IJST_OUT FromJsonResp& resp)
 	{
 		assert(req.pFieldBuffer == this);
 
 		m_pAllocator = &req.allocator;
 
 		if (req.canMoveSrc) {
-			return DoMoveFromJson(req.stream, req.unknownMode, resp.pErrDoc, resp.fieldCount);
+			return DoMoveFromJson(req.stream, req.unknownMode, resp.errDoc, resp.fieldCount);
 		}
 		else {
-			return DoFromJson(req.stream, req.unknownMode, resp.pErrDoc, resp.fieldCount);
+			return DoFromJson(req.stream, req.unknownMode, resp.errDoc, resp.fieldCount);
 		}
 	}
 #endif
@@ -1206,14 +1203,15 @@ private:
 	int DoFromJsonWrap(Func func, TJsonValue &stream, EUnknownMode unknownMode, std::string* pErrMsgOut)
 	{
 		size_t fieldCount;
-		rapidjson::Document* pErrDoc = (pErrMsgOut == IJSTI_NULL) ? IJSTI_NULL : new rapidjson::Document();
-		detail::MemoryGuarder<rapidjson::Document> ptrGuarder(pErrDoc);
-		int ret = (this->*func)(stream, unknownMode, pErrDoc, fieldCount);
+		JsonAllocator* allocator = pErrMsgOut == IJSTI_NULL ? IJSTI_NULL : new JsonAllocator();
+		detail::MemoryGuarder<JsonAllocator> ptrGuarder(allocator);
+		detail::DeserializeErrDoc errDoc(allocator);
+		int ret = (this->*func)(stream, unknownMode, errDoc, fieldCount);
 		if (ret != 0 && pErrMsgOut != IJSTI_NULL) {
-			assert(pErrDoc != IJSTI_NULL);
+			assert(allocator != IJSTI_NULL);
 			rapidjson::StringBuffer sb;
 			detail::JsonWriter writer(sb);
-			pErrDoc->Accept(writer);
+			errDoc.errMsg.Accept(writer);
 			(*pErrMsgOut) = std::string(sb.GetString(), sb.GetLength());
 		}
 		return ret;
@@ -1224,18 +1222,18 @@ private:
 	 * @note Make sure the lifecycle of allocator of the stream is longer than this object
 	 */
 	int DoMoveFromJson(JsonValue &stream, EUnknownMode unknownMode,
-					   rapidjson::Document *pErrDoc, IJST_OUT size_t &fieldCountOut)
+					   detail::DeserializeErrDoc& errDoc, IJST_OUT size_t &fieldCountOut)
 	{
 		if (m_isParentVal) {
 			// Set field by stream itself
 			assert(m_pMetaClass->metaFields.size() == 1);
 			return DoFieldFromJson(
-					&m_pMetaClass->metaFields[0], stream, unknownMode, /*canMoveSrc=*/true, pErrDoc);
+					&m_pMetaClass->metaFields[0], stream, unknownMode, /*canMoveSrc=*/true, errDoc);
 		}
 
 		// Set fields by members of stream
 		if (!stream.IsObject()) {
-			detail::ErrDoc::TypeMismatch(pErrDoc, "object", stream);
+			errDoc.TypeMismatch("object", stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -1263,7 +1261,7 @@ private:
 						++itNextRemain;
 						break;
 					case UnknownMode::kError:
-						detail::ErrDoc::ErrorInObject(pErrDoc, "UnknownMember", fieldName);
+						errDoc.ErrorInObject("UnknownMember", fieldName);
 						return Err::kDeserializeSomeUnknownMember;
 					case UnknownMode::kIgnore:
 						break;
@@ -1278,7 +1276,7 @@ private:
 			memberStream.Swap(itMember->value);
 
 			IJSTI_RET_WHEN_NOT_ZERO(
-					DoFieldFromJson(pMetaField, memberStream, unknownMode, /*canMoveSrc=*/true, pErrDoc) );
+					DoFieldFromJson(pMetaField, memberStream, unknownMode, /*canMoveSrc=*/true, errDoc) );
 			++fieldCountOut;
 		}
 
@@ -1293,24 +1291,24 @@ private:
 			m_pUnknown->SetObject();
 		}
 
-		int ret = CheckFieldState(pErrDoc);
+		int ret = CheckFieldState(errDoc);
 		return ret;
 	}
 
 	//! Deserialize from stream
 	int DoFromJson(const JsonValue &stream, EUnknownMode unknownMode,
-				   rapidjson::Document *pErrDoc, IJST_OUT size_t &fieldCountOut)
+				   detail::DeserializeErrDoc& errDoc, IJST_OUT size_t &fieldCountOut)
 	{
 		if (m_isParentVal) {
 			// Serialize field by stream itself
 			assert(m_pMetaClass->metaFields.size() == 1);
 			return DoFieldFromJson(
-					&m_pMetaClass->metaFields[0], const_cast<JsonValue &>(stream), unknownMode, /*canMoveSrc=*/true, pErrDoc);
+					&m_pMetaClass->metaFields[0], const_cast<JsonValue &>(stream), unknownMode, /*canMoveSrc=*/true, errDoc);
 		}
 
 		// Serialize fields by members of stream
 		if (!stream.IsObject()) {
-			detail::ErrDoc::TypeMismatch(pErrDoc, "object", stream);
+			errDoc.TypeMismatch("object", stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -1338,7 +1336,7 @@ private:
 					case UnknownMode::kIgnore:
 						break;
 					case UnknownMode::kError:
-						detail::ErrDoc::ErrorInObject(pErrDoc, "UnknownMember", fieldName);
+						errDoc.ErrorInObject("UnknownMember", fieldName);
 						return Err::kDeserializeSomeUnknownMember;
 					default:
 						assert(false);
@@ -1348,18 +1346,17 @@ private:
 
 			JsonValue& memberStream = const_cast<JsonValue&>(itMember->value);
 			IJSTI_RET_WHEN_NOT_ZERO(
-					DoFieldFromJson(pMetaField, memberStream, unknownMode, /*canMoveSrc=*/false, pErrDoc) );
+					DoFieldFromJson(pMetaField, memberStream, unknownMode, /*canMoveSrc=*/false, errDoc) );
 			++fieldCountOut;
 		}
 
-		int ret = CheckFieldState(pErrDoc);
+		int ret = CheckFieldState(errDoc);
 		return ret;
 	}
 
 
-	int DoFieldFromJson(const detail::MetaField* metaField,
-						JsonValue &stream, EUnknownMode unknownMode, bool canMoveSrc,
-						rapidjson::Document *pErrDoc)
+	int DoFieldFromJson(const detail::MetaField *metaField,
+						JsonValue &stream, EUnknownMode unknownMode, bool canMoveSrc, detail::DeserializeErrDoc &errDoc)
 	{
 		// Check nullable
 		if (isBitSet(metaField->desc, FDesc::Nullable)
@@ -1370,21 +1367,21 @@ private:
 		else
 		{
 			void *pField = GetFieldByOffset(metaField->offset);
-			FromReq elemReq(stream, *m_pAllocator, unknownMode, canMoveSrc, pField);
-			IJSTI_NEW_ELEM_ERR_DOC(pErrDoc, pElemErrDoc);
-			FromResp elemResp(pElemErrDoc);
+			FromJsonReq elemReq(stream, *m_pAllocator, unknownMode, canMoveSrc, pField);
+			FromJsonResp elemResp(errDoc.pAllocator);
 			int ret = metaField->serializerInterface->FromJson(elemReq, elemResp);
 			// Check return
-			if (ret != 0) {
+			if (ret != 0)
+			{
 				(*m_pFieldStatus)[metaField->index] = FStatus::kParseFailed;
-				detail::ErrDoc::ErrorInObject(pErrDoc, "ErrInObject", metaField->name, pElemErrDoc);
+				errDoc.ErrorInObject("ErrInObject", metaField->name, &elemResp.errDoc);
 				return ret;
 			}
 			// Check elem size
 			if (isBitSet(metaField->desc, FDesc::ElemNotEmpty)
 				&& elemResp.fieldCount == 0)
 			{
-				detail::ErrDoc::ErrorInObject(pErrDoc, "ElemIsEmpty", metaField->name);
+				errDoc.ErrorInObject("ElemIsEmpty", metaField->name);
 				return Err::kDeserializeElemEmpty;
 			}
 			// succ
@@ -1407,16 +1404,14 @@ private:
 		(*m_pFieldStatus)[index] = fStatus;
 	}
 
-	int CheckFieldState(rapidjson::Document *pErrDoc) const
+	int CheckFieldState(detail::DeserializeErrDoc& errDoc) const
 	{
 		// Check all required field status
 		std::stringstream invalidNameOss;
 		bool hasErr = false;
 
-		IJSTI_NEW_ELEM_ERR_DOC(pErrDoc, missingFields);
-		if (missingFields != IJSTI_NULL) {
-			missingFields->SetArray();
-		}
+		detail::DeserializeErrDoc missingFields(errDoc.pAllocator);
+		missingFields.errMsg.SetArray();
 
 		for (std::vector<detail::MetaField>::const_iterator itField = m_pMetaClass->metaFields.begin();
 			 itField != m_pMetaClass->metaFields.end(); ++itField)
@@ -1437,11 +1432,11 @@ private:
 
 			// Has error
 			hasErr = true;
-			detail::ErrDoc::PushMemberName(missingFields, itField->name);
+			missingFields.PushMemberName(itField->name);
 		}
 		if (hasErr)
 		{
-			detail::ErrDoc::MissingMember(pErrDoc, missingFields);
+			errDoc.MissingMember(missingFields);
 			return Err::kDeserializeSomeFiledsInvalid;
 		}
 		return 0;
