@@ -482,7 +482,7 @@ namespace detail {
 			const size_t n = metaFields.size();
 			for (size_t i = 1; i < n; i++) {
 				for (size_t j = i; j > 0 && metaFields[j - 1].offset > metaFields[j].offset; j--) {
-					std::swap(metaFields[j], metaFields[j - 1]);
+					detail::Swap(metaFields[j], metaFields[j - 1]);
 				}
 			}
 		}

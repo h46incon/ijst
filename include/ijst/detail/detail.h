@@ -70,6 +70,18 @@ private:
 	T* const m_Ptr;
 };
 
+/**
+ * Custom swap() to avoid dependency on C++ <algorithm> header
+ * @tparam _T 	Type of the arguments to swap, should be instantiated with primitive C++ types only.
+ * @note This has the same semantics as std::swap().
+ */
+template <typename _T>
+inline void Swap(_T& a, _T& b) RAPIDJSON_NOEXCEPT {
+	_T tmp = IJSTI_MOVE(a);
+	a = IJSTI_MOVE(b);
+	b = IJSTI_MOVE(tmp);
+}
+
 template<typename _Ch>
 class GenericHeadOStream {
 public:
