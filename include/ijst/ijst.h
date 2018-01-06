@@ -529,10 +529,11 @@ public:
 			m_pMetaClass(pMetaClass), m_isValid(isValid), m_isParentVal(isParentVal)
 	{
 		IJST_ASSERT(!m_isParentVal || m_pMetaClass->metaFields.size() == 1);
-		m_pFieldStatus = new FieldStatusType(m_pMetaClass->metaFields.size(), FStatus::kMissing);
-		m_pUnknown = new rapidjson::Value(rapidjson::kObjectType);
-		m_pOwnDoc = new rapidjson::Document();
-		m_pAllocator = &m_pOwnDoc->GetAllocator();
+		m_r = static_cast<Resource *>(operator new(sizeof(Resource)));
+		new(&m_r->fieldStatus) FieldStatusType(m_pMetaClass->metaFields.size(), FStatus::kMissing);
+		new(&m_r->unknown)rapidjson::Value(rapidjson::kObjectType);
+		new(&m_r->ownDoc) rapidjson::Document();
+		m_pAllocator = &m_r->ownDoc.GetAllocator();
 		InitOuterPtr();
 	}
 
@@ -543,23 +544,22 @@ public:
 		m_isValid = rhs.m_isValid;
 		m_isParentVal = rhs.m_isParentVal;
 
-		m_pFieldStatus = new FieldStatusType(*rhs.m_pFieldStatus);
-		m_pUnknown = new rapidjson::Value(rapidjson::kObjectType);
-		m_pOwnDoc = new rapidjson::Document();
-		m_pAllocator = &m_pOwnDoc->GetAllocator();
+		m_r = static_cast<Resource *>(operator new(sizeof(Resource)));
+		new(&m_r->fieldStatus)FieldStatusType(rhs.m_r->fieldStatus);
+		new(&m_r->unknown)rapidjson::Value(rapidjson::kObjectType);
+		new(&m_r->ownDoc) rapidjson::Document();
+		m_pAllocator = &m_r->ownDoc.GetAllocator();
 
 		m_pMetaClass = rhs.m_pMetaClass;
 		InitOuterPtr();
 
-		m_pUnknown->CopyFrom(*rhs.m_pUnknown, *m_pAllocator, true);
+		m_r->unknown.CopyFrom(rhs.m_r->unknown, *m_pAllocator, true);
 	}
 
 	#if __cplusplus >= 201103L
 	Accessor(Accessor &&rhs) IJSTI_NOEXCEPT
 	{
-		m_pUnknown = IJST_NULL;
-		m_pOwnDoc = IJST_NULL;
-		m_pFieldStatus = IJST_NULL;
+		m_r = IJSTI_NULL;
 		Steal(rhs);
 	}
 	#endif
@@ -572,12 +572,8 @@ public:
 
 	~Accessor() IJSTI_NOEXCEPT
 	{
-		delete m_pUnknown;
-		m_pUnknown = IJST_NULL;
-		delete m_pOwnDoc;
-		m_pOwnDoc = IJST_NULL;
-		delete m_pFieldStatus;
-		m_pFieldStatus = IJST_NULL;
+		delete m_r;
+		m_r = IJSTI_NULL;
 	}
 	//endregion
 
@@ -589,17 +585,9 @@ public:
 		}
 
 		// Handler resource
-		delete m_pUnknown;
-		m_pUnknown = rhs.m_pUnknown;
-		rhs.m_pUnknown = IJST_NULL;
-
-		delete m_pOwnDoc;
-		m_pOwnDoc = rhs.m_pOwnDoc;
-		rhs.m_pOwnDoc = IJST_NULL;
-
-		delete m_pFieldStatus;
-		m_pFieldStatus = rhs.m_pFieldStatus;
-		rhs.m_pFieldStatus = IJST_NULL;
+		delete m_r;
+		m_r = rhs.m_r;
+		rhs.m_r = IJSTI_NULL;
 
 		// other simple field
 		m_pMetaClass = rhs.m_pMetaClass;
@@ -653,12 +641,12 @@ public:
 	{
 		const size_t offset = GetFieldOffset(pField);
 		const int index = m_pMetaClass->FindIndex(offset);
-		return index == -1 ? FStatus::kNotAField : (*m_pFieldStatus)[index];
+		return index == -1 ? FStatus::kNotAField : m_r->fieldStatus[index];
 	}
 
 	//! Get unknwon fields
-	inline JsonValue &GetUnknown() { return *m_pUnknown; }
-	inline const JsonValue &GetUnknown() const { return *m_pUnknown; }
+	inline JsonValue &GetUnknown() { return m_r->unknown; }
+	inline const JsonValue &GetUnknown() const { return m_r->unknown; }
 
 	//! Get allocator used in object.
 	//! The inner allocator is own allocator when init, but may change to other allocator
@@ -668,8 +656,8 @@ public:
 
 	//! Get own allocator that used to manager resource.
 	//! User could use the returned value to check if this object use outer allocator.
-	inline JsonAllocator &GetOwnAllocator() { return m_pOwnDoc->GetAllocator(); }
-	inline const JsonAllocator &GetOwnAllocator() const { return m_pOwnDoc->GetAllocator(); }
+	inline JsonAllocator &GetOwnAllocator() { return m_r->ownDoc.GetAllocator(); }
+	inline const JsonAllocator &GetOwnAllocator() const { return m_r->ownDoc.GetAllocator(); }
 
 	/**
 	 * Serialize the structure to string.
@@ -702,7 +690,7 @@ public:
 	{
 		// The new object will call FromJson() interfaces soon in most situation
 		// So clear own allocator will not bring much benefice
-		m_pAllocator = &m_pOwnDoc->GetAllocator();
+		m_pAllocator = &m_r->ownDoc.GetAllocator();
 		rapidjson::Document doc(m_pAllocator);
 		doc.Parse(cstrInput, length);
 		if (doc.HasParseError())
@@ -759,7 +747,7 @@ public:
 	{
 		// The new object will call FromJson() interfaces in most situation
 		// So clear own allocator will not bring much benefice
-		m_pAllocator = &m_pOwnDoc->GetAllocator();
+		m_pAllocator = &m_r->ownDoc.GetAllocator();
 		rapidjson::Document doc(m_pAllocator);
 		doc.ParseInsitu(str);
 		if (doc.HasParseError())
@@ -835,9 +823,9 @@ public:
 		if (m_pAllocator != &allocator) {
 			// copy buffer when need
 			JsonValue temp;
-			temp = *m_pUnknown;
+			temp = m_r->unknown;
 			// The life cycle of const string in temp should be same as this object
-			m_pUnknown->CopyFrom(temp, allocator, false);
+			m_r->unknown.CopyFrom(temp, allocator, false);
 		}
 
 		m_pAllocator = &allocator;
@@ -888,9 +876,9 @@ public:
 							std::string *pErrMsgOut = IJST_NULL)
 	{
 		// Store document to manager allocator
-		m_pOwnDoc->Swap(srcDocStolen);
-		m_pAllocator = &m_pOwnDoc->GetAllocator();
-		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, *m_pOwnDoc, unknownMode, pErrMsgOut);
+		m_r->ownDoc.Swap(srcDocStolen);
+		m_pAllocator = &m_r->ownDoc.GetAllocator();
+		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, m_r->ownDoc, unknownMode, pErrMsgOut);
 	}
 #endif
 
@@ -963,9 +951,9 @@ private:
 		// Write buffer if need
 		if (isBitSet(fPushMode, FPush::kPushUnknown))
 		{
-			assert(m_pUnknown->IsObject());
-			for (rapidjson::Value::ConstMemberIterator itMember = m_pUnknown->MemberBegin();
-				 itMember != m_pUnknown->MemberEnd(); ++itMember)
+			assert(m_r->unknown.IsObject());
+			for (rapidjson::Value::ConstMemberIterator itMember = m_r->unknown.MemberBegin();
+				 itMember != m_r->unknown.MemberEnd(); ++itMember)
 			{
 				// Write key
 				const JsonValue& key = itMember->name;
@@ -988,7 +976,7 @@ private:
 			 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
 		{
 			// Check field state
-			const EFStatus fstatus = (*m_pFieldStatus)[itMetaField->index];
+			const EFStatus fstatus = m_r->fieldStatus[itMetaField->index];
 			switch (fstatus) {
 				case FStatus::kValid:
 				case FStatus::kMissing:
@@ -1045,7 +1033,7 @@ private:
 			buffer.SetObject();
 
 			do {
-				const size_t unknwonSize = isBitSet(fPushMode, FPush::kPushUnknown) ? m_pUnknown->MemberCount() : 0;
+				const size_t unknwonSize = isBitSet(fPushMode, FPush::kPushUnknown) ? m_r->unknown.MemberCount() : 0;
 				const size_t maxSize = m_pMetaClass->metaFields.size() + unknwonSize;
 				if (buffer.MemberCapacity() >= maxSize) {
 					break;
@@ -1060,7 +1048,7 @@ private:
 					for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
 						 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
 					{
-						const EFStatus fstatus = (*m_pFieldStatus)[itMetaField->index];
+						const EFStatus fstatus = m_r->fieldStatus[itMetaField->index];
 						if (fstatus == FStatus::kValid || fstatus == FStatus::kNull) {
 							++fieldSize;
 						}
@@ -1080,7 +1068,7 @@ private:
 			 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
 		{
 			// Check field state
-			const EFStatus fstatus = (*m_pFieldStatus)[itMetaField->index];
+			const EFStatus fstatus = m_r->fieldStatus[itMetaField->index];
 			switch (fstatus) {
 				case FStatus::kValid:
 				case FStatus::kMissing:
@@ -1276,10 +1264,10 @@ private:
 			stream.EraseMember(itNextRemain, stream.MemberEnd());
 		}
 		if (unknownMode == UnknownMode::kKeep) {
-			m_pUnknown->SetNull().Swap(stream);
+			m_r->unknown.SetNull().Swap(stream);
 		}
 		else {
-			m_pUnknown->SetObject();
+			m_r->unknown.SetObject();
 		}
 
 		int ret = CheckFieldState(errDoc);
@@ -1303,7 +1291,7 @@ private:
 			return Err::kDeserializeValueTypeError;
 		}
 
-		m_pUnknown->SetObject();
+		m_r->unknown.SetObject();
 		fieldCountOut = 0;
 		// For each member
 		for (rapidjson::Value::ConstMemberIterator itMember = stream.MemberBegin();
@@ -1318,7 +1306,7 @@ private:
 				// Not a field in struct
 				switch (unknownMode) {
 					case UnknownMode::kKeep:
-						m_pUnknown->AddMember(
+						m_r->unknown.AddMember(
 								rapidjson::Value().SetString(fieldName.c_str(), fieldName.length(), *m_pAllocator),
 								rapidjson::Value().CopyFrom(itMember->value, *m_pAllocator, true),
 								*m_pAllocator
@@ -1353,7 +1341,7 @@ private:
 		if (isBitSet(metaField->desc, FDesc::Nullable)
 			&& stream.IsNull())
 		{
-			(*m_pFieldStatus)[metaField->index] = FStatus::kNull;
+			m_r->fieldStatus[metaField->index] = FStatus::kNull;
 		}
 		else
 		{
@@ -1364,7 +1352,7 @@ private:
 			// Check return
 			if (ret != 0)
 			{
-				(*m_pFieldStatus)[metaField->index] = FStatus::kParseFailed;
+				m_r->fieldStatus[metaField->index] = FStatus::kParseFailed;
 				errDoc.ErrorInObject("ErrInObject", metaField->name, &elemResp.errDoc);
 				return ret;
 			}
@@ -1376,7 +1364,7 @@ private:
 				return Err::kDeserializeElemEmpty;
 			}
 			// succ
-			(*m_pFieldStatus)[metaField->index] = FStatus::kValid;
+			m_r->fieldStatus[metaField->index] = FStatus::kValid;
 		}
 		return 0;
 	}
@@ -1390,8 +1378,8 @@ private:
 	{
 		const std::size_t offset = GetFieldOffset(field);
 		const int index = m_pMetaClass->FindIndex(offset);
-		IJST_ASSERT(index >= 0 && (unsigned int)index < m_pFieldStatus->size());
-		(*m_pFieldStatus)[index] = fStatus;
+		IJST_ASSERT(index >= 0 && (unsigned int)index < m_r->fieldStatus.size());
+		m_r->fieldStatus[index] = fStatus;
 	}
 
 	int CheckFieldState(detail::DeserializeErrDoc& errDoc) const
@@ -1412,7 +1400,7 @@ private:
 				continue;
 			}
 
-			const EFStatus fStatus = (*m_pFieldStatus)[itField->index];
+			const EFStatus fStatus = m_r->fieldStatus[itField->index];
 			if (fStatus == FStatus::kValid
 				|| fStatus == FStatus::kNull)
 			{
@@ -1448,15 +1436,17 @@ private:
 		return (val & bit) != 0;
 	}
 
-	// Note: Use pointers to make class Accessor be a standard-layout type struct
 	typedef std::vector<EFStatus> FieldStatusType;
-	FieldStatusType* m_pFieldStatus;
+	// Note: Use pointers to make class Accessor be a standard-layout type struct
+	struct Resource {
+		rapidjson::Value unknown;
+		// Should use document instead of Allocator because document can swap allocator
+		rapidjson::Document ownDoc;
+		FieldStatusType fieldStatus;
+	};
+	Resource* m_r;
+
 	const detail::MetaClass* m_pMetaClass;
-
-	rapidjson::Value* m_pUnknown;
-	// Should use document instead of Allocator because document can swap allocator
-	rapidjson::Document* m_pOwnDoc;
-
 	JsonAllocator* m_pAllocator;
 	const unsigned char *m_pOuter;
 
@@ -1473,8 +1463,8 @@ inline void Accessor::template AppendUnknownToBuffer<false, const Accessor>(
 {
 	const Accessor& rThis = accessor;
 	// Copy
-	for (rapidjson::Value::ConstMemberIterator itMember = rThis.m_pUnknown->MemberBegin();
-		 itMember != rThis.m_pUnknown->MemberEnd(); ++itMember)
+	for (rapidjson::Value::ConstMemberIterator itMember = rThis.m_r->unknown.MemberBegin();
+		 itMember != rThis.m_r->unknown.MemberEnd(); ++itMember)
 	{
 		rapidjson::Value name;
 		rapidjson::Value val;
@@ -1493,8 +1483,8 @@ inline void Accessor::template AppendUnknownToBuffer<true, Accessor>(
 	// append inner data to buffer
 	if (&allocator == rThis.m_pAllocator) {
 		// Move
-		for (rapidjson::Value::MemberIterator itMember = rThis.m_pUnknown->MemberBegin();
-			 itMember != rThis.m_pUnknown->MemberEnd(); ++itMember)
+		for (rapidjson::Value::MemberIterator itMember = rThis.m_r->unknown.MemberBegin();
+			 itMember != rThis.m_r->unknown.MemberEnd(); ++itMember)
 		{
 			buffer.AddMember(itMember->name, itMember->value, allocator);
 			// both itMember->name, itMember->value are null now
@@ -1507,7 +1497,7 @@ inline void Accessor::template AppendUnknownToBuffer<true, Accessor>(
 		// The object will be release after serialize in most suitation, so do not need clear own allocator
 	}
 
-	rThis.m_pUnknown->SetObject();
+	rThis.m_r->unknown.SetObject();
 }
 #endif
 

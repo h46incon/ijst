@@ -220,10 +220,10 @@ public:
 			if (ret != 0)
 			{
 				field.pop_back();
+				resp.fStatus = FStatus::kParseFailed;
 				resp.errDoc.ErrorInArray("ErrInArray", field.size(), &elemResp.errDoc);
 				return ret;
 			}
-			resp.fStatus = FStatus::kParseFailed;
 			++resp.fieldCount;
 		}
 		resp.fStatus = FStatus::kValid;

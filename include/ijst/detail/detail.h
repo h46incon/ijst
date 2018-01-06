@@ -29,10 +29,6 @@ namespace detail{
 #define IJSTI_PP_CONCAT(x, y) 		IJSTI_PP_CONCAT_I(x, y)
 #define IJSTI_PP_CONCAT_I(x, y) 	x ## y
 
-#define IJSTI_NEW_ELEM_ERR_DOC(pErrDoc, pElemErrDoc)									\
-	rapidjson::Document* pElemErrDoc = detail::ErrDoc::NewErrDoc(pErrDoc);				\
-	detail::MemoryGuarder<rapidjson::Document> IJSTI_PP_CONCAT(ptrGuarder_, __LINE__) (pElemErrDoc)
-
 /**
  * Singleton interface
  * @tparam _T type
@@ -159,7 +155,7 @@ private:
 typedef GenericHeadWriter<HeadOStream, rapidjson::Writer<HeadOStream> > HeadWriter;
 
 struct DeserializeErrDoc {
-	//! New a DeserializeErrDoc
+	//! Constructor
 	//! @param _pAllocator		allocator. set to nullptr if do not need to enable error message
 	explicit DeserializeErrDoc(rapidjson::MemoryPoolAllocator<>* _pAllocator):
 			pAllocator(_pAllocator) {}
