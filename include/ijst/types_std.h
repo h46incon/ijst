@@ -168,7 +168,6 @@ public:
 	}
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsBool()) {
@@ -181,7 +180,6 @@ public:
 		*pField = static_cast<VarType >(req.stream.GetBool() ? 1 : 0);
 		return 0;
 	}
-#endif
 };
 
 #define IJSTI_SERIALIZER_BOOL_DEFINE()																			\
@@ -204,22 +202,18 @@ public:
 	#define IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()				// empty
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
-	#define IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()																\
-		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE					\
-		{																											\
-			if (!req.stream.IsBool()) {																				\
-				resp.fStatus = FStatus::kParseFailed;																\
-				resp.errDoc.TypeMismatch("bool", req.stream);										\
-				return Err::kDeserializeValueTypeError;																\
-			}																										\
-			VarType *pField = static_cast<VarType *>(req.pFieldBuffer);												\
-			*pField = req.stream.GetBool();																			\
-			return 0;																								\
-		}
-#else
-	#define IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()			// empty
-#endif
+#define IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()																\
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE					\
+	{																											\
+		if (!req.stream.IsBool()) {																				\
+			resp.fStatus = FStatus::kParseFailed;																\
+			resp.errDoc.TypeMismatch("bool", req.stream);										\
+			return Err::kDeserializeValueTypeError;																\
+		}																										\
+		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);												\
+		*pField = req.stream.GetBool();																			\
+		return 0;																								\
+	}
 
 
 template<>
@@ -262,7 +256,6 @@ public:
 	}
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsInt()) {
@@ -275,7 +268,6 @@ public:
 		*pField = req.stream.GetInt();
 		return 0;
 	}
-#endif
 
 };
 
@@ -299,7 +291,6 @@ public:
 	}
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsInt64()) {
@@ -312,7 +303,6 @@ public:
 		*pField = req.stream.GetInt64();
 		return 0;
 	}
-#endif
 
 };
 
@@ -336,7 +326,6 @@ public:
 	}
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsUint()) {
@@ -349,7 +338,6 @@ public:
 		*pField = req.stream.GetUint();
 		return 0;
 	}
-#endif
 
 };
 
@@ -373,7 +361,6 @@ public:
 	}
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsUint64()) {
@@ -386,7 +373,6 @@ public:
 		*pField = req.stream.GetUint64();
 		return 0;
 	}
-#endif
 
 };
 
@@ -410,7 +396,6 @@ public:
 	}
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsNumber()) {
@@ -423,7 +408,6 @@ public:
 		*pField = req.stream.GetDouble();
 		return 0;
 	}
-#endif
 
 };
 
@@ -449,7 +433,6 @@ public:
 	}
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsString()) {
@@ -462,7 +445,6 @@ public:
 		*pField = std::string(req.stream.GetString(), req.stream.GetStringLength());
 		return 0;
 	}
-#endif
 
 };
 
@@ -499,7 +481,6 @@ public:
 	}
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		(void) resp;
@@ -514,7 +495,6 @@ public:
 		}
 		return 0;
 	}
-#endif
 
 };
 

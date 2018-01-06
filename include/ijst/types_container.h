@@ -160,13 +160,11 @@ public:
 	}
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		_T *pField = (_T *) req.pFieldBuffer;
 		return pField->_.IFromJson(req, resp);
 	}
-#endif
 
 };
 
@@ -298,13 +296,9 @@ private:
 	#define IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()		// empty
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
-	#define IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()															\
-		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE					\
-		{ return ContainerSerializerSingleton::GetInstance()->FromJson(req, resp); }
-#else
-	#define IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()		// empty
-#endif
+#define IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()															\
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE					\
+	{ return ContainerSerializerSingleton::GetInstance()->FromJson(req, resp); }
 
 /**
  * Serialization class of Vector types
@@ -448,7 +442,6 @@ public:
 	}
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsObject()) {
@@ -497,7 +490,6 @@ public:
 		resp.fStatus = FStatus::kValid;
 		return 0;
 	}
-#endif
 
 };
 

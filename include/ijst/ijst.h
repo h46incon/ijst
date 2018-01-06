@@ -41,8 +41,6 @@
 #ifndef IJST_ENABLE_FROM_JSON_OBJECT
 	#define IJST_ENABLE_FROM_JSON_OBJECT 		0
 #endif
-#undef IJST_ENABLE_FROM_JSON_OBJECT
-#define IJST_ENABLE_FROM_JSON_OBJECT 		1
 
 /**
  * IJST_AUTO_META_INIT
@@ -299,7 +297,6 @@ namespace detail {
 		{ (void) pField; (void) allocator; return 0; }
 #endif // #if IJST_ENABLE_TO_JSON_OBJECT
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 	struct FromJsonReq {
 		// Pointer of deserialize output.
 		// The instance should deserialize in this object
@@ -339,7 +336,6 @@ namespace detail {
 	};
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp)= 0;
-#endif // #if IJST_ENABLE_FROM_JSON_OBJECT
 
 	};
 
@@ -365,9 +361,7 @@ namespace detail {
 		virtual int SetAllocator(void *pField, JsonAllocator &allocator) IJSTI_OVERRIDE;
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE = 0;
-#endif
 	};
 
 	#define IJSTI_FSERIALIZER_INS(_T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< _T> >::GetInstance()
@@ -934,7 +928,6 @@ private:
 	}
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 	typedef detail::SerializerInterface::FromJsonReq FromJsonReq;
 	typedef detail::SerializerInterface::FromJsonResp FromJsonResp;
 
@@ -951,7 +944,6 @@ private:
 			return DoFromJson(req.stream, req.unknownMode, resp.errDoc, resp.fieldCount);
 		}
 	}
-#endif
 
 	// #endregion
 
@@ -1198,7 +1190,6 @@ private:
 	static inline void AppendUnknownToBuffer(_TAccessor &accessor, JsonValue &buffer, JsonAllocator &allocator);
 #endif // #if IJST_ENABLE_TO_JSON_OBJECT
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 	template<typename TJsonValue, typename Func>
 	int DoFromJsonWrap(Func func, TJsonValue &stream, EUnknownMode unknownMode, std::string* pErrMsgOut)
 	{
@@ -1389,7 +1380,6 @@ private:
 		}
 		return 0;
 	}
-#endif // #if IJST_ENABLE_FROM_JSON_OBJECT
 
 	inline void InitOuterPtr()
 	{
