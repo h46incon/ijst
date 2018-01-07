@@ -274,6 +274,27 @@ TEST(Deserialize, NotEmpty)
 	}
 }
 
+TEST(Deserialize, ParseFlags)
+{
+	string json = "{/*this is a comment*/}";
+	// Deserialize
+	{
+		NotEmptySt st;
+		int ret = st._.Deserialize<rapidjson::kParseCommentsFlag>(json.c_str(), json.length());
+		ASSERT_EQ(ret, 0);
+	}
+
+	// DeserializeInsitu
+	{
+		NotEmptySt st;
+		char* buf = new char[json.length() + 1];
+		strncpy(buf, json.c_str(), json.length() + 1);
+		int ret = st._.DeserializeInsitu<rapidjson::kParseCommentsFlag>(buf);
+		ASSERT_EQ(ret, 0);
+		delete[] buf;
+	}
+}
+
 IJST_DEFINE_STRUCT(
 		StErrCheck
 		, (IJST_TPRI(Bool), v, "f_v", 0)

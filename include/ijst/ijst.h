@@ -677,6 +677,7 @@ public:
 
 	/**
 	 * Deserialize from C-style string.
+	 * @tparam parseFlags		parseFlags of rapidjson parse method
 	 * @param cstrInput			Input C string
 	 * @param length			Length of string
 	 * @param unknownMode		Behaviour when meet unknown member in json
@@ -685,6 +686,7 @@ public:
 	 *
 	 * @note The input string can contain '\0'
 	 */
+	template <unsigned parseFlags>
 	int Deserialize(const char *cstrInput, std::size_t length, EUnknownMode unknownMode = UnknownMode::kKeep,
 					std::string *pErrMsgOut = IJST_NULL)
 	{
@@ -692,7 +694,7 @@ public:
 		// So clear own allocator will not bring much benefice
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
 		rapidjson::Document doc(m_pAllocator);
-		doc.Parse(cstrInput, length);
+		doc.Parse<parseFlags>(cstrInput, length);
 		if (doc.HasParseError())
 		{
 			if (pErrMsgOut != IJST_NULL)
@@ -705,6 +707,22 @@ public:
 		}
 
 		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, unknownMode, pErrMsgOut);
+	}
+
+	/**
+	 * Deserialize from C-style string.
+	 * @param cstrInput			Input C string
+	 * @param length			Length of string
+	 * @param unknownMode		Behaviour when meet unknown member in json
+	 * @param pErrMsgOut		Error message output. Null if do not need error message
+	 * @return					Error code
+	 *
+	 * @note The input string can contain '\0'
+	 */
+	int Deserialize(const char *cstrInput, std::size_t length, EUnknownMode unknownMode = UnknownMode::kKeep,
+					std::string *pErrMsgOut = IJST_NULL)
+	{
+		return this->template Deserialize<rapidjson::kParseDefaultFlags>(cstrInput, length, unknownMode, pErrMsgOut);
 	}
 
 	/**
@@ -734,6 +752,7 @@ public:
 
 	/**
 	 * Deserialize insitu from str.
+	 * @tparam parseFlags		parseFlags of rapidjson parse method
 	 * @param cstrInput			Input C string
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param pErrMsgOut		Error message output. Null if do not need error message
@@ -742,6 +761,7 @@ public:
 	 * @note The context in str may be changed after deserialize
 	 * @note Make sure the lifecycle of str is longer than this object
 	 */
+	 template<unsigned parseFlags>
 	int DeserializeInsitu(char *str, EUnknownMode unknownMode = UnknownMode::kKeep,
 						  std::string *pErrMsgOut = IJST_NULL)
 	{
@@ -749,7 +769,7 @@ public:
 		// So clear own allocator will not bring much benefice
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
 		rapidjson::Document doc(m_pAllocator);
-		doc.ParseInsitu(str);
+		doc.ParseInsitu<parseFlags>(str);
 		if (doc.HasParseError())
 		{
 			if (pErrMsgOut != IJST_NULL)
@@ -761,6 +781,22 @@ public:
 			return Err::kDeserializeParseFaild;
 		}
 		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, unknownMode, pErrMsgOut);
+	}
+
+	/**
+	 * Deserialize insitu from str.
+	 * @param cstrInput			Input C string
+	 * @param unknownMode		Behaviour when meet unknown member in json
+	 * @param pErrMsgOut		Error message output. Null if do not need error message
+	 * @return					Error code
+	 *
+	 * @note The context in str may be changed after deserialize
+	 * @note Make sure the lifecycle of str is longer than this object
+	 */
+	int DeserializeInsitu(char *str, EUnknownMode unknownMode = UnknownMode::kKeep,
+						  std::string *pErrMsgOut = IJST_NULL)
+	{
+		return this->template DeserializeInsitu<rapidjson::kParseDefaultFlags>(str, unknownMode, pErrMsgOut);
 	}
 
 #if IJST_ENABLE_TO_JSON_OBJECT
