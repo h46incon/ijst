@@ -178,6 +178,67 @@ public:
 };
 typedef UnknownMode::_E EUnknownMode;
 
+template<typename _Ch>
+class GenericHandlerBase {
+public:
+	typedef _Ch Ch;
+
+	virtual bool Null()= 0;
+	virtual bool Bool(bool b)= 0;
+	virtual bool Int(int i)= 0;
+	virtual bool Uint(unsigned i)= 0;
+	virtual bool Int64(int64_t i)= 0;
+	virtual bool Uint64(uint64_t i)= 0;
+	virtual bool Double(double d)= 0;
+	// enabled via kParseNumbersAsStringsFlag, string is not null-terminated (use length)
+	virtual bool RawNumber(const Ch* str, rapidjson::SizeType length, bool copy = false)= 0;
+	virtual bool String(const Ch* str, rapidjson::SizeType length, bool copy = false)= 0;
+	virtual bool StartObject()= 0;
+	virtual bool Key(const Ch* str, rapidjson::SizeType length, bool copy = false)= 0;
+	virtual bool EndObject(rapidjson::SizeType memberCount = 0)= 0;
+	virtual bool StartArray()= 0;
+	virtual bool EndArray(rapidjson::SizeType elementCount = 0)= 0;
+};
+typedef GenericHandlerBase<char> HandlerBase;
+
+template<typename Handler>
+class HandlerWrapper : public GenericHandlerBase<typename Handler::Ch>
+{
+public:
+	typedef typename Handler::Ch Ch;
+	Handler& h;
+	explicit HandlerWrapper(Handler& _h) : h(_h) {}
+
+	bool Null() IJSTI_OVERRIDE
+	{ return h.Null(); }
+	bool Bool(bool b) IJSTI_OVERRIDE
+	{ return h.Bool(b); }
+	bool Int(int i) IJSTI_OVERRIDE
+	{ return h.Int(i); }
+	bool Uint(unsigned i) IJSTI_OVERRIDE
+	{ return h.Uint(i); }
+	bool Int64(int64_t i) IJSTI_OVERRIDE
+	{ return h.Int64(i); }
+	bool Uint64(uint64_t i) IJSTI_OVERRIDE
+	{ return h.Uint64(i); }
+	bool Double(double d) IJSTI_OVERRIDE
+	{ return h.Double(d); }
+	bool RawNumber(const Ch *str, rapidjson::SizeType length, bool copy = false) IJSTI_OVERRIDE
+	{ return h.RawNumber(str, length, copy); }
+	bool String(const Ch *str, rapidjson::SizeType length, bool copy = false) IJSTI_OVERRIDE
+	{ return h.String(str, length, copy); }
+	bool StartObject() IJSTI_OVERRIDE
+	{ return h.StartObject(); }
+	bool Key(const Ch *str, rapidjson::SizeType length, bool copy = false) IJSTI_OVERRIDE
+	{ return h.Key(str, length, copy); }
+	bool EndObject(rapidjson::SizeType memberCount = 0) IJSTI_OVERRIDE
+	{ return h.EndObject(memberCount); }
+	bool StartArray() IJSTI_OVERRIDE
+	{ return h.StartArray(); }
+	bool EndArray(rapidjson::SizeType elementCount = 0) IJSTI_OVERRIDE
+	{ return h.EndArray(elementCount); }
+};
+
 //! Error code.
 struct Err {
 	static const int kSucc 							= 0x00000000;
@@ -253,9 +314,9 @@ namespace detail {
 			// The actual type of field should be decide in the derived class
 			const void* pField;
 
-			JsonWriter& writer;
+			HandlerBase& writer;
 
-			SerializeReq(JsonWriter& _writer, const void *_pField, FPush::Mode _fPushMode)
+			SerializeReq(HandlerBase& _writer, const void *_pField, FPush::Mode _fPushMode)
 					: fPushMode(_fPushMode)
 					, pField(_pField)
 					, writer(_writer)
@@ -665,11 +726,23 @@ public:
 	 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
 	 * @return					Error code
 	 */
+	int Serialize(HandlerBase& writer, FPush::Mode fieldPushMode = FPush::kPushAllFields | FPush::kPushUnknown)  const
+	{
+		return DoSerialize(writer, fieldPushMode);
+	}
+
+	/**
+	 * Serialize the structure to string.
+	 * @param strOutput 		The output of result
+	 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
+	 * @return					Error code
+	 */
 	int Serialize(IJST_OUT std::string &strOutput, FPush::Mode fieldPushMode = FPush::kPushAllFields | FPush::kPushUnknown)  const
 	{
 		rapidjson::StringBuffer buffer;
 		detail::JsonWriter writer(buffer);
-		IJSTI_RET_WHEN_NOT_ZERO(DoSerialize(writer, fieldPushMode));
+		HandlerWrapper<detail::JsonWriter> writerWrapper(writer);
+		IJSTI_RET_WHEN_NOT_ZERO(DoSerialize(writerWrapper, fieldPushMode));
 
 		strOutput = std::string(buffer.GetString(), buffer.GetLength());
 		return 0;
@@ -972,7 +1045,7 @@ private:
 	// #endregion
 
 	//! Serialize to string using SAX API
-	int DoSerialize(detail::JsonWriter &writer, FPush::Mode fPushMode) const
+	int DoSerialize(HandlerBase &writer, FPush::Mode fPushMode) const
 	{
 		if (m_isParentVal) {
 			return DoSerializeFields(writer, fPushMode);
@@ -1005,7 +1078,7 @@ private:
 		return 0;
 	}
 
-	int DoSerializeFields(detail::JsonWriter &writer, FPush::Mode fPushMode) const
+	int DoSerializeFields(HandlerBase &writer, FPush::Mode fPushMode) const
 	{
 		IJST_ASSERT(!m_isParentVal || m_pMetaClass->metaFields.size() == 1);
 		for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();

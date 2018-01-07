@@ -4,8 +4,7 @@
 
 #include "util.h"
 
-#include <ijst/ijst.h>
-#include <ijst/types_std.h>
+#include <rapidjson/prettywriter.h>
 
 using std::vector;
 using std::map;
@@ -396,6 +395,20 @@ TEST(Serialize, BigStruct)
 	Complicate3 st;
 	rapidjson::Document doc;
 	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
+	ASSERT_EQ(doc["i1_v"].GetInt(), 0);
+	ASSERT_EQ(doc["i64_v"].GetInt(), 0);
+}
+
+TEST(Serialize, SerializeHandler)
+{
+	Complicate3 st;
+	rapidjson::StringBuffer buf;
+	rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buf);
+	HandlerWrapper<rapidjson::PrettyWriter<rapidjson::StringBuffer> > writerWrapper(writer);
+	st._.Serialize(writerWrapper, FPush::kPushAllFields);
+	rapidjson::Document doc;
+	doc.Parse(buf.GetString(), buf.GetLength());
+	ASSERT_FALSE(doc.HasParseError());
 	ASSERT_EQ(doc["i1_v"].GetInt(), 0);
 	ASSERT_EQ(doc["i64_v"].GetInt(), 0);
 }
