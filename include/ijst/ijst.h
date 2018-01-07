@@ -1026,7 +1026,7 @@ private:
 					if (!m_isParentVal) {
 						// write key
 						IJSTI_RET_WHEN_WRITE_FAILD(
-								writer.Key(itMetaField->name.c_str(), itMetaField->name.length()) );
+								writer.Key(itMetaField->name.c_str(), (rapidjson::SizeType)itMetaField->name.length()) );
 					}
 					// write value
 					SerializeReq req(writer, pFieldValue, fPushMode);
@@ -1040,7 +1040,7 @@ private:
 					if (!m_isParentVal) {
 						// write key
 						IJSTI_RET_WHEN_WRITE_FAILD(
-								writer.Key(itMetaField->name.c_str(), itMetaField->name.length()) );
+								writer.Key(itMetaField->name.c_str(), (rapidjson::SizeType)itMetaField->name.length()) );
 					}
 					// write value
 					IJSTI_RET_WHEN_WRITE_FAILD(writer.Null());
@@ -1091,7 +1091,7 @@ private:
 					}
 
 				}
-				buffer.MemberReserve(fieldSize, allocator);
+				buffer.MemberReserve((rapidjson::SizeType)fieldSize, allocator);
 			} while (false);
 		}
 
@@ -1217,7 +1217,7 @@ private:
 	template<typename TJsonValue, typename Func>
 	int DoFromJsonWrap(Func func, TJsonValue &stream, EUnknownMode unknownMode, std::string* pErrMsgOut)
 	{
-		size_t fieldCount;
+		size_t fieldCount = 0;
 		JsonAllocator* allocator = pErrMsgOut == IJSTI_NULL ? IJSTI_NULL : new JsonAllocator();
 		detail::MemoryGuarder<JsonAllocator> ptrGuarder(allocator);
 		detail::DeserializeErrDoc errDoc(allocator);
@@ -1343,7 +1343,7 @@ private:
 				switch (unknownMode) {
 					case UnknownMode::kKeep:
 						m_r->unknown.AddMember(
-								rapidjson::Value().SetString(fieldName.c_str(), fieldName.length(), *m_pAllocator),
+								rapidjson::Value().SetString(fieldName.c_str(), (rapidjson::SizeType)fieldName.length(), *m_pAllocator),
 								rapidjson::Value().CopyFrom(itMember->value, *m_pAllocator, true),
 								*m_pAllocator
 						);

@@ -221,7 +221,7 @@ public:
 			{
 				field.pop_back();
 				resp.fStatus = FStatus::kParseFailed;
-				resp.errDoc.ErrorInArray("ErrInArray", field.size(), &elemResp.errDoc);
+				resp.errDoc.ErrorInArray("ErrInArray", (rapidjson::SizeType)field.size(), &elemResp.errDoc);
 				return ret;
 			}
 			++resp.fieldCount;

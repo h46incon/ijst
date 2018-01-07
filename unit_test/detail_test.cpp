@@ -59,6 +59,7 @@ TEST(Detail, CancelableWriter)
 			writer.String("v1", 2);
 			writer.Bool(true);
 			writer.Bool(false);
+			writer.Null();
 		writer.EndArray();
 	writer.EndObject();
 
@@ -94,5 +95,6 @@ TEST(Detail, CancelableWriter)
 	ASSERT_STREQ(val[6].GetString(), "v1");
 	ASSERT_EQ(val[7].GetBool(), true);
 	ASSERT_EQ(val[8].GetBool(), false);
-	ASSERT_EQ(val.Size(), 9u);
+	ASSERT_TRUE(val[9].IsNull());
+	ASSERT_EQ(val.Size(), 10u);
 }

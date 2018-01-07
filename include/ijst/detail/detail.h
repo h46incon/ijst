@@ -123,7 +123,7 @@ typedef GenericHeadOStream<char> HeadOStream;
 template<typename OutputStream, typename BaseWriter>
 class GenericHeadWriter {
 public:
-	GenericHeadWriter(OutputStream& stream) : m_stream(stream), m_baseWriter(stream) {}
+	explicit GenericHeadWriter(OutputStream& stream) : m_stream(stream), m_baseWriter(stream) {}
 
 	typedef typename BaseWriter::Ch Ch;
 	bool Null() { return m_baseWriter.Null() && m_stream.HeadOnly(); }
@@ -174,7 +174,7 @@ struct DeserializeErrDoc {
 						 rapidjson::Value().SetString(expectedType, *pAllocator),
 						 *pAllocator);
 		errMsg.AddMember("json",
-						 rapidjson::Value().SetString(ostream.str.c_str(), ostream.str.length(), *pAllocator),
+						 rapidjson::Value().SetString(ostream.str.c_str(), (rapidjson::SizeType)ostream.str.length(), *pAllocator),
 						 *pAllocator);
 	}
 
@@ -188,7 +188,7 @@ struct DeserializeErrDoc {
 						 rapidjson::Value().SetString(type, *pAllocator),
 						 *pAllocator);
 		errMsg.AddMember("member",
-						 rapidjson::Value().SetString(memberName.c_str(), memberName.length(), *pAllocator),
+						 rapidjson::Value().SetString(memberName.c_str(), (rapidjson::SizeType)memberName.length(), *pAllocator),
 						 *pAllocator);
 		if (errDetail != IJSTI_NULL) {
 			assert(pAllocator == errDetail->pAllocator);
@@ -229,7 +229,7 @@ struct DeserializeErrDoc {
 		assert(errMsg.IsArray());
 
 		errMsg.PushBack(
-				rapidjson::Value().SetString(memberName.c_str(), memberName.length(), *pAllocator),
+				rapidjson::Value().SetString(memberName.c_str(), (rapidjson::SizeType)memberName.length(), *pAllocator),
 				*pAllocator
 		);
 	}
