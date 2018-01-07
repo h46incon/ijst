@@ -1500,7 +1500,6 @@ private:
 	int CheckFieldState(detail::DeserializeErrDoc& errDoc) const
 	{
 		// Check all required field status
-		std::stringstream invalidNameOss;
 		bool hasErr = false;
 
 		detail::DeserializeErrDoc missingFields(errDoc.pAllocator);
