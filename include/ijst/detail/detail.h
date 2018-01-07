@@ -78,6 +78,30 @@ inline void Swap(_T& a, _T& b) RAPIDJSON_NOEXCEPT {
 	b = IJSTI_MOVE(tmp);
 }
 
+template<typename Itera, typename Target, typename Comp>
+Itera BinarySearch(Itera begin, Itera end, const Target& target, Comp comp)
+{
+	assert(begin <= end);
+
+	while (begin < end) {
+		Itera mid = begin + (end - begin) / 2;
+		int c = comp(*mid, target);
+		if (c > 0) {
+			// target < mid
+			end = mid;
+		}
+		else if (c < 0) {
+			// target > mid
+			begin = mid + 1;
+		}
+		else {
+			// target == mid
+			return mid;
+		}
+	}
+	return end;
+};
+
 template<typename _Ch>
 class GenericHeadOStream {
 public:

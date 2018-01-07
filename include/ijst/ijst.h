@@ -15,10 +15,8 @@
 
 #include <cassert>		// assert
 #include <cstddef>		// NULL, size_t, offsetof
-#include <algorithm>	// std::sort, std::lower_bound
 #include <vector>
 #include <string>
-#include <sstream>
 
 /**	========================================================================================
  *				Public Interface
@@ -467,29 +465,28 @@ namespace detail {
 			assert(!mapInited);
 			SortMetaFieldsByOffset();
 
-			m_nameMap.reserve(metaFields.size());
 			m_offsets.reserve(metaFields.size());
+			m_nameMap.resize(metaFields.size(), NameMap(IJSTI_NULL, IJSTI_NULL));
 
 			for (size_t i = 0; i < metaFields.size(); ++i) {
 				MetaField *ptrMetaField = &(metaFields[i]);
 				ptrMetaField->index = static_cast<int>(i);
 
-				m_nameMap.push_back(NameMap(&(ptrMetaField->name), ptrMetaField));
 				m_offsets.push_back(ptrMetaField->offset);
-
 				// Assert field offset is sorted and not exist before
 				assert(i == 0 || m_offsets[i]  > m_offsets[i-1]);
+
+				// Insert name Map
+				InsertNameMap(i, NameMap(&(ptrMetaField->name), ptrMetaField));
 			}
 
-			std::sort(m_nameMap.begin(), m_nameMap.end());
-			IJST_ASSERT(CheckNameMapSortedAndUnique());
 			mapInited = true;
 		}
 
 		int FindIndex(size_t offset) const
 		{
 			std::vector<size_t>::const_iterator it =
-					std::lower_bound(m_offsets.begin(), m_offsets.end(), offset);
+					BinarySearch(m_offsets.begin(), m_offsets.end(), offset, IntComp);
 			if (it != m_offsets.end() && *it == offset) {
 				return static_cast<int>(it - m_offsets.begin());
 			}
@@ -501,7 +498,7 @@ namespace detail {
 		const MetaField* FindByName(const std::string &name) const
 		{
 			std::vector<NameMap>::const_iterator it =
-					std::lower_bound(m_nameMap.begin(), m_nameMap.end(), name, NameMapComp);
+					BinarySearch(m_nameMap.begin(), m_nameMap.end(), name, NameMapComp);
 			if (it != m_nameMap.end() && (*it->pName) == name) {
 				return it->metaField;
 			}
@@ -526,9 +523,14 @@ namespace detail {
 			const MetaField* metaField;
 		};
 
-		static bool NameMapComp(const NameMap &l, const std::string &name)
+		static int NameMapComp(const NameMap &l, const std::string &name)
 		{
-			return (*l.pName) < name;
+			return l.pName->compare(name);
+		}
+
+		static int IntComp(size_t l, size_t r)
+		{
+			return (int)((long)l - (long)r);
 		}
 
 		void SortMetaFieldsByOffset()
@@ -542,14 +544,18 @@ namespace detail {
 			}
 		}
 
-		bool CheckNameMapSortedAndUnique() const
+		void InsertNameMap(size_t len, const NameMap& v)
 		{
-			for (size_t i = 1; i < m_nameMap.size(); ++i) {
-				if (!((*m_nameMap[i - 1].pName) < (*m_nameMap[i].pName))) {
-					return false;		// Maybe the field's json name is duplicate
-				}
+			std::vector<NameMap>::iterator it =
+					BinarySearch(m_nameMap.begin(), m_nameMap.begin() + len, *v.pName, NameMapComp);
+			size_t i = static_cast<size_t>(it - m_nameMap.begin());
+			// assert name is unique
+			assert(i == len || (*v.pName) != (*it->pName));
+
+			for (size_t j = len; j > i; --j) {
+				m_nameMap[j] = IJSTI_MOVE(m_nameMap[j - 1]);
 			}
-			return true;
+			m_nameMap[i] = v;
 		}
 
 		std::vector<NameMap> m_nameMap;
