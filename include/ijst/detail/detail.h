@@ -198,7 +198,7 @@ struct DeserializeErrDoc {
 						 rapidjson::Value().SetString(expectedType, *pAllocator),
 						 *pAllocator);
 		errMsg.AddMember("json",
-						 rapidjson::Value().SetString(ostream.str.c_str(), (rapidjson::SizeType)ostream.str.length(), *pAllocator),
+						 rapidjson::Value().SetString(ostream.str.data(), (rapidjson::SizeType)ostream.str.size(), *pAllocator),
 						 *pAllocator);
 	}
 
@@ -212,7 +212,7 @@ struct DeserializeErrDoc {
 						 rapidjson::Value().SetString(type, *pAllocator),
 						 *pAllocator);
 		errMsg.AddMember("member",
-						 rapidjson::Value().SetString(memberName.c_str(), (rapidjson::SizeType)memberName.length(), *pAllocator),
+						 rapidjson::Value().SetString(memberName.data(), (rapidjson::SizeType)memberName.size(), *pAllocator),
 						 *pAllocator);
 		if (errDetail != IJSTI_NULL) {
 			assert(pAllocator == errDetail->pAllocator);
@@ -253,7 +253,7 @@ struct DeserializeErrDoc {
 		assert(errMsg.IsArray());
 
 		errMsg.PushBack(
-				rapidjson::Value().SetString(memberName.c_str(), (rapidjson::SizeType)memberName.length(), *pAllocator),
+				rapidjson::Value().SetString(memberName.data(), (rapidjson::SizeType)memberName.size(), *pAllocator),
 				*pAllocator
 		);
 	}

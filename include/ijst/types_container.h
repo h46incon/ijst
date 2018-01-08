@@ -384,7 +384,7 @@ public:
 		for (typename RealVarType::const_iterator itFieldMember = field.begin(); itFieldMember != field.end(); ++itFieldMember) {
 			const std::string& key = itFieldMember->first;
 			IJSTI_RET_WHEN_WRITE_FAILD(
-					req.writer.Key(key.c_str(), static_cast<rapidjson::SizeType>(key.length())) );
+					req.writer.Key(key.data(), static_cast<rapidjson::SizeType>(key.size())) );
 
 			SerializeReq elemReq(req.writer, &(itFieldMember->second), req.fPushMode);
 			IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq));
@@ -415,7 +415,7 @@ public:
 
 			// Add member by copy key name
 			rapidjson::GenericStringRef<char> fieldNameRef =
-					rapidjson::StringRef(itFieldMember->first.c_str(), itFieldMember->first.length());
+					rapidjson::StringRef(itFieldMember->first.data(), itFieldMember->first.size());
 			req.buffer.AddMember(
 					rapidjson::Value().SetString(fieldNameRef, req.allocator),
 					newElem,

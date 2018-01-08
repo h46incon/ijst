@@ -826,7 +826,7 @@ public:
 						   EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
 						   std::string *pErrMsgOut = IJST_NULL)
 	{
-		return Deserialize(strInput.c_str(), strInput.length(), unknownMode, checkField, pErrMsgOut);
+		return Deserialize(strInput.data(), strInput.size(), unknownMode, checkField, pErrMsgOut);
 	}
 
 	/**
@@ -840,7 +840,7 @@ public:
 	inline int Deserialize(const std::string &strInput, IJST_OUT std::string& errMsgOut,
 						   EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true)
 	{
-		return Deserialize(strInput.c_str(), strInput.length(), unknownMode, checkField, &errMsgOut);
+		return Deserialize(strInput.data(), strInput.size(), unknownMode, checkField, &errMsgOut);
 	}
 
 	/**
@@ -1139,7 +1139,7 @@ private:
 					if (!m_isParentVal) {
 						// write key
 						IJSTI_RET_WHEN_WRITE_FAILD(
-								writer.Key(itMetaField->name.c_str(), (rapidjson::SizeType)itMetaField->name.length()) );
+								writer.Key(itMetaField->name.data(), (rapidjson::SizeType)itMetaField->name.size()) );
 					}
 					// write value
 					SerializeReq req(writer, pFieldValue, fPushMode);
@@ -1153,7 +1153,7 @@ private:
 					if (!m_isParentVal) {
 						// write key
 						IJSTI_RET_WHEN_WRITE_FAILD(
-								writer.Key(itMetaField->name.c_str(), (rapidjson::SizeType)itMetaField->name.length()) );
+								writer.Key(itMetaField->name.data(), (rapidjson::SizeType)itMetaField->name.size()) );
 					}
 					// write value
 					IJSTI_RET_WHEN_WRITE_FAILD(writer.Null());
@@ -1290,7 +1290,7 @@ private:
 		// library unload, and the memory pool should be fast to copy field name.
 		// Do not check existing key, that's a feature
 		rapidjson::GenericStringRef<char> fieldNameRef =
-				rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
+				rapidjson::StringRef(itMetaField->name.data(), itMetaField->name.size());
 		buffer.AddMember(
 				rapidjson::Value().SetString(fieldNameRef, allocator),
 				elemOutput,
@@ -1309,7 +1309,7 @@ private:
 
 		// Init
 		rapidjson::GenericStringRef<char> fieldNameRef =
-				rapidjson::StringRef(itMetaField->name.c_str(), itMetaField->name.length());
+				rapidjson::StringRef(itMetaField->name.data(), itMetaField->name.size());
 		rapidjson::Value fieldNameVal;
 		fieldNameVal.SetString(fieldNameRef);
 
@@ -1459,7 +1459,7 @@ private:
 				switch (p.unknownMode) {
 					case UnknownMode::kKeep:
 						m_r->unknown.AddMember(
-								rapidjson::Value().SetString(fieldName.c_str(), (rapidjson::SizeType)fieldName.length(), *m_pAllocator),
+								rapidjson::Value().SetString(fieldName.data(), (rapidjson::SizeType)fieldName.size(), *m_pAllocator),
 								rapidjson::Value().CopyFrom(itMember->value, *m_pAllocator, true),
 								*m_pAllocator
 						);
