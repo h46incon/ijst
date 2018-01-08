@@ -25,6 +25,46 @@ TEST(Deserialize, Empty)
 	ASSERT_EQ(ret, retExpected);
 }
 
+TEST(Deserialize, IgnoeFieldStatus)
+{
+	string emptyJson = "{}";
+	// Deserialize
+	{
+		SimpleSt st;
+		int ret = st._.Deserialize(emptyJson, UnknownMode::kKeep, false);
+		ASSERT_EQ(ret, 0);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
+	}
+	// DeserializeInsitu
+	{
+		char * buf = new char [emptyJson.size() + 1];
+		memcpy(buf, emptyJson.c_str(), emptyJson.size());
+		buf[emptyJson.size()] = '\0';
+		SimpleSt st;
+		int ret = st._.DeserializeInsitu(buf, UnknownMode::kKeep, false);
+		ASSERT_EQ(ret, 0);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
+	}
+#if IJST_ENABLE_FROM_JSON_OBJECT
+	// From Json
+	{
+		rapidjson::Document doc(rapidjson::kObjectType);
+		SimpleSt st;
+		int ret = st._.FromJson(doc, UnknownMode::kKeep, false);
+		ASSERT_EQ(ret, 0);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
+	}
+	// Move From Json
+	{
+		rapidjson::Document doc(rapidjson::kObjectType);
+		SimpleSt st;
+		int ret = st._.MoveFromJson(doc, UnknownMode::kKeep, false);
+		ASSERT_EQ(ret, 0);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
+	}
+#endif
+}
+
 
 TEST(Deserialize, ParseError)
 {
@@ -322,7 +362,7 @@ TEST(Deserialize, ErrorDoc_ContainerTypeError)
 		const string json = "[1]";
 		StErrCheck st;
 		string errMsg;
-		int ret = st._.Deserialize(json, UnknownMode::kKeep, &errMsg);
+		int ret = st._.Deserialize(json, UnknownMode::kKeep, true, &errMsg);
 		ASSERT_EQ(ret, kErrTypeError);
 		UTEST_PARSE_STR_TO_JSON(errMsg, errDoc);
 		CheckTypeMismatch(errDoc, "object", "[1]");

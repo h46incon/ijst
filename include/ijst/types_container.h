@@ -213,7 +213,7 @@ public:
 			// Use resize() instead of push_back() to avoid copy constructor in C++11
 			field.resize(field.size() + 1);
 			FromJsonReq elemReq(*itVal, req.allocator,
-								   req.unknownMode, req.canMoveSrc, &field.back());
+								   req.unknownMode, req.canMoveSrc, req.checkField, &field.back());
 			FromJsonResp elemResp(resp.errDoc.pAllocator);
 			// FromJson
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
@@ -470,7 +470,7 @@ public:
 
 			ElemVarType &elemBuffer = field[fieldName];
 			FromJsonReq elemReq(itMember->value, req.allocator,
-								req.unknownMode, req.canMoveSrc, &elemBuffer);
+								req.unknownMode, req.canMoveSrc, req.checkField, &elemBuffer);
 
 			// FromJson
 			FromJsonResp elemResp(resp.errDoc.pAllocator);
