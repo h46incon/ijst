@@ -10,10 +10,10 @@ using namespace ijst;
 
 IJST_DEFINE_STRUCT(
 		SimpleSt
-		, (IJST_TPRI(Int), int_1, "int_val_1", FDesc::Optional)
-		, (IJST_TPRI(Int), int_2, "int_val_2", 0)
-		, (IJST_TPRI(Str), str_1, "str_val_1", FDesc::Optional)
-		, (IJST_TPRI(Str), str_2, "str_val_2", 0)
+		, (T_int, int_1, "int_val_1", FDesc::Optional)
+		, (T_int, int_2, "int_val_2", 0)
+		, (T_string, str_1, "str_val_1", FDesc::Optional)
+		, (T_string, str_2, "str_val_2", 0)
 )
 
 TEST(Deserialize, Empty)
@@ -201,9 +201,9 @@ TEST(Deserialize, Insitu)
 }
 IJST_DEFINE_STRUCT(
 		NullableSt
-		, (IJST_TPRI(Int), int_1, "int_val_1", FDesc::Optional)
-		, (IJST_TPRI(Int), int_2, "int_val_2", FDesc::Nullable)
-		, (IJST_TPRI(Int), int_3, "int_val_3", FDesc::Nullable | FDesc::Optional)
+		, (T_int, int_1, "int_val_1", FDesc::Optional)
+		, (T_int, int_2, "int_val_2", FDesc::Nullable)
+		, (T_int, int_3, "int_val_3", FDesc::Nullable | FDesc::Optional)
 )
 
 TEST(Deserialize, NullValue)
@@ -266,8 +266,8 @@ TEST(Deserialize, NullValue)
 
 IJST_DEFINE_STRUCT(
 		NotEmptySt
-		, (IJST_TVEC(IJST_TPRI(Int)), vec_v, "vec", FDesc::ElemNotEmpty | FDesc::Optional)
-		, (IJST_TMAP(IJST_TPRI(Int)), map_v, "map", FDesc::ElemNotEmpty | FDesc::Optional)
+		, (IJST_TVEC(T_int), vec_v, "vec", FDesc::ElemNotEmpty | FDesc::Optional)
+		, (IJST_TMAP(T_int), map_v, "map", FDesc::ElemNotEmpty | FDesc::Optional)
 )
 
 TEST(Deserialize, NotEmpty)
@@ -337,11 +337,11 @@ TEST(Deserialize, ParseFlags)
 
 IJST_DEFINE_STRUCT(
 		StErrCheck
-		, (IJST_TPRI(Bool), v, "f_v", 0)
-		, (IJST_TMAP(IJST_TPRI(Bool)), map_v, "f_map", 0)
-		, (IJST_TVEC(IJST_TPRI(Bool)), vec_v, "f_vec", 0)
-		, (IJST_TDEQUE(IJST_TPRI(Bool)), deq_v, "f_deq", 0)
-		, (IJST_TLIST(IJST_TPRI(Bool)), list_v, "f_list", 0)
+		, (T_bool, v, "f_v", 0)
+		, (IJST_TMAP(T_bool), map_v, "f_map", 0)
+		, (IJST_TVEC(T_bool), vec_v, "f_vec", 0)
+		, (IJST_TDEQUE(T_bool), deq_v, "f_deq", 0)
+		, (IJST_TLIST(T_bool), list_v, "f_list", 0)
 )
 
 void TestErrCheckTypeError(const std::string& errJson, const char* memberName, const char* expectedType, const char* jsonVal)

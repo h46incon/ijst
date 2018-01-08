@@ -11,79 +11,53 @@
 // Use int types declared in rapidjson
 #include <rapidjson/rapidjson.h>
 
-//! Declare a primitive type field. _T is a value in ijst::FType
-#define IJST_TPRI(_T)	::ijst::detail::TypeClassPrim< ::ijst::FType::_T>
-
 namespace ijst {
 
-//! Primitive field types
-struct FType {
-	enum _E {
-		//! bool -> uint8_t
-		Bool,
-		//! bool -> bool. @note: Could not declare IJST_TVEC(IJST_TPRI(RBool)) now
-		RBool,
-		//! bool -> a wrapper of bool
-		WBool,
-		//! number -> int
-		Int,
-		//! number -> uint64_t
-		Int64,
-		//! number -> unsigned int
-		UInt,
-		//! number -> uint64_t
-		UInt64,
-		//! number -> double
-		Double,
-		//! string -> std::string
-		Str,
-		//! anything -> a wrapper of rapidjson::Value
-		Raw,
-	};
-};
-typedef FType::_E EFType;
-
-namespace detail {
-	template<EFType _T>
-	struct TypeClassPrim {
-		// nothing
-	};
-}
-
-typedef uint8_t 		FStoreBool;
-typedef bool 			FStoreRBool;
-typedef int 			FStoreInt;
-typedef int64_t 		FStoreInt64;
-typedef unsigned int 	FStoreUInt;
-typedef uint64_t 		FStoreUInt64;
-typedef double 			FStoreDouble;
-
+//! bool -> uint8_t
+typedef uint8_t 		T_bool;
+//! bool -> bool. @note: Could not declare std::vector<T_rbool> now
+typedef bool 			T_rbool;
+//! bool -> a wrapper of bool
+class 					T_wbool;
+//! number -> int
+typedef int 			T_int;
+//! number -> int64_t
+typedef int64_t 		T_int64;
+//! number -> unsigned int
+typedef unsigned int 	T_uint;
+//! number -> uint64_t
+typedef uint64_t 		T_uint64;
+//! string -> std::string
+typedef double 			T_double;
+//! string -> std::string
 #if IJST_USE_SL_WRAPPER
-	typedef ijst::SLWrapper<std::string> FStoreString;
+typedef ijst::SLWrapper<std::string> T_string;
 #else
-	typedef std::string FStoreString;
+typedef std::string T_string;
 #endif
+//! anything -> a wrapper of rapidjson::Value
+class 					T_raw;
 
-class FStoreWBool {
+class T_wbool {
 public:
-	FStoreWBool() : m_val(false) {}
-	FStoreWBool(bool _val) : m_val(_val) {}
+	T_wbool() : m_val(false) {}
+	T_wbool(bool _val) : m_val(_val) {}
 	operator bool() const { return m_val; }
 
 private:
-	template <typename T> FStoreWBool(T);	// deleted
+	template <typename T> T_wbool(T);	// deleted
 	bool m_val;
 };
 
-class FStoreRaw {
+class T_raw {
 public:
-	FStoreRaw()
+	T_raw()
 	{
 		m_pOwnDoc = new rapidjson::Document();
 		m_pAllocator = &m_pOwnDoc->GetAllocator();
 	}
 
-	FStoreRaw(const FStoreRaw &rhs)
+	T_raw(const T_raw &rhs)
 	{
 		m_pOwnDoc = new rapidjson::Document();
 		m_pAllocator = &m_pOwnDoc->GetAllocator();
@@ -91,7 +65,7 @@ public:
 	}
 
 #if __cplusplus >= 201103L
-	FStoreRaw(FStoreRaw &&rhs) IJSTI_NOEXCEPT
+	T_raw(T_raw &&rhs) IJSTI_NOEXCEPT
 	{
 		m_pOwnDoc = IJST_NULL;
 		m_pAllocator = IJST_NULL;
@@ -99,13 +73,13 @@ public:
 	}
 #endif
 
-	FStoreRaw &operator=(FStoreRaw rhs)
+	T_raw &operator=(T_raw rhs)
 	{
 		Steal(rhs);
 		return *this;
 	}
 
-	void Steal(FStoreRaw& rhs) IJSTI_NOEXCEPT
+	void Steal(T_raw& rhs) IJSTI_NOEXCEPT
 	{
 		if (this == &rhs) {
 			return;
@@ -120,7 +94,7 @@ public:
 		v = rhs.v;
 	}
 
-	~FStoreRaw()
+	~T_raw()
 	{
 		delete m_pOwnDoc;
 		m_pOwnDoc = IJST_NULL;
@@ -137,10 +111,10 @@ public:
 	const JsonAllocator& GetOwnAllocator() const {return m_pOwnDoc->GetAllocator();}
 
 private:
-	friend class detail::FSerializer<detail::TypeClassPrim<FType::Raw> >;
+	friend class detail::FSerializer<T_raw>;
 	JsonValue v;
 	JsonAllocator* m_pAllocator;
-	rapidjson::Document* m_pOwnDoc;		// use pointer to make FStoreRaw be a standard-layout type
+	rapidjson::Document* m_pOwnDoc;		// use pointer to make T_raw be a standard-layout type
 };
 
 }	// namespace ijst
@@ -148,11 +122,15 @@ private:
 namespace ijst {
 namespace detail {
 
-template<>
-class FSerializer<TypeClassPrim<FType::Bool> > : public SerializerInterface {
-public:
-	typedef ijst::FStoreBool VarType;
+#define IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(_Type)						\
+	template<> class FSerializer<_Type> : public SerializerInterface {		\
+	public: 																\
+		typedef _Type VarType;
 
+#define IJSTI_DEFINE_SERIALIZE_INTERFACE_END()								\
+	};
+
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_bool)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -180,7 +158,8 @@ public:
 		*pField = static_cast<VarType >(req.stream.GetBool() ? 1 : 0);
 		return 0;
 	}
-};
+IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
+
 
 #define IJSTI_SERIALIZER_BOOL_DEFINE()																			\
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE												\
@@ -207,7 +186,7 @@ public:
 	{																											\
 		if (!req.stream.IsBool()) {																				\
 			resp.fStatus = FStatus::kParseFailed;																\
-			resp.errDoc.TypeMismatch("bool", req.stream);										\
+			resp.errDoc.TypeMismatch("bool", req.stream);														\
 			return Err::kDeserializeValueTypeError;																\
 		}																										\
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);												\
@@ -216,31 +195,21 @@ public:
 	}
 
 
-template<>
-class FSerializer<TypeClassPrim<FType::RBool> > : public SerializerInterface {
-public:
-	typedef ijst::FStoreRBool VarType;
-
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_rbool)
 	IJSTI_SERIALIZER_BOOL_DEFINE()
 	IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()
 	IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()
-};
+IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-template<>
-class FSerializer<TypeClassPrim<FType::WBool> > : public SerializerInterface {
-public:
-	typedef ijst::FStoreWBool VarType;
 
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_wbool)
 	IJSTI_SERIALIZER_BOOL_DEFINE()
 	IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()
 	IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()
-};
+IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-template<>
-class FSerializer<TypeClassPrim<FType::Int> > : public SerializerInterface {
-public:
-	typedef ijst::FStoreInt VarType;
 
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -268,14 +237,10 @@ public:
 		*pField = req.stream.GetInt();
 		return 0;
 	}
+IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-};
 
-template<>
-class FSerializer<TypeClassPrim<FType::Int64> > : public SerializerInterface {
-public:
-	typedef ijst::FStoreInt64 VarType;
-
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int64)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -303,14 +268,10 @@ public:
 		*pField = req.stream.GetInt64();
 		return 0;
 	}
+IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-};
 
-template<>
-class FSerializer<TypeClassPrim<FType::UInt> > : public SerializerInterface {
-public:
-	typedef ijst::FStoreUInt VarType;
-
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -338,14 +299,10 @@ public:
 		*pField = req.stream.GetUint();
 		return 0;
 	}
+IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-};
 
-template<>
-class FSerializer<TypeClassPrim<FType::UInt64> > : public SerializerInterface {
-public:
-	typedef ijst::FStoreUInt64 VarType;
-
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint64)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -373,14 +330,10 @@ public:
 		*pField = req.stream.GetUint64();
 		return 0;
 	}
+IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-};
 
-template<>
-class FSerializer<TypeClassPrim<FType::Double> > : public SerializerInterface {
-public:
-	typedef ijst::FStoreDouble VarType;
-
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_double)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -409,26 +362,22 @@ public:
 		return 0;
 	}
 
-};
+IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
 
-template<>
-class FSerializer<TypeClassPrim<FType::Str> > : public SerializerInterface {
-public:
-	typedef ijst::FStoreString VarType;
-
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_string)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
 		const std::string &field = IJST_CONT_VAL(*pField);
-		return (req.writer.String(field.c_str(), static_cast<rapidjson::SizeType>(field.length())) ? 0 : Err::kWriteFailed);
+		return (req.writer.String(field.data(), static_cast<rapidjson::SizeType>(field.size())) ? 0 : Err::kWriteFailed);
 	}
 
 #if IJST_ENABLE_TO_JSON_OBJECT
 	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetString(IJST_CONT_VAL(*pField).c_str(), IJST_CONT_VAL(*pField).length(), req.allocator);
+		req.buffer.SetString(IJST_CONT_VAL(*pField).data(), IJST_CONT_VAL(*pField).size(), req.allocator);
 		return 0;
 	}
 #endif
@@ -445,14 +394,10 @@ public:
 		*pField = std::string(req.stream.GetString(), req.stream.GetStringLength());
 		return 0;
 	}
+IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-};
 
-template<>
-class FSerializer<TypeClassPrim<FType::Raw> > : public SerializerInterface {
-public:
-	typedef ijst::FStoreRaw VarType;
-
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_raw)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -495,8 +440,7 @@ public:
 		}
 		return 0;
 	}
-
-};
+IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
 }	//namespace detail
 }	//namespace ijst

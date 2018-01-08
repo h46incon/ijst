@@ -169,11 +169,11 @@ void TestMemberTypeMismatch(const string& errJson, const char* type, const char*
 
 IJST_DEFINE_STRUCT(
 		StBool
-		, (IJST_TPRI(Bool), v, "f_v", 0)
-		, (IJST_TMAP(IJST_TPRI(Bool)), map_v, "f_map", 0)
-		, (IJST_TVEC(IJST_TPRI(Bool)), vec_v, "f_vec", 0)
-		, (IJST_TDEQUE(IJST_TPRI(Bool)), deq_v, "f_deq", 0)
-		, (IJST_TLIST(IJST_TPRI(Bool)), list_v, "f_list", 0)
+		, (T_bool, v, "f_v", 0)
+		, (IJST_TMAP(T_bool), map_v, "f_map", 0)
+		, (IJST_TVEC(T_bool), vec_v, "f_vec", 0)
+		, (IJST_TDEQUE(T_bool), deq_v, "f_deq", 0)
+		, (IJST_TLIST(T_bool), list_v, "f_list", 0)
 )
 
 TEST(Primitive, Bool)
@@ -193,10 +193,10 @@ TEST(Primitive, Bool)
 
 IJST_DEFINE_STRUCT(
 		StRBool
-		, (IJST_TPRI(RBool), v, "f_v", 0)
-		, (IJST_TMAP(IJST_TPRI(RBool)), map_v, "f_map", 0)
-		, (IJST_TDEQUE(IJST_TPRI(RBool)), deq_v, "f_deq", 0)
-		, (IJST_TLIST(IJST_TPRI(RBool)), list_v, "f_list", 0)
+		, (T_rbool, v, "f_v", 0)
+		, (IJST_TMAP(T_rbool), map_v, "f_map", 0)
+		, (IJST_TDEQUE(T_rbool), deq_v, "f_deq", 0)
+		, (IJST_TLIST(T_rbool), list_v, "f_list", 0)
 )
 
 TEST(Primitive, RBool)
@@ -262,11 +262,11 @@ TEST(Primitive, RBool)
 
 IJST_DEFINE_STRUCT(
 		StWBool
-		, (IJST_TPRI(WBool), v, "f_v", 0)
-		, (IJST_TVEC(IJST_TPRI(WBool)), vec_v, "f_vec", 0)
-		, (IJST_TMAP(IJST_TPRI(WBool)), map_v, "f_map", 0)
-		, (IJST_TDEQUE(IJST_TPRI(WBool)), deq_v, "f_deq", 0)
-		, (IJST_TLIST(IJST_TPRI(WBool)), list_v, "f_list", 0)
+		, (T_wbool, v, "f_v", 0)
+		, (IJST_TVEC(T_wbool), vec_v, "f_vec", 0)
+		, (IJST_TMAP(T_wbool), map_v, "f_map", 0)
+		, (IJST_TDEQUE(T_wbool), deq_v, "f_deq", 0)
+		, (IJST_TLIST(T_wbool), list_v, "f_list", 0)
 )
 
 TEST(Primitive, WBool)
@@ -286,11 +286,11 @@ TEST(Primitive, WBool)
 
 IJST_DEFINE_STRUCT(
 		StInt
-		, (IJST_TPRI(Int), v, "f_v", 0)
-		, (IJST_TVEC(IJST_TPRI(Int)), vec_v, "f_vec", 0)
-		, (IJST_TMAP(IJST_TPRI(Int)), map_v, "f_map", 0)
-		, (IJST_TDEQUE(IJST_TPRI(Int)), deq_v, "f_deq", 0)
-		, (IJST_TLIST(IJST_TPRI(Int)), list_v, "f_list", 0)
+		, (T_int, v, "f_v", 0)
+		, (IJST_TVEC(T_int), vec_v, "f_vec", 0)
+		, (IJST_TMAP(T_int), map_v, "f_map", 0)
+		, (IJST_TDEQUE(T_int), deq_v, "f_deq", 0)
+		, (IJST_TLIST(T_int), list_v, "f_list", 0)
 )
 
 TEST(Primitive, Int)
@@ -312,11 +312,11 @@ TEST(Primitive, Int)
 }
 IJST_DEFINE_STRUCT(
 		StInt64
-		, (IJST_TPRI(Int64), v, "f_v", 0)
-		, (IJST_TVEC(IJST_TPRI(Int64)), vec_v, "f_vec", 0)
-		, (IJST_TMAP(IJST_TPRI(Int64)), map_v, "f_map", 0)
-		, (IJST_TDEQUE(IJST_TPRI(Int64)), deq_v, "f_deq", 0)
-		, (IJST_TLIST(IJST_TPRI(Int64)), list_v, "f_list", 0)
+		, (T_int64, v, "f_v", 0)
+		, (IJST_TVEC(T_int64), vec_v, "f_vec", 0)
+		, (IJST_TMAP(T_int64), map_v, "f_map", 0)
+		, (IJST_TDEQUE(T_int64), deq_v, "f_deq", 0)
+		, (IJST_TLIST(T_int64), list_v, "f_list", 0)
 )
 
 TEST(Primitive, Int64)
@@ -348,11 +348,11 @@ TEST(Primitive, Int64)
 
 IJST_DEFINE_STRUCT(
 		StUInt
-		, (IJST_TPRI(UInt), v, "f_v", 0)
-		, (IJST_TVEC(IJST_TPRI(UInt)), vec_v, "f_vec", 0)
-		, (IJST_TMAP(IJST_TPRI(UInt)), map_v, "f_map", 0)
-		, (IJST_TDEQUE(IJST_TPRI(UInt)), deq_v, "f_deq", 0)
-		, (IJST_TLIST(IJST_TPRI(UInt)), list_v, "f_list", 0)
+		, (T_uint, v, "f_v", 0)
+		, (IJST_TVEC(T_uint), vec_v, "f_vec", 0)
+		, (IJST_TMAP(T_uint), map_v, "f_map", 0)
+		, (IJST_TDEQUE(T_uint), deq_v, "f_deq", 0)
+		, (IJST_TLIST(T_uint), list_v, "f_list", 0)
 )
 
 TEST(Primitive, UInt)
@@ -381,11 +381,11 @@ TEST(Primitive, UInt)
 
 IJST_DEFINE_STRUCT(
 		StUInt64
-		, (IJST_TPRI(UInt64), v, "f_v", 0)
-		, (IJST_TVEC(IJST_TPRI(UInt64)), vec_v, "f_vec", 0)
-		, (IJST_TMAP(IJST_TPRI(UInt64)), map_v, "f_map", 0)
-		, (IJST_TDEQUE(IJST_TPRI(UInt64)), deq_v, "f_deq", 0)
-		, (IJST_TLIST(IJST_TPRI(UInt64)), list_v, "f_list", 0)
+		, (T_uint64, v, "f_v", 0)
+		, (IJST_TVEC(T_uint64), vec_v, "f_vec", 0)
+		, (IJST_TMAP(T_uint64), map_v, "f_map", 0)
+		, (IJST_TDEQUE(T_uint64), deq_v, "f_deq", 0)
+		, (IJST_TLIST(T_uint64), list_v, "f_list", 0)
 )
 
 TEST(Primitive, UInt64)
@@ -414,11 +414,11 @@ TEST(Primitive, UInt64)
 
 IJST_DEFINE_STRUCT(
 		StDouble
-		, (IJST_TPRI(Double), v, "f_v", 0)
-		, (IJST_TVEC(IJST_TPRI(Double)), vec_v, "f_vec", 0)
-		, (IJST_TMAP(IJST_TPRI(Double)), map_v, "f_map", 0)
-		, (IJST_TDEQUE(IJST_TPRI(Double)), deq_v, "f_deq", 0)
-		, (IJST_TLIST(IJST_TPRI(Double)), list_v, "f_list", 0)
+		, (T_double, v, "f_v", 0)
+		, (IJST_TVEC(T_double), vec_v, "f_vec", 0)
+		, (IJST_TMAP(T_double), map_v, "f_map", 0)
+		, (IJST_TDEQUE(T_double), deq_v, "f_deq", 0)
+		, (IJST_TLIST(T_double), list_v, "f_list", 0)
 )
 
 TEST(Primitive, Double)
@@ -446,11 +446,11 @@ TEST(Primitive, Double)
 
 IJST_DEFINE_STRUCT(
 		StString
-		, (IJST_TPRI(Str), v, "f_v", 0)
-		, (IJST_TVEC(IJST_TPRI(Str)), vec_v, "f_vec", 0)
-		, (IJST_TMAP(IJST_TPRI(Str)), map_v, "f_map", 0)
-		, (IJST_TDEQUE(IJST_TPRI(Str)), deq_v, "f_deq", 0)
-		, (IJST_TLIST(IJST_TPRI(Str)), list_v, "f_list", 0)
+		, (T_string, v, "f_v", 0)
+		, (IJST_TVEC(T_string), vec_v, "f_vec", 0)
+		, (IJST_TMAP(T_string), map_v, "f_map", 0)
+		, (IJST_TDEQUE(T_string), deq_v, "f_deq", 0)
+		, (IJST_TLIST(T_string), list_v, "f_list", 0)
 )
 
 TEST(Primitive, Str)
@@ -473,11 +473,11 @@ TEST(Primitive, Str)
 
 IJST_DEFINE_STRUCT(
 		StRaw
-		, (IJST_TPRI(Raw), v, "f_v", 0)
-		, (IJST_TVEC(IJST_TPRI(Raw)), vec_v, "f_vec", 0)
-		, (IJST_TMAP(IJST_TPRI(Raw)), map_v, "f_map", 0)
-		, (IJST_TDEQUE(IJST_TPRI(Raw)), deq_v, "f_deq", 0)
-		, (IJST_TLIST(IJST_TPRI(Raw)), list_v, "f_list", 0)
+		, (T_raw, v, "f_v", 0)
+		, (IJST_TVEC(T_raw), vec_v, "f_vec", 0)
+		, (IJST_TMAP(T_raw), map_v, "f_map", 0)
+		, (IJST_TDEQUE(T_raw), deq_v, "f_deq", 0)
+		, (IJST_TLIST(T_raw), list_v, "f_list", 0)
 )
 
 TEST(Primitive, Raw)
@@ -558,7 +558,7 @@ TEST(Primitive, Raw)
 		st.v.V().SetInt(0);
 		IJST_MARK_VALID(st, v);
 
-		FStoreRaw raw;
+		T_raw raw;
 		raw.V().SetNull();
 		st.vec_v[0] = raw;
 		raw.V().SetString("v03");
@@ -586,10 +586,10 @@ TEST(Primitive, Raw_BasicAPI)
 {
 	{
 		// Copy constructor
-		FStoreRaw src;
+		T_raw src;
 		src.V().SetString("src_v", src.GetAllocator());
 
-		FStoreRaw dst(src);
+		T_raw dst(src);
 		ASSERT_STREQ(src.V().GetString(), "src_v");
 		ASSERT_STREQ(dst.V().GetString(), "src_v");
 		ASSERT_NE(&src.GetAllocator(), &dst.GetAllocator());
@@ -597,10 +597,10 @@ TEST(Primitive, Raw_BasicAPI)
 
 	{
 		// assignment
-		FStoreRaw src;
+		T_raw src;
 		src.V().SetString("src_v", src.GetAllocator());
 
-		FStoreRaw dst;
+		T_raw dst;
 		dst = src;
 		ASSERT_STREQ(src.V().GetString(), "src_v");
 		ASSERT_STREQ(dst.V().GetString(), "src_v");
@@ -610,11 +610,11 @@ TEST(Primitive, Raw_BasicAPI)
 #if __cplusplus >= 201103L
 	{
 		// Rvalue Copy constructor
-		FStoreRaw src;
+		T_raw src;
 		src.V().SetString("src_v", src.GetAllocator());
 		JsonAllocator* pSrcAlloc = &src.GetAllocator();
 
-		FStoreRaw dst(std::move(src));
+		T_raw dst(std::move(src));
 		ASSERT_STREQ(dst.V().GetString(), "src_v");
 		ASSERT_EQ(&dst.GetAllocator(), pSrcAlloc);
 		ASSERT_EQ(&src.GetAllocator(), nullptr);
@@ -622,11 +622,11 @@ TEST(Primitive, Raw_BasicAPI)
 
 	{
 		// Rvalue assignment
-		FStoreRaw src;
+		T_raw src;
 		src.V().SetString("src_v", src.GetAllocator());
 		JsonAllocator* pSrcAlloc = &src.GetAllocator();
 
-		FStoreRaw dst;
+		T_raw dst;
 		dst = std::move(src);
 		ASSERT_STREQ(dst.V().GetString(), "src_v");
 		ASSERT_EQ(&dst.GetAllocator(), pSrcAlloc);

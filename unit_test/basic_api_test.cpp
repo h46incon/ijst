@@ -273,7 +273,7 @@ TEST(BasicAPI, WrapperMap)
 }
 
 IJST_DEFINE_VALUE(
-		ValVec, IJST_TVEC(IJST_TPRI(Int)), v, 0
+		ValVec, IJST_TVEC(T_int), v, 0
 )
 
 TEST(BasicAPI, DefineValueStVec)
@@ -304,7 +304,7 @@ TEST(BasicAPI, DefineValueStVec)
 }
 
 IJST_DEFINE_VALUE_WITH_GETTER(
-		ValMap, IJST_TMAP(IJST_TPRI(Int)), v, 0
+		ValMap, IJST_TMAP(T_int), v, 0
 )
 
 TEST(BasicAPI, DefineValueStMap)
@@ -334,10 +334,10 @@ TEST(BasicAPI, DefineValueStMap)
 
 IJST_DEFINE_STRUCT(
 		SimpleSt
-		, (IJST_TPRI(Int), int_1, "int_val_1", 0)
-		, (IJST_TPRI(Int), int_2, "int_val_2", 0)
-		, (IJST_TPRI(Str), str_1, "str_val_1", 0)
-		, (IJST_TPRI(Str), str_2, "str_val_2", 0)
+		, (T_int, int_1, "int_val_1", 0)
+		, (T_int, int_2, "int_val_2", 0)
+		, (T_string, str_1, "str_val_1", 0)
+		, (T_string, str_2, "str_val_2", 0)
 )
 
 TEST(BasicAPI, FieldStatus)
@@ -352,7 +352,7 @@ TEST(BasicAPI, FieldStatus)
 
 	// IJST_* macro
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), FStatus::kMissing);
-	IJST_SET_STRICT(simpleSt, str_1, FStoreString(std::string("str1")));
+	IJST_SET_STRICT(simpleSt, str_1, T_string(std::string("str1")));
 	ASSERT_STREQ(IJST_CONT_VAL(simpleSt.str_1).c_str(), "str1");
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), FStatus::kValid);
 
@@ -375,7 +375,7 @@ TEST(BasicAPI, FieldValue)
 	simpleSt._.SetStrict(simpleSt.int_1, 0x5A5A);
 	IJST_SET(simpleSt, int_2, 0xA5A5);
 	simpleSt._.Set(simpleSt.str_1, "str1");
-	IJST_SET_STRICT(simpleSt, str_2, FStoreString(std::string("str2")));
+	IJST_SET_STRICT(simpleSt, str_2, T_string(std::string("str2")));
 
 	// Check
 	ASSERT_EQ(simpleSt.int_1, 0x5A5A);
@@ -525,10 +525,10 @@ TEST(BasicAPI, Allocator)
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
 		SWGetter
-		, (IJST_TPRI(Int), int_1, "int_val_1", 0)
-		, (IJST_TPRI(Int), int_2, "int_val_2", 0)
-		, (IJST_TPRI(Str), str_1, "str_val_1", 0)
-		, (IJST_TPRI(Str), str_2, "str_val_2", 0)
+		, (T_int, int_1, "int_val_1", 0)
+		, (T_int, int_2, "int_val_2", 0)
+		, (T_string, str_1, "str_val_1", 0)
+		, (T_string, str_2, "str_val_2", 0)
 )
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
@@ -618,10 +618,10 @@ TEST(BasicAPI, ChainedOptional)
 struct DummySt {
 	IJST_DEFINE_STRUCT(
 			SimpleSt
-			, (IJST_TPRI(Int), int_1, "int_val_1", 0)
-			, (IJST_TPRI(Int), int_2, "int_val_2", 0)
-			, (IJST_TPRI(Str), str_1, "str_val_1", 0)
-			, (IJST_TPRI(Str), str_2, "str_val_2", 0)
+			, (T_int, int_1, "int_val_1", 0)
+			, (T_int, int_2, "int_val_2", 0)
+			, (T_string, str_1, "str_val_1", 0)
+			, (T_string, str_2, "str_val_2", 0)
 	)
 };
 
@@ -637,7 +637,7 @@ void TestDefineInFunction()
 {
 	IJST_DEFINE_STRUCT(
 		StInFunc
-		, (IJST_TPRI(Int), int_1, "int_val_1", 0)
+		, (T_int, int_1, "int_val_1", 0)
 	);
 
 	StInFunc st;
