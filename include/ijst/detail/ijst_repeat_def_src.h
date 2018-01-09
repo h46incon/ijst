@@ -78,8 +78,8 @@
 	IJSTM_HASH define IJSTM_DEFINE_STRUCT(n)( 																IJSTM_BSLASH
 						isRawVal, needGetter, stName BOOST_PP_ENUM_TRAILING_PARAMS(n, f)) 					IJSTM_BSLASH
 	class stName{	 																						IJSTM_BSLASH
-	public:	 																								IJSTM_BSLASH
-		::ijst::Accessor _;			 																		IJSTM_BSLASH
+	public:																									IJSTM_BSLASH
+		IJSTI_STRUCT_PUBLIC_DEFINE()																		IJSTM_BSLASH
 		BOOST_PP_REPEAT(n, IJSTM_DEFINE_FIELD, ~)															IJSTM_BSLASH
 		IJSTI_PP_CONCAT(IJSTI_DEFINE_GETTER_, needGetter) (n BOOST_PP_ENUM_TRAILING_PARAMS(n,f))			IJSTM_BSLASH
 		explicit stName(bool isValid = true): 	 															IJSTM_BSLASH

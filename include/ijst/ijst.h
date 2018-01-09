@@ -241,8 +241,18 @@ struct Err {
  * @note	The specialized template for container is declared in "types_container.h",
  * 			which implements operator []
  */
-template <typename _T>
+
+class Accessor;
+
+template <typename _T, typename = Accessor>
 class Optional
+{
+	typedef _T ValType;
+	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
+};
+
+template <typename _T>
+class Optional<_T, typename _T::_ijstStructAccessorType>
 {
 	typedef _T ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
@@ -1666,6 +1676,10 @@ inline void Accessor::template AppendUnknownToBuffer<true, Accessor>(
 	#define IJSTI_IDL_FNAME(fType, fName, sName, desc)		fName
 	#define IJSTI_IDL_SNAME(fType, fName, sName, desc)		sName
 	#define IJSTI_IDL_DESC(fType, fName, sName, desc)		desc
+
+	#define IJSTI_STRUCT_PUBLIC_DEFINE()														\
+		typedef ::ijst::Accessor _ijstStructAccessorType;										\
+		_ijstStructAccessorType _;
 
 	#define IJSTI_DEFINE_FIELD(fType, fName, ... )												\
 			::ijst::detail::FSerializer< fType>::VarType fName;

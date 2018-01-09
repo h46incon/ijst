@@ -18,11 +18,21 @@
 //! Declare a vector<_T> field.
 #define IJST_TLIST(_T)	::std::list< _T>
 //! Declare a map<string, _T> field.
-#define IJST_TMAP(_T)	::ijst::detail::TypeClassMap< _T>
+#define IJST_TMAP(_T)	::ijst::TypeClassMap< _T>
 //! Declare a object field which _T is a ijst struct type.
-#define IJST_TOBJ(_T)	::ijst::detail::TypeClassObj< _T>
+#define IJST_TOBJ(_T)	::ijst::TypeClassObj< _T>
 
 namespace ijst {
+
+template<class _T>
+struct TypeClassMap {
+	// nothing
+};
+
+template<class _T>
+struct TypeClassObj {
+	// nothing
+};
 
 template <typename _TElem>
 class Optional <std::map<std::string, _TElem> > {
@@ -91,17 +101,6 @@ IJSTI_OPTIONAL_ARRAY_DEFINE(const, std::deque)
 
 namespace ijst {
 namespace detail {
-
-template<class _T>
-struct TypeClassMap {
-	// nothing
-};
-
-template<class _T>
-struct TypeClassObj {
-	// nothing
-};
-
 /**
  * Serialization class of Object types
  * @tparam _T class
