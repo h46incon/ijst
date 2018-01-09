@@ -5,7 +5,6 @@
 #ifndef _IJST_HPP_INCLUDE_
 #define _IJST_HPP_INCLUDE_
 
-#include "std_layout_wrapper.h"
 #include "detail/detail.h"
 
 #include <rapidjson/document.h>
@@ -64,26 +63,12 @@
 #endif
 
 /**
- * IJST_USE_SL_WRAPPER
- *	By default, ijst uses std::vector, std::map, and std::string when defining struct.
- *	User can specify IJST_USE_SL_WRAPPER to 1 to use ijst::Vector, ijst::Map, ijst::SLWrapper<std::string>.
- *	This option will make the behaviour more standards-compliant, but will bring a little inconvenience when using.
- */
-#ifndef IJST_USE_SL_WRAPPER
-	#define IJST_USE_SL_WRAPPER	0
-#endif
-
-/**
  * IJST_OFFSETOF
- *	By default, the offset of each field is computed by "((Struct*)0)->field" when IJST_USE_SL_WRAPPER is false,
- *	and macro "offsetof()" when IJST_USL_SL_WRAPPER is true
+ *	By default, the offset of each field is computed by "((Struct*)0)->field".
+ *	User could overwrite by define this macro such as "offsetof()".
  */
 #ifndef IJST_OFFSETOF
-	#if IJST_USE_SL_WRAPPER
-		#define IJST_OFFSETOF(_T, member)	offsetof(_T, member)
-	#else
-		#define IJST_OFFSETOF(_T, member)	((size_t)&(((_T*)0)->member))
-	#endif
+	#define IJST_OFFSETOF(_T, member)	((size_t)&(((_T*)0)->member))
 #endif
 
 
@@ -118,13 +103,6 @@
 
 //! IJST_NULL.
 #define IJST_NULL				IJSTI_NULL
-
-//! Wrappers.
-#if IJST_USE_SL_WRAPPER
-	#define IJST_CONT_VAL(_v)			(_v).Val()
-#else
-	#define IJST_CONT_VAL(_v)			(_v)
-#endif
 
 namespace ijst {
 typedef rapidjson::Value JsonValue;

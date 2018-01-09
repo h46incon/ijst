@@ -30,11 +30,7 @@ typedef uint64_t 		T_uint64;
 //! string -> std::string
 typedef double 			T_double;
 //! string -> std::string
-#if IJST_USE_SL_WRAPPER
-typedef ijst::SLWrapper<std::string> T_string;
-#else
-typedef std::string T_string;
-#endif
+typedef std::string 	T_string;
 //! anything -> a wrapper of rapidjson::Value
 class 					T_raw;
 
@@ -368,8 +364,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_string)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		const std::string &field = IJST_CONT_VAL(*pField);
+		const VarType& field = *static_cast<const VarType *>(req.pField);
 		return (req.writer.String(field.data(), static_cast<rapidjson::SizeType>(field.size())) ? 0 : Err::kWriteFailed);
 	}
 
@@ -377,7 +372,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_string)
 	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetString(IJST_CONT_VAL(*pField).data(), IJST_CONT_VAL(*pField).size(), req.allocator);
+		req.buffer.SetString(pField->data(), static_cast<rapidjson::SizeType>(pField->size()), req.allocator);
 		return 0;
 	}
 #endif

@@ -237,15 +237,15 @@ TEST(Serialize, Complicate)
 	map<string, T_string> ms2;
 	ms2["k1"] = "v3";
 	ms2["k3"] = "v4";
-	IJST_CONT_VAL(st.vms).push_back(ms1);
-	IJST_CONT_VAL(st.vms).push_back(ms2);
+	st.vms.push_back(ms1);
+	st.vms.push_back(ms2);
 	// mvs
 	vector<T_string> vs1;
 	vs1.push_back(string("s1"));
 	vs1.push_back(string("s2"));
 	st.mvs["mk1"] = vs1;
-	IJST_CONT_VAL(st.mvs["mk2"]).push_back(string("s3"));
-	IJST_CONT_VAL(st.mvs["mk2"]).push_back(string("s4"));
+	st.mvs["mk2"].push_back(string("s3"));
+	st.mvs["mk2"].push_back(string("s4"));
 	// mmo
 	Inner in1;
 	in1.int_1 = 11;
@@ -291,11 +291,11 @@ IJST_DEFINE_STRUCT(
 TEST(Serialize, Container)
 {
 	Container st;
-	IJST_CONT_VAL(st.dVector).push_back(1);
-	IJST_CONT_VAL(st.dDeque).push_back(1);
-	IJST_CONT_VAL(st.dDeque).push_front(0);
-	IJST_CONT_VAL(st.dList).push_back(-1);
-	IJST_CONT_VAL(st.dList).push_front(-2);
+	st.dVector.push_back(1);
+	st.dDeque.push_back(1);
+	st.dDeque.push_front(0);
+	st.dList.push_back(-1);
+	st.dList.push_front(-2);
 
 	rapidjson::Document doc;
 	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);

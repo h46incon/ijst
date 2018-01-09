@@ -3,6 +3,7 @@
 //
 
 #include "util.h"
+#include <ijst/types_stdlayout_wrapper.h>
 using namespace ijst;
 
 namespace dummy_ns {
@@ -10,31 +11,31 @@ namespace dummy_ns {
 TEST(BasicAPI, WrapperCommon)
 {
 	// default constructor
-	SLWrapper<std::string> val;
+	T_Wrapper<std::string> val;
 	ASSERT_TRUE(val.Val().empty());
 
 	val.Val() = "Val";
 	{
-		const SLWrapper<std::string>& valRef = val;
+		const T_Wrapper<std::string>& valRef = val;
 		ASSERT_EQ(valRef.Val(), "Val");
 	}
 
 	// Copy constructor
 	{
-		SLWrapper<std::string> val2 (val);
+		T_Wrapper<std::string> val2 (val);
 		ASSERT_EQ(val2.Val(), "Val");
 	}
 
 	// Copy constructor for TVal
 	{
 		std::string innerV = val.Val();
-		SLWrapper<std::string> val2(innerV);
+		T_Wrapper<std::string> val2(innerV);
 		ASSERT_EQ(val2.Val(), "Val");
 	}
 
 	// Assignment
 	{
-		SLWrapper<std::string> val2;
+		T_Wrapper<std::string> val2;
 		val2 = val;
 		ASSERT_EQ(val2.Val(), "Val");
 	}
@@ -42,7 +43,7 @@ TEST(BasicAPI, WrapperCommon)
 	// Assignment for TVal
 	{
 		std::string innerV = val.Val();
-		SLWrapper<std::string> val2;
+		T_Wrapper<std::string> val2;
 		val2 = innerV;
 		ASSERT_EQ(val2.Val(), "Val");
 	}
@@ -53,22 +54,22 @@ TEST(BasicAPI, WrapperCommon)
 #if __cplusplus >= 201103L
 	// Copy constructor for RValue
 	{
-		SLWrapper<std::string> valTemp (val);
-		SLWrapper<std::string> val2 (std::move(valTemp));
+		T_Wrapper<std::string> valTemp (val);
+		T_Wrapper<std::string> val2 (std::move(valTemp));
 		ASSERT_EQ(val2.Val(), "Val");
 	}
 
 	// Copy constructor for TVal RValue
 	{
 		std::string innerV = val.Val();
-		SLWrapper<std::string> val2(std::move(innerV));
+		T_Wrapper<std::string> val2(std::move(innerV));
 		ASSERT_EQ(val2.Val(), "Val");
 	}
 
 	// Assignment for RValue
 	{
-		SLWrapper<std::string> valTemp (val);
-		SLWrapper<std::string> val2;
+		T_Wrapper<std::string> valTemp (val);
+		T_Wrapper<std::string> val2;
 		val2 = std::move(valTemp);
 		ASSERT_EQ(val2.Val(), "Val");
 	}
@@ -76,201 +77,13 @@ TEST(BasicAPI, WrapperCommon)
 	// Assignment for TVal
 	{
 		std::string innerV = val.Val();
-		SLWrapper<std::string> val2;
+		T_Wrapper<std::string> val2;
 		val2 = std::move(innerV);
 		ASSERT_EQ(val2.Val(), "Val");
 	}
 #endif
-
-#if __cplusplus >= 201103L
-	// operator [] for vector
-	{
-		SLWrapper<std::vector<int> > val;
-		val->push_back(2);
-		val[0] = 3;
-		const SLWrapper<std::vector<int> >& valRef = val;
-		ASSERT_EQ(valRef[0], 3);
-	}
-
-	// operator [] for map
-	{
-		SLWrapper<std::map<int, std::string> > val;
-		int key = 42;
-		val[key] = "value";
-		ASSERT_STREQ(val[key].c_str(), "value");
-		ASSERT_STREQ(val[std::move(key)].c_str(), "value");
-	}
-#endif
 }
 
-TEST(BasicAPI, WrapperVector)
-{
-	// default constructor
-	Vector<int> val;
-	ASSERT_TRUE(val->empty());
-
-	// operator []
-	val->push_back(1);
-	val[0] = 2;
-	const Vector<int>& vecRef = val;
-	ASSERT_EQ(vecRef[0], 2);
-
-	// Copy constructor
-	{
-		Vector<int> val2 (val);
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2[0], 2);
-	}
-
-	// Copy constructor for TVal
-	{
-		std::vector<int> innerV = val.Val();
-		Vector<int> val2(innerV);
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2[0], 2);
-	}
-
-	// Assignment
-	{
-		Vector<int> val2;
-		val2 = val;
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2[0], 2);
-	}
-
-	// Assignment for TVal
-	{
-		std::vector<int> innerV = val.Val();
-		Vector<int> val2;
-		val2 = innerV;
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2[0], 2);
-	}
-
-	// Check source
-	ASSERT_EQ(val->size(), 1u);
-	ASSERT_EQ(val[0], 2);
-
-#if __cplusplus >= 201103L
-	// Copy constructor for RValue
-	{
-		Vector<int> valTemp (val);
-		Vector<int> val2 (std::move(valTemp));
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2[0], 2);
-	}
-
-	// Copy constructor for TVal RValue
-	{
-		std::vector<int> innerV = val.Val();
-		Vector<int> val2(std::move(innerV));
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2[0], 2);
-	}
-
-	// Assignment for RValue
-	{
-		Vector<int> valTemp (val);
-		Vector<int> val2;
-		val2 = std::move(valTemp);
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2[0], 2);
-	}
-
-	// Assignment for TVal
-	{
-		std::vector<int> innerV = val.Val();
-		Vector<int> val2;
-		val2 = std::move(innerV);
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2[0], 2);
-	}
-#endif
-}
-
-
-TEST(BasicAPI, WrapperMap)
-{
-	// default constructor
-	Map<std::string, int> val;
-	ASSERT_TRUE(val->empty());
-
-	// operator []
-	val["k"] = 2;
-	ASSERT_EQ(val["k"], 2);
-
-	// Copy constructor
-	{
-		Map<std::string, int> val2 (val);
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2["k"], 2);
-	}
-
-	// Copy constructor for TVal
-	{
-		std::map<std::string, int> innerV = val.Val();
-		Map<std::string, int> val2(innerV);
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2["k"], 2);
-	}
-
-	// Assignment
-	{
-		Map<std::string, int> val2;
-		val2 = val;
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2["k"], 2);
-	}
-
-	// Assignment for TVal
-	{
-		std::map<std::string, int> innerV = val.Val();
-		Map<std::string, int> val2;
-		val2 = innerV;
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2["k"], 2);
-	}
-
-	// Check source
-	ASSERT_EQ(val->size(), 1u);
-	ASSERT_EQ(val["k"], 2);
-
-#if __cplusplus >= 201103L
-	// Copy constructor for RValue
-	{
-		Map<std::string, int> valTemp (val);
-		Map<std::string, int> val2 (std::move(valTemp));
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2["k"], 2);
-	}
-
-	// Copy constructor for TVal RValue
-	{
-		std::map<std::string, int> innerV = val.Val();
-		Map<std::string, int> val2(std::move(innerV));
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2["k"], 2);
-	}
-
-	// Assignment for RValue
-	{
-		Map<std::string, int> valTemp (val);
-		Map<std::string, int> val2;
-		val2 = std::move(valTemp);
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2["k"], 2);
-	}
-
-	// Assignment for TVal
-	{
-		std::map<std::string, int> innerV = val.Val();
-		Map<std::string, int> val2;
-		val2 = std::move(innerV);
-		ASSERT_EQ(val2->size(), 1u);
-		ASSERT_EQ(val2["k"], 2);
-	}
-#endif
-}
 
 IJST_DEFINE_VALUE(
 		ValVec, IJST_TVEC(T_int), v, 0
@@ -285,7 +98,7 @@ TEST(BasicAPI, DefineValueStVec)
 	const std::string json = "[0, 1, 2]";
 	ret = st._.Deserialize(json);
 	ASSERT_EQ(ret, 0);
-	std::vector<int>& vRef = IJST_CONT_VAL(st.v);
+	std::vector<int>& vRef = st.v;
 	ASSERT_EQ(vRef.size(), 3u);
 	ASSERT_EQ(vRef[0], 0);
 	ASSERT_EQ(vRef[1], 1);
@@ -316,7 +129,7 @@ TEST(BasicAPI, DefineValueStMap)
 	const std::string json = "{\"v1\": 1, \"v2\": 2}";
 	ret = st._.Deserialize(json);
 	ASSERT_EQ(ret, 0);
-	std::map<std::string, int>& vRef = IJST_CONT_VAL(*st.Getv().Ptr());
+	std::map<std::string, int>& vRef = *st.Getv().Ptr();
 	ASSERT_EQ(vRef.size(), 2u);
 	ASSERT_EQ(vRef["v1"], 1);
 	ASSERT_EQ(vRef["v2"], 2);
@@ -353,7 +166,7 @@ TEST(BasicAPI, FieldStatus)
 	// IJST_* macro
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), FStatus::kMissing);
 	IJST_SET_STRICT(simpleSt, str_1, T_string(std::string("str1")));
-	ASSERT_STREQ(IJST_CONT_VAL(simpleSt.str_1).c_str(), "str1");
+	ASSERT_STREQ(simpleSt.str_1.c_str(), "str1");
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), FStatus::kValid);
 
 	// Mark valid
@@ -380,8 +193,8 @@ TEST(BasicAPI, FieldValue)
 	// Check
 	ASSERT_EQ(simpleSt.int_1, 0x5A5A);
 	ASSERT_EQ(simpleSt.int_2, 0xA5A5);
-	ASSERT_STREQ(IJST_CONT_VAL(simpleSt.str_1).c_str(), "str1");
-	ASSERT_STREQ(IJST_CONT_VAL(simpleSt.str_2).c_str(), "str2");
+	ASSERT_STREQ(simpleSt.str_1.c_str(), "str1");
+	ASSERT_STREQ(simpleSt.str_2.c_str(), "str2");
 }
 
 TEST(BasicAPI, Constructor4LValue)
@@ -436,9 +249,6 @@ TEST(BasicAPI, Constructor4LValue)
 		// Avoid make temp2 become rvalue
 		temp2._.MarkValid(&temp2.int_1);
 	}
-
-
-
 }
 
 #if __cplusplus >= 201103L
@@ -507,8 +317,8 @@ TEST(BasicAPI, Allocator)
 	ASSERT_EQ(&cst._.GetAllocator(), &st._.GetAllocator());
 
 	// Init
-	IJST_CONT_VAL(cst.vec).push_back(SimpleSt());
-	IJST_CONT_VAL(cst.vec).push_back(SimpleSt());
+	cst.vec.push_back(SimpleSt());
+	cst.vec.push_back(SimpleSt());
 	cst.map["v1"] = SimpleSt();
 	cst.map["v2"] = SimpleSt();
 
@@ -575,7 +385,7 @@ TEST(BasicAPI, ChainedOptional)
 	ASSERT_EQ(st.v.Getvec().Ptr(), &(st.v.vec));
 	ASSERT_EQ(IJST_NULL, st.v.Getvec()[0].Ptr());
 	// vector valid
-	IJST_CONT_VAL(st.v.vec).resize(1);
+	st.v.vec.resize(1);
 	ASSERT_EQ(st.v.Getvec()[0].Ptr(), &(st.v.vec[0]));
 	ASSERT_EQ(IJST_NULL, st.v.Getvec()[0]->Getint_1().Ptr());
 
@@ -586,7 +396,7 @@ TEST(BasicAPI, ChainedOptional)
 	ASSERT_EQ(st.v.Getdeq().Ptr(), &(st.v.deq));
 	ASSERT_EQ(IJST_NULL, st.v.Getdeq()[0].Ptr());
 	// deq valid
-	IJST_CONT_VAL(st.v.deq).resize(1);
+	st.v.deq.resize(1);
 	ASSERT_EQ(st.v.Getdeq()[0].Ptr(), &(st.v.deq[0]));
 	ASSERT_EQ(IJST_NULL, st.v.Getdeq()[0]->Getint_1().Ptr());
 

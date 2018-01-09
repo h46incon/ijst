@@ -78,21 +78,21 @@ void TestSt(const string& json, VT vDefault
 		// v
 		ASSERT_EQ(st.v, v0);
 		// map
-		ASSERT_EQ(IJST_CONT_VAL(st.map_v).size(), 2u);
+		ASSERT_EQ(st.map_v.size(), 2u);
 		ASSERT_EQ(st.map_v["v1"], map1);
 		ASSERT_EQ(st.map_v["v2"], map2);
 		// vec
-		ASSERT_EQ(IJST_CONT_VAL(st.vec_v).size(), 2u);
+		ASSERT_EQ(st.vec_v.size(), 2u);
 		ASSERT_EQ(st.vec_v[0], vec0);
 		ASSERT_EQ(st.vec_v[1], vec1);
 		// deq
-		ASSERT_EQ(IJST_CONT_VAL(st.deq_v).size(), 2u);
+		ASSERT_EQ(st.deq_v.size(), 2u);
 		ASSERT_EQ(st.deq_v[0], deq0);
 		ASSERT_EQ(st.deq_v[1], deq1);
 		// list
-		ASSERT_EQ(IJST_CONT_VAL(st.list_v).size(), 2u);
-		ASSERT_EQ(IJST_CONT_VAL(st.list_v).front(), lst0);
-		ASSERT_EQ(IJST_CONT_VAL(st.list_v).back(), lst1);
+		ASSERT_EQ(st.list_v.size(), 2u);
+		ASSERT_EQ(st.list_v.front(), lst0);
+		ASSERT_EQ(st.list_v.back(), lst1);
 	}
 
 	// Fields modify
@@ -103,17 +103,17 @@ void TestSt(const string& json, VT vDefault
 	st.map_v["v3"] = nmap3;
 	// vec
 	st.vec_v[0] = nvec0;
-	IJST_CONT_VAL(st.vec_v).pop_back();
-	IJST_CONT_VAL(st.vec_v).push_back(nvec1);
-	IJST_CONT_VAL(st.vec_v).push_back(nvec2);
+	st.vec_v.pop_back();
+	st.vec_v.push_back(nvec1);
+	st.vec_v.push_back(nvec2);
 	// deque
-	IJST_CONT_VAL(st.deq_v).push_back(ndeq1);
-	IJST_CONT_VAL(st.deq_v).pop_front();
+	st.deq_v.push_back(ndeq1);
+	st.deq_v.pop_front();
 	st.deq_v[0] = ndeq0;
 	// list
-	IJST_CONT_VAL(st.list_v).push_back(nlst1);
-	IJST_CONT_VAL(st.list_v).pop_front();
-	IJST_CONT_VAL(st.list_v).front() = (nlst0);
+	st.list_v.push_back(nlst1);
+	st.list_v.pop_front();
+	st.list_v.front() = (nlst0);
 
 	// Serialize
 	rapidjson::Document doc;
@@ -220,15 +220,15 @@ TEST(Primitive, RBool)
 		int ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(st.v, true);
-		ASSERT_EQ(IJST_CONT_VAL(st.map_v).size(), 2u);
+		ASSERT_EQ(st.map_v.size(), 2u);
 		ASSERT_EQ(st.map_v["v1"], true);
 		ASSERT_EQ(st.map_v["v2"], false);
-		ASSERT_EQ(IJST_CONT_VAL(st.deq_v).size(), 2u);
+		ASSERT_EQ(st.deq_v.size(), 2u);
 		ASSERT_EQ(st.deq_v[0], false);
 		ASSERT_EQ(st.deq_v[1], true);
-		ASSERT_EQ(IJST_CONT_VAL(st.list_v).size(), 2u);
-		ASSERT_EQ(IJST_CONT_VAL(st.list_v).front(), true);
-		ASSERT_EQ(IJST_CONT_VAL(st.list_v).back(), false);
+		ASSERT_EQ(st.list_v.size(), 2u);
+		ASSERT_EQ(st.list_v.front(), true);
+		ASSERT_EQ(st.list_v.back(), false);
 	}
 
 	// Serialize
@@ -236,12 +236,12 @@ TEST(Primitive, RBool)
 		IJST_SET(st, v, false);
 		st.map_v["v1"] = true;
 		st.map_v["v3"] = false;
-		IJST_CONT_VAL(st.deq_v).clear();
-		IJST_CONT_VAL(st.deq_v).push_front(true);
-		IJST_CONT_VAL(st.deq_v).push_back(false);
-		IJST_CONT_VAL(st.list_v).clear();
-		IJST_CONT_VAL(st.list_v).push_front(true);
-		IJST_CONT_VAL(st.list_v).push_back(false);
+		st.deq_v.clear();
+		st.deq_v.push_front(true);
+		st.deq_v.push_back(false);
+		st.list_v.clear();
+		st.list_v.push_front(true);
+		st.list_v.push_back(false);
 
 		rapidjson::Document doc;
 		UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
@@ -562,7 +562,7 @@ TEST(Primitive, Raw)
 		raw.V().SetNull();
 		st.vec_v[0] = raw;
 		raw.V().SetString("v03");
-		IJST_CONT_VAL(st.vec_v).push_back(raw);
+		st.vec_v.push_back(raw);
 
 		raw.V().SetString("v2");
 		st.map_v["v1"] = raw;
