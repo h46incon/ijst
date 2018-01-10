@@ -420,12 +420,10 @@ public:
 			// Get information
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
 			// New a elem buffer in container first to avoid copy
-			bool hasAlloc = false;
-			if (field.find(fieldName) == field.end()) {
-				hasAlloc = true;
-			}
-
-			ElemVarType &elemBuffer = field[fieldName];
+			typename VarType::value_type buf(fieldName, ElemVarType());
+			std::pair<typename VarType::iterator, bool> insertRet = field.insert(IJSTI_MOVE(buf));
+			const bool hasAlloc = insertRet.second;
+			ElemVarType &elemBuffer = insertRet.first->second;
 			FromJsonReq elemReq(itMember->value, req.allocator,
 								req.unknownMode, req.canMoveSrc, req.checkField, &elemBuffer);
 
