@@ -337,11 +337,11 @@ TEST(Deserialize, ParseFlags)
 
 IJST_DEFINE_STRUCT(
 		StErrCheck
-		, (T_bool, v, "f_v", 0)
-		, (IJST_TMAP(T_bool), map_v, "f_map", 0)
-		, (IJST_TVEC(T_bool), vec_v, "f_vec", 0)
-		, (IJST_TDEQUE(T_bool), deq_v, "f_deq", 0)
-		, (IJST_TLIST(T_bool), list_v, "f_list", 0)
+		, (T_ubool, v, "f_v", 0)
+		, (IJST_TMAP(T_ubool), map_v, "f_map", 0)
+		, (IJST_TVEC(T_ubool), vec_v, "f_vec", 0)
+		, (IJST_TDEQUE(T_ubool), deq_v, "f_deq", 0)
+		, (IJST_TLIST(T_ubool), list_v, "f_list", 0)
 )
 
 void TestErrCheckTypeError(const std::string& errJson, const char* memberName, const char* expectedType, const char* jsonVal)

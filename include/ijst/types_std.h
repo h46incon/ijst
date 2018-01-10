@@ -13,10 +13,10 @@
 
 namespace ijst {
 
+//! bool -> bool. @note: Could not declare std::vector<T_bool>
+typedef bool 			T_bool;
 //! bool -> uint8_t
-typedef uint8_t 		T_bool;
-//! bool -> bool. @note: Could not declare std::vector<T_rbool> now
-typedef bool 			T_rbool;
+typedef uint8_t 		T_ubool;
 //! bool -> a wrapper of bool
 class 					T_wbool;
 //! number -> int
@@ -126,7 +126,7 @@ namespace detail {
 #define IJSTI_DEFINE_SERIALIZE_INTERFACE_END()								\
 	};
 
-IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_bool)
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_ubool)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -191,7 +191,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 	}
 
 
-IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_rbool)
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_bool)
 	IJSTI_SERIALIZER_BOOL_DEFINE()
 	IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()
 	IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()

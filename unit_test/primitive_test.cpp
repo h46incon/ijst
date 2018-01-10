@@ -172,7 +172,6 @@ IJST_DEFINE_STRUCT(
 		StBool
 		, (T_bool, v, "f_v", 0)
 		, (IJST_TMAP(T_bool), map_v, "f_map", 0)
-		, (IJST_TVEC(T_bool), vec_v, "f_vec", 0)
 		, (IJST_TDEQUE(T_bool), deq_v, "f_deq", 0)
 		, (IJST_TLIST(T_bool), list_v, "f_list", 0)
 )
@@ -183,30 +182,7 @@ TEST(Primitive, Bool)
 	string errorJson = "{\"f_v\": \"1\"}";
 	TestMemberTypeMismatch<StBool>(errorJson, "bool", "\"1\"");
 
-	const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, "
-			"\"f_vec\": [false, true], \"f_deq\": [true, false], \"f_list\": [false, true]}";
-	TestSt<StBool, bool> (
-			json, false
-			, true, true, false, false, true, true, false, false, true
-			, false, false, false, true, false, true, false, true, true, false
-	);
-}
-
-IJST_DEFINE_STRUCT(
-		StRBool
-		, (T_rbool, v, "f_v", 0)
-		, (IJST_TMAP(T_rbool), map_v, "f_map", 0)
-		, (IJST_TDEQUE(T_rbool), deq_v, "f_deq", 0)
-		, (IJST_TLIST(T_rbool), list_v, "f_list", 0)
-)
-
-TEST(Primitive, RBool)
-{
-	// Deserialize error
-	string errorJson = "{\"f_v\": \"1\"}";
-	TestMemberTypeMismatch<StRBool>(errorJson, "bool", "\"1\"");
-
-	StRBool st;
+	StBool st;
 	// Default value
 	{
 		ASSERT_EQ(st._.GetUnknown().MemberCount(), 0u);
@@ -259,6 +235,30 @@ TEST(Primitive, RBool)
 		ASSERT_EQ(pGetJsonVal(doc["f_list"][0]), true);
 		ASSERT_EQ(pGetJsonVal(doc["f_list"][1]), false);
 	}
+}
+
+IJST_DEFINE_STRUCT(
+		StUBool
+		, (T_ubool, v, "f_v", 0)
+		, (IJST_TMAP(T_ubool), map_v, "f_map", 0)
+		, (IJST_TVEC(T_ubool), vec_v, "f_vec", 0)
+		, (IJST_TDEQUE(T_ubool), deq_v, "f_deq", 0)
+		, (IJST_TLIST(T_ubool), list_v, "f_list", 0)
+)
+
+TEST(Primitive, UBool)
+{
+	// Deserialize error
+	string errorJson = "{\"f_v\": \"1\"}";
+	TestMemberTypeMismatch<StUBool>(errorJson, "bool", "\"1\"");
+
+	const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true, \"v2\": false}, "
+			"\"f_vec\": [false, true], \"f_deq\": [true, false], \"f_list\": [false, true]}";
+	TestSt<StUBool, bool> (
+			json, false
+			, true, true, false, false, true, true, false, false, true
+			, false, false, false, true, false, true, false, true, true, false
+	);
 }
 
 IJST_DEFINE_STRUCT(
