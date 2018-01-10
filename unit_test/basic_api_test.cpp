@@ -8,7 +8,7 @@ using namespace ijst;
 
 namespace dummy_ns {
 
-TEST(BasicAPI, WrapperCommon)
+TEST(BasicAPI, Wrapper)
 {
 	// default constructor
 	T_Wrapper<std::string> val;
@@ -83,7 +83,6 @@ TEST(BasicAPI, WrapperCommon)
 	}
 #endif
 }
-
 
 IJST_DEFINE_VALUE(
 		ValVec, IJST_TVEC(T_int), v, 0

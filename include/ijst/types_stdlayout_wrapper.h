@@ -64,5 +64,42 @@ public:
 private:
 	_T* m_pVal;
 };
+
+namespace detail {
+	template<typename _T>
+	class FSerializer<T_Wrapper<_T> > : public SerializerInterface {
+	public:
+		typedef T_Wrapper<_T> VarType;
+
+		virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
+		{
+			const VarType& field = *static_cast<const VarType*>(req.pField);
+			SerializeReq elemReq(req.writer, &field.Val(), req.fPushMode);
+			return IJSTI_FSERIALIZER_INS(_T)->Serialize(elemReq);
+		}
+
+#if IJST_ENABLE_TO_JSON_OBJECT
+		virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
+		{
+			const VarType& field = *static_cast<const VarType*>(req.pField);
+			ToJsonReq elemReq(req.buffer, req.allocator, &field.Val(), req.canMoveSrc, req.fPushMode);
+			return IJSTI_FSERIALIZER_INS(_T)->ToJson(elemReq);
+		}
+
+		virtual int SetAllocator(void* pField, JsonAllocator& allocator) IJSTI_OVERRIDE
+		{
+			VarType& field = *static_cast<VarType*>(pField);
+			return IJSTI_FSERIALIZER_INS(_T)->SetAllocator(&field.Val(), allocator);
+		}
+#endif
+
+		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
+		{
+			VarType& field = *static_cast<VarType*>(req.pFieldBuffer);
+			FromJsonReq elemReq(req.stream, req.allocator, req.unknownMode, req.canMoveSrc, req.checkField, &field.Val());
+			return IJSTI_FSERIALIZER_INS(_T)->FromJson(elemReq, resp);
+		}
+	};
+}
 }
 #endif //_IJST_TYPES_STD_LAYOUT_WRAPPER_HPP_INCLUDE_

@@ -5,6 +5,7 @@
 #include "util.h"
 
 #include <ijst/types_std.h>
+#include <ijst/types_stdlayout_wrapper.h>
 #include <limits>
 using std::vector;
 using std::map;
@@ -468,6 +469,32 @@ TEST(Primitive, Str)
 			json, ""
 			, "true", "false", "v22", "0", "1", "", "null", "0", "NaN"
 			, "false", "0.2", "0.4", "map1", "true", "map3", "", "0", "NaN", "null"
+	);
+}
+
+IJST_DEFINE_STRUCT(
+	StWrapper
+	, (T_Wrapper<int>, v, "f_v", 0)
+	, (IJST_TVEC(T_Wrapper<int>), vec_v, "f_vec", 0)
+	, (IJST_TMAP(T_Wrapper<int>), map_v, "f_map", 0)
+	, (IJST_TDEQUE(T_Wrapper<int>), deq_v, "f_deq", 0)
+	, (IJST_TLIST(T_Wrapper<int>), list_v, "f_list", 0)
+)
+
+TEST(Primitive, Wrapper)
+{
+	// Deserialize error
+	{
+		string errorJson = "{\"f_v\": \"0\"}";
+		TestMemberTypeMismatch<StWrapper>(errorJson, "int", "\"0\"");
+	}
+	const string json = "{\"f_v\": 0, \"f_map\": {\"v1\": -65537, \"v2\": 65536}, "
+			"\"f_vec\": [-2147483648, 2147483647], \"f_deq\": [-1, 1], \"f_list\": [-2, 2]}";
+
+	TestSt<StWrapper, int> (
+			json, 0
+			, 0, -65537, 65536, -2147483647-1, 2147483647, -1, 1, -2, 2
+			, -2147483647-1, 0, 65536, -65536, 2147483647, -2147483647-1, 10, -10, 20, -20
 	);
 }
 
