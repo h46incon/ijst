@@ -2,7 +2,7 @@
 
 ijst (iJsonStruct) 一个是 C++ Json 序列化库：
 
-- 使用方便。只需在 C++ 中定义一次结构体，无须重复添加元信息，更不用额外工具生成代码。
+- 使用方便。只需在 C++ 中定义**一次**结构体，无须重复添加元信息。
 - 完整。支持 list、map 以及结构体的嵌套定义。
 - 轻量。header-only，仅依赖 stl 和 [rapidjson](https://github.com/Tencent/rapidjson)。
 - 兼容 C++ 98/03。
@@ -20,6 +20,7 @@ ijst (iJsonStruct) 一个是 C++ Json 序列化库：
 ```cpp
 #include <ijst/ijst.h>
 #include <ijst/types_std.h>
+using namespace ijst;
 
 //*** json 字符串
 const std::string jsonStr = R"({
@@ -33,9 +34,9 @@ IJST_DEFINE_STRUCT(
     // 结构体名字
     JsonStruct
     // 定义字段
-    , (IJST_TPRI(Int), iVal, "int_val", 0)  
-    , (IJST_TVEC(IJST_TPRI(Str)), vecVal, "vec_val", 0)
-    , (IJST_TMAP(IJST_TPRI(UInt64)), mapVal, "map_val", 0)
+    , (T_int, iVal, "int_val", 0)  
+    , (IJST_TVEC(T_string), vecVal, "vec_val", 0)
+    , (IJST_TMAP(T_uint64), mapVal, "map_val", 0)
 );
 
 //*** 默认情况下会生成这样的结构体：
@@ -87,9 +88,9 @@ if (ptr != NULL)  //...
 //*** 和 IJST_DEFINE_STRUCT 类似
 IJST_DEFINE_STRUCT_WITH_GETTER(
     Inner
-    , (IJST_TPRI(Int), iData, "i", ijst::FDesc::Optional)
-    , (IJST_TVEC(IJST_TPRI(Int)), vecData, "vec", ijst::FDesc::Optional)
-    , (IJST_TMAP(IJST_TPRI(Int)), mapData, "map", ijst::FDesc::Optional)
+    , (T_int, iData, "i", ijst::FDesc::Optional)
+    , (IJST_TVEC(T_int), vecData, "vec", ijst::FDesc::Optional)
+    , (IJST_TMAP(T_int), mapData, "map", ijst::FDesc::Optional)
 )
 
 //*** 默认情况下会生成这样的结构体：
