@@ -33,7 +33,7 @@ TEST(Serialize, EmptyValue)
 
 	// Empty struct
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(nestSt, doc, 0);
+	UTEST_MOVE_TO_STRING_AND_CHECK(nestSt, doc, FPush::kOnlyValidField);
 	ASSERT_TRUE(doc.IsObject());
 	ASSERT_TRUE(doc.MemberCount() == 0);
 }
@@ -44,7 +44,7 @@ TEST(Serialize, EmptyValue_PushAllField)
 	// Empty struct
 
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(nestSt, doc, FPush::kPushAllFields | FPush::kPushUnknown);
+	UTEST_MOVE_TO_STRING_AND_CHECK(nestSt, doc, FPush::kNoneFlag);
 
 	// Check
 	ASSERT_TRUE(doc["vec_val_1"].IsArray());
@@ -77,7 +77,7 @@ TEST(Serialize, NullValue)
 	IJST_MARK_NULL(innerSt, int_2);
 
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(innerSt, doc, FPush::kPushAllFields | FPush::kPushUnknown);
+	UTEST_MOVE_TO_STRING_AND_CHECK(innerSt, doc, FPush::kNoneFlag);
 
 	ASSERT_EQ(IJST_GET_STATUS(innerSt, int_2), FStatus::kNull);
 	ASSERT_EQ(doc["int_val_1"].GetInt(), 1);
@@ -92,7 +92,7 @@ TEST(Serialize, MarkMissing)
 	IJST_MARK_MISSING(innerSt, int_2);
 
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(innerSt, doc, 0);
+	UTEST_MOVE_TO_STRING_AND_CHECK(innerSt, doc, FPush::kOnlyValidField);
 
 	ASSERT_EQ(doc["int_val_1"].GetInt(), 1);
 	ASSERT_FALSE(doc.HasMember("int_val_2"));
@@ -119,7 +119,7 @@ TEST(Serialize, AdditionalJsonField)
 	{
 		rapidjson::Document doc;
 		string json;
-		int ret = st._.Serialize(json, 0);
+		int ret = st._.Serialize(json, FPush::kIgnoreUnknown | FPush::kOnlyValidField);
 		ASSERT_EQ(ret, 0);
 		doc.Parse(json.c_str(), json.length());
 		ASSERT_FALSE(doc.HasParseError());
@@ -127,7 +127,7 @@ TEST(Serialize, AdditionalJsonField)
 #if IJST_ENABLE_TO_JSON_OBJECT
 		rapidjson::Value jVal;
 		JsonAllocator allocator;
-		ret = st._.ToJson(jVal, allocator, FPush::kZero);
+		ret = st._.ToJson(jVal, allocator, FPush::kIgnoreUnknown | FPush::kOnlyValidField);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ((rapidjson::Value&)doc, jVal);
 #endif
@@ -182,7 +182,7 @@ TEST(Serialize, AdditionalJsonFieldMoved)
 		ObjRefSt st2 = st;
 		// Serialize
 		rapidjson::Document doc;
-		UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kZero);
+		UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kIgnoreUnknown | FPush::kOnlyValidField);
 
 		// Check output
 		ASSERT_EQ(doc.MemberCount(), 1u);
@@ -192,7 +192,7 @@ TEST(Serialize, AdditionalJsonFieldMoved)
 	}
 	// Serialize
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kNoneFlag);
 
 	// Check src
 	ASSERT_EQ(st._.GetUnknown().MemberCount(), 0u);
@@ -258,7 +258,7 @@ TEST(Serialize, Complicate)
 
 	// Value Check
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kNoneFlag);
 	// c1
 	ASSERT_EQ(doc["c1_v"]["i1_v"]["int_val_1"].GetInt(), 1);
 	ASSERT_EQ(doc["c1_v"]["i2_v"]["int_val_2"].GetInt(), 2);
@@ -298,7 +298,7 @@ TEST(Serialize, Container)
 	st.dList.push_front(-2);
 
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kNoneFlag);
 
 	ASSERT_EQ(doc["vec"].Size(), 1u);
 	ASSERT_EQ(doc["vec"][0].GetInt(), 1);
@@ -318,7 +318,7 @@ TEST(Serialize, EmptyStruct)
 {
 	EmptySt st;
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kNoneFlag);
 	ASSERT_EQ(doc.MemberCount(), 0u);
 }
 
@@ -394,7 +394,7 @@ TEST(Serialize, BigStruct)
 {
 	Complicate3 st;
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kNoneFlag);
 	ASSERT_EQ(doc["i1_v"].GetInt(), 0);
 	ASSERT_EQ(doc["i64_v"].GetInt(), 0);
 }
@@ -405,7 +405,7 @@ TEST(Serialize, SerializeHandler)
 	rapidjson::StringBuffer buf;
 	rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buf);
 	HandlerWrapper<rapidjson::PrettyWriter<rapidjson::StringBuffer> > writerWrapper(writer);
-	st._.Serialize(writerWrapper, FPush::kPushAllFields);
+	st._.Serialize(writerWrapper);
 	rapidjson::Document doc;
 	doc.Parse(buf.GetString(), buf.GetLength());
 	ASSERT_FALSE(doc.HasParseError());

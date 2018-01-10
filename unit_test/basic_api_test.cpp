@@ -106,7 +106,7 @@ TEST(BasicAPI, DefineValueStVec)
 	// Serialize
 	vRef.push_back(3);
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kNoneFlag);
 	ASSERT_TRUE(doc.IsArray());
 	ASSERT_EQ(doc.Size(), 4u);
 	ASSERT_EQ(doc[0].GetInt(), 0);
@@ -136,7 +136,7 @@ TEST(BasicAPI, DefineValueStMap)
 	// Serialize
 	vRef["v3"] = 3;
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kPushAllFields | FPush::kPushUnknown);
+	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kNoneFlag);
 	ASSERT_TRUE(doc.IsObject());
 	ASSERT_EQ(doc.MemberCount(), 3u);
 	ASSERT_EQ(doc["v1"].GetInt(), 1);

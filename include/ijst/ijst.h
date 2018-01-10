@@ -136,11 +136,11 @@ typedef FStatus::_E EFStatus;
 struct FPush {
 	typedef unsigned int Mode;
 	//! does not set any option
-	static const Mode kZero								= 0x00000000;
-	//! set if need serialize all field, otherwise will serialize only valid field
-	static const Mode kPushAllFields					= 0x00000001;
-	//! set if need serialize unknown field
-	static const Mode kPushUnknown						= 0x00000002;
+	static const Mode kNoneFlag							= 0x00000000;
+	//! set if serialize only valid fields, otherwise will serialize all fields
+	static const Mode kOnlyValidField					= 0x00000001;
+	//! set if ignore unknown fields, otherwise will serialize all unknown fields
+	static const Mode kIgnoreUnknown					= 0x00000002;
 };
 
 //! Behaviour when meeting unknown member in json object.
@@ -725,7 +725,7 @@ public:
 	 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
 	 * @return					Error code
 	 */
-	int Serialize(HandlerBase& writer, FPush::Mode fieldPushMode = FPush::kPushAllFields | FPush::kPushUnknown)  const
+	int Serialize(HandlerBase& writer, FPush::Mode fieldPushMode = FPush::kNoneFlag)  const
 	{
 		return DoSerialize(writer, fieldPushMode);
 	}
@@ -736,7 +736,7 @@ public:
 	 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
 	 * @return					Error code
 	 */
-	int Serialize(IJST_OUT std::string &strOutput, FPush::Mode fieldPushMode = FPush::kPushAllFields | FPush::kPushUnknown)  const
+	int Serialize(IJST_OUT std::string &strOutput, FPush::Mode fieldPushMode = FPush::kNoneFlag)  const
 	{
 		rapidjson::StringBuffer buffer;
 		detail::JsonWriter writer(buffer);
@@ -896,7 +896,7 @@ public:
 	 * @note If using inner allocator, user should carefully handler the structure's life cycle
 	 */
 	inline int ToJson(IJST_OUT JsonValue &output, JsonAllocator &allocator,
-					  FPush::Mode fieldPushMode = FPush::kPushUnknown | FPush::kPushAllFields) const
+					  FPush::Mode fieldPushMode = FPush::kNoneFlag) const
 	{
 		return Accessor::template DoToJson<false, const Accessor>
 				(*this, fieldPushMode, output, allocator);
@@ -914,7 +914,7 @@ public:
 	 * @note If using inner allocator, user should carefully handler the structure's life cycle
 	 */
 	inline int MoveToJson(IJST_OUT JsonValue &output, JsonAllocator &allocator,
-					  FPush::Mode fieldPushMode = FPush::kPushUnknown | FPush::kPushAllFields)
+					  FPush::Mode fieldPushMode = FPush::kNoneFlag)
 	{
 		return Accessor::template DoToJson<true, Accessor>
 				(*this, fieldPushMode, output, allocator);
@@ -1086,7 +1086,7 @@ private:
 		IJSTI_RET_WHEN_NOT_ZERO(DoSerializeFields(writer, fPushMode));
 
 		// Write buffer if need
-		if (isBitSet(fPushMode, FPush::kPushUnknown))
+		if (!isBitSet(fPushMode, FPush::kIgnoreUnknown))
 		{
 			assert(m_r->unknown.IsObject());
 			for (rapidjson::Value::ConstMemberIterator itMember = m_r->unknown.MemberBegin();
@@ -1119,7 +1119,7 @@ private:
 				case FStatus::kMissing:
 				case FStatus::kParseFailed:
 				{
-					if (fstatus != FStatus::kValid && !isBitSet(fPushMode, FPush::kPushAllFields)) {
+					if (fstatus != FStatus::kValid && isBitSet(fPushMode, FPush::kOnlyValidField)) {
 						continue;
 					}
 
@@ -1170,17 +1170,14 @@ private:
 			buffer.SetObject();
 
 			do {
-				const size_t unknwonSize = isBitSet(fPushMode, FPush::kPushUnknown) ? m_r->unknown.MemberCount() : 0;
+				const size_t unknwonSize = isBitSet(fPushMode, FPush::kIgnoreUnknown) ? 0 : m_r->unknown.MemberCount();
 				const size_t maxSize = m_pMetaClass->metaFields.size() + unknwonSize;
 				if (buffer.MemberCapacity() >= maxSize) {
 					break;
 				}
 
 				size_t fieldSize;
-				if (isBitSet(fPushMode, FPush::kPushAllFields)) {
-					fieldSize = maxSize;
-				}
-				else {
+				if (isBitSet(fPushMode, FPush::kOnlyValidField)) {
 					fieldSize = unknwonSize;
 					for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
 						 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
@@ -1190,7 +1187,9 @@ private:
 							++fieldSize;
 						}
 					}
-
+				}
+				else {
+					fieldSize = maxSize;
 				}
 				buffer.MemberReserve((rapidjson::SizeType)fieldSize, allocator);
 			} while (false);
@@ -1211,7 +1210,7 @@ private:
 				case FStatus::kMissing:
 				case FStatus::kParseFailed:
 				{
-					if (fstatus != FStatus::kValid && !isBitSet(fPushMode, FPush::kPushAllFields)) {
+					if (fstatus != FStatus::kValid && isBitSet(fPushMode, FPush::kOnlyValidField)) {
 						continue;
 					}
 					IJSTI_RET_WHEN_NOT_ZERO(
@@ -1248,7 +1247,7 @@ private:
 		const Accessor& rThis = accessor;
 		IJSTI_RET_WHEN_NOT_ZERO(
 				rThis.DoAllFieldsToJson(fPushMode, kCanMoveSrc, buffer, allocator) );
-		if (isBitSet(fPushMode, FPush::kPushUnknown)) {
+		if (!isBitSet(fPushMode, FPush::kIgnoreUnknown)) {
 			Accessor::template AppendUnknownToBuffer<kCanMoveSrc, _TAccessor>(accessor, buffer, allocator);
 		}
 		return 0;

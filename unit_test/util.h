@@ -28,7 +28,7 @@ do {																				\
 	int serRet = st._.MoveToJson(_jVal, st._.GetAllocator(), (fieldPushMode));		\
 	ASSERT_EQ(serRet, 0);															\
 	ASSERT_EQ((rapidjson::Value&)doc, _jVal);										\
-	if (((fieldPushMode) & ijst::FPush::kPushUnknown) != 0)							\
+	if (((fieldPushMode) & ijst::FPush::kIgnoreUnknown) == 0)						\
 	{ ASSERT_EQ(st._.GetUnknown().MemberCount(), 0u); }								\
 } while (false)
 

@@ -172,8 +172,8 @@ ret = sampleStruct._.MoveFromJson(doc);
 
 ijst 会记录每个字段的状态，这些状态会影响**序列化**时的行为。可能的状态如下：
 
-- kMissing：未设置有效值。如序列化时未启用 `FPush::kPushAllFields`(*)选项，则不参与序列化。
-- kParseFailed：解析该字段时出错。如序列化未启用 `FPush::kPushAllFields`(*)选项，则不参与序列化。
+- kMissing：未设置有效值。如序列化时启用 `FPush::kOnlyValidField`(*)选项，则不参与序列化。
+- kParseFailed：解析该字段时出错。如序列化启用 `FPush::kOnlyValidField`(*)选项，则不参与序列化。
 - kNull：值为 null。序列化时值为 null。
 - kValid：已设置为有效值。按实际值序列化。
 
@@ -232,7 +232,7 @@ std::string strJson = // Init...
 int ret = sampleStruct._.Deserialize(strJson, ijst::UnknownMode::kIgnore);
 ```
 
-在序列化时，如启用 `FPush::kPushUnknown` 选项时，会保存的所有 unknown 字段（该选项默认启用）。
+在序列化时，如未启用 `FPush::kIgnoreUnknown` 选项时，会保存的所有 unknown 字段（该选项默认启用）。
 
 ### 访问 Unknown 字段
 
