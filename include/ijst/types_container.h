@@ -162,8 +162,7 @@ public:
 	virtual int FromJson(const FromJsonReq &req, FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsArray()) {
-			resp.fStatus = FStatus::kParseFailed;
-			resp.errDoc.TypeMismatch("array", req.stream);
+			resp.errDoc.ElementTypeMismatch("array", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -182,19 +181,17 @@ public:
 			field.resize(field.size() + 1);
 			FromJsonReq elemReq(*itVal, req.allocator,
 								   req.unknownMode, req.canMoveSrc, req.checkField, &field.back());
-			FromJsonResp elemResp(resp.errDoc.pAllocator);
+			FromJsonResp elemResp(resp.errDoc);
 			// FromJson
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
 			if (ret != 0)
 			{
 				field.pop_back();
-				resp.fStatus = FStatus::kParseFailed;
-				resp.errDoc.ErrorInArray("ErrInArray", (rapidjson::SizeType)field.size(), &elemResp.errDoc);
+				resp.errDoc.ErrorInArray("ErrInArray", (rapidjson::SizeType)field.size());
 				return ret;
 			}
 			++resp.fieldCount;
 		}
-		resp.fStatus = FStatus::kValid;
 		return 0;
 	}
 
@@ -403,8 +400,7 @@ public:
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsObject()) {
-			resp.fStatus = FStatus::kParseFailed;
-			resp.errDoc.TypeMismatch("object", req.stream);
+			resp.errDoc.ElementTypeMismatch("object", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -428,7 +424,7 @@ public:
 								req.unknownMode, req.canMoveSrc, req.checkField, &elemBuffer);
 
 			// FromJson
-			FromJsonResp elemResp(resp.errDoc.pAllocator);
+			FromJsonResp elemResp(resp.errDoc);
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
 			if (ret != 0)
 			{
@@ -436,13 +432,11 @@ public:
 				{
 					field.erase(fieldName);
 				}
-				resp.errDoc.ErrorInObject("ErrInMap", fieldName, &elemResp.errDoc);
-				resp.fStatus = FStatus::kParseFailed;
+				resp.errDoc.ErrorInObject("ErrInMap", fieldName);
 				return ret;
 			}
 			++resp.fieldCount;
 		}
-		resp.fStatus = FStatus::kValid;
 		return 0;
 	}
 

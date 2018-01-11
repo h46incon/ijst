@@ -145,8 +145,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_ubool)
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsBool()) {
-			resp.fStatus = FStatus::kParseFailed;
-			resp.errDoc.TypeMismatch("bool", req.stream);
+			resp.errDoc.ElementTypeMismatch("bool", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -181,8 +180,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE					\
 	{																											\
 		if (!req.stream.IsBool()) {																				\
-			resp.fStatus = FStatus::kParseFailed;																\
-			resp.errDoc.TypeMismatch("bool", req.stream);														\
+			resp.errDoc.ElementTypeMismatch("bool", req.stream);												\
 			return Err::kDeserializeValueTypeError;																\
 		}																										\
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);												\
@@ -224,8 +222,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int)
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsInt()) {
-			resp.fStatus = FStatus::kParseFailed;
-			resp.errDoc.TypeMismatch("int", req.stream);
+			resp.errDoc.ElementTypeMismatch("int", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -255,8 +252,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int64)
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsInt64()) {
-			resp.fStatus = FStatus::kParseFailed;
-			resp.errDoc.TypeMismatch("int64", req.stream);
+			resp.errDoc.ElementTypeMismatch("int64", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -286,8 +282,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint)
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsUint()) {
-			resp.fStatus = FStatus::kParseFailed;
-			resp.errDoc.TypeMismatch("uint", req.stream);
+			resp.errDoc.ElementTypeMismatch("uint", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -317,8 +312,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint64)
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsUint64()) {
-			resp.fStatus = FStatus::kParseFailed;
-			resp.errDoc.TypeMismatch("uint64", req.stream);
+			resp.errDoc.ElementTypeMismatch("uint64", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -348,8 +342,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_double)
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsNumber()) {
-			resp.fStatus = FStatus::kParseFailed;
-			resp.errDoc.TypeMismatch("number", req.stream);
+			resp.errDoc.ElementTypeMismatch("number", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -380,8 +373,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_string)
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsString()) {
-			resp.fStatus = FStatus::kParseFailed;
-			resp.errDoc.TypeMismatch("string", req.stream);
+			resp.errDoc.ElementTypeMismatch("string", req.stream);
 			return Err::kDeserializeValueTypeError;
 		}
 

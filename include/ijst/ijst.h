@@ -375,14 +375,12 @@ namespace detail {
 	};
 
 	struct FromJsonResp {
-		EFStatus fStatus;
 		size_t fieldCount;
-		DeserializeErrDoc errDoc;
+		DeserializeErrDoc& errDoc;
 
-		explicit FromJsonResp(JsonAllocator* _pAllocator) :
-				fStatus(FStatus::kMissing),
+		explicit FromJsonResp(DeserializeErrDoc& _errDoc) :
 				fieldCount(0),
-				errDoc(_pAllocator)
+				errDoc(_errDoc)
 		{ }
 
 	};
@@ -1348,7 +1346,7 @@ private:
 
 		// Set fields by members of stream
 		if (!stream.IsObject()) {
-			p.errDoc.TypeMismatch("object", stream);
+			p.errDoc.ElementTypeMismatch("object", stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -1426,7 +1424,7 @@ private:
 
 		// Serialize fields by members of stream
 		if (!stream.IsObject()) {
-			p.errDoc.TypeMismatch("object", stream);
+			p.errDoc.ElementTypeMismatch("object", stream);
 			return Err::kDeserializeValueTypeError;
 		}
 
@@ -1489,13 +1487,13 @@ private:
 		{
 			void *pField = GetFieldByOffset(metaField->offset);
 			FromJsonReq elemReq(stream, *m_pAllocator, p.unknownMode, canMoveSrc, p.checkField, pField);
-			FromJsonResp elemResp(p.errDoc.pAllocator);
+			FromJsonResp elemResp(p.errDoc);
 			int ret = metaField->serializerInterface->FromJson(elemReq, elemResp);
 			// Check return
 			if (ret != 0)
 			{
 				m_r->fieldStatus[metaField->index] = FStatus::kParseFailed;
-				p.errDoc.ErrorInObject("ErrInObject", metaField->name, &elemResp.errDoc);
+				p.errDoc.ErrorInObject("ErrInObject", metaField->name);
 				return ret;
 			}
 			// Check elem size
@@ -1529,9 +1527,6 @@ private:
 		// Check all required field status
 		bool hasErr = false;
 
-		detail::DeserializeErrDoc missingFields(errDoc.pAllocator);
-		missingFields.errMsg.SetArray();
-
 		for (std::vector<detail::MetaField>::const_iterator itField = m_pMetaClass->metaFields.begin();
 			 itField != m_pMetaClass->metaFields.end(); ++itField)
 		{
@@ -1551,11 +1546,11 @@ private:
 
 			// Has error
 			hasErr = true;
-			missingFields.PushMemberName(itField->name);
+			errDoc.ElementAddMemberName(itField->name);
 		}
 		if (hasErr)
 		{
-			errDoc.MissingMember(missingFields);
+			errDoc.MissingMember();
 			return Err::kDeserializeSomeFiledsInvalid;
 		}
 		return 0;
