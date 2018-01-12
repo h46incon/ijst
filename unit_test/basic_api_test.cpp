@@ -299,9 +299,9 @@ TEST(BasicAPI, Constructor4RValue)
 
 IJST_DEFINE_STRUCT(
 		Complicate
-		, (IJST_TOBJ(SimpleSt), st, "st_v", 0)
-		, (IJST_TVEC(IJST_TOBJ(SimpleSt)), vec, "vec_v", 0)
-		, (IJST_TMAP(IJST_TOBJ(SimpleSt)), map, "map_v", 0)
+		, (IJST_TST(SimpleSt), st, "st_v", 0)
+		, (IJST_TVEC(IJST_TST(SimpleSt)), vec, "vec_v", 0)
+		, (IJST_TMAP(IJST_TST(SimpleSt)), map, "map_v", 0)
 )
 
 #if IJST_ENABLE_TO_JSON_OBJECT
@@ -342,16 +342,16 @@ IJST_DEFINE_STRUCT_WITH_GETTER(
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
 		CWGetter
-		, (IJST_TOBJ(SimpleSt), sim, "sim_v", 0)
-		, (IJST_TOBJ(SWGetter), st, "st_v", 0)
-		, (IJST_TVEC(IJST_TOBJ(SWGetter)), vec, "vec_v", 0)
-		, (IJST_TDEQUE(IJST_TOBJ(SWGetter)), deq, "deq_v", 0)
-		, (IJST_TMAP(IJST_TOBJ(SWGetter)), map, "map_v", 0)
+		, (IJST_TST(SimpleSt), sim, "sim_v", 0)
+		, (IJST_TST(SWGetter), st, "st_v", 0)
+		, (IJST_TVEC(IJST_TST(SWGetter)), vec, "vec_v", 0)
+		, (IJST_TDEQUE(IJST_TST(SWGetter)), deq, "deq_v", 0)
+		, (IJST_TMAP(IJST_TST(SWGetter)), map, "map_v", 0)
 )
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
 		CWGetter2
-		, (IJST_TOBJ(CWGetter), v, "v", 0)
+		, (IJST_TST(CWGetter), v, "v", 0)
 )
 
 TEST(BasicAPI, ChainedOptional)

@@ -22,9 +22,9 @@ IJST_DEFINE_STRUCT(
 IJST_DEFINE_STRUCT(
 		NestSt
 		, (IJST_TVEC(T_int), vec_1, "vec_val_1", 0)
-		, (IJST_TOBJ(Inner), inner_1, "inner_val_1", 0)
+		, (IJST_TST(Inner), inner_1, "inner_val_1", 0)
 		, (IJST_TMAP(T_string), map_1, "map_val_1", 0)
-		, (IJST_TVEC(IJST_TOBJ(Inner)), vec_2, "vec_val_2", 0)
+		, (IJST_TVEC(IJST_TST(Inner)), vec_2, "vec_val_2", 0)
 )
 
 TEST(Serialize, EmptyValue)
@@ -100,10 +100,10 @@ TEST(Serialize, MarkMissing)
 
 IJST_DEFINE_STRUCT(
 		ObjRefSt
-		, (IJST_TOBJ(Inner), inner, "inner_val", 0)
-		, (IJST_TVEC(IJST_TOBJ(Inner)), inner_v, "inner_v_val", 0)
-		, (IJST_TMAP(IJST_TOBJ(Inner)), inner_m, "inner_m_val", 0)
-		, (IJST_TMAP(IJST_TVEC(IJST_TOBJ(Inner))), inner_mv, "inner_mv_val", 0)
+		, (IJST_TST(Inner), inner, "inner_val", 0)
+		, (IJST_TVEC(IJST_TST(Inner)), inner_v, "inner_v_val", 0)
+		, (IJST_TMAP(IJST_TST(Inner)), inner_m, "inner_m_val", 0)
+		, (IJST_TMAP(IJST_TVEC(IJST_TST(Inner))), inner_mv, "inner_mv_val", 0)
 )
 
 TEST(Serialize, AdditionalJsonField)
@@ -207,18 +207,18 @@ TEST(Serialize, AdditionalJsonFieldMoved)
 
 IJST_DEFINE_STRUCT(
 		Complicate1
-		, (IJST_TOBJ(Inner), i1, "i1_v", 0)
-		, (IJST_TOBJ(Inner), i2, "i2_v", 0)
-		, (IJST_TOBJ(Inner), i3, "i3_v", 0)
-		, (IJST_TOBJ(Inner), i4, "i4_v", 0)
+		, (IJST_TST(Inner), i1, "i1_v", 0)
+		, (IJST_TST(Inner), i2, "i2_v", 0)
+		, (IJST_TST(Inner), i3, "i3_v", 0)
+		, (IJST_TST(Inner), i4, "i4_v", 0)
 )
 
 IJST_DEFINE_STRUCT(
 		Complicate2
-		, (IJST_TOBJ(Complicate1), c1, "c1_v", 0)
+		, (IJST_TST(Complicate1), c1, "c1_v", 0)
 		, (IJST_TVEC(IJST_TMAP(T_string)), vms, "vms_v", 0)
 		, (IJST_TMAP(IJST_TVEC(T_string)), mvs, "mvs_v", 0)
-		, (IJST_TMAP(IJST_TMAP(IJST_TOBJ(Inner))), mmo, "mmo_v", 0)
+		, (IJST_TMAP(IJST_TMAP(IJST_TST(Inner))), mmo, "mmo_v", 0)
 )
 
 TEST(Serialize, Complicate)

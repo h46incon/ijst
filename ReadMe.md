@@ -113,7 +113,7 @@ private:
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
     Outter
-    , (IJST_TOBJ(Inner), stInner, "inner", ijst::FDesc::Optional)
+    , (IJST_TST(Inner), stInner, "inner", ijst::FDesc::Optional)
 )
 
 

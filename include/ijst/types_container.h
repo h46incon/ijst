@@ -20,7 +20,7 @@
 //! Declare a map<string, _T> field.
 #define IJST_TMAP(_T)	::ijst::TypeClassMap< _T>
 //! Declare a object field which _T is a ijst struct type.
-#define IJST_TOBJ(_T)	::ijst::TypeClassObj< _T>
+#define IJST_TST(_T)	::ijst::TypeClassStruct< _T>
 
 namespace ijst {
 
@@ -30,7 +30,7 @@ struct TypeClassMap {
 };
 
 template<class _T>
-struct TypeClassObj {
+struct TypeClassStruct {
 	// nothing
 };
 
@@ -106,7 +106,7 @@ namespace detail {
  * @tparam _T class
  */
 template<class _T>
-class FSerializer<TypeClassObj<_T> > : public SerializerInterface {
+class FSerializer<TypeClassStruct<_T> > : public SerializerInterface {
 public:
 	typedef _T VarType;
 
@@ -388,8 +388,7 @@ public:
 		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
 
 		// Reset member
-		for (typename VarType::iterator itera = field.begin(); itera != field.end(); ++itera)
-		{
+		for (typename VarType::iterator itera = field.begin(); itera != field.end(); ++itera) {
 			IJSTI_RET_WHEN_NOT_ZERO(interface->SetAllocator(&(itera->second), allocator));
 		}
 

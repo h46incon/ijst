@@ -65,9 +65,9 @@ ijst 分别使用这几个宏表达 json 中的 list 和任意键值的 object�
 
 \*\* **ijst 结构体类型**
 
-在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TOBJ(_type)`。
+在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TST(_type)`。
 
-可使用该宏在结构体中包含其他的结构体，如 `IJST_TOBJ(struct_name)`。
+可使用该宏在结构体中包含其他的结构体，如 `IJST_TST(SampleStruct)`。
 
 \*\* **自定义类型**
 
@@ -262,7 +262,7 @@ jUnknown.SetString("s", 1, alloc);
 ```cpp
 IJST_DEFINE_STRUCT (
     OuterStruct
-    , (IJST_TOBJ(SampleStruct), stSample, "sample", 0)
+    , (IJST_TST(SampleStruct), stSample, "sample", 0)
 );
 OuterStruct ost;
 
