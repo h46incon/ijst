@@ -20,14 +20,9 @@
 //! Declare a map<string, _T> field.
 #define IJST_TMAP(_T)	IJST_TYPE(::std::map< ::std::string, _T>)
 //! Declare a object field which _T is a ijst struct type.
-#define IJST_TST(_T)	::ijst::TypeClassStruct< _T>
+#define IJST_TST(_T)	_T
 
 namespace ijst {
-
-template<class _T>
-struct TypeClassStruct {
-	// nothing
-};
 
 template <typename _TElem>
 class Optional <std::map<std::string, _TElem> > {
@@ -96,42 +91,6 @@ IJSTI_OPTIONAL_ARRAY_DEFINE(const, std::deque)
 
 namespace ijst {
 namespace detail {
-/**
- * Serialization class of Object types
- * @tparam _T class
- */
-template<class _T>
-class FSerializer<TypeClassStruct<_T> > : public SerializerInterface {
-public:
-	typedef _T VarType;
-
-	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
-	{
-		_T *pField = (_T *) req.pField;
-		return pField->_.ISerialize(req);
-	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		_T *pField = (_T *) req.pField;
-		return pField->_.IToJson(req);
-	}
-
-	virtual int SetAllocator(void* pField, JsonAllocator& allocator) IJSTI_OVERRIDE
-	{
-		_T *pFieldT = (_T *) pField;
-		return pFieldT->_.ISetAllocator(pField, allocator);
-	}
-#endif
-
-	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
-	{
-		_T *pField = (_T *) req.pFieldBuffer;
-		return pField->_.IFromJson(req, resp);
-	}
-
-};
 
 template<typename DefType, typename VarType>
 class ContainerSerializer : public SerializerInterface {

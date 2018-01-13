@@ -403,7 +403,7 @@ namespace detail {
 	 * This template is unimplemented, and will throw a compile error when use it.
 	 * @tparam _T class
 	 */
-	template<class _T>
+	template<typename _T, typename = Accessor>
 	class FSerializer : public SerializerInterface {
 	public:
 		#if __cplusplus >= 201103L
@@ -428,6 +428,42 @@ namespace detail {
 	/**	========================================================================================
 	 *				Private
 	 */
+
+	/**
+	 * Serialization class of ijst struct types
+	 * @tparam _T class
+	 */
+	template<class _T>
+	class FSerializer<_T, typename _T::_ijstStructAccessorType>: public SerializerInterface {
+	public:
+		typedef _T VarType;
+
+		virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
+		{
+			_T *pField = (_T *) req.pField;
+			return pField->_.ISerialize(req);
+		}
+
+	#if IJST_ENABLE_TO_JSON_OBJECT
+		virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
+		{
+			_T *pField = (_T *) req.pField;
+			return pField->_.IToJson(req);
+		}
+
+		virtual int SetAllocator(void* pField, JsonAllocator& allocator) IJSTI_OVERRIDE
+		{
+			_T *pFieldT = (_T *) pField;
+			return pFieldT->_.ISetAllocator(pField, allocator);
+		}
+	#endif
+
+		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
+		{
+			_T *pField = (_T *) req.pFieldBuffer;
+			return pField->_.IFromJson(req, resp);
+		}
+	};
 
 	struct MetaField { // NOLINT
 		int index;
@@ -1016,7 +1052,7 @@ public:
 
 private:
 	// #region Implement SerializeInterface
-	template <class _T> friend class detail::FSerializer;
+	template <typename, typename> friend class detail::FSerializer;
 	typedef detail::SerializerInterface::SerializeReq SerializeReq;
 	inline int ISerialize(const SerializeReq &req) const
 	{
