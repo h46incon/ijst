@@ -138,18 +138,19 @@ public:
 		assert(req.pFieldBuffer != IJST_NULL);
 		VarType& field = *static_cast<VarType *>(req.pFieldBuffer);
 		field.clear();
-		ReserveWrapper<VarType>::Do(field, req.stream.Size());
+		// Alloc buffer
+		field.resize(req.stream.Size());
 		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(ElemType);
 
-		for (rapidjson::Value::ValueIterator itVal = req.stream.Begin();
-			 itVal != req.stream.End(); ++itVal)
+		size_t i = 0;
+		typename VarType::iterator itField = field.begin();
+		rapidjson::Value::ValueIterator  itVal = req.stream.Begin();
+		for (; itVal != req.stream.End(); ++itVal, ++itField, ++i)
 		{
-			// Alloc buffer
-			// New a elem buffer in container first to avoid copy
-			// Use resize() instead of push_back() to avoid copy constructor in C++11
-			field.resize(field.size() + 1);
+			assert(i < field.size());
+			assert(itField != field.end());
 			FromJsonReq elemReq(*itVal, req.allocator,
-								   req.unknownMode, req.canMoveSrc, req.checkField, &field.back());
+								   req.unknownMode, req.canMoveSrc, req.checkField, &*itField);
 			FromJsonResp elemResp(resp.errDoc);
 			// FromJson
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
@@ -161,6 +162,7 @@ public:
 			}
 			++resp.fieldCount;
 		}
+		assert(i == field.size());
 		return 0;
 	}
 
@@ -197,21 +199,6 @@ public:
 		return 0;
 	}
 #endif
-private:
-	template<typename Container>
-	struct ReserveWrapper {
-		static void Do(Container& container, size_t capacity)
-		{ (void)container; (void) capacity; }
-	};
-
-	template<typename _T>
-	struct ReserveWrapper<std::vector<_T> > {
-		static void Do(std::vector<_T>& container, size_t capacity)
-		{
-			// field.shrink_to_fit();
-			container.reserve(capacity);
-		}
-	};
 };
 
 #define IJSTI_SERIALIZER_CONTAINER_DEFINE()																		\
@@ -484,29 +471,30 @@ public:
 		// pField->shrink_to_fit();
 		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(ValType);
 
-		field.reserve(req.stream.MemberCount());
-		for (rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
-			 itMember != req.stream.MemberEnd(); ++itMember)
+		// Alloc buffer
+		field.resize(req.stream.MemberCount());
+		size_t i = 0;
+		rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
+		for (; itMember != req.stream.MemberEnd(); ++itMember, ++i)
 		{
-			// New a elem buffer in container first to avoid copy
-			field.resize(field.size() + 1);
-			MemberType& memberBuf = field.back();
+			assert(i < field.size());
+			MemberType& memberBuf = field[i];
 			memberBuf.name = std::string(itMember->name.GetString(), itMember->name.GetStringLength());
 			ValType &elemBuffer = memberBuf.value;
 			FromJsonReq elemReq(itMember->value, req.allocator,
 								req.unknownMode, req.canMoveSrc, req.checkField, &elemBuffer);
-
-			// FromJson
 			FromJsonResp elemResp(resp.errDoc);
+
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
 			if (ret != 0)
 			{
 				resp.errDoc.ErrorInObject("ErrInMap", memberBuf.name);
-				field.pop_back();
+				field.resize(i);
 				return ret;
 			}
 			++resp.fieldCount;
 		}
+		assert(i == field.size());
 		return 0;
 	}
 
