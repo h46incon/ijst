@@ -335,13 +335,30 @@ TEST(Deserialize, ParseFlags)
 	}
 }
 
+TEST(Deserialize, ErrDoc_MemberMissing)
+{
+	string json = "{}";
+	const int retExpected = Err::kDeserializeSomeFiledsInvalid;
+	NullableSt st;
+	string errMsg;
+	int ret = st._.Deserialize(json, errMsg);
+	ASSERT_EQ(ret, retExpected);
+	rapidjson::Document errDoc;
+	errDoc.Parse(errMsg.c_str(), errMsg.length());
+	ASSERT_TRUE(errDoc.IsObject());
+	ASSERT_STREQ(errDoc["type"].GetString(), "MissingMember");
+	ASSERT_EQ(errDoc["members"].Size(), 1u);
+	ASSERT_STREQ(errDoc["members"][0].GetString(), "int_val_2");
+}
+
 IJST_DEFINE_STRUCT(
 		StErrCheck
-		, (T_ubool, v, "f_v", 0)
-		, (IJST_TMAP(T_ubool), map_v, "f_map", 0)
-		, (IJST_TVEC(T_ubool), vec_v, "f_vec", 0)
-		, (IJST_TDEQUE(T_ubool), deq_v, "f_deq", 0)
-		, (IJST_TLIST(T_ubool), list_v, "f_list", 0)
+		, (T_ubool, v, "f_v", FDesc::Optional)
+		, (IJST_TMAP(T_ubool), map_v, "f_map", FDesc::Optional)
+		, (IJST_TOBJ(T_ubool), obj_v, "f_obj", FDesc::Optional)
+		, (IJST_TVEC(T_ubool), vec_v, "f_vec", FDesc::Optional)
+		, (IJST_TDEQUE(T_ubool), deq_v, "f_deq", FDesc::Optional)
+		, (IJST_TLIST(T_ubool), list_v, "f_list", FDesc::Optional)
 )
 
 void TestErrCheckTypeError(const std::string& errJson, const char* memberName, const char* expectedType, const char* jsonVal)
@@ -370,36 +387,37 @@ TEST(Deserialize, ErrorDoc_ContainerTypeError)
 
 	// Type error bool
 	{
-		const string json = "{\"f_v\": \"ERROR_HERE\", \"f_map\": {\"v1\": true}, "
-				"\"f_vec\": [false], \"f_deq\": [true], \"f_list\": [false]}";
+		const string json = "{\"f_v\": \"ERROR_HERE\"}";
 		TestErrCheckTypeError(json, "f_v", "bool", "\"ERROR_HERE\"");
 	}
 
 	// Type error map
 	{
-		const string json = "{\"f_v\": true, \"f_map\": false, "
-				"\"f_vec\": [false], \"f_deq\": [true], \"f_list\": [false]}";
+		const string json = "{\"f_map\": false}";
 		TestErrCheckTypeError(json, "f_map", "object", "false");
+	}
+
+	// Type error object
+	{
+		const string json = "{\"f_obj\": null}";
+		TestErrCheckTypeError(json, "f_obj", "object", "null");
 	}
 
 	// Type error vec
 	{
-		const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true}, "
-				"\"f_vec\": true, \"f_deq\": [true], \"f_list\": [false]}";
+		const string json = "{\"f_vec\": true}";
 		TestErrCheckTypeError(json, "f_vec", "array", "true");
 	}
 
 	// Type error deq
 	{
-		const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true}, "
-				"\"f_vec\": [true], \"f_deq\": false, \"f_list\": [false]}";
+		const string json = "{\"f_deq\": false}";
 		TestErrCheckTypeError(json, "f_deq", "array", "false");
 	}
 
 	// Type error list
 	{
-		const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true}, "
-				"\"f_vec\": [true], \"f_deq\": [false], \"f_list\": true}";
+		const string json = "{\"f_list\": true}";
 		TestErrCheckTypeError(json, "f_list", "array", "true");
 	}
 }
@@ -418,31 +436,18 @@ TEST(Deserialize, ErrDoc)
 {
 	// Member Unknown
 	{
-		const string json = "{\"UNKNOWN\": true, \"f_v\": true, \"f_map\": {\"v1\": true}, "
-				"\"f_vec\": [false], \"f_deq\": [true], \"f_list\": [false]}";
+		const string json = "{\"UNKNOWN\": true }";
 		rapidjson::Document errDoc;
 		TestErrCheckCommonError(json, Err::kDeserializeSomeUnknownMember, errDoc, UnknownMode::kError);
 		ASSERT_STREQ(errDoc["type"].GetString(), "UnknownMember");
 		ASSERT_STREQ(errDoc["member"].GetString(), "UNKNOWN");
 	}
 
-	// Member missing
-	{
-		const string json = "{\"f_map\": {\"v1\": true}, "
-				"\"f_vec\": [false], \"f_deq\": [true], \"f_list\": [false]}";
-		rapidjson::Document errDoc;
-		TestErrCheckCommonError(json, Err::kDeserializeSomeFiledsInvalid, errDoc);
-		ASSERT_STREQ(errDoc["type"].GetString(), "MissingMember");
-		ASSERT_EQ(errDoc["members"].Size(), 1u);
-		ASSERT_STREQ(errDoc["members"][0].GetString(), "f_v");
-	}
-
 	// Error in object has been checked in many places
 
 	// Error in map
 	{
-		const string json = "{\"f_v\": true, \"f_map\": {\"v1\": \"ERROR_HERE\"}, "
-				"\"f_vec\": [false], \"f_deq\": [true], \"f_list\": [false]}";
+		const string json = "{\"f_map\": {\"v1\": \"ERROR_HERE\"} }";
 		rapidjson::Document errDoc;
 		TestErrCheckCommonError(json, Err::kDeserializeValueTypeError, errDoc);
 		ASSERT_STREQ(errDoc["type"].GetString(), "ErrInObject");
@@ -452,10 +457,21 @@ TEST(Deserialize, ErrDoc)
 		CheckTypeMismatch(errDoc["err"]["err"], "bool", "\"ERROR_HERE\"");
 	}
 
+	// Error in object
+	{
+		const string json = "{\"f_obj\": {\"o0\": null} }";
+		rapidjson::Document errDoc;
+		TestErrCheckCommonError(json, Err::kDeserializeValueTypeError, errDoc);
+		ASSERT_STREQ(errDoc["type"].GetString(), "ErrInObject");
+		ASSERT_STREQ(errDoc["member"].GetString(), "f_obj");
+		ASSERT_STREQ(errDoc["err"]["type"].GetString(), "ErrInMap");
+		ASSERT_STREQ(errDoc["err"]["member"].GetString(), "o0");
+		CheckTypeMismatch(errDoc["err"]["err"], "bool", "null");
+	}
+
 	// Error in array
 	{
-		const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true}, "
-				"\"f_vec\": [1024], \"f_deq\": [true], \"f_list\": [false]}";
+		const string json = "{\"f_vec\": [1024]}";
 		rapidjson::Document errDoc;
 		TestErrCheckCommonError(json, Err::kDeserializeValueTypeError, errDoc);
 		ASSERT_STREQ(errDoc["type"].GetString(), "ErrInObject");
@@ -467,8 +483,7 @@ TEST(Deserialize, ErrDoc)
 
 	// Error in deq
 	{
-		const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true}, "
-				"\"f_vec\": [true], \"f_deq\": [2048], \"f_list\": [false]}";
+		const string json = "{\"f_deq\": [2048]}";
 		rapidjson::Document errDoc;
 		TestErrCheckCommonError(json, Err::kDeserializeValueTypeError, errDoc);
 		ASSERT_STREQ(errDoc["type"].GetString(), "ErrInObject");
@@ -478,10 +493,9 @@ TEST(Deserialize, ErrDoc)
 		CheckTypeMismatch(errDoc["err"]["err"], "bool", "2048");
 	}
 
-	// Error in deq
+	// Error in list
 	{
-		const string json = "{\"f_v\": true, \"f_map\": {\"v1\": true}, "
-				"\"f_vec\": [true], \"f_deq\": [false], \"f_list\": [4096]}";
+		const string json = "{\"f_list\": [4096]}";
 		rapidjson::Document errDoc;
 		TestErrCheckCommonError(json, Err::kDeserializeValueTypeError, errDoc);
 		ASSERT_STREQ(errDoc["type"].GetString(), "ErrInObject");

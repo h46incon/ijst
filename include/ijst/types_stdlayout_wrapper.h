@@ -38,6 +38,16 @@ public:
 	_T& operator*() { return *m_pVal; }
 	const _T& operator*() const { return *m_pVal; }
 
+#if __cplusplus >= 201103L
+	explicit operator _T&() { return *m_pVal; }
+	explicit operator const _T&() const { return *m_pVal; }
+#else
+	operator _T&() { return *m_pVal; }
+	operator const _T&() const { return *m_pVal; }
+#endif
+
+	bool operator== (const T_Wrapper& rhs) const { return *m_pVal == *rhs.m_pVal; }
+	bool operator!= (const T_Wrapper& rhs) const { return *m_pVal != *rhs.m_pVal; }
 	bool operator== (const _T& rhs) const { return *m_pVal == rhs; }
 	bool operator!= (const _T& rhs) const { return *m_pVal != rhs; }
 #if __cplusplus >= 201103L
