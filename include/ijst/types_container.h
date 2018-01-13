@@ -92,14 +92,14 @@ IJSTI_OPTIONAL_ARRAY_DEFINE(const, std::deque)
 namespace ijst {
 namespace detail {
 
-template<typename DefType, typename VarType>
+template<typename ElemType, typename VarType>
 class ContainerSerializer : public SerializerInterface {
 public:
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		assert(req.pField != IJST_NULL);
 		const VarType& field = *static_cast<const VarType*>(req.pField);
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(DefType);
+		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(ElemType);
 
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartArray());
 
@@ -124,7 +124,7 @@ public:
 		VarType& field = *static_cast<VarType *>(req.pFieldBuffer);
 		field.clear();
 		ReserveWrapper<VarType>::Do(field, req.stream.Size());
-		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(DefType);
+		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(ElemType);
 
 		for (rapidjson::Value::ValueIterator itVal = req.stream.Begin();
 			 itVal != req.stream.End(); ++itVal)
@@ -154,7 +154,7 @@ public:
 	{
 		assert(req.pField != IJST_NULL);
 		const VarType& field = *static_cast<const VarType*>(req.pField);
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(DefType);
+		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(ElemType);
 		req.buffer.SetArray();
 		req.buffer.Reserve(static_cast<rapidjson::SizeType>(field.size()), req.allocator);
 
@@ -171,7 +171,7 @@ public:
 	{
 		assert(pField != IJST_NULL);
 		VarType& field = *static_cast<VarType *>(pField);
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(DefType);
+		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(ElemType);
 
 		// Loop
 		for (typename VarType::iterator itera = field.begin(); itera != field.end(); ++itera)
@@ -223,13 +223,8 @@ private:
  */
 template<class _T>
 class FSerializer<std::vector<_T> > : public SerializerInterface {
-public:
-	typedef typename FSerializer<_T>::VarType ElemVarType;
-	typedef std::vector<ElemVarType> VarType;
-
-private:
+	typedef std::vector<_T> VarType;
 	typedef Singleton<ContainerSerializer<_T, VarType> > ContainerSerializerSingleton;
-
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
 	IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()
@@ -242,11 +237,7 @@ public:
  */
 template<class _T>
 class FSerializer<std::deque<_T> > : public SerializerInterface {
-public:
-	typedef typename FSerializer<_T>::VarType ElemVarType;
-	typedef std::deque<ElemVarType> VarType;
-
-private:
+	typedef std::deque<_T> VarType;
 	typedef Singleton<ContainerSerializer<_T, VarType> > ContainerSerializerSingleton;
 
 public:
@@ -261,13 +252,8 @@ public:
  */
 template<class _T>
 class FSerializer<std::list<_T> > : public SerializerInterface {
-public:
-	typedef typename FSerializer<_T>::VarType ElemVarType;
-	typedef std::list<ElemVarType> VarType;
-
-private:
+	typedef std::list<_T> VarType;
 	typedef Singleton<ContainerSerializer<_T, VarType> > ContainerSerializerSingleton;
-
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
 	IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()
@@ -280,9 +266,8 @@ public:
  */
 template<class _T>
 class FSerializer<std::map<std::string, _T> > : public SerializerInterface {
+	typedef std::map<std::string, _T> VarType;
 public:
-	typedef typename FSerializer<_T>::VarType ElemVarType;
-	typedef std::map<std::string, ElemVarType> VarType;
 
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
@@ -369,10 +354,10 @@ public:
 			// Get information
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
 			// New a elem buffer in container first to avoid copy
-			typename VarType::value_type buf(fieldName, ElemVarType());
+			typename VarType::value_type buf(fieldName, _T());
 			std::pair<typename VarType::iterator, bool> insertRet = field.insert(IJSTI_MOVE(buf));
 			const bool hasAlloc = insertRet.second;
-			ElemVarType &elemBuffer = insertRet.first->second;
+			_T &elemBuffer = insertRet.first->second;
 			FromJsonReq elemReq(itMember->value, req.allocator,
 								req.unknownMode, req.canMoveSrc, req.checkField, &elemBuffer);
 

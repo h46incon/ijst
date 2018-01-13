@@ -119,9 +119,9 @@ namespace ijst {
 namespace detail {
 
 #define IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(_Type)						\
-	template<> class FSerializer<_Type> : public SerializerInterface {		\
-	public: 																\
-		typedef _Type VarType;
+	template<> class FSerializer< _Type> : public SerializerInterface {		\
+		typedef _Type VarType;												\
+	public:
 
 #define IJSTI_DEFINE_SERIALIZE_INTERFACE_END()								\
 	};

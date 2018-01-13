@@ -77,8 +77,9 @@ ijst 分别使用这几个宏表达 json 中的 list 和任意键值的 object�
 
 成员变量名。
 
-- 如果使用 `IJST_DEFINE_STRUCT`，变量名不能为 `_`（一个下划线）
-- 如果使用 `IJST_DEFINE_STRUCT_WITH_GETTER`，变量名不能为 `_`， `_TypeDef`， `Get变量名`。
+变量名不能为 `_`（一个下划线）。如果使用 `IJST_DEFINE_STRUCT_WITH_GETTER`，变量名也不能为 `Get其他变量名`。
+
+另外，尽量不要使用 `_` 开头的变量名，这在未来可能会引起冲突。
 
 ### JsonName
 

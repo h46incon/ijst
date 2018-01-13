@@ -1721,29 +1721,20 @@ inline void Accessor::template AppendUnknownToBuffer<true, Accessor>(
 		_ijstStructAccessorType _;
 
 	#define IJSTI_DEFINE_FIELD(fType, fName, ... )												\
-			::ijst::detail::FSerializer< fType>::VarType fName;
-
-	#define IJSTI_FIELD_TYPEDEF_START()															\
-			struct _TypeDef {
-
-	#define IJSTI_FIELD_TYPEDEF(fType, fName, ...) 												\
-				typedef ::ijst::detail::FSerializer< fType>::VarType fName;
-
-	#define IJSTI_FIELD_TYPEDEF_END()															\
-			};
+			fType fName;
 
 	#define IJSTI_FIELD_GETTER(fType, fName, ... )												\
-			::ijst::Optional<const _TypeDef::fName> IJSTI_PP_CONCAT(Get, fName)() const 		\
+			::ijst::Optional<const fType> IJSTI_PP_CONCAT(Get, fName)() const 					\
 			{																					\
 				if (!this->_.IsValid() || this->_.GetStatus(&fName) != ijst::FStatus::kValid)	\
-					{ return ::ijst::Optional<const _TypeDef::fName>(IJST_NULL); }				\
-				return ::ijst::Optional<const _TypeDef::fName>(&fName);							\
+					{ return ::ijst::Optional<const fType>(IJST_NULL); }						\
+				return ::ijst::Optional<const fType>(&fName);									\
 			}																					\
-			::ijst::Optional<_TypeDef::fName> IJSTI_PP_CONCAT(Get, fName)()						\
+			::ijst::Optional< fType> IJSTI_PP_CONCAT(Get, fName)()								\
 			{																					\
 				if (!this->_.IsValid() || this->_.GetStatus(&fName) != ijst::FStatus::kValid)	\
-					{ return ::ijst::Optional<_TypeDef::fName>(IJST_NULL); }					\
-				return ::ijst::Optional<_TypeDef::fName>(&fName);								\
+					{ return ::ijst::Optional< fType>(IJST_NULL); }								\
+				return ::ijst::Optional< fType>(&fName);										\
 			}
 
 	#define IJSTI_METAINFO_DEFINE_START(stName, N)												\
