@@ -103,6 +103,8 @@
 
 //! IJST_NULL.
 #define IJST_NULL				IJSTI_NULL
+//! IJST_TYPE. Helper declare macro with comma
+#define IJST_TYPE(...)			::ijst::ArgumentType<void( __VA_ARGS__)>::type
 
 namespace ijst {
 typedef rapidjson::Value JsonValue;
@@ -153,6 +155,13 @@ public:
 	};
 };
 typedef UnknownMode::_E EUnknownMode;
+
+//! ArugmentType. Helper template to declare macro argument with comma
+//! See https://stackoverflow.com/questions/13842468/comma-in-c-c-macro/13842784
+template<typename T>
+struct ArgumentType;
+template<typename T, typename U>
+struct ArgumentType<U(T)> {typedef T type;};
 
 template<typename _Ch>
 class GenericHandlerBase {

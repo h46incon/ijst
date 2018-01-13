@@ -18,16 +18,11 @@
 //! Declare a vector<_T> field.
 #define IJST_TLIST(_T)	::std::list< _T>
 //! Declare a map<string, _T> field.
-#define IJST_TMAP(_T)	::ijst::TypeClassMap< _T>
+#define IJST_TMAP(_T)	IJST_TYPE(::std::map< ::std::string, _T>)
 //! Declare a object field which _T is a ijst struct type.
 #define IJST_TST(_T)	::ijst::TypeClassStruct< _T>
 
 namespace ijst {
-
-template<class _T>
-struct TypeClassMap {
-	// nothing
-};
 
 template<class _T>
 struct TypeClassStruct {
@@ -325,7 +320,7 @@ public:
  * @tparam _T class
  */
 template<class _T>
-class FSerializer<TypeClassMap<_T> > : public SerializerInterface {
+class FSerializer<std::map<std::string, _T> > : public SerializerInterface {
 public:
 	typedef typename FSerializer<_T>::VarType ElemVarType;
 	typedef std::map<std::string, ElemVarType> VarType;
