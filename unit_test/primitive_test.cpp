@@ -168,6 +168,16 @@ void TestMemberTypeMismatch(const string& errJson, const char* type, const char*
 	CheckMemberTypeMismatch(errMsg, "f_v", type, value);
 }
 
+#define UTEST_DEFINE_STRUCT(StName, PrimType) 				\
+	IJST_DEFINE_STRUCT(										\
+		StName												\
+		, (PrimType, v, "f_v", 0)							\
+		, (IJST_TMAP(PrimType), map_v, "f_map", 0)			\
+		, (IJST_TVEC(PrimType), vec_v, "f_vec", 0)			\
+		, (IJST_TDEQUE(PrimType), deq_v, "f_deq", 0)		\
+		, (IJST_TLIST(PrimType), list_v, "f_list", 0)		\
+	)
+
 IJST_DEFINE_STRUCT(
 		StBool
 		, (T_bool, v, "f_v", 0)
@@ -237,14 +247,7 @@ TEST(Primitive, Bool)
 	}
 }
 
-IJST_DEFINE_STRUCT(
-		StUBool
-		, (T_ubool, v, "f_v", 0)
-		, (IJST_TMAP(T_ubool), map_v, "f_map", 0)
-		, (IJST_TVEC(T_ubool), vec_v, "f_vec", 0)
-		, (IJST_TDEQUE(T_ubool), deq_v, "f_deq", 0)
-		, (IJST_TLIST(T_ubool), list_v, "f_list", 0)
-)
+UTEST_DEFINE_STRUCT(StUBool, T_ubool)
 
 TEST(Primitive, UBool)
 {
@@ -261,15 +264,7 @@ TEST(Primitive, UBool)
 	);
 }
 
-IJST_DEFINE_STRUCT(
-		StWBool
-		, (T_wbool, v, "f_v", 0)
-		, (IJST_TVEC(T_wbool), vec_v, "f_vec", 0)
-		, (IJST_TMAP(T_wbool), map_v, "f_map", 0)
-		, (IJST_TDEQUE(T_wbool), deq_v, "f_deq", 0)
-		, (IJST_TLIST(T_wbool), list_v, "f_list", 0)
-)
-
+UTEST_DEFINE_STRUCT(StWBool, T_wbool)
 TEST(Primitive, WBool)
 {
 	// Deserialize error
@@ -285,15 +280,7 @@ TEST(Primitive, WBool)
 	);
 }
 
-IJST_DEFINE_STRUCT(
-		StInt
-		, (T_int, v, "f_v", 0)
-		, (IJST_TVEC(T_int), vec_v, "f_vec", 0)
-		, (IJST_TMAP(T_int), map_v, "f_map", 0)
-		, (IJST_TDEQUE(T_int), deq_v, "f_deq", 0)
-		, (IJST_TLIST(T_int), list_v, "f_list", 0)
-)
-
+UTEST_DEFINE_STRUCT(StInt, T_int)
 TEST(Primitive, Int)
 {
 	// Deserialize error
@@ -311,15 +298,8 @@ TEST(Primitive, Int)
 			, -2147483647-1, 0, 65536, -65536, 2147483647, -2147483647-1, 10, -10, 20, -20
 	);
 }
-IJST_DEFINE_STRUCT(
-		StInt64
-		, (T_int64, v, "f_v", 0)
-		, (IJST_TVEC(T_int64), vec_v, "f_vec", 0)
-		, (IJST_TMAP(T_int64), map_v, "f_map", 0)
-		, (IJST_TDEQUE(T_int64), deq_v, "f_deq", 0)
-		, (IJST_TLIST(T_int64), list_v, "f_list", 0)
-)
 
+UTEST_DEFINE_STRUCT(StInt64, T_int64)
 TEST(Primitive, Int64)
 {
 	// Deserialize error
@@ -346,16 +326,7 @@ TEST(Primitive, Int64)
 	);
 }
 
-
-IJST_DEFINE_STRUCT(
-		StUInt
-		, (T_uint, v, "f_v", 0)
-		, (IJST_TVEC(T_uint), vec_v, "f_vec", 0)
-		, (IJST_TMAP(T_uint), map_v, "f_map", 0)
-		, (IJST_TDEQUE(T_uint), deq_v, "f_deq", 0)
-		, (IJST_TLIST(T_uint), list_v, "f_list", 0)
-)
-
+UTEST_DEFINE_STRUCT(StUInt, T_uint)
 TEST(Primitive, UInt)
 {
 	// Deserialize error
@@ -380,15 +351,7 @@ TEST(Primitive, UInt)
 	);
 }
 
-IJST_DEFINE_STRUCT(
-		StUInt64
-		, (T_uint64, v, "f_v", 0)
-		, (IJST_TVEC(T_uint64), vec_v, "f_vec", 0)
-		, (IJST_TMAP(T_uint64), map_v, "f_map", 0)
-		, (IJST_TDEQUE(T_uint64), deq_v, "f_deq", 0)
-		, (IJST_TLIST(T_uint64), list_v, "f_list", 0)
-)
-
+UTEST_DEFINE_STRUCT(StUInt64, T_uint64)
 TEST(Primitive, UInt64)
 {
 	// Deserialize error
@@ -413,15 +376,7 @@ TEST(Primitive, UInt64)
 	);
 }
 
-IJST_DEFINE_STRUCT(
-		StDouble
-		, (T_double, v, "f_v", 0)
-		, (IJST_TVEC(T_double), vec_v, "f_vec", 0)
-		, (IJST_TMAP(T_double), map_v, "f_map", 0)
-		, (IJST_TDEQUE(T_double), deq_v, "f_deq", 0)
-		, (IJST_TLIST(T_double), list_v, "f_list", 0)
-)
-
+UTEST_DEFINE_STRUCT(StDouble, T_double)
 TEST(Primitive, Double)
 {
 	// Deserialize error
@@ -444,16 +399,7 @@ TEST(Primitive, Double)
 	);
 }
 
-
-IJST_DEFINE_STRUCT(
-		StString
-		, (T_string, v, "f_v", 0)
-		, (IJST_TVEC(T_string), vec_v, "f_vec", 0)
-		, (IJST_TMAP(T_string), map_v, "f_map", 0)
-		, (IJST_TDEQUE(T_string), deq_v, "f_deq", 0)
-		, (IJST_TLIST(T_string), list_v, "f_list", 0)
-)
-
+UTEST_DEFINE_STRUCT(StString, T_string)
 TEST(Primitive, Str)
 {
 	// Deserialize error
@@ -472,15 +418,7 @@ TEST(Primitive, Str)
 	);
 }
 
-IJST_DEFINE_STRUCT(
-	StWrapper
-	, (T_Wrapper<int>, v, "f_v", 0)
-	, (IJST_TVEC(T_Wrapper<int>), vec_v, "f_vec", 0)
-	, (IJST_TMAP(T_Wrapper<int>), map_v, "f_map", 0)
-	, (IJST_TDEQUE(T_Wrapper<int>), deq_v, "f_deq", 0)
-	, (IJST_TLIST(T_Wrapper<int>), list_v, "f_list", 0)
-)
-
+UTEST_DEFINE_STRUCT(StWrapper, T_Wrapper<int>)
 TEST(Primitive, Wrapper)
 {
 	// Deserialize error
@@ -498,15 +436,7 @@ TEST(Primitive, Wrapper)
 	);
 }
 
-IJST_DEFINE_STRUCT(
-		StRaw
-		, (T_raw, v, "f_v", 0)
-		, (IJST_TVEC(T_raw), vec_v, "f_vec", 0)
-		, (IJST_TMAP(T_raw), map_v, "f_map", 0)
-		, (IJST_TDEQUE(T_raw), deq_v, "f_deq", 0)
-		, (IJST_TLIST(T_raw), list_v, "f_list", 0)
-)
-
+UTEST_DEFINE_STRUCT(StRaw, T_raw)
 TEST(Primitive, Raw)
 {
 	int ret;
