@@ -347,31 +347,30 @@ public:
 		assert(req.pFieldBuffer != IJST_NULL);
 		VarType& field = *static_cast<VarType *>(req.pFieldBuffer);
 		field.clear();
-		// pField->shrink_to_fit();
 		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
 
 		for (rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
 			 itMember != req.stream.MemberEnd(); ++itMember)
 		{
-			// Get information
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
 			// New a elem buffer in container first to avoid copy
 			typename VarType::value_type buf(fieldName, _T());
 			std::pair<typename VarType::iterator, bool> insertRet = field.insert(IJSTI_MOVE(buf));
-			const bool hasAlloc = insertRet.second;
+			// Check duplicate
+			if (!insertRet.second) {
+				resp.errDoc.ElementMapKeyDuplicated(fieldName);
+				return Err::kDeserializeMapKeyDuplicated;
+			}
+
+			// Element FromJson
 			_T &elemBuffer = insertRet.first->second;
 			FromJsonReq elemReq(itMember->value, req.allocator,
 								req.unknownMode, req.canMoveSrc, req.checkField, &elemBuffer);
-
-			// FromJson
 			FromJsonResp elemResp(resp.errDoc);
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
 			if (ret != 0)
 			{
-				if (hasAlloc)
-				{
-					field.erase(fieldName);
-				}
+				field.erase(fieldName);
 				resp.errDoc.ErrorInObject("ErrInMap", fieldName);
 				return ret;
 			}

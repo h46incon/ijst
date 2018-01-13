@@ -457,6 +457,17 @@ TEST(Deserialize, ErrDoc)
 		CheckTypeMismatch(errDoc["err"]["err"], "bool", "\"ERROR_HERE\"");
 	}
 
+	// Map key duplicated
+	{
+		const string json = "{\"f_map\": {\"v2\": true, \"v2\": true} }";
+		rapidjson::Document errDoc;
+		TestErrCheckCommonError(json, Err::kDeserializeMapKeyDuplicated, errDoc);
+		ASSERT_STREQ(errDoc["type"].GetString(), "ErrInObject");
+		ASSERT_STREQ(errDoc["member"].GetString(), "f_map");
+		ASSERT_STREQ(errDoc["err"]["type"].GetString(), "MapKeyDuplicated");
+		ASSERT_STREQ(errDoc["err"]["key"].GetString(), "v2");
+	}
+
 	// Error in object
 	{
 		const string json = "{\"f_obj\": {\"o0\": null} }";

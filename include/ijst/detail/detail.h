@@ -240,6 +240,17 @@ struct DeserializeErrDoc {
 		errMsg.AddMember("members", errDetail, *pAllocator);
 	}
 
+	void ElementMapKeyDuplicated(const std::string& keyName)
+	{
+		if (pAllocator == IJSTI_NULL) { return; }
+
+		errMsg.SetObject();
+		errMsg.AddMember("type", rapidjson::StringRef("MapKeyDuplicated"), *pAllocator);
+		errMsg.AddMember("key",
+						 rapidjson::Value().SetString(keyName.data(), (rapidjson::SizeType)keyName.size(), *pAllocator),
+						 *pAllocator);
+	}
+
 	void ElementTypeMismatch(const char *expectedType, const rapidjson::Value &errVal)
 	{
 		if (pAllocator == IJSTI_NULL) { return; }

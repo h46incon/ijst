@@ -225,6 +225,7 @@ struct Err {
 	static const int kDeserializeParseFaild 		= 0x00001003;
 	static const int kDeserializeElemEmpty 			= 0x00001004;
 	static const int kDeserializeSomeUnknownMember	= 0x00001005;
+	static const int kDeserializeMapKeyDuplicated	= 0x00001006;
 	static const int kInnerError 					= 0x00002001;
 	static const int kWriteFailed					= 0x00003001;
 };
