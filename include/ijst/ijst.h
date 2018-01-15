@@ -42,10 +42,10 @@
 /**
  * IJST_GETTER_PREFIX
  * ijst generator getter methods when using IJST_DEFINE_STRUCT_WITH_GETTER or IJST_DEFINE_VALUE_WITH_GETTER that names
- * are IJST_GETTER_PREFIX + FIELD_NAME. By default, the prefix is "Get", e.g., a getter method could name Getint1().
+ * are IJST_GETTER_PREFIX + FIELD_NAME. By default, the prefix is "get", e.g., a getter method could name get_int1().
  */
 #ifndef IJST_GETTER_PREFIX
-	#define IJST_GETTER_PREFIX Get
+	#define IJST_GETTER_PREFIX get_
 #endif
 
 /**

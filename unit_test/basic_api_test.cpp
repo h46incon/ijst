@@ -128,7 +128,7 @@ TEST(BasicAPI, DefineValueStMap)
 	const std::string json = "{\"v1\": 1, \"v2\": 2}";
 	ret = st._.Deserialize(json);
 	ASSERT_EQ(ret, 0);
-	std::map<std::string, int>& vRef = *st.Getv().Ptr();
+	std::map<std::string, int>& vRef = *st.get_v().Ptr();
 	ASSERT_EQ(vRef.size(), 2u);
 	ASSERT_EQ(vRef["v1"], 1);
 	ASSERT_EQ(vRef["v2"], 2);
@@ -361,67 +361,67 @@ TEST(BasicAPI, ChainedOptional)
 
 	// fields are missing:
 
-	// Get* null
-	ASSERT_EQ(IJST_NULL, st.Getv().Ptr());
-	// Get* null chained
-	ASSERT_EQ(IJST_NULL, st.Getv()->Getvec().Ptr());
+	// get_* null
+	ASSERT_EQ(IJST_NULL, st.get_v().Ptr());
+	// get_* null chained
+	ASSERT_EQ(IJST_NULL, st.get_v()->get_vec().Ptr());
 	// Long null chained
-	ASSERT_EQ(IJST_NULL, st.Getv()->Getsim().Ptr());
-	ASSERT_EQ(IJST_NULL, st.Getv()->Getvec()[0]->Getint_1().Ptr());
-	ASSERT_EQ(IJST_NULL, st.Getv()->Getdeq()[0]->Getint_1().Ptr());
-	ASSERT_EQ(IJST_NULL, st.Getv()->Getmap()[""]->Getint_1().Ptr());
+	ASSERT_EQ(IJST_NULL, st.get_v()->get_sim().Ptr());
+	ASSERT_EQ(IJST_NULL, st.get_v()->get_vec()[0]->get_int_1().Ptr());
+	ASSERT_EQ(IJST_NULL, st.get_v()->get_deq()[0]->get_int_1().Ptr());
+	ASSERT_EQ(IJST_NULL, st.get_v()->get_map()[""]->get_int_1().Ptr());
 
-	// Get valid
+	// get_ valid
 	IJST_MARK_VALID(st, v);
-	ASSERT_EQ(st.Getv().Ptr(), &(st.v));
+	ASSERT_EQ(st.get_v().Ptr(), &(st.v));
 	IJST_MARK_VALID(st.v, sim);
-	ASSERT_EQ(st.Getv()->Getsim().Ptr(), &(st.v.sim));
+	ASSERT_EQ(st.get_v()->get_sim().Ptr(), &(st.v.sim));
 
 	// vector null
-	ASSERT_EQ(IJST_NULL, st.v.Getvec()[0].Ptr());
+	ASSERT_EQ(IJST_NULL, st.v.get_vec()[0].Ptr());
 	// vector elem out of range
 	IJST_MARK_VALID(st.v, vec);
-	ASSERT_EQ(st.v.Getvec().Ptr(), &(st.v.vec));
-	ASSERT_EQ(IJST_NULL, st.v.Getvec()[0].Ptr());
+	ASSERT_EQ(st.v.get_vec().Ptr(), &(st.v.vec));
+	ASSERT_EQ(IJST_NULL, st.v.get_vec()[0].Ptr());
 	// vector valid
 	st.v.vec.resize(1);
-	ASSERT_EQ(st.v.Getvec()[0].Ptr(), &(st.v.vec[0]));
-	ASSERT_EQ(IJST_NULL, st.v.Getvec()[0]->Getint_1().Ptr());
+	ASSERT_EQ(st.v.get_vec()[0].Ptr(), &(st.v.vec[0]));
+	ASSERT_EQ(IJST_NULL, st.v.get_vec()[0]->get_int_1().Ptr());
 
 	// deq null
-	ASSERT_EQ(IJST_NULL, st.v.Getdeq()[0].Ptr());
+	ASSERT_EQ(IJST_NULL, st.v.get_deq()[0].Ptr());
 	// deq elem out of range
 	IJST_MARK_VALID(st.v, deq);
-	ASSERT_EQ(st.v.Getdeq().Ptr(), &(st.v.deq));
-	ASSERT_EQ(IJST_NULL, st.v.Getdeq()[0].Ptr());
+	ASSERT_EQ(st.v.get_deq().Ptr(), &(st.v.deq));
+	ASSERT_EQ(IJST_NULL, st.v.get_deq()[0].Ptr());
 	// deq valid
 	st.v.deq.resize(1);
-	ASSERT_EQ(st.v.Getdeq()[0].Ptr(), &(st.v.deq[0]));
-	ASSERT_EQ(IJST_NULL, st.v.Getdeq()[0]->Getint_1().Ptr());
+	ASSERT_EQ(st.v.get_deq()[0].Ptr(), &(st.v.deq[0]));
+	ASSERT_EQ(IJST_NULL, st.v.get_deq()[0]->get_int_1().Ptr());
 
 	// map null
-	ASSERT_EQ(IJST_NULL, st.v.Getmap()[""].Ptr());
+	ASSERT_EQ(IJST_NULL, st.v.get_map()[""].Ptr());
 	// map key not exist
 	IJST_MARK_VALID(st.v, map);
-	ASSERT_EQ(st.v.Getmap().Ptr(), &(st.v.map));
-	ASSERT_EQ(IJST_NULL, st.v.Getmap()[""].Ptr());
+	ASSERT_EQ(st.v.get_map().Ptr(), &(st.v.map));
+	ASSERT_EQ(IJST_NULL, st.v.get_map()[""].Ptr());
 	// map valid
 	st.v.map[""];
-	ASSERT_EQ(st.v.Getmap()[""].Ptr(), &(st.v.map[""]));
-	ASSERT_EQ(IJST_NULL, st.v.Getmap()[""]->Getint_1().Ptr());
+	ASSERT_EQ(st.v.get_map()[""].Ptr(), &(st.v.map[""]));
+	ASSERT_EQ(IJST_NULL, st.v.get_map()[""]->get_int_1().Ptr());
 
 	// Long valid chained
 	IJST_MARK_VALID(st.v.vec[0], int_1);
-	ASSERT_EQ(st.Getv()->Getvec()[0]->Getint_1().Ptr(), &(st.v.vec[0].int_1));
+	ASSERT_EQ(st.get_v()->get_vec()[0]->get_int_1().Ptr(), &(st.v.vec[0].int_1));
 	IJST_MARK_VALID(st.v.deq[0], int_1);
-	ASSERT_EQ(st.Getv()->Getdeq()[0]->Getint_1().Ptr(), &(st.v.deq[0].int_1));
+	ASSERT_EQ(st.get_v()->get_deq()[0]->get_int_1().Ptr(), &(st.v.deq[0].int_1));
 	IJST_MARK_VALID(st.v.map[""], int_2);
-	ASSERT_EQ(st.Getv()->Getmap()[""]->Getint_2().Ptr(), &(st.v.map[""].int_2));
+	ASSERT_EQ(st.get_v()->get_map()[""]->get_int_2().Ptr(), &(st.v.map[""].int_2));
 
 	// Long valid chained of const
-	ASSERT_EQ(cref.Getv()->Getvec()[0]->Getint_1().Ptr(), &(cref.v.vec[0].int_1));
-	ASSERT_EQ(cref.Getv()->Getdeq()[0]->Getint_1().Ptr(), &(cref.v.deq[0].int_1));
-	ASSERT_EQ(cref.Getv()->Getmap()[""]->Getint_2().Ptr(), &(st.v.map[""].int_2));
+	ASSERT_EQ(cref.get_v()->get_vec()[0]->get_int_1().Ptr(), &(cref.v.vec[0].int_1));
+	ASSERT_EQ(cref.get_v()->get_deq()[0]->get_int_1().Ptr(), &(cref.v.deq[0].int_1));
+	ASSERT_EQ(cref.get_v()->get_map()[""]->get_int_2().Ptr(), &(st.v.map[""].int_2));
 }
 
 struct DummySt {
