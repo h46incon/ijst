@@ -40,8 +40,17 @@
 #endif
 
 /**
+ * IJST_GETTER_PREFIX
+ * ijst generator getter methods when using IJST_DEFINE_STRUCT_WITH_GETTER or IJST_DEFINE_VALUE_WITH_GETTER that names
+ * are IJST_GETTER_PREFIX + FIELD_NAME. By default, the prefix is "Get", e.g., a getter method could name Getint1().
+ */
+#ifndef IJST_GETTER_PREFIX
+	#define IJST_GETTER_PREFIX Get
+#endif
+
+/**
  * IJST_AUTO_META_INIT
- *	if define IJST_AUTO_META_INIT before include this header, the meta class information will init before main.
+ *	If define IJST_AUTO_META_INIT before include this header, the meta class information will init before main.
  *	That's will make it thread-safe to init meta class information before C++11.
  *	The feature is enable default before C++11. So set the value to 0 to force disable it.
  */
@@ -1725,13 +1734,13 @@ inline void Accessor::template AppendUnknownToBuffer<true, Accessor>(
 			fType fName;
 
 	#define IJSTI_FIELD_GETTER(fType, fName, ... )												\
-			::ijst::Optional<const fType> IJSTI_PP_CONCAT(Get, fName)() const 					\
+			::ijst::Optional<const fType> IJSTI_PP_CONCAT(IJST_GETTER_PREFIX, fName)() const 	\
 			{																					\
 				if (!this->_.IsValid() || this->_.GetStatus(&fName) != ijst::FStatus::kValid)	\
 					{ return ::ijst::Optional<const fType>(IJST_NULL); }						\
 				return ::ijst::Optional<const fType>(&fName);									\
 			}																					\
-			::ijst::Optional< fType> IJSTI_PP_CONCAT(Get, fName)()								\
+			::ijst::Optional< fType> IJSTI_PP_CONCAT(IJST_GETTER_PREFIX, fName)()				\
 			{																					\
 				if (!this->_.IsValid() || this->_.GetStatus(&fName) != ijst::FStatus::kValid)	\
 					{ return ::ijst::Optional< fType>(IJST_NULL); }								\
