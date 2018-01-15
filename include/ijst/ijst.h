@@ -281,6 +281,82 @@ public:
 	}
 };
 
+struct MetaFieldInfo { // NOLINT
+	int index;
+	FDesc::Mode desc;
+	std::size_t offset;
+	std::string name;
+	detail::SerializerInterface *serializerInterface;
+};
+
+class MetaClassInfo {
+public:
+	MetaClassInfo() : accessorOffset(0), mapInited(false) { }
+
+	template<typename _T>
+	static const MetaClassInfo& GetMetaInfo();
+
+	int FindIndex(size_t offset) const
+	{
+		std::vector<size_t>::const_iterator it =
+				detail::BinarySearch(m_offsets.begin(), m_offsets.end(), offset, IntComp);
+		if (it != m_offsets.end() && *it == offset) {
+			return static_cast<int>(it - m_offsets.begin());
+		}
+		else {
+			return -1;
+		}
+	}
+
+	const MetaFieldInfo* FindByName(const std::string &name) const
+	{
+		std::vector<NameMap>::const_iterator it =
+				detail::BinarySearch(m_nameMap.begin(), m_nameMap.end(), name, NameMapComp);
+		if (it != m_nameMap.end() && (*it->pName) == name) {
+			return it->metaField;
+		}
+		else {
+			return IJST_NULL;
+		}
+	}
+
+	const std::vector<MetaFieldInfo>& GetFieldsInfo() const { return fieldsInfo; }
+	const std::string& GetStructName() const { return structName; }
+	const std::size_t GetAccessorOffset() const { return accessorOffset; }
+
+private:
+	friend class detail::MetaClassInfoSetter;
+	struct NameMap {
+		NameMap(const std::string* _pName, const MetaFieldInfo* _metaField)
+				: pName(_pName), metaField(_metaField) {}
+
+		bool operator<(const NameMap &r) const
+		{ return (*pName) < (*r.pName); }
+
+		const std::string* pName;
+		const MetaFieldInfo* metaField;
+	};
+
+	static int NameMapComp(const NameMap &l, const std::string &name)
+	{
+		return l.pName->compare(name);
+	}
+
+	static int IntComp(size_t l, size_t r)
+	{
+		return (int)((long)l - (long)r);
+	}
+
+	std::vector<MetaFieldInfo> fieldsInfo;
+	std::string structName;
+	std::size_t accessorOffset;
+
+	std::vector<NameMap> m_nameMap;
+	std::vector<size_t> m_offsets;
+
+	bool mapInited;
+};
+
 /**	========================================================================================
  *				Inner Interface
  */
@@ -363,48 +439,48 @@ namespace detail {
 		{ (void) pField; (void) allocator; return 0; }
 #endif // #if IJST_ENABLE_TO_JSON_OBJECT
 
-	struct FromJsonReq {
-		// Pointer of deserialize output.
-		// The instance should deserialize in this object
-		// The actual type of field should be decide in the derived class
-		void* pFieldBuffer;
+		struct FromJsonReq {
+			// Pointer of deserialize output.
+			// The instance should deserialize in this object
+			// The actual type of field should be decide in the derived class
+			void* pFieldBuffer;
 
-		// The input stream and allocator
-		JsonValue& stream;
-		JsonAllocator& allocator;
+			// The input stream and allocator
+			JsonValue& stream;
+			JsonAllocator& allocator;
 
-		// true if move context in stream to avoid copy when possible
-		bool canMoveSrc;
+			// true if move context in stream to avoid copy when possible
+			bool canMoveSrc;
 
-		EUnknownMode unknownMode;
+			EUnknownMode unknownMode;
 
-		// true if check field status is matched requirement
-		bool checkField;
+			// true if check field status is matched requirement
+			bool checkField;
 
-		FromJsonReq(JsonValue &_stream, JsonAllocator &_allocator,
-					EUnknownMode _unknownMode, bool _canMoveSrc, bool _checkField,
-					void *_pField)
-				: pFieldBuffer(_pField)
-				  , stream(_stream)
-				  , allocator(_allocator)
-				  , canMoveSrc(_canMoveSrc)
-				  , unknownMode(_unknownMode)
-				  , checkField(_checkField)
-		{ }
-	};
+			FromJsonReq(JsonValue &_stream, JsonAllocator &_allocator,
+						EUnknownMode _unknownMode, bool _canMoveSrc, bool _checkField,
+						void *_pField)
+					: pFieldBuffer(_pField)
+					  , stream(_stream)
+					  , allocator(_allocator)
+					  , canMoveSrc(_canMoveSrc)
+					  , unknownMode(_unknownMode)
+					  , checkField(_checkField)
+			{ }
+		};
 
-	struct FromJsonResp {
-		size_t fieldCount;
-		DeserializeErrDoc& errDoc;
+		struct FromJsonResp {
+			size_t fieldCount;
+			DeserializeErrDoc& errDoc;
 
-		explicit FromJsonResp(DeserializeErrDoc& _errDoc) :
-				fieldCount(0),
-				errDoc(_errDoc)
-		{ }
+			explicit FromJsonResp(DeserializeErrDoc& _errDoc) :
+					fieldCount(0),
+					errDoc(_errDoc)
+			{ }
 
-	};
+		};
 
-	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp)= 0;
+		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp)= 0;
 
 	};
 
@@ -438,11 +514,104 @@ namespace detail {
 	/**	========================================================================================
 	 *				Private
 	 */
-
 	/**
-	 * Serialization class of ijst struct types
-	 * @tparam _T class
+	 * Meta info initer
+	 * Push meta class info of _T in specialized constructor MetaInfo<_T>().
+	 * @tparam _T: class. Concept require _T::_InitMetaInfo(MetaInfo*)
 	 */
+	template<typename _T>
+	class MetaClassInfoIniter {
+	public:
+		MetaClassInfo metaClass;
+
+	private:
+		friend class Singleton<MetaClassInfoIniter<_T> >;
+
+		MetaClassInfoIniter()
+		{
+			_T::_InitMetaInfo(this);
+		}
+	};
+
+	class MetaClassInfoSetter {
+	public:
+		explicit MetaClassInfoSetter(MetaClassInfo& _d) : d(_d) { }
+
+		void InitBegin(const std::string& _tag, std::size_t _fieldCount, std::size_t _accessorOffset)
+		{
+			d.structName = _tag;
+			d.accessorOffset = _accessorOffset;
+			d.fieldsInfo.reserve(_fieldCount);
+		}
+
+		void PushMetaField(const std::string &name, std::size_t offset,
+						   FDesc::Mode desc, SerializerInterface *serializerInterface)
+		{
+			MetaFieldInfo metaField;
+			metaField.name = name;
+			metaField.offset = offset;
+			metaField.desc = desc;
+			metaField.serializerInterface = serializerInterface;
+			d.fieldsInfo.push_back(IJSTI_MOVE(metaField));
+		}
+
+		void InitEnd()
+		{
+			// assert MetaClassInfo's map has not inited before
+			assert(!d.mapInited);
+			SortMetaFieldsByOffset();
+
+			d.m_offsets.reserve(d.fieldsInfo.size());
+			d.m_nameMap.resize(d.fieldsInfo.size(), MetaClassInfo::NameMap(IJSTI_NULL, IJSTI_NULL));
+
+			for (size_t i = 0; i < d.fieldsInfo.size(); ++i) {
+				MetaFieldInfo *ptrMetaField = &(d.fieldsInfo[i]);
+				ptrMetaField->index = static_cast<int>(i);
+
+				d.m_offsets.push_back(ptrMetaField->offset);
+				// Assert field offset is sorted and not exist before
+				assert(i == 0 || d.m_offsets[i]  > d.m_offsets[i-1]);
+
+				// Insert name Map
+				InsertNameMap(i, MetaClassInfo::NameMap(&(ptrMetaField->name), ptrMetaField));
+			}
+
+			d.mapInited = true;
+		}
+
+	private:
+		void SortMetaFieldsByOffset()
+		{
+			// fieldsInfo is already sorted in most case, use insertion sort
+			const size_t n = d.fieldsInfo.size();
+			for (size_t i = 1; i < n; i++) {
+				for (size_t j = i; j > 0 && d.fieldsInfo[j - 1].offset > d.fieldsInfo[j].offset; j--) {
+					detail::Swap(d.fieldsInfo[j], d.fieldsInfo[j - 1]);
+				}
+			}
+		}
+
+		void InsertNameMap(size_t len, const MetaClassInfo::NameMap& v)
+		{
+			std::vector<MetaClassInfo::NameMap>::iterator it =
+					BinarySearch(d.m_nameMap.begin(), d.m_nameMap.begin() + len, *v.pName, MetaClassInfo::NameMapComp);
+			size_t i = static_cast<size_t>(it - d.m_nameMap.begin());
+			// assert name is unique
+			assert(i == len || (*v.pName) != (*it->pName));
+
+			for (size_t j = len; j > i; --j) {
+				d.m_nameMap[j] = IJSTI_MOVE(d.m_nameMap[j - 1]);
+			}
+			d.m_nameMap[i] = v;
+		}
+
+		MetaClassInfo& d;
+	};
+
+/**
+ * Serialization class of ijst struct types
+ * @tparam _T class
+ */
 	template<class _T>
 	class FSerializer<_T, typename _T::_ijstStructAccessorType>: public SerializerInterface {
 	public:
@@ -475,160 +644,6 @@ namespace detail {
 		}
 	};
 
-	struct MetaField { // NOLINT
-		int index;
-		FDesc::Mode desc;
-		std::size_t offset;
-		SerializerInterface *serializerInterface;
-		std::string name;
-	};
-
-	class MetaClass {
-	public:
-		MetaClass() : accessorOffset(0), mapInited(false) { }
-
-		void InitBegin(const std::string& _tag, std::size_t _fieldCount, std::size_t _accessorOffset)
-		{
-			tag = _tag;
-			accessorOffset = _accessorOffset;
-			metaFields.reserve(_fieldCount);
-		}
-
-		void PushMetaField(const std::string &name, std::size_t offset,
-						   FDesc::Mode desc, SerializerInterface *serializerInterface)
-		{
-			MetaField metaField;
-			metaField.name = name;
-			metaField.offset = offset;
-			metaField.desc = desc;
-			metaField.serializerInterface = serializerInterface;
-			metaFields.push_back(IJSTI_MOVE(metaField));
-		}
-
-		void InitEnd()
-		{
-			// assert MetaClass's map has not inited before
-			assert(!mapInited);
-			SortMetaFieldsByOffset();
-
-			m_offsets.reserve(metaFields.size());
-			m_nameMap.resize(metaFields.size(), NameMap(IJSTI_NULL, IJSTI_NULL));
-
-			for (size_t i = 0; i < metaFields.size(); ++i) {
-				MetaField *ptrMetaField = &(metaFields[i]);
-				ptrMetaField->index = static_cast<int>(i);
-
-				m_offsets.push_back(ptrMetaField->offset);
-				// Assert field offset is sorted and not exist before
-				assert(i == 0 || m_offsets[i]  > m_offsets[i-1]);
-
-				// Insert name Map
-				InsertNameMap(i, NameMap(&(ptrMetaField->name), ptrMetaField));
-			}
-
-			mapInited = true;
-		}
-
-		int FindIndex(size_t offset) const
-		{
-			std::vector<size_t>::const_iterator it =
-					BinarySearch(m_offsets.begin(), m_offsets.end(), offset, IntComp);
-			if (it != m_offsets.end() && *it == offset) {
-				return static_cast<int>(it - m_offsets.begin());
-			}
-			else {
-				return -1;
-			}
-		}
-
-		const MetaField* FindByName(const std::string &name) const
-		{
-			std::vector<NameMap>::const_iterator it =
-					BinarySearch(m_nameMap.begin(), m_nameMap.end(), name, NameMapComp);
-			if (it != m_nameMap.end() && (*it->pName) == name) {
-				return it->metaField;
-			}
-			else {
-				return IJST_NULL;
-			}
-		}
-
-		std::vector<MetaField> metaFields;
-		std::string tag;
-		std::size_t accessorOffset;
-
-	private:
-		struct NameMap {
-			NameMap(const std::string* _pName, const MetaField* _metaField)
-					: pName(_pName), metaField(_metaField) {}
-
-			bool operator<(const NameMap &r) const
-			{ return (*pName) < (*r.pName); }
-
-			const std::string* pName;
-			const MetaField* metaField;
-		};
-
-		static int NameMapComp(const NameMap &l, const std::string &name)
-		{
-			return l.pName->compare(name);
-		}
-
-		static int IntComp(size_t l, size_t r)
-		{
-			return (int)((long)l - (long)r);
-		}
-
-		void SortMetaFieldsByOffset()
-		{
-			// metaFields is already sorted in most case, use insertion sort
-			const size_t n = metaFields.size();
-			for (size_t i = 1; i < n; i++) {
-				for (size_t j = i; j > 0 && metaFields[j - 1].offset > metaFields[j].offset; j--) {
-					detail::Swap(metaFields[j], metaFields[j - 1]);
-				}
-			}
-		}
-
-		void InsertNameMap(size_t len, const NameMap& v)
-		{
-			std::vector<NameMap>::iterator it =
-					BinarySearch(m_nameMap.begin(), m_nameMap.begin() + len, *v.pName, NameMapComp);
-			size_t i = static_cast<size_t>(it - m_nameMap.begin());
-			// assert name is unique
-			assert(i == len || (*v.pName) != (*it->pName));
-
-			for (size_t j = len; j > i; --j) {
-				m_nameMap[j] = IJSTI_MOVE(m_nameMap[j - 1]);
-			}
-			m_nameMap[i] = v;
-		}
-
-		std::vector<NameMap> m_nameMap;
-		std::vector<size_t> m_offsets;
-
-		bool mapInited;
-	};
-
-	/**
-	 * Reflection info.
-	 * Push meta class info of _T in specialized constructor MetaInfo<_T>().
-	 * @tparam _T: class. Concept require _T::InitMetaInfo(MetaInfo*)
-	 */
-	template<class _T>
-	class MetaInfo {
-	public:
-		MetaClass metaClass;
-
-	private:
-		friend class Singleton<MetaInfo<_T> >;
-
-		MetaInfo()
-		{
-			_T::InitMetaInfo(this);
-		}
-	};
-
 }	// namespace detail
 
 /**
@@ -638,12 +653,12 @@ namespace detail {
 class Accessor {
 public:
 	//region constructors
-	explicit Accessor(const detail::MetaClass *pMetaClass, bool isParentVal, bool isValid) :
+	explicit Accessor(const MetaClassInfo *pMetaClass, bool isParentVal, bool isValid) :
 			m_pMetaClass(pMetaClass), m_isValid(isValid), m_isParentVal(isParentVal)
 	{
-		IJST_ASSERT(!m_isParentVal || m_pMetaClass->metaFields.size() == 1);
+		IJST_ASSERT(!m_isParentVal || m_pMetaClass->GetFieldsInfo().size() == 1);
 		m_r = static_cast<Resource *>(operator new(sizeof(Resource)));
-		new(&m_r->fieldStatus) FieldStatusType(m_pMetaClass->metaFields.size(), FStatus::kMissing);
+		new(&m_r->fieldStatus) FieldStatusType(m_pMetaClass->GetFieldsInfo().size(), FStatus::kMissing);
 		new(&m_r->unknown)rapidjson::Value(rapidjson::kObjectType);
 		new(&m_r->ownDoc) rapidjson::Document();
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
@@ -716,6 +731,7 @@ public:
 
 	inline bool IsValid() const { return m_isValid; }
 	inline bool IsParentVal() const { return m_isParentVal; }
+	const MetaClassInfo& GetMetaInfo() const { return *m_pMetaClass; }
 
 	/*
 	 * Field accessor.
@@ -1005,8 +1021,8 @@ public:
 		m_pAllocator = &allocator;
 
 		// Set allocator in members
-		for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
-			 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
+		for (std::vector<MetaFieldInfo>::const_iterator itMetaField = m_pMetaClass->GetFieldsInfo().begin();
+			 itMetaField != m_pMetaClass->GetFieldsInfo().end(); ++itMetaField)
 		{
 			void *pField = GetFieldByOffset(itMetaField->offset);
 			IJSTI_RET_WHEN_NOT_ZERO(
@@ -1161,9 +1177,9 @@ private:
 
 	int DoSerializeFields(HandlerBase &writer, FPush::Mode fPushMode) const
 	{
-		IJST_ASSERT(!m_isParentVal || m_pMetaClass->metaFields.size() == 1);
-		for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
-			 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
+		IJST_ASSERT(!m_isParentVal || m_pMetaClass->GetFieldsInfo().size() == 1);
+		for (std::vector<MetaFieldInfo>::const_iterator itMetaField = m_pMetaClass->GetFieldsInfo().begin();
+			 itMetaField != m_pMetaClass->GetFieldsInfo().end(); ++itMetaField)
 		{
 			// Check field state
 			const EFStatus fstatus = m_r->fieldStatus[itMetaField->index];
@@ -1224,7 +1240,7 @@ private:
 
 			do {
 				const size_t unknwonSize = isBitSet(fPushMode, FPush::kIgnoreUnknown) ? 0 : m_r->unknown.MemberCount();
-				const size_t maxSize = m_pMetaClass->metaFields.size() + unknwonSize;
+				const size_t maxSize = m_pMetaClass->GetFieldsInfo().size() + unknwonSize;
 				if (buffer.MemberCapacity() >= maxSize) {
 					break;
 				}
@@ -1232,8 +1248,8 @@ private:
 				size_t fieldSize;
 				if (isBitSet(fPushMode, FPush::kOnlyValidField)) {
 					fieldSize = unknwonSize;
-					for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
-						 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
+					for (std::vector<MetaFieldInfo>::const_iterator itMetaField = m_pMetaClass->GetFieldsInfo().begin();
+						 itMetaField != m_pMetaClass->GetFieldsInfo().end(); ++itMetaField)
 					{
 						const EFStatus fstatus = m_r->fieldStatus[itMetaField->index];
 						if (fstatus == FStatus::kValid || fstatus == FStatus::kNull) {
@@ -1253,8 +1269,8 @@ private:
 		const rapidjson::SizeType oldCapcity = m_isParentVal ? 0 : buffer.MemberCapacity();
 		#endif
 
-		for (std::vector<detail::MetaField>::const_iterator itMetaField = m_pMetaClass->metaFields.begin();
-			 itMetaField != m_pMetaClass->metaFields.end(); ++itMetaField)
+		for (std::vector<MetaFieldInfo>::const_iterator itMetaField = m_pMetaClass->GetFieldsInfo().begin();
+			 itMetaField != m_pMetaClass->GetFieldsInfo().end(); ++itMetaField)
 		{
 			// Check field state
 			const EFStatus fstatus = m_r->fieldStatus[itMetaField->index];
@@ -1306,7 +1322,7 @@ private:
 		return 0;
 	}
 
-	int DoFieldToJson(std::vector<detail::MetaField>::const_iterator itMetaField,
+	int DoFieldToJson(std::vector<MetaFieldInfo>::const_iterator itMetaField,
 					  bool canMoveSrc, unsigned fPushMode,
 					  JsonValue &buffer, JsonAllocator &allocator) const
 	{
@@ -1339,7 +1355,7 @@ private:
 		return 0;
 	}
 
-	int DoNullFieldToJson(std::vector<detail::MetaField>::const_iterator itMetaField,
+	int DoNullFieldToJson(std::vector<MetaFieldInfo>::const_iterator itMetaField,
 						  JsonValue &buffer, JsonAllocator &allocator) const
 	{
 		if (m_isParentVal) {
@@ -1394,9 +1410,9 @@ private:
 	{
 		if (m_isParentVal) {
 			// Set field by stream itself
-			assert(m_pMetaClass->metaFields.size() == 1);
+			assert(m_pMetaClass->GetFieldsInfo().size() == 1);
 			return DoFieldFromJson(
-					&m_pMetaClass->metaFields[0], stream, /*canMoveSrc=*/true, p);
+					&m_pMetaClass->GetFieldsInfo()[0], stream, /*canMoveSrc=*/true, p);
 		}
 
 		// Set fields by members of stream
@@ -1414,7 +1430,7 @@ private:
 
 			// Get related field info
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-			const detail::MetaField *pMetaField = m_pMetaClass->FindByName(fieldName);
+			const MetaFieldInfo *pMetaField = m_pMetaClass->FindByName(fieldName);
 
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
@@ -1472,9 +1488,9 @@ private:
 	{
 		if (m_isParentVal) {
 			// Serialize field by stream itself
-			assert(m_pMetaClass->metaFields.size() == 1);
+			assert(m_pMetaClass->GetFieldsInfo().size() == 1);
 			return DoFieldFromJson(
-					&m_pMetaClass->metaFields[0], const_cast<JsonValue &>(stream), /*canMoveSrc=*/true, p);
+					&m_pMetaClass->GetFieldsInfo()[0], const_cast<JsonValue &>(stream), /*canMoveSrc=*/true, p);
 		}
 
 		// Serialize fields by members of stream
@@ -1491,7 +1507,7 @@ private:
 		{
 			// Get related field info
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-			const detail::MetaField *pMetaField = m_pMetaClass->FindByName(fieldName);
+			const MetaFieldInfo *pMetaField = m_pMetaClass->FindByName(fieldName);
 
 			if (pMetaField == IJST_NULL)
 			{
@@ -1530,7 +1546,7 @@ private:
 	}
 
 
-	int DoFieldFromJson(const detail::MetaField *metaField, JsonValue &stream, bool canMoveSrc, FromJsonParam& p)
+	int DoFieldFromJson(const MetaFieldInfo *metaField, JsonValue &stream, bool canMoveSrc, FromJsonParam& p)
 	{
 		// Check nullable
 		if (isBitSet(metaField->desc, FDesc::Nullable)
@@ -1566,7 +1582,7 @@ private:
 
 	inline void InitOuterPtr()
 	{
-		m_pOuter = reinterpret_cast<const unsigned char *>(this - m_pMetaClass->accessorOffset);
+		m_pOuter = reinterpret_cast<const unsigned char *>(this - m_pMetaClass->GetAccessorOffset());
 	}
 
 	void MarkFieldStatus(const void* field, EFStatus fStatus)
@@ -1582,8 +1598,8 @@ private:
 		// Check all required field status
 		bool hasErr = false;
 
-		for (std::vector<detail::MetaField>::const_iterator itField = m_pMetaClass->metaFields.begin();
-			 itField != m_pMetaClass->metaFields.end(); ++itField)
+		for (std::vector<MetaFieldInfo>::const_iterator itField = m_pMetaClass->GetFieldsInfo().begin();
+			 itField != m_pMetaClass->GetFieldsInfo().end(); ++itField)
 		{
 			if (isBitSet(itField->desc, FDesc::Optional))
 			{
@@ -1637,7 +1653,7 @@ private:
 	};
 	Resource* m_r;
 
-	const detail::MetaClass* m_pMetaClass;
+	const MetaClassInfo* m_pMetaClass;
 	JsonAllocator* m_pAllocator;
 	const unsigned char *m_pOuter;
 
@@ -1645,6 +1661,14 @@ private:
 	bool m_isParentVal;
 	//</editor-fold>
 };
+
+///! { implementations
+template<typename _T>
+inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
+{
+	IJSTI_TRY_INIT_META_BEFORE_MAIN(detail::MetaClassInfoIniter<_T>);
+	return detail::Singleton<detail::MetaClassInfoIniter<_T> >::GetInstance()->metaClass;
+}
 
 #if IJST_ENABLE_TO_JSON_OBJECT
 //! copy version of Accessor::AppendInnerToBuffer
@@ -1691,6 +1715,7 @@ inline void Accessor::template AppendUnknownToBuffer<true, Accessor>(
 	rThis.m_r->unknown.SetObject();
 }
 #endif
+///! }
 
 //! IJSTI_DEFINE_STRUCT_IMPL
 //! Wrapper of IJST_DEFINE_STRUCT_IMPL_*
@@ -1748,25 +1773,26 @@ inline void Accessor::template AppendUnknownToBuffer<true, Accessor>(
 			}
 
 	#define IJSTI_METAINFO_DEFINE_START(stName, N)												\
-			typedef ::ijst::detail::MetaInfo<stName> MetaInfoT;									\
+			typedef ::ijst::detail::MetaClassInfoIniter<stName> MetaInfoT;						\
 			typedef ::ijst::detail::Singleton<MetaInfoT> MetaInfoS;								\
 			friend MetaInfoT;																	\
-			static void InitMetaInfo(MetaInfoT* metaInfo)										\
+			static void _InitMetaInfo(MetaInfoT* metaInfo)										\
 			{																					\
 				IJSTI_TRY_INIT_META_BEFORE_MAIN(MetaInfoT);										\
 				/*Do not call MetaInfoS::GetInstance() int this function */			 			\
-				metaInfo->metaClass.InitBegin(#stName, N, IJST_OFFSETOF(stName, _));			\
+				detail::MetaClassInfoSetter mSetter(metaInfo->metaClass);						\
+				mSetter.InitBegin(#stName, N, IJST_OFFSETOF(stName, _));
 
-	#define IJSTI_METAINFO_ADD(stName, fDef)  								\
-			metaInfo->metaClass.PushMetaField(								\
-				IJSTI_IDL_SNAME fDef, 										\
-				IJST_OFFSETOF(stName, IJSTI_IDL_FNAME fDef),				\
-				IJSTI_IDL_DESC fDef, 										\
-				IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef)					\
+	#define IJSTI_METAINFO_ADD(stName, fDef)  													\
+			mSetter.PushMetaField(																\
+				IJSTI_IDL_SNAME fDef, 															\
+				IJST_OFFSETOF(stName, IJSTI_IDL_FNAME fDef),									\
+				IJSTI_IDL_DESC fDef, 															\
+				IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef)										\
 			);
 
 	#define IJSTI_METAINFO_DEFINE_END()															\
-				metaInfo->metaClass.InitEnd();													\
+				mSetter.InitEnd();																\
 			}
 
 }	// namespace ijst

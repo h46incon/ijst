@@ -152,6 +152,20 @@ IJST_DEFINE_STRUCT(
 		, (T_string, str_2, "str_val_2", 0)
 )
 
+TEST(BasicAPI, MetaInfo)
+{
+	SimpleSt st;
+	const MetaClassInfo& metaInfo = MetaClassInfo::GetMetaInfo<SimpleSt>();
+	ASSERT_EQ(&st._.GetMetaInfo(), &metaInfo);
+	ASSERT_EQ(metaInfo.GetStructName(), "SimpleSt");
+	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 4u);
+	ASSERT_EQ(metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
+	ASSERT_EQ(metaInfo.FindByName("int_val_1")->offset, (char*)&st.int_1 - (char*)&st);
+	ASSERT_EQ(metaInfo.FindByName("int_val_2")->offset, (char*)&st.int_2 - (char*)&st);
+	ASSERT_EQ(metaInfo.FindByName("str_val_1")->offset, (char*)&st.str_1 - (char*)&st);
+	ASSERT_EQ(metaInfo.FindByName("str_val_2")->offset, (char*)&st.str_2 - (char*)&st);
+}
+
 TEST(BasicAPI, FieldStatus)
 {
 	SimpleSt simpleSt;

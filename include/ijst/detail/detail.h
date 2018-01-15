@@ -12,6 +12,9 @@
 
 namespace ijst{
 namespace detail{
+// forward declaration
+class SerializerInterface;
+class MetaClassInfoSetter;
 
 #if __cplusplus >= 201103L
 	#define IJSTI_MOVE(val) 	std::move((val))
