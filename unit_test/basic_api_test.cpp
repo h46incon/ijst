@@ -155,7 +155,7 @@ IJST_DEFINE_STRUCT(
 void CheckFieldInfo(const MetaClassInfo& metaInfo,
 					const std::string& fieldName, const std::string& jsonName, size_t offset, FDesc::Mode desc)
 {
-	const MetaFieldInfo *fieldInfo = metaInfo.FindByJsonName(jsonName);
+	const MetaFieldInfo *fieldInfo = metaInfo.FindFieldByJsonName(jsonName);
 	ASSERT_FALSE(fieldInfo == NULL);
 	ASSERT_EQ(fieldInfo->fieldName, fieldName);
 	ASSERT_EQ(fieldInfo->jsonName, jsonName);
@@ -167,7 +167,7 @@ TEST(BasicAPI, MetaInfo)
 	SimpleSt st;
 	const MetaClassInfo& metaInfo = MetaClassInfo::GetMetaInfo<SimpleSt>();
 	ASSERT_EQ(&st._.GetMetaInfo(), &metaInfo);
-	ASSERT_EQ(metaInfo.GetStructName(), "SimpleSt");
+	ASSERT_EQ(metaInfo.GetClassName(), "SimpleSt");
 	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 4u);
 	ASSERT_EQ(metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
 	CheckFieldInfo(metaInfo, "int_1", "int_val_1", (char*)&st.int_1 - (char*)&st, 0);

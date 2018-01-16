@@ -26,6 +26,11 @@
 
 namespace ijst {
 
+/**
+ * Memeber in json object
+ *
+ * @tparam _T	value type
+ */
 template<typename _T>
 struct T_Member {
 	typedef _T ValType;
@@ -39,11 +44,23 @@ struct T_Member {
 #endif
 };
 
+/**
+ * Specialization for map type of Optional template.
+ * This specialization add operator[] (string key) for getter chaining.
+ *
+ * @tparam _TElem
+ */
 template <typename _TElem>
 class Optional <std::map<std::string, _TElem> > {
 	typedef std::map<std::string, _TElem> ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 public:
+	/**
+	 * Get element by key
+	 *
+	 * @param key 	key
+	 * @return 		Optional(elemInstance) if key is found, Optional(null) else
+	 */
 	Optional<_TElem> operator[](const std::string& key) const
 	{
 		if (m_pVal == IJST_NULL) {
@@ -59,12 +76,24 @@ public:
 	}
 };
 
+/**
+ * const version Specialization for map type of Optional template.
+ * This specialization add operator[] (string key) for getter chaining.
+ *
+ * @tparam _TElem	Element type
+ */
 template <typename _TElem>
 class Optional <const std::map<std::string, _TElem> >
 {
 	typedef const std::map<std::string, _TElem> ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 public:
+	/**
+	 * Get element by key
+	 *
+	 * @param key 	key
+	 * @return 		Optional(const elemInstance) if key is found, Optional(null) else
+	 */
 	Optional<const _TElem> operator[](const std::string& key) const
 	{
 		if (m_pVal == IJST_NULL) {
@@ -80,6 +109,12 @@ public:
 	}
 };
 
+/**
+ * Specialization for vector or deque type of Optional template.
+ * This specialization add operator[] (size_type i) for getter chaining.
+ *
+ * @tparam _TElem	Element type
+ */
 #define IJSTI_OPTIONAL_ARRAY_DEFINE(is_const, Container)													\
 	template<typename _TElem>																				\
 	class Optional<is_const Container<_TElem> >																\
@@ -87,6 +122,7 @@ public:
 		typedef is_const Container<_TElem> ValType;															\
 		IJSTI_OPTIONAL_BASE_DEFINE(ValType)																	\
 	public:																									\
+		/** return Optional(elemeInstance) if i is valid, Optional(null) else. */							\
 		Optional<is_const _TElem> operator[](typename Container<_TElem>::size_type i) const					\
 		{																									\
 			if (m_pVal == IJST_NULL || m_pVal->size() <= i) {												\

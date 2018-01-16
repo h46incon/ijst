@@ -15,6 +15,8 @@ namespace detail{
 // forward declaration
 class SerializerInterface;
 class MetaClassInfoSetter;
+template<typename _T>
+class MetaClassInfoIniter;
 
 #if __cplusplus >= 201103L
 	#define IJSTI_MOVE(val) 	std::move((val))

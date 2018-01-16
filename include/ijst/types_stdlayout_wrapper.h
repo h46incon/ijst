@@ -10,7 +10,8 @@
 
 namespace ijst {
 /**
- * Common wrapper
+ * Common wrapper to hold object via a standard-layout object, that required by offset() macro.
+ *
  * @tparam _T: Value type, must implement default constructor, copy constructor, assignment
  */
 template<typename _T>

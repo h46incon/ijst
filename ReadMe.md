@@ -75,10 +75,10 @@ assert (ret == 0);
 ```
 
 ### Getter Chaining
-如果所需字段的路径比较深的时候，为避免累赘的判断，可使用 `Get*` 方法，比如：
+如果所需字段的路径比较深的时候，为避免累赘的判断，可使用 `get_*` 方法，比如：
 
 ```cpp
-int* ptr = st.GetvecField()[0].GetmapField()["key"].GetintField().Ptr();
+int* ptr = st.get_vecField()[0].get_mapField()["key"].get_intField().Ptr();
 if (ptr != NULL)  //...
 ```
 
@@ -104,9 +104,9 @@ public:
         typedef std::map<std::string, int> mapData;
     };
     // Getters
-    ijst::Optional<_TypeDef::iData> GetiData();
-    ijst::Optional<_TypeDef::vecData> GetvecData();
-    ijst::Optional<_TypeDef::mapData> GetmapData();
+    ijst::Optional<_TypeDef::iData> get_iData();
+    ijst::Optional<_TypeDef::vecData> get_vecData();
+    ijst::Optional<_TypeDef::mapData> get_mapData();
 private:
 };
 */
@@ -117,9 +117,9 @@ IJST_DEFINE_STRUCT_WITH_GETTER(
 )
 
 
-//*** 可以通过连串的 Get 尝试直接访问字段
+//*** 可以通过连串的 get_* 尝试直接访问字段
 Outter stOutter;
-int* pData = stOutter.GetstInner()->GetvecData()[2].Ptr();
+int* pData = stOutter.get_stInner()->get_vecData()[2].Ptr();
 if (pData != NULL) {
     // ... 
 }

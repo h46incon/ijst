@@ -80,10 +80,6 @@
 	#define IJST_OFFSETOF(_T, member)	((size_t)&(((_T*)0)->member))
 #endif
 
-
-
-#define IJST_OUT
-
 //! Declare a ijst struct.
 #define IJST_DEFINE_STRUCT(...) \
     IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), false, F, __VA_ARGS__)
@@ -110,9 +106,11 @@
 //! Set field in obj to val and mark it valid. Type of field and val must be same.
 #define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
 
-//! IJST_NULL.
+//! NULL definition. (NULL before C++11, nullptr else)
 #define IJST_NULL				IJSTI_NULL
-//! IJST_TYPE. Helper declare macro with comma
+//! Empty macro to mark a param is a output.
+#define IJST_OUT
+//! Helper declare macro with comma. @example IJST_TYPE(std::map<std::string, int>)
 #define IJST_TYPE(...)			::ijst::detail::ArgumentType<void( __VA_ARGS__)>::type
 
 namespace ijst {
@@ -122,8 +120,11 @@ typedef rapidjson::MemoryPoolAllocator<> 	JsonAllocator;
 //! Field description.
 struct FDesc {
 	typedef unsigned int Mode;
+	//! Field is optional.
 	static const Mode Optional 			= 0x00000001;
+	//! Field can be null.
 	static const Mode Nullable 			= 0x00000002;
+	//! Field is a container, and has at least one element.
 	static const Mode ElemNotEmpty 		= 0x00000004;
 	// FDesc of Element (i.e. Nullable, ElemNotEmpty) inside container is hard to represent, has not plan to implement it
 };
@@ -145,25 +146,41 @@ typedef FStatus::_E EFStatus;
 //! Options can be combined by bitwise OR operator (|).
 struct FPush {
 	typedef unsigned int Mode;
-	//! does not set any option
+	//! does not set any option.
 	static const Mode kNoneFlag							= 0x00000000;
-	//! set if serialize only valid fields, otherwise will serialize all fields
+	//! set if serialize only valid fields, otherwise will serialize all fields.
 	static const Mode kOnlyValidField					= 0x00000001;
-	//! set if ignore unknown fields, otherwise will serialize all unknown fields
+	//! set if ignore unknown fields, otherwise will serialize all unknown fields.
 	static const Mode kIgnoreUnknown					= 0x00000002;
 };
 
-//! Behaviour when meeting unknown member in json object.
+/**
+ * Behaviour when meeting unknown member in json object.
+ *
+ * @see Accessor::GetUnknown()
+ */
 struct UnknownMode {
 public:
 	enum _E {
-		kKeep,		// keep unknown fields
-		kIgnore,	// ignore unknown fields
-		kError		// error when unknown fields occurs
+		//! Keep unknown fields.
+		kKeep,
+		//! Ignore unknown fields.
+		kIgnore,
+		//! Error when unknown fields occurs.
+		kError
 	};
 };
 typedef UnknownMode::_E EUnknownMode;
 
+/**
+ * @brief A virtual based class implement rapidjson::Handler concept.
+ *
+ * Using raw rapidjson::Handler concept have to make function as a template, which is not convince is some situations.
+ *
+ * @tparam _Ch	character type of string
+ *
+ * @see HandlerWrapper
+ */
 template<typename _Ch>
 class GenericHandlerBase {
 public:
@@ -187,6 +204,11 @@ public:
 };
 typedef GenericHandlerBase<char> HandlerBase;
 
+/**
+ *	A wrapper that convert raw rapidjson::Handler instance to derived class of GenericHandlerBase.
+ *
+ * @tparam Handler		rapidjson::Handler
+ */
 template<typename Handler>
 class HandlerWrapper : public GenericHandlerBase<typename Handler::Ch>
 {
@@ -225,7 +247,7 @@ public:
 	{ return h.EndArray(elementCount); }
 };
 
-//! Error code.
+//! Error codes.
 struct Err {
 	static const int kSucc 							= 0x00000000;
 	static const int kDeserializeValueTypeError 	= 0x00001001;
@@ -245,16 +267,16 @@ struct Err {
 	private:												\
 		_T* const m_pVal;
 
+class Accessor;
+
 /**
- * Optional helper for getter chaining
+ * Helper for implementing getter chaining.
+ *
  * @tparam _T 	type
  *
  * @note	The specialized template for container is declared in "types_container.h",
- * 			which implements operator []
+ * 			which implements operator [].
  */
-
-class Accessor;
-
 template <typename _T, typename = Accessor>
 class Optional
 {
@@ -262,12 +284,23 @@ class Optional
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 };
 
+/**
+ * Specialization for ijst struct (defined via IJST_DEFINE_STRUCT and so on) of Optional template.
+ * This specialization add operator->() for getter chaining.
+ *
+ * @tparam _T	ijst struct type
+ */
 template <typename _T>
 class Optional<_T, typename _T::_ijstStructAccessorType>
 {
 	typedef _T ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 public:
+	/**
+	 * Get instance
+	 *
+	 * @return 	valid instance when data is not null, invalid instance when data is null
+	 */
 	_T* operator->() const
 	{
 		static _T empty(false);
@@ -280,22 +313,50 @@ public:
 	}
 };
 
+/**
+ * Meta information of field.
+ *
+ * @see MetaClassInfo
+ */
 struct MetaFieldInfo { // NOLINT
+	//! The index of this fields in the meta information in the class. (Fields are sorted by offset inside class)
 	int index;
+	//! Field description.
 	FDesc::Mode desc;
+	//! Field's offset inside class.
 	std::size_t offset;
+	//! Json name when (de)serialization.
 	std::string jsonName;
+	//! field name.
 	std::string fieldName;
+	//! @private private serializer interface.
 	detail::SerializerInterface *serializerInterface;
 };
 
+/**
+ * Meta information of class.
+ *
+ * @see MetaFieldInfo
+ */
 class MetaClassInfo {
 public:
-	MetaClassInfo() : accessorOffset(0), mapInited(false) { }
-
+	/**
+	 * Get meta information for ijst struct _T.
+	 *
+	 * @tparam _T 	ijst struct
+	 * @return		MetaClassInfo instance
+	 */
 	template<typename _T>
 	static const MetaClassInfo& GetMetaInfo();
 
+	/**
+	 * Find index of field by offset.
+	 *
+	 * @param offset 	field's offset
+	 * @return 			index if offset found, -1 else
+	 *
+	 * @note log(FieldSize) complexity.
+	 */
 	int FindIndex(size_t offset) const
 	{
 		std::vector<size_t>::const_iterator it =
@@ -308,7 +369,15 @@ public:
 		}
 	}
 
-	const MetaFieldInfo* FindByJsonName(const std::string &name) const
+	/**
+	 * Find meta information of filed by json name.
+	 *
+	 * @param name		field's json name
+	 * @return			pointer of info if found, null else
+	 *
+	 * @note log(FieldSize) complexity.
+	 */
+	const MetaFieldInfo* FindFieldByJsonName(const std::string &name) const
 	{
 		std::vector<NameMap>::const_iterator it =
 				detail::BinarySearch(m_nameMap.begin(), m_nameMap.end(), name, NameMapComp);
@@ -320,12 +389,18 @@ public:
 		}
 	}
 
+	//! Get meta information of all fields in class. The returned vector is sorted by offset.
 	const std::vector<MetaFieldInfo>& GetFieldsInfo() const { return fieldsInfo; }
-	const std::string& GetStructName() const { return structName; }
+	//! Get name of class.
+	const std::string& GetClassName() const { return structName; }
+	//! Get the offset of Accessor object.
 	const std::size_t GetAccessorOffset() const { return accessorOffset; }
 
 private:
 	friend class detail::MetaClassInfoSetter;
+	template<typename _T> friend class detail::MetaClassInfoIniter;
+	MetaClassInfo() : accessorOffset(0), mapInited(false) { }
+
 	MetaClassInfo(const MetaClassInfo&);	// = delete
 	MetaClassInfo& operator=(MetaClassInfo);		// = delete
 
@@ -379,8 +454,11 @@ namespace detail {
 		#define IJSTI_TRY_INIT_META_BEFORE_MAIN(_T)
 	#endif
 
-	//! ArugmentType. Helper template to declare macro argument with comma
-	//! See https://stackoverflow.com/questions/13842468/comma-in-c-c-macro/13842784
+	/**
+	 * ArugmentType. Helper template to declare macro argument with comma
+	 *
+	 * @see https://stackoverflow.com/questions/13842468/comma-in-c-c-macro/13842784
+	 */
 	template<typename T>
 	struct ArgumentType;
 	template<typename T, typename U>
@@ -612,10 +690,10 @@ namespace detail {
 		MetaClassInfo& d;
 	};
 
-/**
- * Serialization class of ijst struct types
- * @tparam _T class
- */
+	/**
+	 * Serialization of ijst struct types
+	 * @tparam _T class
+	 */
 	template<class _T>
 	class FSerializer<_T, typename _T::_ijstStructAccessorType>: public SerializerInterface {
 	public:
@@ -651,8 +729,9 @@ namespace detail {
 }	// namespace detail
 
 /**
- * Struct Accessor.
- * User can access and modify fields, serialize and deserialize of a structure.
+ * @brief Accessor of ijst struct
+ *
+ * User can access and modify fields, serialize and deserialize of a structure via it.
  */
 class Accessor {
 public:
@@ -781,19 +860,24 @@ public:
 	inline JsonValue &GetUnknown() { return m_r->unknown; }
 	inline const JsonValue &GetUnknown() const { return m_r->unknown; }
 
-	//! Get allocator used in object.
-	//! The inner allocator is own allocator when init, but may change to other allocator
-	//! when calling SetMembersAllocator() or Deserialize().
+	/**
+	 * Get allocator used in object.
+	 * The inner allocator is own allocator when init,
+	 * but may change to other allocator when calling SetMembersAllocator() or Deserialize().
+	 */
 	inline JsonAllocator &GetAllocator() { return *m_pAllocator; }
 	inline const JsonAllocator &GetAllocator() const { return *m_pAllocator; }
 
-	//! Get own allocator that used to manager resource.
-	//! User could use the returned value to check if this object use outer allocator.
+	/**
+	 * Get own allocator that used to manager resource.
+	 * User could use the returned value to check if this object use outer allocator.
+	 */
 	inline JsonAllocator &GetOwnAllocator() { return m_r->ownDoc.GetAllocator(); }
 	inline const JsonAllocator &GetOwnAllocator() const { return m_r->ownDoc.GetAllocator(); }
 
 	/**
 	 * Serialize the structure to string.
+	 *
 	 * @param strOutput 		The output of result
 	 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
 	 * @return					Error code
@@ -805,6 +889,7 @@ public:
 
 	/**
 	 * Serialize the structure to string.
+	 *
 	 * @param strOutput 		The output of result
 	 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
 	 * @return					Error code
@@ -822,7 +907,9 @@ public:
 
 	/**
 	 * Deserialize from C-style string.
+	 *
 	 * @tparam parseFlags		parseFlags of rapidjson parse method
+	 *
 	 * @param cstrInput			Input C string
 	 * @param length			Length of string
 	 * @param unknownMode		Behaviour when meet unknown member in json
@@ -858,6 +945,7 @@ public:
 
 	/**
 	 * Deserialize from C-style string.
+	 *
 	 * @param cstrInput			Input C string
 	 * @param length			Length of string
 	 * @param unknownMode		Behaviour when meet unknown member in json
@@ -877,6 +965,7 @@ public:
 
 	/**
 	 * Deserialize from std::string.
+	 *
 	 * @param strInput			Input string
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param checkField		true if need check whether field status meet requirement
@@ -892,6 +981,7 @@ public:
 
 	/**
 	 * Deserialize from std::string.
+	 *
 	 * @param strInput			Input string
 	 * @param errMsgOut			Error message output
 	 * @param unknownMode		Behaviour when meet unknown member in json
@@ -906,7 +996,9 @@ public:
 
 	/**
 	 * Deserialize insitu from str.
+	 *
 	 * @tparam parseFlags		parseFlags of rapidjson parse method
+	 *
 	 * @param cstrInput			Input C string
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param checkField		true if need check whether field status meet requirement
@@ -941,6 +1033,7 @@ public:
 
 	/**
 	 * Deserialize insitu from str.
+	 *
 	 * @param cstrInput			Input C string
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param checkField		true if need check whether field status meet requirement
@@ -960,6 +1053,7 @@ public:
 #if IJST_ENABLE_TO_JSON_OBJECT
 	/**
 	 * Serialize the structure to a JsonValue object.
+	 *
 	 * @param output 			The output of result
 	 * @param allocator	 		Allocator when adding members to output
 	 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
@@ -977,12 +1071,13 @@ public:
 
 	/**
 	 * Serialize the structure to a JsonValue object.
-	 * @note The object may be invalid after serialization
+	 *
 	 * @param output 			The output of result
 	 * @param allocator	 		Allocator when adding members to output.
 	 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
 	 * @return					Error code
 	 *
+	 * @note The object may be invalid after serialization
 	 * @note Need to set IJST_ENABLE_TO_JSON_OBJECT to 1 to enable this method
 	 * @note If using inner allocator, user should carefully handler the structure's life cycle
 	 */
@@ -995,6 +1090,7 @@ public:
 
 	/**
 	 * Init allocator of members to self's allocator.
+	 *
 	 * @return 					Error code
 	 *
 	 * @note Need to set IJST_ENABLE_TO_JSON_OBJECT to 1 to enable this method
@@ -1006,6 +1102,7 @@ public:
 
 	/**
 	 * Set Inner allocator of object and members.
+	 *
 	 * @param allocator			New allocator
 	 * @return					Error code
 	 *
@@ -1040,6 +1137,7 @@ public:
 #if IJST_ENABLE_FROM_JSON_OBJECT
 	/**
 	 * Deserialize from json object.
+	 *
 	 * @param stream			Input json object
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param checkField		true if need check whether field status meet requirement
@@ -1059,6 +1157,7 @@ public:
 	 * Deserialize from json document. The source object may be stolen after deserialize.
 	 * Because the accessor need manager the input allocator, but the Allocator class has no Swap() interface,
 	 * so use document object instead.
+	 *
 	 * @param srcDocStolen		Input document object
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param checkField		true if need check whether field status meet requirement
@@ -1434,7 +1533,7 @@ private:
 
 			// Get related field info
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-			const MetaFieldInfo *pMetaField = m_pMetaClass->FindByJsonName(fieldName);
+			const MetaFieldInfo *pMetaField = m_pMetaClass->FindFieldByJsonName(fieldName);
 
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
@@ -1511,7 +1610,7 @@ private:
 		{
 			// Get related field info
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-			const MetaFieldInfo *pMetaField = m_pMetaClass->FindByJsonName(fieldName);
+			const MetaFieldInfo *pMetaField = m_pMetaClass->FindFieldByJsonName(fieldName);
 
 			if (pMetaField == IJST_NULL)
 			{
