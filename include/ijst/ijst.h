@@ -122,7 +122,6 @@ typedef rapidjson::MemoryPoolAllocator<> 	JsonAllocator;
 //! Field description.
 struct FDesc {
 	typedef unsigned int Mode;
-	static const Mode _MaskDesc 		= 0x000000FF;
 	static const Mode Optional 			= 0x00000001;
 	static const Mode Nullable 			= 0x00000002;
 	static const Mode ElemNotEmpty 		= 0x00000004;
@@ -285,7 +284,8 @@ struct MetaFieldInfo { // NOLINT
 	int index;
 	FDesc::Mode desc;
 	std::size_t offset;
-	std::string name;
+	std::string jsonName;
+	std::string fieldName;
 	detail::SerializerInterface *serializerInterface;
 };
 
@@ -308,7 +308,7 @@ public:
 		}
 	}
 
-	const MetaFieldInfo* FindByName(const std::string &name) const
+	const MetaFieldInfo* FindByJsonName(const std::string &name) const
 	{
 		std::vector<NameMap>::const_iterator it =
 				detail::BinarySearch(m_nameMap.begin(), m_nameMap.end(), name, NameMapComp);
@@ -326,6 +326,9 @@ public:
 
 private:
 	friend class detail::MetaClassInfoSetter;
+	MetaClassInfo(const MetaClassInfo&);	// = delete
+	MetaClassInfo& operator=(MetaClassInfo);		// = delete
+
 	struct NameMap {
 		NameMap(const std::string* _pName, const MetaFieldInfo* _metaField)
 				: pName(_pName), metaField(_metaField) {}
@@ -544,11 +547,12 @@ namespace detail {
 			d.fieldsInfo.reserve(_fieldCount);
 		}
 
-		void PushMetaField(const std::string &name, std::size_t offset,
-						   FDesc::Mode desc, SerializerInterface *serializerInterface)
+		void PushMetaField(const std::string &fieldName, const std::string& jsonName,
+						   std::size_t offset, FDesc::Mode desc, SerializerInterface *serializerInterface)
 		{
 			MetaFieldInfo metaField;
-			metaField.name = name;
+			metaField.jsonName = jsonName;
+			metaField.fieldName = fieldName;
 			metaField.offset = offset;
 			metaField.desc = desc;
 			metaField.serializerInterface = serializerInterface;
@@ -573,7 +577,7 @@ namespace detail {
 				assert(i == 0 || d.m_offsets[i]  > d.m_offsets[i-1]);
 
 				// Insert name Map
-				InsertNameMap(i, MetaClassInfo::NameMap(&(ptrMetaField->name), ptrMetaField));
+				InsertNameMap(i, MetaClassInfo::NameMap(&(ptrMetaField->jsonName), ptrMetaField));
 			}
 
 			d.mapInited = true;
@@ -1196,7 +1200,7 @@ private:
 					if (!m_isParentVal) {
 						// write key
 						IJSTI_RET_WHEN_WRITE_FAILD(
-								writer.Key(itMetaField->name.data(), (rapidjson::SizeType)itMetaField->name.size()) );
+								writer.Key(itMetaField->jsonName.data(), (rapidjson::SizeType)itMetaField->jsonName.size()) );
 					}
 					// write value
 					SerializeReq req(writer, pFieldValue, fPushMode);
@@ -1210,7 +1214,7 @@ private:
 					if (!m_isParentVal) {
 						// write key
 						IJSTI_RET_WHEN_WRITE_FAILD(
-								writer.Key(itMetaField->name.data(), (rapidjson::SizeType)itMetaField->name.size()) );
+								writer.Key(itMetaField->jsonName.data(), (rapidjson::SizeType)itMetaField->jsonName.size()) );
 					}
 					// write value
 					IJSTI_RET_WHEN_WRITE_FAILD(writer.Null());
@@ -1346,7 +1350,7 @@ private:
 		// library unload, and the memory pool should be fast to copy field name.
 		// Do not check existing key, that's a feature
 		rapidjson::GenericStringRef<char> fieldNameRef =
-				rapidjson::StringRef(itMetaField->name.data(), itMetaField->name.size());
+				rapidjson::StringRef(itMetaField->jsonName.data(), itMetaField->jsonName.size());
 		buffer.AddMember(
 				rapidjson::Value().SetString(fieldNameRef, allocator),
 				elemOutput,
@@ -1365,7 +1369,7 @@ private:
 
 		// Init
 		rapidjson::GenericStringRef<char> fieldNameRef =
-				rapidjson::StringRef(itMetaField->name.data(), itMetaField->name.size());
+				rapidjson::StringRef(itMetaField->jsonName.data(), itMetaField->jsonName.size());
 		rapidjson::Value fieldNameVal;
 		fieldNameVal.SetString(fieldNameRef);
 
@@ -1430,7 +1434,7 @@ private:
 
 			// Get related field info
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-			const MetaFieldInfo *pMetaField = m_pMetaClass->FindByName(fieldName);
+			const MetaFieldInfo *pMetaField = m_pMetaClass->FindByJsonName(fieldName);
 
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
@@ -1507,7 +1511,7 @@ private:
 		{
 			// Get related field info
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-			const MetaFieldInfo *pMetaField = m_pMetaClass->FindByName(fieldName);
+			const MetaFieldInfo *pMetaField = m_pMetaClass->FindByJsonName(fieldName);
 
 			if (pMetaField == IJST_NULL)
 			{
@@ -1564,14 +1568,14 @@ private:
 			if (ret != 0)
 			{
 				m_r->fieldStatus[metaField->index] = FStatus::kParseFailed;
-				p.errDoc.ErrorInObject("ErrInObject", metaField->name);
+				p.errDoc.ErrorInObject("ErrInObject", metaField->jsonName);
 				return ret;
 			}
 			// Check elem size
 			if (isBitSet(metaField->desc, FDesc::ElemNotEmpty)
 				&& elemResp.fieldCount == 0)
 			{
-				p.errDoc.ErrorInObject("ElemIsEmpty", metaField->name);
+				p.errDoc.ErrorInObject("ElemIsEmpty", metaField->jsonName);
 				return Err::kDeserializeElemEmpty;
 			}
 			// succ
@@ -1617,7 +1621,7 @@ private:
 
 			// Has error
 			hasErr = true;
-			errDoc.ElementAddMemberName(itField->name);
+			errDoc.ElementAddMemberName(itField->jsonName);
 		}
 		if (hasErr)
 		{
@@ -1750,6 +1754,7 @@ inline void Accessor::template AppendUnknownToBuffer<true, Accessor>(
 	#define IJSTI_IDL_FNAME(fType, fName, sName, desc)		fName
 	#define IJSTI_IDL_SNAME(fType, fName, sName, desc)		sName
 	#define IJSTI_IDL_DESC(fType, fName, sName, desc)		desc
+	#define IJSTI_IDL_FNAME_STR(fType, fName, sName, desc)		#fName
 
 	#define IJSTI_STRUCT_PUBLIC_DEFINE()														\
 		typedef ::ijst::Accessor _ijstStructAccessorType;										\
@@ -1785,6 +1790,7 @@ inline void Accessor::template AppendUnknownToBuffer<true, Accessor>(
 
 	#define IJSTI_METAINFO_ADD(stName, fDef)  													\
 			mSetter.PushMetaField(																\
+				IJSTI_IDL_FNAME_STR fDef,														\
 				IJSTI_IDL_SNAME fDef, 															\
 				IJST_OFFSETOF(stName, IJSTI_IDL_FNAME fDef),									\
 				IJSTI_IDL_DESC fDef, 															\

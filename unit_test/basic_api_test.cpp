@@ -147,11 +147,21 @@ TEST(BasicAPI, DefineValueStMap)
 IJST_DEFINE_STRUCT(
 		SimpleSt
 		, (T_int, int_1, "int_val_1", 0)
-		, (T_int, int_2, "int_val_2", 0)
-		, (T_string, str_1, "str_val_1", 0)
-		, (T_string, str_2, "str_val_2", 0)
+		, (T_int, int_2, "int_val_2", FDesc::Optional)
+		, (T_string, str_1, "str_val_1", FDesc::Nullable)
+		, (T_string, str_2, "str_val_2", FDesc::Optional | FDesc::Nullable)
 )
 
+void CheckFieldInfo(const MetaClassInfo& metaInfo,
+					const std::string& fieldName, const std::string& jsonName, size_t offset, FDesc::Mode desc)
+{
+	const MetaFieldInfo *fieldInfo = metaInfo.FindByJsonName(jsonName);
+	ASSERT_FALSE(fieldInfo == NULL);
+	ASSERT_EQ(fieldInfo->fieldName, fieldName);
+	ASSERT_EQ(fieldInfo->jsonName, jsonName);
+	ASSERT_EQ(fieldInfo->offset, offset);
+	ASSERT_EQ(fieldInfo->desc, desc);
+}
 TEST(BasicAPI, MetaInfo)
 {
 	SimpleSt st;
@@ -160,10 +170,10 @@ TEST(BasicAPI, MetaInfo)
 	ASSERT_EQ(metaInfo.GetStructName(), "SimpleSt");
 	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 4u);
 	ASSERT_EQ(metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
-	ASSERT_EQ(metaInfo.FindByName("int_val_1")->offset, (char*)&st.int_1 - (char*)&st);
-	ASSERT_EQ(metaInfo.FindByName("int_val_2")->offset, (char*)&st.int_2 - (char*)&st);
-	ASSERT_EQ(metaInfo.FindByName("str_val_1")->offset, (char*)&st.str_1 - (char*)&st);
-	ASSERT_EQ(metaInfo.FindByName("str_val_2")->offset, (char*)&st.str_2 - (char*)&st);
+	CheckFieldInfo(metaInfo, "int_1", "int_val_1", (char*)&st.int_1 - (char*)&st, 0);
+	CheckFieldInfo(metaInfo, "int_2", "int_val_2", (char*)&st.int_2 - (char*)&st, FDesc::Optional);
+	CheckFieldInfo(metaInfo, "str_1", "str_val_1", (char*)&st.str_1 - (char*)&st, FDesc::Nullable);
+	CheckFieldInfo(metaInfo, "str_2", "str_val_2", (char*)&st.str_2 - (char*)&st, FDesc::Optional | FDesc::Nullable);
 }
 
 TEST(BasicAPI, FieldStatus)
