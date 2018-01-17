@@ -1,18 +1,20 @@
 ## ijst
 
-ijst (iJsonStruct) 一个是 C++ Json 序列化库：
+ijst (iJsonStruct) 一个是 C++ Json 序列化/反序列化库：
 
-- 使用方便。只需在 C++ 中定义**一次**结构体，无须重复添加元信息。
-- 完整。支持 list、map 以及结构体的嵌套定义。
-- 轻量。header-only，仅依赖 stl 和 [rapidjson](https://github.com/Tencent/rapidjson)。
+- 只需定义**一次**结构体，无须重复添加元信息。
+- 支持 Getter Chaining，可以很简单地访问路径较深的字段。
+- 支持 unknown 字段和可选字段。
+- 性能还行。反序列化性能达到 rapidJSON 的 1/3 ~ 1/2，序列化和 rapidJSON 持平。
+- 轻量。header-only，仅依赖 stl 和 [rapidJSON](https://github.com/Tencent/rapidjson)。
 - 兼容 C++ 98/03。
 
 ## 使用
 ### 安装
-1. 将 rapidjson 加入头文件搜索路径
-2. 将 `include/ijst` 文件夹复制进工程
+1. 安装 rapidJSON （将其加入 header 搜索路径即可）。
+2. 将 `include/ijst` 文件夹复制进工程。
 
-注：ijst 需要依赖一些 rapidjson 中未 release 的提交，所以请通过 git 签出其 master 分支。
+注：ijst 需要依赖一些 rapidJSON 中未 release 的提交，所以请通过 git 签出其 master 分支。
 
 ### 基本使用
 
@@ -20,16 +22,18 @@ ijst (iJsonStruct) 一个是 C++ Json 序列化库：
 ```cpp
 #include <ijst/ijst.h>
 #include <ijst/types_std.h>
+#include <ijst/types_container.h>
 using namespace ijst;
 
-//*** json 字符串
-const std::string jsonStr = R"({
-"int_val": 42, 
-"vec_val": ["str1", "str2"], 
-"map_val": {"k1": 1, "k2": 2}
+//*** 需要反序列化的 JSON 字符串
+const std::string jsonStr = R"(
+{
+    "int_val": 42, 
+    "vec_val": ["str1", "str2"], 
+    "map_val": {"k1": 1, "k2": 2}
 })";
 
-//*** 使用 ijst 唯一的额外工作就是定义一个 ijst 结构体：
+//*** 定义一个 ijst 结构体：
 IJST_DEFINE_STRUCT(
     // 结构体名字
     JsonStruct
@@ -39,11 +43,11 @@ IJST_DEFINE_STRUCT(
     , (IJST_TMAP(T_uint64), mapVal, "map_val", 0)
 );
 
-//*** 默认情况下会生成这样的结构体：
+//*** 默认情况下会生成这样的类：
 /*
 class JsonStruct {
 public:
-    ijst::Accessor _;   // API 入口
+    ijst::Accessor _;   // 通过这个对象进行序列化等操作
     int iVal; 
     std::vector<std::string> vecVal; 
     std::map<std::string, uint64_t> mapVal; 
@@ -54,7 +58,7 @@ private:
 */
 ```
 
-#### 字段访问及序列化
+#### 字段访问及(反)序列化
 ```cpp
 //*** 定义一个 JsonStruct 对象
 JsonStruct jStruct;
@@ -75,7 +79,7 @@ assert (ret == 0);
 ```
 
 ### Getter Chaining
-如果所需字段的路径比较深的时候，为避免累赘的判断，可使用 `get_*` 方法，比如：
+如果所需访问的字段的路径比较深的时候，为避免累赘的判断，可使用 `get_*` 方法，比如：
 
 ```cpp
 int* ptr = st.get_vecField()[0].get_mapField()["key"].get_intField().Ptr();
@@ -87,7 +91,7 @@ if (ptr != NULL)  //...
 ```cpp
 //*** 和 IJST_DEFINE_STRUCT 类似
 IJST_DEFINE_STRUCT_WITH_GETTER(
-    Inner
+    StIn
     , (T_int, iData, "i", ijst::FDesc::Optional)
     , (IJST_TVEC(T_int), vecData, "vec", ijst::FDesc::Optional)
     , (IJST_TMAP(T_int), mapData, "map", ijst::FDesc::Optional)
@@ -98,31 +102,26 @@ IJST_DEFINE_STRUCT_WITH_GETTER(
 class JsonStruct {
 public:
     //... 普通的字段，同 IJST_DEFINE_STRUCT
-    struct _TypeDef {
-        typedef int iData;
-        typedef std::vector<int> vecData;
-        typedef std::map<std::string, int> mapData;
-    };
+    
     // Getters
-    ijst::Optional<_TypeDef::iData> get_iData();
-    ijst::Optional<_TypeDef::vecData> get_vecData();
-    ijst::Optional<_TypeDef::mapData> get_mapData();
+    ijst::Optional<T_int> get_iData();
+    ijst::Optional<std::vector<T_int> > get_vecData();
+    ijst::Optional<std::map<std::string, T_int> > get_mapData();
 private:
 };
 */
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
-    Outter
-    , (IJST_TST(Inner), stInner, "inner", ijst::FDesc::Optional)
+    StOut
+    , (IJST_TST(StOut), stIn, "inner", ijst::FDesc::Optional)
 )
 
-
-//*** 可以通过连串的 get_* 尝试直接访问字段
-Outter stOutter;
-int* pData = stOutter.get_stInner()->get_vecData()[2].Ptr();
-if (pData != NULL) {
-    // ... 
-}
+//*** 可以通过连串的 get_* 尝试直接访问字段，而不用关注路径的中间节点是否存在
+StOut st;
+int* pData = st.get_stIn()->get_vecData()[2].Ptr();
+assert (pData == NULL);
+// 如果路径中的每个字段都是 kValid 的，且 vector 或 map 中的下标或键存在，则最终得到的指针会指向该字段：
+// int* pData = st.get_stIn()->get_vecData()[2].Ptr() == &st.stIn.vecData[2];
 ```
 
 ### 详细说明

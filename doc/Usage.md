@@ -20,6 +20,8 @@ IJST_DEFINE_STRUCT (
 ```cpp
 #include <ijst/ijst.h>
 #include <ijst/types_std.h>
+#include <ijst/types_container.h>
+using namespace ijst;
 
 IJST_DEFINE_STRUCT (
     SampleStruct
@@ -27,8 +29,8 @@ IJST_DEFINE_STRUCT (
     , (T_string, strName, "name", 0)
     , (T_bool, bSex, "sex", 0)     // 只是举一个bool的栗子
     // 接下来是复杂的字段
-    , (IJST_TVEC(T_uint64), vecFriendsID, "friends_id", ijst::FDesc::Optional) // Optional，可能没朋友
-    , (IJST_TMAP(T_string), mapWhatEver, "what_ever", ijst::FDesc::ElemNotEmpty)
+    , (IJST_TVEC(T_uint64), vecFriendsID, "friends_id", ijst::FDesc::Optional)      // Optional，可能没朋友
+    , (IJST_TMAP(IJST_TVEC(T_string)), mapWhatEver, "what_ever", ijst::FDesc::ElemNotEmpty)    // ElemNotEmpty 表示这个 map 里至少有一对键值
 );
 
 // 定义该类型的变量
@@ -43,15 +45,15 @@ SampleStruct sampleStruct;
 
 ### FieldType
 
-字段类型。该类型是预定义的类型，需要通过 ijst 提供的宏指定。
+字段类型。该类型需要是 ijst 预定义的类型。
 
 目前已实现的类型如下：
 
-\*\* **基本原子类型**
+\*\* **原子类型**
 
 在 `ijst/types_std.h` 中定义。提供的类型为 `T_int, T_int64, T_uint, T_uint64, T_string, T_raw, T_bool, T_ubool, T_wbool`。
 
-因为 std::vector<bool> 的特殊性， ijst 提供了 `T_bool(bool), T_ubool(uin8_t), T_wbool(BoolWrapper)` 这几种类型来储存 bool 变量。
+因为 `std::vector<bool>` 的特殊性， ijst 提供了 `T_bool(bool), T_ubool(uin8_t), T_wbool(BoolWrapper)` 这几种类型来储存 bool 变量。
 
 这些原子类型可以满足大部分的使用需求。
 如果不能确定某个字段的类型，则可以使用 `T_raw` 类型操作原始的 `rapidjson::Value` 对象。
@@ -60,8 +62,8 @@ SampleStruct sampleStruct;
 
 在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TMAP(_type), IJST_TVEC(_type), IJST_TDEQUE(_type), IJST_TLIST(_type)`。
 
-ijst 分别使用这几个宏表达 json 中的 list 和任意键值的 object，和 json 中一样，容器的元素类型可以为原子类型和容器（即支持**嵌套**定义）。
-如 `IJST_TVEC(T_int)` 可表达 json 值 *[1, 2, 3]*， `IJST_TMAP(IJST_TVEC(T_ubool))` 可表达 json 值 *{"key1": [true, true], "key2": [true, false]}*。
+ijst 分别使用这几个宏表达 JSON 中的 list 和任意键值的 object，和 JSON 中一样，容器的元素类型可以为原子类型和容器（即支持**嵌套**定义）。
+如 `IJST_TVEC(T_int)` 可表达 JSON 值 *[1, 2, 3]*， `IJST_TMAP(IJST_TVEC(T_ubool))` 可表达 JSON 值 *{"key1": [true, true], "key2": [true, false]}*。
 
 \*\* **ijst 结构体类型**
 
@@ -77,20 +79,20 @@ ijst 分别使用这几个宏表达 json 中的 list 和任意键值的 object�
 
 成员变量名。
 
-变量名不能为 `_`（一个下划线）。如果使用 `IJST_DEFINE_STRUCT_WITH_GETTER`，变量名也不能为 `Get其他变量名`。
+变量名不能为 `_`（一个下划线）。如果使用 `IJST_DEFINE_STRUCT_WITH_GETTER`，变量名也不能为 `get_其他变量名`。
 
 另外，尽量不要使用 `_` 开头的变量名，这在未来可能会引起冲突。
 
 ### JsonName
 
-json 中的健值。
+JSON 中的键值。
 
 ### FieldDesc
 
 字段描述。该值可以为`ijst::FDesc`中值的组合，如无特殊情况，使用0即可。值的含义如下：
 
-- Optional：该字段可能在 json 中不出现。
-- Nullable：该字段的 json 值可能为 null。
+- Optional：该字段在 JSON 中不必须出现。
+- Nullable：该字段的 JSON 值可能为 null。
 - ElemNotEmpty：该字段是个容器类型，且至少有一个元素。
 
 ---
@@ -100,7 +102,7 @@ json 中的健值。
 在定义了一个 ijst 结构体后，除了用户定义的字段，其还会添加一个名为 `_` 的 `Accessor` 类型成员。
 通过该成员可以完成对象的序列化、反序列化等操作。
 
-默认情况下，可以将结构体和 json 字符串间转换：
+默认情况下，可以将结构体和 JSON 字符串间转换：
 
 ```cpp
 SampleStruct sampleStruct;
@@ -127,7 +129,7 @@ delete[] strJson;
 rapidjson::Value& jUnknown = sampleStruct._.GetUnknown();
 ```
 
-另外，也可以将结构体和 rapidjson::Value 间转换：
+另外，也可以将结构体和 `rapidjson::Value` 间转换：
 
 ```cpp
 SampleStruct sampleStruct;
@@ -145,7 +147,7 @@ ret = sampleStruct._.FromJson(jVal);
 
 ```
 
-在某些情况下，只需关心序列化/反序列后的结果，而不需关心其源对象是否会被破坏，则可以用 **Move** 类型的接口以提高效率。这些接口会尝试使用窃取资源的方式以减少拷贝（thanks rapidjson）：
+在某些情况下，只需关心序列化/反序列后的结果，而不需关心其源对象是否会被破坏，则可以用 **Move** 类型的接口以提高效率。这些接口会尝试使用窃取资源的方式以减少拷贝：
 
 ```cpp
 int ret;
@@ -156,7 +158,7 @@ ret = sampleStruct._.MoveToJson(jVal, sampleStruct._.GetAllocator());
 // 因为使用了 sampleStruct 管理的 allocator，需要注意其生命周期
 
 // Move 反序列化，反序列化后 doc 对象的内容会被窃取
-// 因为需要由 ijst 结构体管理 allocator，但由于 rapidjson API 的限制，所以参数只支持 rapidjson::Document 对象
+// 因为需要由 ijst 结构体管理 allocator，但由于 rapidJSON API 的限制，所以参数只支持 rapidjson::Document 对象
 rapidjson::Document doc;
 //... Init doc
 ret = sampleStruct._.MoveFromJson(doc);
@@ -171,14 +173,12 @@ ret = sampleStruct._.MoveFromJson(doc);
 
 ## 字段的状态
 
-ijst 会记录每个字段的状态，这些状态会影响**序列化**时的行为。可能的状态如下：
+ijst 会记录每个字段的状态（在 `ijst::FStatus` 中定义），这些状态会影响**序列化**时的行为。可能的状态如下：
 
-- kMissing：未设置有效值。如序列化时启用 `FPush::kOnlyValidField`(*)选项，则不参与序列化。
-- kParseFailed：解析该字段时出错。如序列化启用 `FPush::kOnlyValidField`(*)选项，则不参与序列化。
-- kNull：值为 null。序列化时值为 null。
 - kValid：已设置为有效值。按实际值序列化。
-
-*：该选项默认启用
+- kMissing：未设置有效值。如序列化时启用 `FPush::kOnlyValidField` 选项，则不参与序列化。
+- kParseFailed：解析该字段时出错。如序列化启用 `FPush::kOnlyValidField` 选项，则不参与序列化。
+- kNull：值为 null。序列化时值为 null。
 
 ijst 初始化时，所有字段都是 `kMissing` 状态。可通过相关宏获取或改变其状态：
 
@@ -194,7 +194,7 @@ IJST_MARK_MISSING(obj, field)
 注意，直接修改字段的值不会改变其状态。除了通过上述的宏外，也可通过 `IJST_SET` 相关的宏改变字段的值，同时将其设置为 `kValid` 状态：
 
 ```cpp
-IJST_SET(obj, field, val)  
+IJST_SET(obj, field, val)
 IJST_SET_STRICT(obj, field, val)    // field 和 val 的类型必须完全相同
 ```
 
@@ -205,8 +205,11 @@ SampleStruct st;
 st.iID = 42;
 // 此时 iID 还是 missing 状态
 assert( IJST_GET_STATUS(st, iID) == ijst::FStatus::kMissing );
+
 // 需手动标记改其状态为 valid
 IJST_MARK_VALID(st, iID);
+assert( IJST_GET_STATUS(st, iID) == ijst::FStatus::kValid );
+
 // 或使用 SET 宏在设置字段值的同时，将其状态设置为 valid
 IJST_SET(st, strName, "unique name");
 assert( IJST_GET_STATUS(st, strName) == ijst::FStatus::kValid );
@@ -214,15 +217,15 @@ assert( IJST_GET_STATUS(st, strName) == ijst::FStatus::kValid );
 
 ---
 
-## Unknown
+## Unknown 字段
 
-### 反序列化时的行为
+### (反)序列化时的行为
 
-在反序列化时，可能会在 json 中遇到未在结构体中声明的字段。将其一味的丢弃是会遭人唾弃的。
-在 ijst 的反序列化接口中，可以通过一个 `ijst::EUnknownMode` 类型的参数指定相关的行为：
+在反序列化时，可能会在 JSON 中遇到未在结构体中声明的字段。将其一味的丢弃是会遭人唾弃的。
+在 Accessor 的反序列化接口中，可以通过一个 `ijst::EUnknownMode` 类型的参数指定相关的行为：
 
 - kIgnore：忽略 unknown 字段。
-- kKeep： 保存 unknown 字段。
+- kKeep： 保存 unknown 字段，这是反序列化 API 中的默认选项。
 - kError： 遇到 unknown 字段时，返回错误。
 
 如：
@@ -233,11 +236,11 @@ std::string strJson = // Init...
 int ret = sampleStruct._.Deserialize(strJson, ijst::UnknownMode::kIgnore);
 ```
 
-在序列化时，如未启用 `FPush::kIgnoreUnknown` 选项时，会保存的所有 unknown 字段（该选项默认启用）。
+在序列化时，如未启用 `FPush::kIgnoreUnknown` 选项时，会保存的所有 unknown 字段。
 
 ### 访问 Unknown 字段
 
-可以通过 ijst 提供的 `GetUnknown()` 接口**访问和修改** Unknown 字段：
+可以通过 Accessor 提供的 `GetUnknown()` 接口**访问和修改** Unknown 字段：
 
 ```cpp
 rapidjson::Value& jUnknown = sampleStruct._.GetUnknown();
@@ -246,7 +249,7 @@ assert(jUnknown.IsObject() == true);
 
 ### Allocator
 
-和 rapidjson 一样，在修改原生的 `rapidjson::Value` 时，可能需要使用其配套的 allocator 对象。
+和 rapidJSON 一样，在修改原生的 `rapidjson::Value` 时，可能需要使用其配套的 allocator 对象。
 ijst 提供了相关的接口获取和设置 allocator 对象：
 
 ```cpp
@@ -257,8 +260,8 @@ ijst::JsonAllocator& alloc = sampleStruct._.GetAllocator();
 jUnknown.SetString("s", 1, alloc);
 ```
 
-如果定义了嵌套了的其他结构体的结构体，且需要修改其 unknown 字段。
-可以先将他们的 allocator 设置为相同的值，这样在 MoveToJson 的时候，可以减少拷贝：
+如果定义了嵌套了的其他结构体的结构体，且需要修改其 unknown 字段，
+可以先将他们的 allocator 设置为相同的值，这样在 `MoveToJson()` 的时候，可以减少拷贝：
 
 ```cpp
 IJST_DEFINE_STRUCT (
@@ -275,4 +278,64 @@ assert(&ost._.GetAllocator() == &ost.stSample._.GetAllocator());
 
 注：反序列化时不需进行此操作。
 
-也和 rapidjson 一样，管理 allocator 是一个较为麻烦的事。ijst 中提供了 `GetOwnAllocator()` 接口以供有相关需求的使用者使用。
+也和 rapidJSON 一样，管理 allocator 是一个较为麻烦的事。ijst 中提供了 `GetOwnAllocator()` 接口以供有相关需求的使用者使用。
+
+---
+
+## Getter Chaining
+
+JSON 提供了 JSON Pointer 以在不进行多次判断的情况下，快速地访问路径较深的字段。如使用 `/foo/bar/0` 可访问 `{"foo": {"bar": [0]}}` 中的成员。
+
+ijst 也提供了类似的**静态类型**的方法：为每个字段定义 `get_` 方法，返回一个 `ijst::Optional` 对象，实现链式的 Getter：
+
+```cpp
+// 需使用 *_WITH_GETTER 宏
+IJST_DEFINE_STRUCT_WITH_GETTER(
+    StIn
+    , (IJST_TVEC(T_int), bar, "bar", 0)
+)
+
+IJST_DEFINE_STRUCT_WITH_GETTER(
+    StOut
+    , (IJST_TST(StIn), foo, "foo", 0)
+)
+
+StOut st;
+
+// 直接访问 /foo/bar/0，而不用关心路径的中间节点是否存在
+int* ptr = st.get_foo()->get_bar()[0].Ptr();
+// 如果失败，最终结果是 nullptr
+assert(ptr == NULL);
+// 如果成功，ptr 会指向具体的字段，如 ptr == &st.foo.bar[0]
+```
+
+模板 `Optional<T>` 的实例中储存着一个指针，可以指向具体的值或 NULL。可以通过其 `Ptr()` 方法获得该指针。该模板针会对不同类型的进行特化：
+
+- ijst 结构体类型。重载 `Optional<T> operator->()` 操作符，在指针为 NULL 时，返回一个 InValid 的结果。
+- `std::vector<TElem>` 类型。重载 `Optional<TElem> operator[size_type i]` 操作符，在指针为 NULL，或 `i` 无效时，返回指向 NULL 的对象。
+- `std::map<std::string, TElem>` 类型。重载 `Optional<TElem> operator[std::string& key]` 操作符，在指针为 NULL，或 `key` 无效时，返回指向 NULL 的对象。
+
+---
+
+## 自定义的序列化/反序列化行为
+
+### 序列化
+在 `Serialize()` 接口中，可以传入 rapidJSON Handler。如以下代码可使用 `rapidjson::PrettyWriter` 生成格式化的 JSON 字符串：
+```cpp
+rapidjson::StringBuffer buf;
+rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buf);
+// 为便于实现，ijst 以继承的方式使用不同的 Handler，可以使用 ijst::HandlerWrapper 转换 rapidJSON Handler 模板
+ijst::HandlerWrapper<rapidjson::PrettyWriter<rapidjson::StringBuffer> > writerWrapper(writer);
+st->_.Serialize(writerWrapper);
+```
+
+### 反序列化
+在 `Deserialize()` 和 `DeserializeInsitu()` 接口中，提供了一个模板参数 `parseFlags`，可以指定反序列化时的行为。
+该参数会传递给 rapidJSON 的 `Parse()` 方法，可以实现支持注释，全精度 double 等功能。详请请见 [rapidJSON#Parsing](http://rapidjson.org/md_doc_dom.html#Parsing)。
+
+如以下代码可以在反序列化时支持注释：
+
+```cpp
+string json = "{/*This is a comment*/  \"foo\": {\"bar\": [0]} }";
+st._.Deserialize<rapidjson::kParseCommentsFlag>(json.data(), json.size());
+```
