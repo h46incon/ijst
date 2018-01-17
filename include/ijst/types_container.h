@@ -11,23 +11,29 @@
 #include <list>
 #include <deque>
 
-//! Declare a vector<_T> field.
+//! @brief Declare a vector<_T> field.
+//! @ingroup IJST_MACRO_API
 #define IJST_TVEC(_T)	::std::vector< _T>
-//! Declare a deque<_T> field.
+//! @brief Declare a deque<_T> field.
+//! @ingroup IJST_MACRO_API
 #define IJST_TDEQUE(_T)	::std::deque< _T>
-//! Declare a vector<_T> field.
+//! @brief Declare a vector<_T> field.
+//! @ingroup IJST_MACRO_API
 #define IJST_TLIST(_T)	::std::list< _T>
-//! Declare a map<string, _T> field of json object
+//! @brief Declare a map<string, _T> field of json object
+//! @ingroup IJST_MACRO_API
 #define IJST_TMAP(_T)	IJST_TYPE(::std::map< ::std::string, _T>)
-//! Declare a vector of members of json object
+//! @brief Declare a vector of members of json object
+//! @ingroup IJST_MACRO_API
 #define IJST_TOBJ(_T)	::std::vector< ::ijst::T_Member< _T> >
-//! Declare a object field which _T is a ijst struct type.
+//! @brief Declare a object field which _T is a ijst struct type.
+//! @ingroup IJST_MACRO_API
 #define IJST_TST(_T)	_T
 
 namespace ijst {
 
 /**
- * Memeber in json object
+ * @brief Memeber in json object
  *
  * @tparam _T	value type
  */

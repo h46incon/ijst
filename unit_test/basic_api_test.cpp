@@ -169,7 +169,7 @@ TEST(BasicAPI, MetaInfo)
 	ASSERT_EQ(&st._.GetMetaInfo(), &metaInfo);
 	ASSERT_EQ(metaInfo.GetClassName(), "SimpleSt");
 	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 4u);
-	ASSERT_EQ(metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
+	ASSERT_EQ((ptrdiff_t)metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
 	CheckFieldInfo(metaInfo, "int_1", "int_val_1", (char*)&st.int_1 - (char*)&st, 0);
 	CheckFieldInfo(metaInfo, "int_2", "int_val_2", (char*)&st.int_2 - (char*)&st, FDesc::Optional);
 	CheckFieldInfo(metaInfo, "str_1", "str_val_1", (char*)&st.str_1 - (char*)&st, FDesc::Nullable);

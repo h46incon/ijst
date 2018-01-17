@@ -21,8 +21,24 @@
  *				Public Interface
  */
 
+/** @file */
+
+/** @defgroup IJST_CONFIG ijst configuration
+ *  @brief Configuration macros for library features
+ *
+ *  Some features are configurable to adapt the library to a wide
+ *  variety of platforms, environments and usage scenarios.  Most of the
+ *  features can be configured in terms of overriden or predefined
+ *  preprocessor macros at compile-time.
+ *
+ *  @note These macros should be given on the compiler command-line
+ *        (where applicable)  to avoid inconsistent values when compiling
+ *        different translation units of a single application.
+ */
+
 /**
- * IJST_ENABLE_TO_JSON_OBJECT
+ * @ingroup IJST_CONFIG
+ *
  * 	By default, ijst can only serialize the structure to string.
  * 	If users need to serialize the structure to a rapidjson::Value, specify this flag to 1.
  */
@@ -31,7 +47,8 @@
 #endif
 
 /**
- * IJST_ENABLE_FROM_JSON_OBJECT
+ * @ingroup IJST_CONFIG
+ *
  * 	By default, ijst can only deserialize the structure from string.
  * 	If users need to deserialize the structure from a rapidjson::Value, specify this flag to 1.
  */
@@ -40,7 +57,8 @@
 #endif
 
 /**
- * IJST_GETTER_PREFIX
+ * @ingroup IJST_CONFIG
+ *
  * ijst generator getter methods when using IJST_DEFINE_STRUCT_WITH_GETTER or IJST_DEFINE_VALUE_WITH_GETTER that names
  * are IJST_GETTER_PREFIX + FIELD_NAME. By default, the prefix is "get", e.g., a getter method could name get_int1().
  *
@@ -51,7 +69,8 @@
 #endif
 
 /**
- * IJST_AUTO_META_INIT
+ * @ingroup IJST_CONFIG
+ *
  *	If define IJST_AUTO_META_INIT before include this header, the meta class information will init before main.
  *	That's will make it thread-safe to init meta class information before C++11.
  *	The feature is enable default before C++11. So set the value to 0 to force disable it.
@@ -65,7 +84,8 @@
 #endif
 
 /**
- * IJST_ASSERT
+ * @ingroup IJST_CONFIG
+ *
  *	By default, ijst uses assert() for errors that indicate a bug.
  *	User can override it by defining IJST_ASSERT(x) macro.
  */
@@ -74,7 +94,8 @@
 #endif
 
 /**
- * IJST_OFFSETOF
+ * @ingroup IJST_CONFIG
+ *
  *	By default, the offset of each field is computed by "((Struct*)0)->field".
  *	User could overwrite by define this macro such as "offsetof()".
  */
@@ -82,37 +103,55 @@
 	#define IJST_OFFSETOF(_T, member)	((size_t)&(((_T*)0)->member))
 #endif
 
-//! Declare a ijst struct.
+/** @defgroup IJST_MACRO_API ijst macro API
+ *  @brief macro API
+ *
+ */
+
+//! @brief Declare a ijst struct.
+//! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_STRUCT(...) \
     IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), false, F, __VA_ARGS__)
-//! Declare a ijst struct with getter.
+//! @brief Declare a ijst struct with getter.
+//! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_STRUCT_WITH_GETTER(...) \
     IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), false, T, __VA_ARGS__)
-//! Declare a ijst struct which represent a value instead of members insides a object
+//! @brief Declare a ijst struct which represent a value instead of members insides a object
+//! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_VALUE(stName, type, fName, desc)	\
     IJSTI_DEFINE_STRUCT_IMPL(1, true, F, stName, (type, fName, "JSON_ITSELF", desc))
-//! Declare a ijst struct which represent a value instead of members insides a object with getter
+//! @brief Declare a ijst struct which represent a value instead of members insides a object with getter
+//! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_VALUE_WITH_GETTER(stName, type, fName, desc)	\
     IJSTI_DEFINE_STRUCT_IMPL(1, true, T, stName, (type, fName, "JSON_ITSELF", desc))
 
-//! Get status of field in obj.
+//! @brief Get status of field in obj.
+//! @ingroup IJST_MACRO_API
 #define IJST_GET_STATUS(obj, field)				obj._.GetStatus(& ((obj).field))
-//! Mark status of field in obj to FStatus::kValid.
+//! @brief Mark status of field in obj to FStatus::kValid.
+//! @ingroup IJST_MACRO_API
 #define IJST_MARK_VALID(obj, field)				obj._.MarkValid(& ((obj).field))
-//! Mark status of field in obj to FStatus::kNull.
+//! @brief Mark status of field in obj to FStatus::kNull.
+//! @ingroup IJST_MACRO_API
 #define IJST_MARK_NULL(obj, field)				obj._.MarkNull(& ((obj).field))
-//! Mark status of field in obj to FStatus::kMissing.
+//! @brief Mark status of field in obj to FStatus::kMissing.
+//! @ingroup IJST_MACRO_API
 #define IJST_MARK_MISSING(obj, field)			obj._.MarkMissing(& ((obj).field))
-//! Set field in obj to val and mark it valid.
+//! @brief Set field in obj to val and mark it valid.
+//! @ingroup IJST_MACRO_API
 #define IJST_SET(obj, field, val)				obj._.Set((obj).field, (val))
-//! Set field in obj to val and mark it valid. Type of field and val must be same.
+//! @brief Set field in obj to val and mark it valid. Type of field and val must be same.
+//! @ingroup IJST_MACRO_API
 #define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
 
-//! NULL definition. (NULL before C++11, nullptr else)
+//! @brief NULL definition. (NULL before C++11, nullptr else)
+//! @ingroup IJST_MACRO_API
 #define IJST_NULL				IJSTI_NULL
-//! Empty macro to mark a param is a output.
+//! @brief Empty macro to mark a param is a output.
+//! @ingroup IJST_MACRO_API
 #define IJST_OUT
-//! Helper declare macro with comma. @example IJST_TYPE(std::map<std::string, int>)
+//! @brief Helper declare macro with comma.
+//! @ingroup IJST_MACRO_API
 #define IJST_TYPE(...)			::ijst::detail::ArgumentType<void( __VA_ARGS__)>::type
 
 namespace ijst {
@@ -144,8 +183,11 @@ public:
 };
 typedef FStatus::_E EFStatus;
 
-//! Serialization options about fields.
-//! Options can be combined by bitwise OR operator (|).
+/**
+ * @brief Serialization options about fields.
+ *
+ * Options can be combined by bitwise OR operator (|).
+ */
 struct FPush {
 	typedef unsigned int Mode;
 	//! does not set any option.
@@ -157,7 +199,7 @@ struct FPush {
 };
 
 /**
- * Behaviour when meeting unknown member in json object.
+ * @brief Behaviour when meeting unknown member in json object.
  *
  * @see Accessor::GetUnknown()
  */
@@ -207,7 +249,7 @@ public:
 typedef GenericHandlerBase<char> HandlerBase;
 
 /**
- *	A wrapper that convert raw rapidjson::Handler instance to derived class of GenericHandlerBase.
+ * @brief A wrapper that convert raw rapidjson::Handler instance to derived class of GenericHandlerBase.
  *
  * @tparam Handler		rapidjson::Handler
  */
@@ -264,7 +306,9 @@ struct Err {
 
 #define IJSTI_OPTIONAL_BASE_DEFINE(_T)						\
 	public:													\
+		/** @brief Constructor */ 							\
 		explicit Optional(_T* _pVal) : m_pVal(_pVal) {}		\
+		/** @brief Get holding pointer */ 					\
 		_T* Ptr() const { return m_pVal; }					\
 	private:												\
 		_T* const m_pVal;
@@ -272,7 +316,7 @@ struct Err {
 class Accessor;
 
 /**
- * Helper for implementing getter chaining.
+ * @brief Helper for implementing getter chaining.
  *
  * @tparam _T 	type
  *
@@ -287,6 +331,8 @@ class Optional
 };
 
 /**
+ * @brief Specialization for ijst struct
+ *
  * Specialization for ijst struct (defined via IJST_DEFINE_STRUCT and so on) of Optional template.
  * This specialization add operator->() for getter chaining.
  *
@@ -299,7 +345,7 @@ class Optional<_T, typename _T::_ijstStructAccessorType>
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 public:
 	/**
-	 * Get instance
+	 * @brief Get pointer
 	 *
 	 * @return 	valid instance when data is not null, invalid instance when data is null
 	 */
@@ -316,7 +362,7 @@ public:
 };
 
 /**
- * Meta information of field.
+ * @brief Meta information of field.
  *
  * @see MetaClassInfo
  */
@@ -336,14 +382,14 @@ struct MetaFieldInfo { // NOLINT
 };
 
 /**
- * Meta information of class.
+ * @brief Meta information of class.
  *
  * @see MetaFieldInfo
  */
 class MetaClassInfo {
 public:
 	/**
-	 * Get meta information for ijst struct _T.
+	 * @brief Get meta information for ijst struct _T.
 	 *
 	 * @tparam _T 	ijst struct
 	 * @return		MetaClassInfo instance
@@ -352,7 +398,7 @@ public:
 	static const MetaClassInfo& GetMetaInfo();
 
 	/**
-	 * Find index of field by offset.
+	 * @brief Find index of field by offset.
 	 *
 	 * @param offset 	field's offset
 	 * @return 			index if offset found, -1 else
@@ -372,7 +418,7 @@ public:
 	}
 
 	/**
-	 * Find meta information of filed by json name.
+	 * @brief Find meta information of filed by json name.
 	 *
 	 * @param name		field's json name
 	 * @return			pointer of info if found, null else
@@ -737,7 +783,7 @@ namespace detail {
  */
 class Accessor {
 public:
-	//region constructors
+	//! Constructor
 	explicit Accessor(const MetaClassInfo *pMetaClass, bool isParentVal, bool isValid) :
 			m_pMetaClass(pMetaClass), m_isValid(isValid), m_isParentVal(isParentVal)
 	{
@@ -750,6 +796,7 @@ public:
 		InitOuterPtr();
 	}
 
+	//! Copy constructor
 	Accessor(const Accessor &rhs)
 	{
 		assert(this != &rhs);
@@ -770,6 +817,7 @@ public:
 	}
 
 	#if __cplusplus >= 201103L
+	//! Move copy constructor
 	Accessor(Accessor &&rhs) IJSTI_NOEXCEPT
 	{
 		m_r = IJSTI_NULL;
@@ -777,20 +825,21 @@ public:
 	}
 	#endif
 
+	//! Assigment
 	Accessor &operator=(Accessor rhs)
 	{
 		Steal(rhs);
 		return *this;
 	}
 
+	//! Destructor
 	~Accessor() IJSTI_NOEXCEPT
 	{
 		delete m_r;
 		m_r = IJSTI_NULL;
 	}
-	//endregion
 
-	//! Steal other Accessor object.
+	//! Stealer
 	void Steal(Accessor &rhs)
 	{
 		if (this == &rhs) {
@@ -821,6 +870,7 @@ public:
 	/*
 	 * Field accessor.
 	 */
+
 	//! Check if pField is a filed in this object.
 	inline bool HasField(const void *pField) const
 	{
@@ -863,7 +913,8 @@ public:
 	inline const JsonValue &GetUnknown() const { return m_r->unknown; }
 
 	/**
-	 * Get allocator used in object.
+	 * @brief Get allocator used in object.
+	 *
 	 * The inner allocator is own allocator when init,
 	 * but may change to other allocator when calling SetMembersAllocator() or Deserialize().
 	 */
@@ -871,16 +922,17 @@ public:
 	inline const JsonAllocator &GetAllocator() const { return *m_pAllocator; }
 
 	/**
-	 * Get own allocator that used to manager resource.
+	 * @brief Get own allocator that used to manager resource.
+	 *
 	 * User could use the returned value to check if this object use outer allocator.
 	 */
 	inline JsonAllocator &GetOwnAllocator() { return m_r->ownDoc.GetAllocator(); }
 	inline const JsonAllocator &GetOwnAllocator() const { return m_r->ownDoc.GetAllocator(); }
 
 	/**
-	 * Serialize the structure to string.
+	 * @brief Serialize the structure to string.
 	 *
-	 * @param strOutput 		The output of result
+	 * @param writer 			writer
 	 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
 	 * @return					Error code
 	 */
@@ -890,7 +942,7 @@ public:
 	}
 
 	/**
-	 * Serialize the structure to string.
+	 * @brief Serialize the structure to string.
 	 *
 	 * @param strOutput 		The output of result
 	 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
@@ -908,7 +960,7 @@ public:
 	}
 
 	/**
-	 * Deserialize from C-style string.
+	 * @brief Deserialize from C-style string.
 	 *
 	 * @tparam parseFlags		parseFlags of rapidjson parse method
 	 *
@@ -946,7 +998,7 @@ public:
 	}
 
 	/**
-	 * Deserialize from C-style string.
+	 * @brief Deserialize from C-style string.
 	 *
 	 * @param cstrInput			Input C string
 	 * @param length			Length of string
@@ -966,7 +1018,7 @@ public:
 	}
 
 	/**
-	 * Deserialize from std::string.
+	 * @brief Deserialize from std::string.
 	 *
 	 * @param strInput			Input string
 	 * @param unknownMode		Behaviour when meet unknown member in json
@@ -982,7 +1034,7 @@ public:
 	}
 
 	/**
-	 * Deserialize from std::string.
+	 * @brief Deserialize from std::string.
 	 *
 	 * @param strInput			Input string
 	 * @param errMsgOut			Error message output
@@ -997,11 +1049,11 @@ public:
 	}
 
 	/**
-	 * Deserialize insitu from str.
+	 * @brief Deserialize insitu from str.
 	 *
 	 * @tparam parseFlags		parseFlags of rapidjson parse method
 	 *
-	 * @param cstrInput			Input C string
+	 * @param str				Input C string
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param checkField		true if need check whether field status meet requirement
 	 * @param pErrMsgOut		Error message output. Null if do not need error message
@@ -1034,9 +1086,9 @@ public:
 	}
 
 	/**
-	 * Deserialize insitu from str.
+	 * @brief Deserialize insitu from str.
 	 *
-	 * @param cstrInput			Input C string
+	 * @param str				Input C string
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param checkField		true if need check whether field status meet requirement
 	 * @param pErrMsgOut		Error message output. Null if do not need error message
@@ -1054,7 +1106,7 @@ public:
 
 #if IJST_ENABLE_TO_JSON_OBJECT
 	/**
-	 * Serialize the structure to a JsonValue object.
+	 * @brief Serialize the structure to a JsonValue object.
 	 *
 	 * @param output 			The output of result
 	 * @param allocator	 		Allocator when adding members to output
@@ -1072,7 +1124,7 @@ public:
 	}
 
 	/**
-	 * Serialize the structure to a JsonValue object.
+	 * @brief Serialize the structure to a JsonValue object.
 	 *
 	 * @param output 			The output of result
 	 * @param allocator	 		Allocator when adding members to output.
@@ -1091,7 +1143,7 @@ public:
 	}
 
 	/**
-	 * Init allocator of members to self's allocator.
+	 * @brief Init allocator of members to self's allocator.
 	 *
 	 * @return 					Error code
 	 *
@@ -1103,7 +1155,7 @@ public:
 	}
 
 	/**
-	 * Set Inner allocator of object and members.
+	 * @brief Set Inner allocator of object and members.
 	 *
 	 * @param allocator			New allocator
 	 * @return					Error code
@@ -1138,7 +1190,7 @@ public:
 
 #if IJST_ENABLE_FROM_JSON_OBJECT
 	/**
-	 * Deserialize from json object.
+	 * @brief Deserialize from json object.
 	 *
 	 * @param stream			Input json object
 	 * @param unknownMode		Behaviour when meet unknown member in json
@@ -1156,6 +1208,8 @@ public:
 	}
 
 	/**
+	 * @brief Move deserialize form json document
+	 *
 	 * Deserialize from json document. The source object may be stolen after deserialize.
 	 * Because the accessor need manager the input allocator, but the Allocator class has no Swap() interface,
 	 * so use document object instead.

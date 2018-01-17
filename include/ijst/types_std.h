@@ -35,8 +35,9 @@ typedef std::string 	T_string;
 class 					T_raw;
 
 /**
- * Wrapper of bool to support normal vector<bool>.
- * This class could convert to/from bool implicitly.
+ * @brief Wrapper of bool to support normal vector<bool>.
+ *
+ * @note This class could convert to/from bool implicitly.
  */
 class T_wbool {
 public:
@@ -50,7 +51,7 @@ private:
 };
 
 /**
- * Object that contain raw rapidjson::Value and Allocator.
+ * @brief Object that contain raw rapidjson::Value and Allocator.
  */
 class T_raw {
 public:
