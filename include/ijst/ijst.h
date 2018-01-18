@@ -1104,7 +1104,7 @@ public:
 		return this->template DeserializeInsitu<rapidjson::kParseDefaultFlags>(str, unknownMode, checkField, pErrMsgOut);
 	}
 
-#if IJST_ENABLE_TO_JSON_OBJECT
+#if IJST_ENABLE_TO_JSON_OBJECT || IJSTI_DOXYGEN_RUNNING
 	/**
 	 * @brief Serialize the structure to a JsonValue object.
 	 *
@@ -1188,7 +1188,7 @@ public:
 	}
 #endif
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
+#if IJST_ENABLE_FROM_JSON_OBJECT || IJSTI_DOXYGEN_RUNNING
 	/**
 	 * @brief Deserialize from json object.
 	 *
