@@ -60,9 +60,20 @@ SampleStruct sampleStruct;
 
 \*\* **容器类型**
 
-在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TMAP(_type), IJST_TVEC(_type), IJST_TDEQUE(_type), IJST_TLIST(_type)`。
+在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TVEC(T), IJST_TDEQUE(T), IJST_TLIST(T)，IJST_TMAP(T)，IJST_TOBJ(T)`。
 
-ijst 分别使用这几个宏表达 JSON 中的 list 和任意键值的 object，和 JSON 中一样，容器的元素类型可以为原子类型和容器（即支持**嵌套**定义）。
+ijst 分别用以下宏表达 JSON 的 list：
+
+- `IJST_TVEC(T)`：将 list 序列化为 `std::vector<T>`。 
+- `IJST_TDEQUE(T)`：将 list 序列化为 `std::deque<T>`。 
+- `IJST_TLIST(T)`：将 list 序列化为 `std::list<T>`。 
+
+用以下宏表达非固定键的 object：
+
+- `IJST_TMAP(T)`：将 object 序列化为 `std::map<std::string, T>`。
+- `IJST_TOBJ`：将 object 序列化为 `std::vector<ijst::T_Member<T> >`，即以数组的形式储存键值对。
+
+容器的元素类型可以为原子类型和容器（即支持**嵌套**定义）。
 如 `IJST_TVEC(T_int)` 可表达 JSON 值 *[1, 2, 3]*， `IJST_TMAP(IJST_TVEC(T_ubool))` 可表达 JSON 值 *{"key1": [true, true], "key2": [true, false]}*。
 
 \*\* **ijst 结构体类型**
@@ -85,7 +96,7 @@ ijst 分别使用这几个宏表达 JSON 中的 list 和任意键值的 object�
 
 ### JsonName
 
-JSON 中的键值。
+JSON 中的键名。
 
 ### FieldDesc
 
@@ -166,7 +177,7 @@ ret = sampleStruct._.MoveFromJson(doc);
 ```
 
 这些例子中省略了一些默认参数。可通过这些参数指定序列化/反序列化时的具体行为。
-完整的接口定义请参考 API 文档（如果我整理了），或直接阅读源码中的函数说明。
+完整的接口定义请参考 [简陋的Reference](Doxygen/html)，或直接阅读源码中的函数说明。
 但是在阅读 API 文档前，建议继续往下阅读以得到大致的了解。
 
 ---
@@ -338,4 +349,43 @@ st->_.Serialize(writerWrapper);
 ```cpp
 string json = "{/*This is a comment*/  \"foo\": {\"bar\": [0]} }";
 st._.Deserialize<rapidjson::kParseCommentsFlag>(json.data(), json.size());
+```
+
+---
+
+## JSON root 不为 object 时
+
+如果需要解析 root 为数组的 JSON，或是需要通过 `IJST_TMAP` 表达整个 JSON（即将 JSON 转成 map），则可以使用 `IJST_DEFINE_VALUE` 或 `IJST_DEFINE_VALUE_WITH_GETTER`。
+
+JSON 为数组:
+
+```cpp
+const std::string json = "[0, 1, 2]";
+
+IJST_DEFINE_VALUE(
+		VecVal, IJST_TVEC(T_int), v, 0
+)
+
+VecVal vec;
+st._.Deserialize(json);
+assert(st.v[2] == 2);
+```
+
+将 JSON 转成 map：
+
+```cpp
+const std::string json = R"(
+{
+    "v1": 2, 
+    "v2": 4, 
+    "v3": 8
+})";
+
+IJST_DEFINE_VALUE(
+		MapVal, IJST_TMAP(T_int), val, 0
+)
+
+MapVal vec;
+st._.Deserialize(json);
+assert(st.val["v2"] == 4);
 ```
