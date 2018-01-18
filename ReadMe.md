@@ -124,7 +124,5 @@ assert (pData == NULL);
 // int* pData = st.get_stIn()->get_vecData()[2].Ptr() == &st.stIn.vecData[2];
 ```
 
-### 注释
-
 ### 详细说明
 移步 [Usage](doc/Usage.md)，或 [简陋的Reference](doc/Doxygen/html)

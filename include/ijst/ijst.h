@@ -313,8 +313,6 @@ struct Err {
 	private:												\
 		_T* const m_pVal;
 
-class Accessor;
-
 /**
  * @brief Helper for implementing getter chaining.
  *
@@ -323,7 +321,7 @@ class Accessor;
  * @note	The specialized template for container is declared in "types_container.h",
  * 			which implements operator [].
  */
-template <typename _T, typename = Accessor>
+template <typename _T, typename = void>
 class Optional
 {
 	typedef _T ValType;
@@ -339,7 +337,7 @@ class Optional
  * @tparam _T	ijst struct type
  */
 template <typename _T>
-class Optional<_T, typename _T::_ijstStructAccessorType>
+class Optional<_T, typename detail::HasType<typename _T::_ijstStructAccessorType>::Void >
 {
 	typedef _T ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
@@ -442,7 +440,7 @@ public:
 	//! Get name of class.
 	const std::string& GetClassName() const { return structName; }
 	//! Get the offset of Accessor object.
-	const std::size_t GetAccessorOffset() const { return accessorOffset; }
+	std::size_t GetAccessorOffset() const { return accessorOffset; }
 
 private:
 	friend class detail::MetaClassInfoSetter;
@@ -618,7 +616,7 @@ namespace detail {
 	 * This template is unimplemented, and will throw a compile error when use it.
 	 * @tparam _T class
 	 */
-	template<typename _T, typename = Accessor>
+	template<typename _T, typename = void>
 	class FSerializer : public SerializerInterface {
 	public:
 		#if __cplusplus >= 201103L
@@ -743,7 +741,7 @@ namespace detail {
 	 * @tparam _T class
 	 */
 	template<class _T>
-	class FSerializer<_T, typename _T::_ijstStructAccessorType>: public SerializerInterface {
+	class FSerializer<_T, typename HasType<typename _T::_ijstStructAccessorType>::Void>: public SerializerInterface {
 	public:
 		typedef _T VarType;
 

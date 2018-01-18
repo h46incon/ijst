@@ -71,6 +71,11 @@ private:
 	T* const m_Ptr;
 };
 
+template <typename _T>
+struct HasType {
+	typedef void Void;
+};
+
 /**
  * Custom swap() to avoid dependency on C++ <algorithm> header
  * @tparam _T 	Type of the arguments to swap, should be instantiated with primitive C++ types only.

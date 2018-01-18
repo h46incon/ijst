@@ -198,7 +198,7 @@ public:
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
 			if (ret != 0)
 			{
-				field.pop_back();
+				field.resize(i);
 				resp.errDoc.ErrorInArray("ErrInArray", (rapidjson::SizeType)field.size());
 				return ret;
 			}
