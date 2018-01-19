@@ -1917,28 +1917,28 @@ inline void Accessor::template AppendUnknownToBuffer<true, Accessor>(
 			fType fName;
 
 	#define IJSTI_FIELD_GETTER(fType, fName, ... )												\
-			::ijst::Optional<const fType> IJSTI_PP_CONCAT(IJST_GETTER_PREFIX, fName)() const 	\
+			::ijst::Optional<const fType > IJSTI_PP_CONCAT(IJST_GETTER_PREFIX, fName)() const 	\
 			{																					\
 				if (!this->_.IsValid() || this->_.GetStatus(&fName) != ijst::FStatus::kValid)	\
-					{ return ::ijst::Optional<const fType>(IJST_NULL); }						\
-				return ::ijst::Optional<const fType>(&fName);									\
+					{ return ::ijst::Optional<const fType >(IJST_NULL); }						\
+				return ::ijst::Optional<const fType >(&fName);									\
 			}																					\
-			::ijst::Optional< fType> IJSTI_PP_CONCAT(IJST_GETTER_PREFIX, fName)()				\
+			::ijst::Optional< fType > IJSTI_PP_CONCAT(IJST_GETTER_PREFIX, fName)()				\
 			{																					\
 				if (!this->_.IsValid() || this->_.GetStatus(&fName) != ijst::FStatus::kValid)	\
-					{ return ::ijst::Optional< fType>(IJST_NULL); }								\
-				return ::ijst::Optional< fType>(&fName);										\
+					{ return ::ijst::Optional< fType >(IJST_NULL); }							\
+				return ::ijst::Optional< fType >(&fName);										\
 			}
 
 	#define IJSTI_METAINFO_DEFINE_START(stName, N)												\
-			typedef ::ijst::detail::MetaClassInfoIniter<stName> MetaInfoT;						\
-			typedef ::ijst::detail::Singleton<MetaInfoT> MetaInfoS;								\
-			friend MetaInfoT;																	\
-			static void _InitMetaInfo(MetaInfoT* metaInfo)										\
+			typedef ::ijst::detail::MetaClassInfoIniter< stName > _MetaInfoT;					\
+			typedef ::ijst::detail::Singleton<_MetaInfoT> _MetaInfoS;							\
+			friend _MetaInfoT;																	\
+			static void _InitMetaInfo(_MetaInfoT* metaInfo)										\
 			{																					\
-				IJSTI_TRY_INIT_META_BEFORE_MAIN(MetaInfoT);										\
+				IJSTI_TRY_INIT_META_BEFORE_MAIN(_MetaInfoT);									\
 				/*Do not call MetaInfoS::GetInstance() int this function */			 			\
-				detail::MetaClassInfoSetter mSetter(metaInfo->metaClass);						\
+				::ijst::detail::MetaClassInfoSetter mSetter(metaInfo->metaClass);				\
 				mSetter.InitBegin(#stName, N, IJST_OFFSETOF(stName, _));
 
 	#define IJSTI_METAINFO_ADD(stName, fDef)  													\

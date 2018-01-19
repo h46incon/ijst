@@ -13,19 +13,19 @@
 
 //! @brief Declare a vector<_T> field.
 //! @ingroup IJST_MACRO_API
-#define IJST_TVEC(_T)	::std::vector< _T>
+#define IJST_TVEC(_T)	::std::vector< _T >
 //! @brief Declare a deque<_T> field.
 //! @ingroup IJST_MACRO_API
-#define IJST_TDEQUE(_T)	::std::deque< _T>
+#define IJST_TDEQUE(_T)	::std::deque< _T >
 //! @brief Declare a vector<_T> field.
 //! @ingroup IJST_MACRO_API
-#define IJST_TLIST(_T)	::std::list< _T>
+#define IJST_TLIST(_T)	::std::list< _T >
 //! @brief Declare a map<string, _T> field of json object
 //! @ingroup IJST_MACRO_API
-#define IJST_TMAP(_T)	IJST_TYPE(::std::map< ::std::string, _T>)
+#define IJST_TMAP(_T)	IJST_TYPE(::std::map< ::std::string, _T >)
 //! @brief Declare a vector of members of json object
 //! @ingroup IJST_MACRO_API
-#define IJST_TOBJ(_T)	::std::vector< ::ijst::T_Member< _T> >
+#define IJST_TOBJ(_T)	::std::vector< ::ijst::T_Member< _T > >
 //! @brief Declare a object field which _T is a ijst struct type.
 //! @ingroup IJST_MACRO_API
 #define IJST_TST(_T)	_T
