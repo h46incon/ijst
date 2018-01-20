@@ -208,54 +208,11 @@ public:
 		return 0;
 	}
 
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		assert(req.pField != IJST_NULL);
-		const VarType& field = *static_cast<const VarType*>(req.pField);
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(ElemType);
-		req.buffer.SetArray();
-		req.buffer.Reserve(static_cast<rapidjson::SizeType>(field.size()), req.allocator);
-
-		for (typename VarType::const_iterator itera = field.begin(); itera != field.end(); ++itera) {
-			JsonValue newElem;
-			ToJsonReq elemReq(newElem, req.allocator, &(*itera), req.canMoveSrc, req.fPushMode);
-			IJSTI_RET_WHEN_NOT_ZERO(interface->ToJson(elemReq));
-			req.buffer.PushBack(newElem, req.allocator);
-		}
-		return 0;
-	}
-
-	virtual int SetAllocator(void *pField, JsonAllocator &allocator) IJSTI_OVERRIDE
-	{
-		assert(pField != IJST_NULL);
-		VarType& field = *static_cast<VarType *>(pField);
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(ElemType);
-
-		// Loop
-		for (typename VarType::iterator itera = field.begin(); itera != field.end(); ++itera)
-		{
-			IJSTI_RET_WHEN_NOT_ZERO(interface->SetAllocator(&(*itera), allocator));
-		}
-
-		return 0;
-	}
-#endif
 };
 
 #define IJSTI_SERIALIZER_CONTAINER_DEFINE()																		\
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE												\
 	{ return ContainerSerializerSingleton::GetInstance()->Serialize(req); }
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	#define IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()																\
-		virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE														\
-		{ return ContainerSerializerSingleton::GetInstance()->ToJson(req); }										\
-		virtual int SetAllocator(void *pField, JsonAllocator &allocator) IJSTI_OVERRIDE								\
-		{ return ContainerSerializerSingleton::GetInstance()->SetAllocator(pField, allocator); }
-#else
-	#define IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()		// empty
-#endif
 
 #define IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()															\
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE					\
@@ -271,7 +228,6 @@ class FSerializer<std::vector<_T> > : public SerializerInterface {
 	typedef Singleton<ContainerSerializer<_T, VarType> > ContainerSerializerSingleton;
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
-	IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()
 	IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()
 };
 
@@ -286,7 +242,6 @@ class FSerializer<std::deque<_T> > : public SerializerInterface {
 
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
-	IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()
 	IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()
 };
 
@@ -300,7 +255,6 @@ class FSerializer<std::list<_T> > : public SerializerInterface {
 	typedef Singleton<ContainerSerializer<_T, VarType> > ContainerSerializerSingleton;
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
-	IJSTI_SERIALIZER_CONTAINER_DEFINE_TO_JSON()
 	IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()
 };
 
@@ -333,51 +287,6 @@ public:
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.EndObject());
 		return 0;
 	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		assert(req.pField != IJST_NULL);
-		const VarType& field = *static_cast<const VarType *>(req.pField);
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
-		if (!req.buffer.IsObject()) {
-			req.buffer.SetObject();
-		}
-
-		for (typename VarType::const_iterator itFieldMember = field.begin(); itFieldMember != field.end(); ++itFieldMember)
-		{
-			// Init
-			const void* pFieldValue = &itFieldMember->second;
-			JsonValue newElem;
-			ToJsonReq elemReq(newElem, req.allocator, pFieldValue, req.canMoveSrc, req.fPushMode);
-			IJSTI_RET_WHEN_NOT_ZERO(interface->ToJson(elemReq));
-
-			// Add member by copy key name
-			rapidjson::GenericStringRef<char> fieldNameRef =
-					rapidjson::StringRef(itFieldMember->first.data(), itFieldMember->first.size());
-			req.buffer.AddMember(
-					rapidjson::Value().SetString(fieldNameRef, req.allocator),
-					newElem,
-					req.allocator
-			);
-		}
-		return 0;
-	}
-
-	virtual int SetAllocator(void* pField, JsonAllocator& allocator) IJSTI_OVERRIDE
-	{
-		assert(pField != IJST_NULL);
-		VarType& field = *static_cast<VarType *>(pField);
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
-
-		// Reset member
-		for (typename VarType::iterator itera = field.begin(); itera != field.end(); ++itera) {
-			IJSTI_RET_WHEN_NOT_ZERO(interface->SetAllocator(&(itera->second), allocator));
-		}
-
-		return 0;
-	}
-#endif
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
@@ -453,51 +362,6 @@ public:
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.EndObject());
 		return 0;
 	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		assert(req.pField != IJST_NULL);
-		const VarType& field = *static_cast<const VarType *>(req.pField);
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(ValType);
-		if (!req.buffer.IsObject()) {
-			req.buffer.SetObject();
-		}
-
-		for (typename VarType::const_iterator itMember = field.begin(); itMember != field.end(); ++itMember)
-		{
-			// Init
-			const void* pFieldValue = &itMember->value;
-			JsonValue newElem;
-			ToJsonReq elemReq(newElem, req.allocator, pFieldValue, req.canMoveSrc, req.fPushMode);
-			IJSTI_RET_WHEN_NOT_ZERO(interface->ToJson(elemReq));
-
-			// Add member by copy key name
-			const std::string& key = itMember->name;
-			rapidjson::GenericStringRef<char> fieldNameRef = rapidjson::StringRef(key.data(), key.size());
-			req.buffer.AddMember(
-					rapidjson::Value().SetString(fieldNameRef, req.allocator),
-					newElem,
-					req.allocator
-			);
-		}
-		return 0;
-	}
-
-	virtual int SetAllocator(void* pField, JsonAllocator& allocator) IJSTI_OVERRIDE
-	{
-		assert(pField != IJST_NULL);
-		VarType& field = *static_cast<VarType *>(pField);
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(ValType);
-
-		// Reset member
-		for (typename VarType::iterator itera = field.begin(); itera != field.end(); ++itera) {
-			IJSTI_RET_WHEN_NOT_ZERO(interface->SetAllocator(&(itera->value), allocator));
-		}
-
-		return 0;
-	}
-#endif
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{

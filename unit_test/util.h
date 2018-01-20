@@ -14,27 +14,7 @@
 #include <ijst/types_std.h>
 #include <ijst/types_container.h>
 #include <ijst/detail/detail.h>
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-
-#define UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, fieldPushMode)						\
-do {																				\
-	std::string json;																\
-	int toStrRet = st._.Serialize(json, (fieldPushMode));							\
-	ASSERT_EQ(toStrRet, 0);															\
-	doc.Parse(json.c_str(), json.length());											\
-	ASSERT_FALSE(doc.HasParseError());												\
-	rapidjson::Value _jVal;															\
-	int serRet = st._.MoveToJson(_jVal, st._.GetAllocator(), (fieldPushMode));		\
-	ASSERT_EQ(serRet, 0);															\
-	ASSERT_EQ((rapidjson::Value&)doc, _jVal);										\
-	if (((fieldPushMode) & ijst::FPush::kIgnoreUnknown) == 0)						\
-	{ ASSERT_EQ(st._.GetUnknown().MemberCount(), 0u); }								\
-} while (false)
-
-#else
-
-#define UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, fieldPushMode)				\
+#define UTEST_SERIALIZE_AND_CHECK(st, doc, fieldPushMode)					\
 do {																		\
 	std::string json;														\
 	int toStrRet = st._.Serialize(json, (fieldPushMode));					\
@@ -42,8 +22,6 @@ do {																		\
 	doc.Parse(json.c_str(), json.length());									\
 	ASSERT_FALSE(doc.HasParseError());										\
 } while (false)
-
-#endif
 
 #define UTEST_PARSE_STR_TO_JSON(str, jsonOutput)								\
 	rapidjson::Document jsonOutput;												\

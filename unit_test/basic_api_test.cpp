@@ -106,7 +106,7 @@ TEST(BasicAPI, DefineValueStVec)
 	// Serialize
 	vRef.push_back(3);
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kNoneFlag);
+	UTEST_SERIALIZE_AND_CHECK(st, doc, FPush::kNoneFlag);
 	ASSERT_TRUE(doc.IsArray());
 	ASSERT_EQ(doc.Size(), 4u);
 	ASSERT_EQ(doc[0].GetInt(), 0);
@@ -136,7 +136,7 @@ TEST(BasicAPI, DefineValueStMap)
 	// Serialize
 	vRef["v3"] = 3;
 	rapidjson::Document doc;
-	UTEST_MOVE_TO_STRING_AND_CHECK(st, doc, FPush::kNoneFlag);
+	UTEST_SERIALIZE_AND_CHECK(st, doc, FPush::kNoneFlag);
 	ASSERT_TRUE(doc.IsObject());
 	ASSERT_EQ(doc.MemberCount(), 3u);
 	ASSERT_EQ(doc["v1"].GetInt(), 1);
@@ -327,34 +327,6 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TVEC(IJST_TST(SimpleSt)), vec, "vec_v", 0)
 		, (IJST_TMAP(IJST_TST(SimpleSt)), map, "map_v", 0)
 )
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-TEST(BasicAPI, Allocator)
-{
-	Complicate cst;
-	ASSERT_NE(&cst._.GetAllocator(), &cst.st._.GetAllocator());
-
-	// SetMembersAllocator
-	SimpleSt st;
-	st._.SetMembersAllocator(cst._.GetAllocator());
-	ASSERT_EQ(&cst._.GetAllocator(), &st._.GetAllocator());
-
-	// Init
-	cst.vec.push_back(SimpleSt());
-	cst.vec.push_back(SimpleSt());
-	cst.map["v1"] = SimpleSt();
-	cst.map["v2"] = SimpleSt();
-
-	cst._.InitMembersAllocator();
-	// Allocator is same of fields inited
-	ASSERT_EQ(&cst._.GetAllocator(), &cst.vec[0]._.GetAllocator());
-	ASSERT_EQ(&cst._.GetAllocator(), &cst.vec[1]._.GetAllocator());
-	ASSERT_EQ(&cst._.GetAllocator(), &cst.map["v1"]._.GetAllocator());
-	ASSERT_EQ(&cst._.GetAllocator(), &cst.map["v2"]._.GetAllocator());
-	// Allocator is not same of fields not inited
-	ASSERT_NE(&cst._.GetAllocator(), &cst.map["v3"]._.GetAllocator());
-}
-#endif
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
 		SWGetter

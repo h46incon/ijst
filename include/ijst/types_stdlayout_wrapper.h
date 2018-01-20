@@ -92,21 +92,6 @@ namespace detail {
 			return IJSTI_FSERIALIZER_INS(_T)->Serialize(elemReq);
 		}
 
-#if IJST_ENABLE_TO_JSON_OBJECT
-		virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-		{
-			const VarType& field = *static_cast<const VarType*>(req.pField);
-			ToJsonReq elemReq(req.buffer, req.allocator, &field.Val(), req.canMoveSrc, req.fPushMode);
-			return IJSTI_FSERIALIZER_INS(_T)->ToJson(elemReq);
-		}
-
-		virtual int SetAllocator(void* pField, JsonAllocator& allocator) IJSTI_OVERRIDE
-		{
-			VarType& field = *static_cast<VarType*>(pField);
-			return IJSTI_FSERIALIZER_INS(_T)->SetAllocator(&field.Val(), allocator);
-		}
-#endif
-
 		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 		{
 			VarType& field = *static_cast<VarType*>(req.pFieldBuffer);

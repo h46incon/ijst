@@ -38,16 +38,6 @@
 /**
  * @ingroup IJST_CONFIG
  *
- * 	By default, ijst can only serialize the structure to string.
- * 	If users need to serialize the structure to a rapidjson::Value, specify this flag to 1.
- */
-#ifndef IJST_ENABLE_TO_JSON_OBJECT
-	#define IJST_ENABLE_TO_JSON_OBJECT 			0
-#endif
-
-/**
- * @ingroup IJST_CONFIG
- *
  * 	By default, ijst can only deserialize the structure from string.
  * 	If users need to deserialize the structure from a rapidjson::Value, specify this flag to 1.
  */
@@ -532,39 +522,6 @@ namespace detail {
 
 		virtual int Serialize(const SerializeReq &req) = 0;
 
-#if IJST_ENABLE_TO_JSON_OBJECT
-		struct ToJsonReq {
-			// ToJson option about fields
-			FPush::Mode fPushMode;
-
-			// Pointer of field to serialize.
-			// The actual type of field should be decide in the derived class
-			const void* pField;
-
-			// true if move context in pField to avoid copy when possible
-			bool canMoveSrc;
-
-			// Output buffer info. The instance should serialize in this object and use allocator
-			IJST_OUT JsonValue& buffer;
-			JsonAllocator& allocator;
-
-			ToJsonReq(JsonValue &_buffer, JsonAllocator &_allocator,
-					  const void *_pField, bool _canMoveSrc,
-					  FPush::Mode _fPushMode)
-					: fPushMode(_fPushMode)
-					  , pField(_pField)
-					  , canMoveSrc(_canMoveSrc)
-					  , buffer(_buffer)
-					  , allocator(_allocator)
-			{ }
-		};
-
-		virtual int ToJson(const ToJsonReq &req)= 0;
-
-		virtual int SetAllocator(void *pField, JsonAllocator &allocator)
-		{ (void) pField; (void) allocator; return 0; }
-#endif // #if IJST_ENABLE_TO_JSON_OBJECT
-
 		struct FromJsonReq {
 			// Pointer of deserialize output.
 			// The instance should deserialize in this object
@@ -624,14 +581,7 @@ namespace detail {
 		#endif
 
 		typedef void VarType;
-
 		virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE = 0;
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-		virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE = 0;
-		virtual int SetAllocator(void *pField, JsonAllocator &allocator) IJSTI_OVERRIDE;
-#endif
-
 		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE = 0;
 	};
 
@@ -749,20 +699,6 @@ namespace detail {
 			_T *pField = (_T *) req.pField;
 			return pField->_.ISerialize(req);
 		}
-
-	#if IJST_ENABLE_TO_JSON_OBJECT
-		virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-		{
-			_T *pField = (_T *) req.pField;
-			return pField->_.IToJson(req);
-		}
-
-		virtual int SetAllocator(void* pField, JsonAllocator& allocator) IJSTI_OVERRIDE
-		{
-			_T *pFieldT = (_T *) pField;
-			return pFieldT->_.ISetAllocator(pField, allocator);
-		}
-	#endif
 
 		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 		{
@@ -1091,90 +1027,6 @@ public:
 		return this->template DeserializeInsitu<rapidjson::kParseDefaultFlags>(str, unknownMode, checkField, pErrMsgOut);
 	}
 
-#if IJST_ENABLE_TO_JSON_OBJECT || IJSTI_DOXYGEN_RUNNING
-	/**
-	 * @brief Serialize the structure to a JsonValue object.
-	 *
-	 * @param output 			The output of result
-	 * @param allocator	 		Allocator when adding members to output
-	 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
-	 * @return					Error code
-	 *
-	 * @note Need to set IJST_ENABLE_TO_JSON_OBJECT to 1 to enable this method
-	 * @note If using inner allocator, user should carefully handler the structure's life cycle
-	 */
-	inline int ToJson(IJST_OUT JsonValue &output, JsonAllocator &allocator,
-					  FPush::Mode fieldPushMode = FPush::kNoneFlag) const
-	{
-		return Accessor::template DoToJson<false, const Accessor>
-				(*this, fieldPushMode, output, allocator);
-	}
-
-	/**
-	 * @brief Serialize the structure to a JsonValue object.
-	 *
-	 * @param output 			The output of result
-	 * @param allocator	 		Allocator when adding members to output.
-	 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
-	 * @return					Error code
-	 *
-	 * @note The object may be invalid after serialization
-	 * @note Need to set IJST_ENABLE_TO_JSON_OBJECT to 1 to enable this method
-	 * @note If using inner allocator, user should carefully handler the structure's life cycle
-	 */
-	inline int MoveToJson(IJST_OUT JsonValue &output, JsonAllocator &allocator,
-					  FPush::Mode fieldPushMode = FPush::kNoneFlag)
-	{
-		return Accessor::template DoToJson<true, Accessor>
-				(*this, fieldPushMode, output, allocator);
-	}
-
-	/**
-	 * @brief Init allocator of members to self's allocator.
-	 *
-	 * @return 					Error code
-	 *
-	 * @note Need to set IJST_ENABLE_TO_JSON_OBJECT to 1 to enable this method
-	 */
-	int InitMembersAllocator()
-	{
-		return SetMembersAllocator(*m_pAllocator);
-	}
-
-	/**
-	 * @brief Set Inner allocator of object and members.
-	 *
-	 * @param allocator			New allocator
-	 * @return					Error code
-	 *
-	 * @note Need to set IJST_ENABLE_TO_JSON_OBJECT to 1 to enable this method
-	 * @note This method will NOT clear pervious allocator
-	 */
-	int SetMembersAllocator(JsonAllocator &allocator)
-	{
-		if (m_pAllocator != &allocator) {
-			// copy buffer when need
-			JsonValue temp;
-			temp = m_r->unknown;
-			// The life cycle of const string in temp should be same as this object
-			m_r->unknown.CopyFrom(temp, allocator, false);
-		}
-
-		m_pAllocator = &allocator;
-
-		// Set allocator in members
-		for (std::vector<MetaFieldInfo>::const_iterator itMetaField = m_pMetaClass->GetFieldsInfo().begin();
-			 itMetaField != m_pMetaClass->GetFieldsInfo().end(); ++itMetaField)
-		{
-			void *pField = GetFieldByOffset(itMetaField->offset);
-			IJSTI_RET_WHEN_NOT_ZERO(
-					itMetaField->serializerInterface->SetAllocator(pField, allocator)
-			);
-		}
-		return 0;
-	}
-#endif
-
 #if IJST_ENABLE_FROM_JSON_OBJECT || IJSTI_DOXYGEN_RUNNING
 	/**
 	 * @brief Deserialize from json object.
@@ -1231,30 +1083,6 @@ private:
 		assert(req.pField == this);
 		return DoSerialize(req.writer, req.fPushMode);
 	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	typedef detail::SerializerInterface::ToJsonReq ToJsonReq;
-
-	inline int IToJson(const ToJsonReq &req)
-	{
-		assert(req.pField == this);
-		if (req.canMoveSrc) {
-			return Accessor::template DoToJson<true, Accessor>
-					(*this, req.fPushMode, req.buffer, req.allocator);
-		}
-		else {
-			return Accessor::template DoToJson<false, const Accessor>
-					(*this, req.fPushMode, req.buffer, req.allocator);
-		}
-	}
-
-	inline int ISetAllocator(void* pField, JsonAllocator& allocator)
-	{
-		(void) pField;
-		assert(pField == this);
-		return SetMembersAllocator(allocator);
-	}
-#endif
 
 	typedef detail::SerializerInterface::FromJsonReq FromJsonReq;
 	typedef detail::SerializerInterface::FromJsonResp FromJsonResp;
@@ -1372,162 +1200,6 @@ private:
 		}
 		return 0;
 	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	int DoAllFieldsToJson(FPush::Mode fPushMode, bool canMoveSrc,
-						  IJST_OUT JsonValue &buffer, JsonAllocator &allocator) const
-	{
-		// Serialize fields to buffer
-
-		if (!m_isParentVal)
-		{
-			// Init buffer to object and reserve space
-			buffer.SetObject();
-
-			do {
-				const size_t unknwonSize = isBitSet(fPushMode, FPush::kIgnoreUnknown) ? 0 : m_r->unknown.MemberCount();
-				const size_t maxSize = m_pMetaClass->GetFieldsInfo().size() + unknwonSize;
-				if (buffer.MemberCapacity() >= maxSize) {
-					break;
-				}
-
-				size_t fieldSize;
-				if (isBitSet(fPushMode, FPush::kOnlyValidField)) {
-					fieldSize = unknwonSize;
-					for (std::vector<MetaFieldInfo>::const_iterator itMetaField = m_pMetaClass->GetFieldsInfo().begin();
-						 itMetaField != m_pMetaClass->GetFieldsInfo().end(); ++itMetaField)
-					{
-						const EFStatus fstatus = m_r->fieldStatus[itMetaField->index];
-						if (fstatus == FStatus::kValid || fstatus == FStatus::kNull) {
-							++fieldSize;
-						}
-					}
-				}
-				else {
-					fieldSize = maxSize;
-				}
-				buffer.MemberReserve((rapidjson::SizeType)fieldSize, allocator);
-			} while (false);
-		}
-
-		#ifndef NDEBUG
-		// assert that buffer will not reallocate memory during serialization
-		const rapidjson::SizeType oldCapcity = m_isParentVal ? 0 : buffer.MemberCapacity();
-		#endif
-
-		for (std::vector<MetaFieldInfo>::const_iterator itMetaField = m_pMetaClass->GetFieldsInfo().begin();
-			 itMetaField != m_pMetaClass->GetFieldsInfo().end(); ++itMetaField)
-		{
-			// Check field state
-			const EFStatus fstatus = m_r->fieldStatus[itMetaField->index];
-			switch (fstatus) {
-				case FStatus::kValid:
-				case FStatus::kMissing:
-				case FStatus::kParseFailed:
-				{
-					if (fstatus != FStatus::kValid && isBitSet(fPushMode, FPush::kOnlyValidField)) {
-						continue;
-					}
-					IJSTI_RET_WHEN_NOT_ZERO(
-							DoFieldToJson(itMetaField, canMoveSrc, fPushMode, buffer, allocator) );
-				}
-					break;
-
-				case FStatus::kNull:
-				{
-					IJSTI_RET_WHEN_NOT_ZERO(
-							DoNullFieldToJson(itMetaField, buffer, allocator) );
-				}
-					break;
-
-
-				case FStatus::kNotAField:
-				default:
-					// Error occurs
-					assert(false);
-					return Err::kInnerError;
-			}
-
-		}
-
-		assert(m_isParentVal || buffer.MemberCapacity() == oldCapcity);
-		// Unknown fields will be add in AppendUnknownToBuffer
-		return 0;
-	}
-
-	template <bool kCanMoveSrc, class _TAccessor>
-	static int DoToJson(_TAccessor &accessor, FPush::Mode fPushMode, IJST_OUT JsonValue &buffer,
-						JsonAllocator &allocator)
-	{
-		const Accessor& rThis = accessor;
-		IJSTI_RET_WHEN_NOT_ZERO(
-				rThis.DoAllFieldsToJson(fPushMode, kCanMoveSrc, buffer, allocator) );
-		if (!isBitSet(fPushMode, FPush::kIgnoreUnknown)) {
-			Accessor::template AppendUnknownToBuffer<kCanMoveSrc, _TAccessor>(accessor, buffer, allocator);
-		}
-		return 0;
-	}
-
-	int DoFieldToJson(std::vector<MetaFieldInfo>::const_iterator itMetaField,
-					  bool canMoveSrc, unsigned fPushMode,
-					  JsonValue &buffer, JsonAllocator &allocator) const
-	{
-		// Init
-		const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
-
-		if (m_isParentVal) {
-			// Set buffer itself to json value
-			ToJsonReq elemSerializeReq(buffer, allocator, pFieldValue, canMoveSrc, fPushMode);
-			return itMetaField->serializerInterface->ToJson(elemSerializeReq);
-		}
-		// Add a member to buffer
-
-		// Serialize field
-		JsonValue elemOutput;
-		ToJsonReq elemSerializeReq(elemOutput, allocator, pFieldValue, canMoveSrc, fPushMode);
-		IJSTI_RET_WHEN_NOT_ZERO(
-				itMetaField->serializerInterface->ToJson(elemSerializeReq));
-
-		// Add member, copy field name because the fieldName store in Meta info maybe release when dynamical
-		// library unload, and the memory pool should be fast to copy field name.
-		// Do not check existing key, that's a feature
-		rapidjson::GenericStringRef<char> fieldNameRef =
-				rapidjson::StringRef(itMetaField->jsonName.data(), itMetaField->jsonName.size());
-		buffer.AddMember(
-				rapidjson::Value().SetString(fieldNameRef, allocator),
-				elemOutput,
-				allocator
-		);
-		return 0;
-	}
-
-	int DoNullFieldToJson(std::vector<MetaFieldInfo>::const_iterator itMetaField,
-						  JsonValue &buffer, JsonAllocator &allocator) const
-	{
-		if (m_isParentVal) {
-			buffer.SetNull();
-			return 0;
-		}
-
-		// Init
-		rapidjson::GenericStringRef<char> fieldNameRef =
-				rapidjson::StringRef(itMetaField->jsonName.data(), itMetaField->jsonName.size());
-		rapidjson::Value fieldNameVal;
-		fieldNameVal.SetString(fieldNameRef);
-
-		// Add member, field name is not need deep copy
-		// Do not check if there is a existing key, that's a feature
-		buffer.AddMember(
-				rapidjson::Value().SetString(fieldNameRef),
-				rapidjson::Value().SetNull(),
-				allocator
-		);
-		return 0;
-	}
-
-	template<bool kCanMoveSrc, typename _TAccessor>
-	static inline void AppendUnknownToBuffer(_TAccessor &accessor, JsonValue &buffer, JsonAllocator &allocator);
-#endif // #if IJST_ENABLE_TO_JSON_OBJECT
 
 	template<typename TJsonValue, typename Func>
 	int DoFromJsonWrap(Func func, TJsonValue &stream, EUnknownMode unknownMode, bool checkField, std::string* pErrMsgOut)
@@ -1808,60 +1480,12 @@ private:
 	//</editor-fold>
 };
 
-///! { implementations
 template<typename _T>
 inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 {
 	IJSTI_TRY_INIT_META_BEFORE_MAIN(detail::MetaClassInfoIniter<_T>);
 	return detail::Singleton<detail::MetaClassInfoIniter<_T> >::GetInstance()->metaClass;
 }
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-//! copy version of Accessor::AppendInnerToBuffer
-template <>
-inline void Accessor::template AppendUnknownToBuffer<false, const Accessor>(
-		const Accessor &accessor, JsonValue &buffer, JsonAllocator &allocator)
-{
-	const Accessor& rThis = accessor;
-	// Copy
-	for (rapidjson::Value::ConstMemberIterator itMember = rThis.m_r->unknown.MemberBegin();
-		 itMember != rThis.m_r->unknown.MemberEnd(); ++itMember)
-	{
-		rapidjson::Value name;
-		rapidjson::Value val;
-		name.CopyFrom(itMember->name, allocator, true);
-		val.CopyFrom(itMember->value, allocator, true);
-		buffer.AddMember(name, val, allocator);
-	}
-}
-
-//! move version of Accessor::AppendInnerToBuffer
-template <>
-inline void Accessor::template AppendUnknownToBuffer<true, Accessor>(
-		Accessor& accessor, JsonValue&buffer, JsonAllocator& allocator)
-{
-	Accessor& rThis = accessor;
-	// append inner data to buffer
-	if (&allocator == rThis.m_pAllocator) {
-		// Move
-		for (rapidjson::Value::MemberIterator itMember = rThis.m_r->unknown.MemberBegin();
-			 itMember != rThis.m_r->unknown.MemberEnd(); ++itMember)
-		{
-			buffer.AddMember(itMember->name, itMember->value, allocator);
-			// both itMember->name, itMember->value are null now
-		}
-	}
-	else
-	{
-		// Copy
-		Accessor::template AppendUnknownToBuffer<false, const Accessor>(accessor, buffer, allocator);
-		// The object will be release after serialize in most suitation, so do not need clear own allocator
-	}
-
-	rThis.m_r->unknown.SetObject();
-}
-#endif
-///! }
 
 //! IJSTI_DEFINE_STRUCT_IMPL
 //! Wrapper of IJST_DEFINE_STRUCT_IMPL_*

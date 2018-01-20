@@ -141,15 +141,6 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_ubool)
 		return (req.writer.Bool((*pField) != 0) ? 0 : Err::kWriteFailed);
 	}
 
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetBool((*pField) != 0);
-		return 0;
-	}
-#endif
-
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsBool()) {
@@ -172,18 +163,6 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 	}																											\
 																												\
 
-#if IJST_ENABLE_TO_JSON_OBJECT
-	#define IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()																	\
-		virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE														\
-		{																											\
-			const VarType *pField = static_cast<const VarType *>(req.pField);										\
-			req.buffer.SetBool(*pField);																			\
-			return 0;																								\
-		}
-#else
-	#define IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()				// empty
-#endif
-
 #define IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()																\
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE					\
 	{																											\
@@ -199,14 +178,12 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
 IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_bool)
 	IJSTI_SERIALIZER_BOOL_DEFINE()
-	IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()
 	IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
 
 IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_wbool)
 	IJSTI_SERIALIZER_BOOL_DEFINE()
-	IJSTI_SERIALIZER_BOOL_DEFINE_TO_JSON()
 	IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
@@ -217,15 +194,6 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int)
 		const VarType *pField = static_cast<const VarType *>(req.pField);
 		return (req.writer.Int(*pField) ? 0 : Err::kWriteFailed);
 	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetInt(*pField);
-		return 0;
-	}
-#endif
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
@@ -248,15 +216,6 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int64)
 		return (req.writer.Int64(*pField) ? 0 : Err::kWriteFailed);
 	}
 
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetInt64(*pField);
-		return 0;
-	}
-#endif
-
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsInt64()) {
@@ -277,15 +236,6 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint)
 		const VarType *pField = static_cast<const VarType *>(req.pField);
 		return (req.writer.Uint(*pField) ? 0 : Err::kWriteFailed);
 	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetUint(*pField);
-		return 0;
-	}
-#endif
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
@@ -308,15 +258,6 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint64)
 		return (req.writer.Uint64(*pField) ? 0 : Err::kWriteFailed);
 	}
 
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetUint64(*pField);
-		return 0;
-	}
-#endif
-
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsUint64()) {
@@ -337,15 +278,6 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_double)
 		const VarType *pField = static_cast<const VarType *>(req.pField);
 		return (req.writer.Double(*pField) ? 0 : Err::kWriteFailed);
 	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetDouble(*pField);
-		return 0;
-	}
-#endif
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
@@ -369,15 +301,6 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_string)
 		return (req.writer.String(field.data(), static_cast<rapidjson::SizeType>(field.size())) ? 0 : Err::kWriteFailed);
 	}
 
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.SetString(pField->data(), static_cast<rapidjson::SizeType>(pField->size()), req.allocator);
-		return 0;
-	}
-#endif
-
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsString()) {
@@ -398,28 +321,6 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_raw)
 		const VarType *pField = static_cast<const VarType *>(req.pField);
 		return (pField->V().Accept(req.writer) ? 0 : Err::kWriteFailed);
 	}
-
-#if IJST_ENABLE_TO_JSON_OBJECT
-	virtual int ToJson(const ToJsonReq &req) IJSTI_OVERRIDE
-	{
-		const VarType *pField = static_cast<const VarType *>(req.pField);
-		req.buffer.CopyFrom(pField->V(), req.allocator, true);
-		return 0;
-	}
-
-	virtual int SetAllocator(void *pField, JsonAllocator &allocator) IJSTI_OVERRIDE
-	{
-		VarType *pFieldT = static_cast<VarType *>(pField);
-		if (pFieldT->m_pAllocator == &allocator) {
-			return 0;
-		}
-		JsonValue temp;
-		temp = pFieldT->v;
-		pFieldT->v.CopyFrom(temp, allocator, false);
-		pFieldT->m_pAllocator = &allocator;
-		return 0;
-	}
-#endif
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
