@@ -378,10 +378,9 @@ TEST(Deserialize, ErrorDoc_ContainerTypeError)
 	{
 		const string json = "[1]";
 		StErrCheck st;
-		string errMsg;
-		int ret = st._.Deserialize(json, UnknownMode::kKeep, true, &errMsg);
+		rapidjson::Document errDoc;
+		int ret = st._.Deserialize(json, UnknownMode::kKeep, true, &errDoc);
 		ASSERT_EQ(ret, kErrTypeError);
-		UTEST_PARSE_STR_TO_JSON(errMsg, errDoc);
 		CheckTypeMismatch(errDoc, "object", "[1]");
 	}
 
@@ -440,6 +439,7 @@ TEST(Deserialize, ErrDoc)
 		rapidjson::Document errDoc;
 		TestErrCheckCommonError(json, Err::kDeserializeParseFaild, errDoc, UnknownMode::kKeep);
 		ASSERT_STREQ(errDoc["type"].GetString(), "ParseError");
+		ASSERT_EQ(errDoc["errCode"].GetInt(), (int)rapidjson::kParseErrorValueInvalid);
 
 		// Parse insitu
 		char *jsonBuf = new char[json.length()];
@@ -452,6 +452,7 @@ TEST(Deserialize, ErrDoc)
 		errDoc.Parse(errMsg.c_str(), errMsg.length());
 		ASSERT_TRUE(errDoc.IsObject());
 		ASSERT_STREQ(errDoc["type"].GetString(), "ParseError");
+		ASSERT_EQ(errDoc["errCode"].GetInt(), (int)rapidjson::kParseErrorValueInvalid);
 	}
 
 	// Member Unknown

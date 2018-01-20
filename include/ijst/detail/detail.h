@@ -61,18 +61,6 @@ private:
 };
 template<typename _T> void *Singleton<_T>::initInstanceTag = Singleton<_T>::GetInstance();
 
-template<typename T>
-class MemoryGuarder {
-public:
-	explicit MemoryGuarder(T* ptr) : m_Ptr (ptr) {}
-	~MemoryGuarder() { delete m_Ptr; }
-
-private:
-	MemoryGuarder& operator= (const MemoryGuarder&);
-	MemoryGuarder(const MemoryGuarder&);
-	T* const m_Ptr;
-};
-
 template <typename _T>
 struct HasType {
 	typedef void Void;
@@ -190,28 +178,27 @@ private:
 
 typedef GenericHeadWriter<HeadOStream, rapidjson::Writer<HeadOStream> > HeadWriter;
 
-struct DeserializeErrDoc {
+struct ErrorDocSetter {
 	//! Constructor
-	//! @param _pAllocator		allocator. set to nullptr if do not need to enable error message
-	explicit DeserializeErrDoc(rapidjson::MemoryPoolAllocator<>* _pAllocator):
-			pAllocator(_pAllocator), errMsg(rapidjson::kNullType) {}
+	//! @param _pErrDoc		Error message output. set to nullptr if do not need to enable error message
+	explicit ErrorDocSetter(rapidjson::Document* _pErrDoc):
+			pAllocator(_pErrDoc == IJSTI_NULL ? IJSTI_NULL : &_pErrDoc->GetAllocator()),
+			pErrMsg(_pErrDoc) {}
 
-	static void SetParseErrMsg(std::string* pErrMsgOut, rapidjson::ParseErrorCode errCode)
+	void ParseFailed(rapidjson::ParseErrorCode errCode)
 	{
-		if (pErrMsgOut == IJSTI_NULL) { return; }
+		if (pAllocator == IJSTI_NULL) { return; }
+		pErrMsg->SetObject();
 
-		rapidjson::Document errDoc(rapidjson::kObjectType);
-		errDoc.AddMember("type",
+		pErrMsg->AddMember("type",
 						 rapidjson::Value().SetString("ParseError"),
-						 errDoc.GetAllocator());
-		errDoc.AddMember("err",
+						 *pAllocator);
+		pErrMsg->AddMember("errCode",
+						 rapidjson::Value().SetInt(static_cast<int>(errCode)),
+						 *pAllocator);
+		pErrMsg->AddMember("err",
 						 rapidjson::StringRef(rapidjson::GetParseError_En(errCode)),
-						 errDoc.GetAllocator());
-
-		rapidjson::StringBuffer sb;
-		rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
-		errDoc.Accept(writer);
-		(*pErrMsgOut) = std::string(sb.GetString(), sb.GetLength());
+						 *pAllocator);
 	}
 
 	//! Set error message about error of member in object
@@ -221,17 +208,17 @@ struct DeserializeErrDoc {
 
 		// backup errMsg
 		rapidjson::Value errDetail;
-		errDetail = errMsg;	// move
+		errDetail = *pErrMsg;	// move
 
-		errMsg.SetObject();
-		errMsg.AddMember("type",
+		pErrMsg->SetObject();
+		pErrMsg->AddMember("type",
 						 rapidjson::Value().SetString(type, *pAllocator),
 						 *pAllocator);
-		errMsg.AddMember("member",
+		pErrMsg->AddMember("member",
 						 rapidjson::Value().SetString(memberName.data(), (rapidjson::SizeType)memberName.size(), *pAllocator),
 						 *pAllocator);
 		if (!errDetail.IsNull()) {
-			errMsg.AddMember("err", errDetail, *pAllocator);
+			pErrMsg->AddMember("err", errDetail, *pAllocator);
 		}
 	}
 
@@ -242,41 +229,41 @@ struct DeserializeErrDoc {
 
 		// backup errMsg
 		rapidjson::Value errDetail;
-		errDetail = errMsg;	// move
+		errDetail = *pErrMsg;	// move
 
-		errMsg.SetObject();
-		errMsg.AddMember("type",
+		pErrMsg->SetObject();
+		pErrMsg->AddMember("type",
 						 rapidjson::Value().SetString(type, *pAllocator),
 						 *pAllocator);
-		errMsg.AddMember("index",
+		pErrMsg->AddMember("index",
 						 rapidjson::Value().SetUint(index),
 						 *pAllocator);
 		if (!errDetail.IsNull()) {
-			errMsg.AddMember("err", errDetail, *pAllocator);
+			pErrMsg->AddMember("err", errDetail, *pAllocator);
 		}
 	}
 
 	void MissingMember()
 	{
 		if (pAllocator == IJSTI_NULL) { return; }
-		assert(errMsg.IsArray());
+		assert(pErrMsg->IsArray());
 
 		// backup errMsg
 		rapidjson::Value errDetail;
-		errDetail = errMsg;	// move
+		errDetail = *pErrMsg;	// move
 
-		errMsg.SetObject();
-		errMsg.AddMember("type", rapidjson::StringRef("MissingMember"), *pAllocator);
-		errMsg.AddMember("members", errDetail, *pAllocator);
+		pErrMsg->SetObject();
+		pErrMsg->AddMember("type", rapidjson::StringRef("MissingMember"), *pAllocator);
+		pErrMsg->AddMember("members", errDetail, *pAllocator);
 	}
 
 	void ElementMapKeyDuplicated(const std::string& keyName)
 	{
 		if (pAllocator == IJSTI_NULL) { return; }
 
-		errMsg.SetObject();
-		errMsg.AddMember("type", rapidjson::StringRef("MapKeyDuplicated"), *pAllocator);
-		errMsg.AddMember("key",
+		pErrMsg->SetObject();
+		pErrMsg->AddMember("type", rapidjson::StringRef("MapKeyDuplicated"), *pAllocator);
+		pErrMsg->AddMember("key",
 						 rapidjson::Value().SetString(keyName.data(), (rapidjson::SizeType)keyName.size(), *pAllocator),
 						 *pAllocator);
 	}
@@ -289,12 +276,12 @@ struct DeserializeErrDoc {
 		HeadWriter writer(ostream);
 		errVal.Accept(writer);
 
-		errMsg.SetObject();
-		errMsg.AddMember("type", rapidjson::StringRef("TypeMismatch"), *pAllocator);
-		errMsg.AddMember("expectedType",
+		pErrMsg->SetObject();
+		pErrMsg->AddMember("type", rapidjson::StringRef("TypeMismatch"), *pAllocator);
+		pErrMsg->AddMember("expectedType",
 						 rapidjson::Value().SetString(expectedType, *pAllocator),
 						 *pAllocator);
-		errMsg.AddMember("json",
+		pErrMsg->AddMember("json",
 						 rapidjson::Value().SetString(ostream.str.data(), (rapidjson::SizeType)ostream.str.size(), *pAllocator),
 						 *pAllocator);
 	}
@@ -302,12 +289,12 @@ struct DeserializeErrDoc {
 	void ElementAddMemberName(const std::string &memberName)
 	{
 		if (pAllocator == IJSTI_NULL) { return; }
-		if (errMsg.IsNull()) {
-			errMsg.SetArray();
+		if (pErrMsg->IsNull()) {
+			pErrMsg->SetArray();
 		}
-		assert(errMsg.IsArray());
+		assert(pErrMsg->IsArray());
 
-		errMsg.PushBack(
+		pErrMsg->PushBack(
 				rapidjson::Value().SetString(memberName.data(), (rapidjson::SizeType)memberName.size(), *pAllocator),
 				*pAllocator
 		);
@@ -316,7 +303,7 @@ struct DeserializeErrDoc {
 	// Pointer to allocator that used to setting error message
 	// Use nullptr if do not need error message
 	rapidjson::MemoryPoolAllocator<>* const pAllocator;
-	rapidjson::Value errMsg;
+	rapidjson::Value* const pErrMsg;
 };
 
 }	// namespace detail

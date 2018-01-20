@@ -554,9 +554,9 @@ namespace detail {
 
 		struct FromJsonResp {
 			size_t fieldCount;
-			DeserializeErrDoc& errDoc;
+			ErrorDocSetter& errDoc;
 
-			explicit FromJsonResp(DeserializeErrDoc& _errDoc) :
+			explicit FromJsonResp(ErrorDocSetter& _errDoc) :
 					fieldCount(0),
 					errDoc(_errDoc)
 			{ }
@@ -901,7 +901,7 @@ public:
 	 * @param length			Length of string
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param checkField		true if need check whether field status meet requirement
-	 * @param pErrMsgOut		Error message output. Null if do not need error message
+	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
 	 * @note The input string can contain '\0'
@@ -909,7 +909,7 @@ public:
 	template <unsigned parseFlags>
 	int Deserialize(const char *cstrInput, std::size_t length,
 					EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
-					std::string *pErrMsgOut = IJST_NULL)
+					rapidjson::Document *pErrDocOut = IJST_NULL)
 	{
 		// The new object will call FromJson() interfaces soon in most situation
 		// So clear own allocator will not bring much benefice
@@ -918,11 +918,12 @@ public:
 		doc.Parse<parseFlags>(cstrInput, length);
 		if (doc.HasParseError())
 		{
-			detail::DeserializeErrDoc::SetParseErrMsg(pErrMsgOut, doc.GetParseError());
+			detail::ErrorDocSetter errDocSetter(pErrDocOut);
+			errDocSetter.ParseFailed(doc.GetParseError());
 			return Err::kDeserializeParseFaild;
 		}
 
-		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, unknownMode, checkField, pErrMsgOut);
+		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, unknownMode, checkField, pErrDocOut);
 	}
 
 	/**
@@ -932,17 +933,17 @@ public:
 	 * @param length			Length of string
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param checkField		true if need check whether field status meet requirement
-	 * @param pErrMsgOut		Error message output. Null if do not need error message
+	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
 	 * @note The input string can contain '\0'
 	 */
 	int Deserialize(const char *cstrInput, std::size_t length,
 					EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
-					std::string *pErrMsgOut = IJST_NULL)
+					rapidjson::Document *pErrDocOut = IJST_NULL)
 	{
 		return this->template Deserialize<rapidjson::kParseDefaultFlags>(
-				cstrInput, length, unknownMode, checkField, pErrMsgOut);
+				cstrInput, length, unknownMode, checkField, pErrDocOut);
 	}
 
 	/**
@@ -951,14 +952,14 @@ public:
 	 * @param strInput			Input string
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param checkField		true if need check whether field status meet requirement
-	 * @param pErrMsgOut		Error message output. Null if do not need error message
+	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 */
 	inline int Deserialize(const std::string &strInput,
 						   EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
-						   std::string *pErrMsgOut = IJST_NULL)
+						   rapidjson::Document *pErrDocOut = IJST_NULL)
 	{
-		return Deserialize(strInput.data(), strInput.size(), unknownMode, checkField, pErrMsgOut);
+		return Deserialize(strInput.data(), strInput.size(), unknownMode, checkField, pErrDocOut);
 	}
 
 	/**
@@ -973,7 +974,15 @@ public:
 	inline int Deserialize(const std::string &strInput, IJST_OUT std::string& errMsgOut,
 						   EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true)
 	{
-		return Deserialize(strInput.data(), strInput.size(), unknownMode, checkField, &errMsgOut);
+		rapidjson::Document errDoc;
+		int ret = Deserialize(strInput.data(), strInput.size(), unknownMode, checkField, &errDoc);
+		if (ret != 0) {
+			rapidjson::StringBuffer sb;
+			detail::JsonWriter writer(sb);
+			errDoc.Accept(writer);
+			errMsgOut = std::string(sb.GetString(), sb.GetLength());
+		}
+		return ret;
 	}
 
 	/**
@@ -984,7 +993,7 @@ public:
 	 * @param str				Input C string
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param checkField		true if need check whether field status meet requirement
-	 * @param pErrMsgOut		Error message output. Null if do not need error message
+	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
 	 * @note The context in str may be changed after deserialize
@@ -993,7 +1002,7 @@ public:
 	 template<unsigned parseFlags>
 	int DeserializeInsitu(char *str,
 						  EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
-						  std::string *pErrMsgOut = IJST_NULL)
+						  rapidjson::Document *pErrDocOut = IJST_NULL)
 	{
 		// The new object will call FromJson() interfaces in most situation
 		// So clear own allocator will not bring much benefice
@@ -1002,10 +1011,11 @@ public:
 		doc.ParseInsitu<parseFlags>(str);
 		if (doc.HasParseError())
 		{
-			detail::DeserializeErrDoc::SetParseErrMsg(pErrMsgOut, doc.GetParseError());
+			detail::ErrorDocSetter errDocSetter(pErrDocOut);
+			errDocSetter.ParseFailed(doc.GetParseError());
 			return Err::kDeserializeParseFaild;
 		}
-		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, unknownMode, checkField, pErrMsgOut);
+		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, unknownMode, checkField, pErrDocOut);
 	}
 
 	/**
@@ -1014,7 +1024,7 @@ public:
 	 * @param str				Input C string
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param checkField		true if need check whether field status meet requirement
-	 * @param pErrMsgOut		Error message output. Null if do not need error message
+	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
 	 * @note The context in str may be changed after deserialize
@@ -1022,9 +1032,9 @@ public:
 	 */
 	int DeserializeInsitu(char *str,
 						  EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
-						  std::string *pErrMsgOut = IJST_NULL)
+						  rapidjson::Document *pErrDocOut = IJST_NULL)
 	{
-		return this->template DeserializeInsitu<rapidjson::kParseDefaultFlags>(str, unknownMode, checkField, pErrMsgOut);
+		return this->template DeserializeInsitu<rapidjson::kParseDefaultFlags>(str, unknownMode, checkField, pErrDocOut);
 	}
 
 #if IJST_ENABLE_FROM_JSON_OBJECT || IJSTI_DOXYGEN_RUNNING
@@ -1034,16 +1044,16 @@ public:
 	 * @param stream			Input json object
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param checkField		true if need check whether field status meet requirement
-	 * @param pErrMsgOut		Error message output. Null if do not need error message
+	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
 	 * @note Need to set IJST_ENABLE_FROM_JSON_OBJECT to 1 to enable this method
 	 */
 	inline int FromJson(const JsonValue &stream,
 						EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
-						std::string *pErrMsgOut = IJST_NULL)
+						rapidjson::Document *pErrDocOut = IJST_NULL)
 	{
-		return DoFromJsonWrap<const JsonValue>(&Accessor::DoFromJson, stream, unknownMode, checkField, pErrMsgOut);
+		return DoFromJsonWrap<const JsonValue>(&Accessor::DoFromJson, stream, unknownMode, checkField, pErrDocOut);
 	}
 
 	/**
@@ -1056,7 +1066,7 @@ public:
 	 * @param srcDocStolen		Input document object
 	 * @param unknownMode		Behaviour when meet unknown member in json
 	 * @param checkField		true if need check whether field status meet requirement
-	 * @param pErrMsgOut		Error message output. Null if do not need error message
+	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
 	 * @note Need to set IJST_ENABLE_FROM_JSON_OBJECT to 1 to enable this method
@@ -1065,12 +1075,12 @@ public:
 	 */
 	inline int MoveFromJson(rapidjson::Document &srcDocStolen,
 							EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
-							std::string *pErrMsgOut = IJST_NULL)
+							rapidjson::Document *pErrDocOut = IJST_NULL)
 	{
 		// Store document to manager allocator
 		m_r->ownDoc.Swap(srcDocStolen);
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
-		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, m_r->ownDoc, unknownMode, checkField, pErrMsgOut);
+		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, m_r->ownDoc, unknownMode, checkField, pErrDocOut);
 	}
 #endif
 
@@ -1089,11 +1099,11 @@ private:
 	struct FromJsonParam{
 		EUnknownMode unknownMode;
 		bool checkField;
-		detail::DeserializeErrDoc& errDoc;
+		detail::ErrorDocSetter& errDoc;
 		size_t& fieldCount;
 
 		FromJsonParam(EUnknownMode _unknownMode, bool _checkField,
-					  detail::DeserializeErrDoc& _errDoc, size_t& _fieldCount)
+					  detail::ErrorDocSetter& _errDoc, size_t& _fieldCount)
 				: unknownMode(_unknownMode), checkField(_checkField), errDoc(_errDoc), fieldCount(_fieldCount)
 		{}
 	};
@@ -1202,22 +1212,12 @@ private:
 	}
 
 	template<typename TJsonValue, typename Func>
-	int DoFromJsonWrap(Func func, TJsonValue &stream, EUnknownMode unknownMode, bool checkField, std::string* pErrMsgOut)
+	int DoFromJsonWrap(Func func, TJsonValue &stream, EUnknownMode unknownMode, bool checkField, rapidjson::Document* pErrDocOut)
 	{
 		size_t fieldCount = 0;
-		JsonAllocator* allocator = pErrMsgOut == IJSTI_NULL ? IJSTI_NULL : new JsonAllocator();
-		detail::MemoryGuarder<JsonAllocator> ptrGuarder(allocator);
-		detail::DeserializeErrDoc errDoc(allocator);
+		detail::ErrorDocSetter errDoc(pErrDocOut);
 		FromJsonParam param(unknownMode, checkField, errDoc, fieldCount);
-		int ret = (this->*func)(stream, param);
-		if (ret != 0 && pErrMsgOut != IJSTI_NULL) {
-			assert(allocator != IJSTI_NULL);
-			rapidjson::StringBuffer sb;
-			detail::JsonWriter writer(sb);
-			errDoc.errMsg.Accept(writer);
-			(*pErrMsgOut) = std::string(sb.GetString(), sb.GetLength());
-		}
-		return ret;
+		return (this->*func)(stream, param);
 	}
 
 	/**
@@ -1411,7 +1411,7 @@ private:
 		m_r->fieldStatus[index] = fStatus;
 	}
 
-	int CheckFieldState(detail::DeserializeErrDoc& errDoc) const
+	int CheckFieldState(detail::ErrorDocSetter& errDoc) const
 	{
 		// Check all required field status
 		bool hasErr = false;
