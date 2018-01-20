@@ -434,6 +434,26 @@ void TestErrCheckCommonError(const string& json, int retExpected, rapidjson::Doc
 
 TEST(Deserialize, ErrDoc)
 {
+	// Parse Error
+	{
+		const string json = "ThisIsAErrJson";
+		rapidjson::Document errDoc;
+		TestErrCheckCommonError(json, Err::kDeserializeParseFaild, errDoc, UnknownMode::kKeep);
+		ASSERT_STREQ(errDoc["type"].GetString(), "ParseError");
+
+		// Parse insitu
+		char *jsonBuf = new char[json.length()];
+		memcpy(jsonBuf, json.c_str(), json.length());
+		StErrCheck st;
+		string errMsg;
+		int ret = st._.Deserialize(json, errMsg);
+		const int retExpected = Err::kDeserializeParseFaild;
+		ASSERT_EQ(ret, retExpected);
+		errDoc.Parse(errMsg.c_str(), errMsg.length());
+		ASSERT_TRUE(errDoc.IsObject());
+		ASSERT_STREQ(errDoc["type"].GetString(), "ParseError");
+	}
+
 	// Member Unknown
 	{
 		const string json = "{\"UNKNOWN\": true }";

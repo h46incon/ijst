@@ -10,7 +10,6 @@
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-#include <rapidjson/error/en.h>
 
 #include <cassert>		// assert
 #include <cstddef>		// NULL, size_t, offsetof
@@ -983,12 +982,7 @@ public:
 		doc.Parse<parseFlags>(cstrInput, length);
 		if (doc.HasParseError())
 		{
-			if (pErrMsgOut != IJST_NULL)
-			{
-				*pErrMsgOut = IJSTI_MOVE(std::string(
-						rapidjson::GetParseError_En(doc.GetParseError())
-				));
-			}
+			detail::DeserializeErrDoc::SetParseErrMsg(pErrMsgOut, doc.GetParseError());
 			return Err::kDeserializeParseFaild;
 		}
 
@@ -1072,12 +1066,7 @@ public:
 		doc.ParseInsitu<parseFlags>(str);
 		if (doc.HasParseError())
 		{
-			if (pErrMsgOut != IJST_NULL)
-			{
-				*pErrMsgOut = IJSTI_MOVE(std::string(
-						rapidjson::GetParseError_En(doc.GetParseError())
-				));
-			}
+			detail::DeserializeErrDoc::SetParseErrMsg(pErrMsgOut, doc.GetParseError());
 			return Err::kDeserializeParseFaild;
 		}
 		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, unknownMode, checkField, pErrMsgOut);

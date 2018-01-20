@@ -8,6 +8,8 @@
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
+#include <rapidjson/error/en.h>
+
 #include <string>
 
 namespace ijst{
@@ -193,6 +195,24 @@ struct DeserializeErrDoc {
 	//! @param _pAllocator		allocator. set to nullptr if do not need to enable error message
 	explicit DeserializeErrDoc(rapidjson::MemoryPoolAllocator<>* _pAllocator):
 			pAllocator(_pAllocator), errMsg(rapidjson::kNullType) {}
+
+	static void SetParseErrMsg(std::string* pErrMsgOut, rapidjson::ParseErrorCode errCode)
+	{
+		if (pErrMsgOut == IJSTI_NULL) { return; }
+
+		rapidjson::Document errDoc(rapidjson::kObjectType);
+		errDoc.AddMember("type",
+						 rapidjson::Value().SetString("ParseError"),
+						 errDoc.GetAllocator());
+		errDoc.AddMember("err",
+						 rapidjson::StringRef(rapidjson::GetParseError_En(errCode)),
+						 errDoc.GetAllocator());
+
+		rapidjson::StringBuffer sb;
+		rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+		errDoc.Accept(writer);
+		(*pErrMsgOut) = std::string(sb.GetString(), sb.GetLength());
+	}
 
 	//! Set error message about error of member in object
 	void ErrorInObject(const char* type, const std::string& memberName)
