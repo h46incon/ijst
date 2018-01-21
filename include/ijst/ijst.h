@@ -188,22 +188,21 @@ struct SerFlag {
 };
 
 /**
- * @brief Behaviour when meeting unknown member in json object.
+ * @brief Deserialization options about fields.
  *
- * @see Accessor::GetUnknown()
+ * Options can be combined by bitwise OR operator (|).
  */
-struct UnknownMode {
-public:
-	enum _E {
-		//! Keep unknown fields.
-		kKeep,
-		//! Ignore unknown fields.
-		kIgnore,
-		//! Error when unknown fields occurs.
-		kError
-	};
+struct DeserFlag {
+	typedef unsigned int Flag;
+	//! does not set any option.
+	static const Flag kNoneFlag							= 0x00000000;
+	//! set if return error when meet unknown fields, otherwise will keep all unknown fields.
+	static const Flag kErrorWhenUnknown					= 0x00000001;
+	//! set if ignore unknown fields, otherwise will keep all unknown fields.
+	static const Flag kIgnoreUnknown					= 0x00000002;
+	//! set if ignore field status, otherwise will check if field status is matched requirement
+	static const Flag kNotCheckFieldStatus				= 0x00000004;
 };
-typedef UnknownMode::_E EUnknownMode;
 
 /**
  * @brief A virtual based class implement rapidjson::Handler concept.
@@ -535,20 +534,16 @@ namespace detail {
 			// true if move context in stream to avoid copy when possible
 			bool canMoveSrc;
 
-			EUnknownMode unknownMode;
-
-			// true if check field status is matched requirement
-			bool checkField;
+			DeserFlag::Flag deserFlag;
 
 			FromJsonReq(JsonValue &_stream, JsonAllocator &_allocator,
-						EUnknownMode _unknownMode, bool _canMoveSrc, bool _checkField,
+						DeserFlag::Flag _deserFlag, bool _canMoveSrc,
 						void *_pField)
 					: pFieldBuffer(_pField)
 					  , stream(_stream)
 					  , allocator(_allocator)
 					  , canMoveSrc(_canMoveSrc)
-					  , unknownMode(_unknownMode)
-					  , checkField(_checkField)
+					  , deserFlag(_deserFlag)
 			{ }
 		};
 
@@ -899,8 +894,7 @@ public:
 	 *
 	 * @param cstrInput			Input C string
 	 * @param length			Length of string
-	 * @param unknownMode		Behaviour when meet unknown member in json
-	 * @param checkField		true if need check whether field status meet requirement
+	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
@@ -908,7 +902,7 @@ public:
 	 */
 	template <unsigned parseFlags>
 	int Deserialize(const char *cstrInput, std::size_t length,
-					EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
+					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 					rapidjson::Document *pErrDocOut = IJST_NULL)
 	{
 		// The new object will call FromJson() interfaces soon in most situation
@@ -923,7 +917,7 @@ public:
 			return ErrorCode::kDeserializeParseFaild;
 		}
 
-		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, unknownMode, checkField, pErrDocOut);
+		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, deserFlag, pErrDocOut);
 	}
 
 	/**
@@ -931,35 +925,33 @@ public:
 	 *
 	 * @param cstrInput			Input C string
 	 * @param length			Length of string
-	 * @param unknownMode		Behaviour when meet unknown member in json
-	 * @param checkField		true if need check whether field status meet requirement
+	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
 	 * @note The input string can contain '\0'
 	 */
 	int Deserialize(const char *cstrInput, std::size_t length,
-					EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
+					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 					rapidjson::Document *pErrDocOut = IJST_NULL)
 	{
 		return this->template Deserialize<rapidjson::kParseDefaultFlags>(
-				cstrInput, length, unknownMode, checkField, pErrDocOut);
+				cstrInput, length, deserFlag, pErrDocOut);
 	}
 
 	/**
 	 * @brief Deserialize from std::string.
 	 *
 	 * @param strInput			Input string
-	 * @param unknownMode		Behaviour when meet unknown member in json
-	 * @param checkField		true if need check whether field status meet requirement
+	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 */
 	inline int Deserialize(const std::string &strInput,
-						   EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
+						   DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 						   rapidjson::Document *pErrDocOut = IJST_NULL)
 	{
-		return Deserialize(strInput.data(), strInput.size(), unknownMode, checkField, pErrDocOut);
+		return Deserialize(strInput.data(), strInput.size(), deserFlag, pErrDocOut);
 	}
 
 	/**
@@ -967,15 +959,14 @@ public:
 	 *
 	 * @param strInput			Input string
 	 * @param errMsgOut			Error message output
-	 * @param unknownMode		Behaviour when meet unknown member in json
-	 * @param checkField		true if need check whether field status meet requirement
+	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @return					Error code
 	 */
 	inline int Deserialize(const std::string &strInput, IJST_OUT std::string& errMsgOut,
-						   EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true)
+						   DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag)
 	{
 		rapidjson::Document errDoc;
-		int ret = Deserialize(strInput.data(), strInput.size(), unknownMode, checkField, &errDoc);
+		int ret = Deserialize(strInput.data(), strInput.size(), deserFlag, &errDoc);
 		if (ret != 0) {
 			rapidjson::StringBuffer sb;
 			detail::JsonWriter writer(sb);
@@ -991,8 +982,7 @@ public:
 	 * @tparam parseFlags		parseFlags of rapidjson parse method
 	 *
 	 * @param str				Input C string
-	 * @param unknownMode		Behaviour when meet unknown member in json
-	 * @param checkField		true if need check whether field status meet requirement
+	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
@@ -1001,7 +991,7 @@ public:
 	 */
 	 template<unsigned parseFlags>
 	int DeserializeInsitu(char *str,
-						  EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
+						  DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 						  rapidjson::Document *pErrDocOut = IJST_NULL)
 	{
 		// The new object will call FromJson() interfaces in most situation
@@ -1015,15 +1005,14 @@ public:
 			errDocSetter.ParseFailed(doc.GetParseError());
 			return ErrorCode::kDeserializeParseFaild;
 		}
-		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, unknownMode, checkField, pErrDocOut);
+		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, deserFlag, pErrDocOut);
 	}
 
 	/**
 	 * @brief Deserialize insitu from str.
 	 *
 	 * @param str				Input C string
-	 * @param unknownMode		Behaviour when meet unknown member in json
-	 * @param checkField		true if need check whether field status meet requirement
+	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
@@ -1031,10 +1020,10 @@ public:
 	 * @note Make sure the lifecycle of str is longer than this object
 	 */
 	int DeserializeInsitu(char *str,
-						  EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
+						  DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 						  rapidjson::Document *pErrDocOut = IJST_NULL)
 	{
-		return this->template DeserializeInsitu<rapidjson::kParseDefaultFlags>(str, unknownMode, checkField, pErrDocOut);
+		return this->template DeserializeInsitu<rapidjson::kParseDefaultFlags>(str, deserFlag, pErrDocOut);
 	}
 
 #if IJST_ENABLE_FROM_JSON_OBJECT || IJSTI_DOXYGEN_RUNNING
@@ -1042,8 +1031,7 @@ public:
 	 * @brief Deserialize from json object.
 	 *
 	 * @param srcJson			Input json object
-	 * @param unknownMode		Behaviour when meet unknown member in json
-	 * @param checkField		true if need check whether field status meet requirement
+	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
@@ -1052,10 +1040,10 @@ public:
 	 * 			e.g, json object is generated by ParseInsitu().
 	 */
 	inline int FromJson(const JsonValue &srcJson,
-						EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
+						DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 						rapidjson::Document *pErrDocOut = IJST_NULL)
 	{
-		return DoFromJsonWrap<const JsonValue>(&Accessor::DoFromJson, srcJson, unknownMode, checkField, pErrDocOut);
+		return DoFromJsonWrap<const JsonValue>(&Accessor::DoFromJson, srcJson, deserFlag, pErrDocOut);
 	}
 
 	/**
@@ -1066,8 +1054,7 @@ public:
 	 * so use document object instead.
 	 *
 	 * @param srcDocStolen		Input document object
-	 * @param unknownMode		Behaviour when meet unknown member in json
-	 * @param checkField		true if need check whether field status meet requirement
+	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
@@ -1078,13 +1065,13 @@ public:
 	 * 			e.g, json object is generated by ParseInsitu().
 	 */
 	inline int MoveFromJson(rapidjson::Document &srcDocStolen,
-							EUnknownMode unknownMode = UnknownMode::kKeep, bool checkField = true,
+							DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 							rapidjson::Document *pErrDocOut = IJST_NULL)
 	{
 		// Store document to manager allocator
 		m_r->ownDoc.Swap(srcDocStolen);
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
-		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, m_r->ownDoc, unknownMode, checkField, pErrDocOut);
+		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, m_r->ownDoc, deserFlag, pErrDocOut);
 	}
 #endif
 
@@ -1101,14 +1088,12 @@ private:
 	typedef detail::SerializerInterface::FromJsonReq FromJsonReq;
 	typedef detail::SerializerInterface::FromJsonResp FromJsonResp;
 	struct FromJsonParam{
-		EUnknownMode unknownMode;
-		bool checkField;
+		DeserFlag::Flag deserFlag;
 		detail::ErrorDocSetter& errDoc;
 		size_t& fieldCount;
 
-		FromJsonParam(EUnknownMode _unknownMode, bool _checkField,
-					  detail::ErrorDocSetter& _errDoc, size_t& _fieldCount)
-				: unknownMode(_unknownMode), checkField(_checkField), errDoc(_errDoc), fieldCount(_fieldCount)
+		FromJsonParam(DeserFlag::Flag _deserFlag, detail::ErrorDocSetter& _errDoc, size_t& _fieldCount)
+				: deserFlag(_deserFlag), errDoc(_errDoc), fieldCount(_fieldCount)
 		{}
 	};
 
@@ -1118,7 +1103,7 @@ private:
 
 		m_pAllocator = &req.allocator;
 
-		FromJsonParam param(req.unknownMode, req.checkField, resp.errDoc, resp.fieldCount);
+		FromJsonParam param(req.deserFlag, resp.errDoc, resp.fieldCount);
 		if (req.canMoveSrc) {
 			return DoMoveFromJson(req.stream, param);
 		}
@@ -1143,7 +1128,7 @@ private:
 		IJSTI_RET_WHEN_NOT_ZERO(DoSerializeFields(writer, serFlag));
 
 		// Write buffer if need
-		if (!isBitSet(serFlag, SerFlag::kIgnoreUnknown))
+		if (!IsBitSet(serFlag, SerFlag::kIgnoreUnknown))
 		{
 			assert(m_r->unknown.IsObject());
 			for (rapidjson::Value::ConstMemberIterator itMember = m_r->unknown.MemberBegin();
@@ -1176,7 +1161,7 @@ private:
 				case FStatus::kMissing:
 				case FStatus::kParseFailed:
 				{
-					if (fstatus != FStatus::kValid && isBitSet(serFlag, SerFlag::kOnlyValidField)) {
+					if (fstatus != FStatus::kValid && IsBitSet(serFlag, SerFlag::kOnlyValidField)) {
 						continue;
 					}
 
@@ -1216,11 +1201,11 @@ private:
 	}
 
 	template<typename TJsonValue, typename Func>
-	int DoFromJsonWrap(Func func, TJsonValue &stream, EUnknownMode unknownMode, bool checkField, rapidjson::Document* pErrDocOut)
+	int DoFromJsonWrap(Func func, TJsonValue &stream, DeserFlag::Flag deserFlag, rapidjson::Document* pErrDocOut)
 	{
 		size_t fieldCount = 0;
 		detail::ErrorDocSetter errDoc(pErrDocOut);
-		FromJsonParam param(unknownMode, checkField, errDoc, fieldCount);
+		FromJsonParam param(deserFlag, errDoc, fieldCount);
 		return (this->*func)(stream, param);
 	}
 
@@ -1256,23 +1241,18 @@ private:
 
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
-				switch (p.unknownMode) {
-					case UnknownMode::kKeep:
-						// Move unknown fields to the front of array first
-						// TODO: This is relay on the implementation details of rapidjson's object storage (array), how to check?
-						if (itNextRemain != itMember) {
-							itNextRemain->name.SetNull().Swap(itMember->name);
-							itNextRemain->value.SetNull().Swap(itMember->value);
-						}
-						++itNextRemain;
-						break;
-					case UnknownMode::kError:
-						p.errDoc.ErrorInObject("UnknownMember", fieldName);
-						return ErrorCode::kDeserializeSomeUnknownMember;
-					case UnknownMode::kIgnore:
-						break;
-					default:
-						assert(false);
+				if (IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
+					p.errDoc.ErrorInObject("UnknownMember", fieldName);
+					return ErrorCode::kDeserializeSomeUnknownMember;
+				}
+				if (!IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
+					// Move unknown fields to the front of array first
+					// TODO: This is relay on the implementation details of rapidjson's object storage (array), how to check?
+					if (itNextRemain != itMember) {
+						itNextRemain->name.SetNull().Swap(itMember->name);
+						itNextRemain->value.SetNull().Swap(itMember->value);
+					}
+					++itNextRemain;
 				}
 				continue;
 			}
@@ -1290,14 +1270,14 @@ private:
 		if (stream.MemberCount() != 0) {
 			stream.EraseMember(itNextRemain, stream.MemberEnd());
 		}
-		if (p.unknownMode == UnknownMode::kKeep) {
-			m_r->unknown.SetNull().Swap(stream);
-		}
-		else {
+		if (IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
 			m_r->unknown.SetObject();
 		}
+		else {
+			m_r->unknown.SetNull().Swap(stream);
+		}
 
-		if (p.checkField) {
+		if (!IsBitSet(p.deserFlag, DeserFlag::kNotCheckFieldStatus)) {
 			return CheckFieldState(p.errDoc);
 		}
 		else {
@@ -1331,24 +1311,18 @@ private:
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
 			const MetaFieldInfo *pMetaField = m_pMetaClass->FindFieldByJsonName(fieldName);
 
-			if (pMetaField == IJST_NULL)
-			{
+			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
-				switch (p.unknownMode) {
-					case UnknownMode::kKeep:
-						m_r->unknown.AddMember(
-								rapidjson::Value().SetString(fieldName.data(), (rapidjson::SizeType)fieldName.size(), *m_pAllocator),
-								rapidjson::Value().CopyFrom(itMember->value, *m_pAllocator),
-								*m_pAllocator
-						);
-						break;
-					case UnknownMode::kIgnore:
-						break;
-					case UnknownMode::kError:
-						p.errDoc.ErrorInObject("UnknownMember", fieldName);
-						return ErrorCode::kDeserializeSomeUnknownMember;
-					default:
-						assert(false);
+				if (IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
+					p.errDoc.ErrorInObject("UnknownMember", fieldName);
+					return ErrorCode::kDeserializeSomeUnknownMember;
+				}
+				if (!IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
+					m_r->unknown.AddMember(
+							rapidjson::Value().SetString(fieldName.data(), (rapidjson::SizeType)fieldName.size(), *m_pAllocator),
+							rapidjson::Value().CopyFrom(itMember->value, *m_pAllocator),
+							*m_pAllocator
+					);
 				}
 				continue;
 			}
@@ -1359,7 +1333,7 @@ private:
 			++p.fieldCount;
 		}
 
-		if (p.checkField) {
+		if (!IsBitSet(p.deserFlag, DeserFlag::kNotCheckFieldStatus)) {
 			return CheckFieldState(p.errDoc);
 		}
 		else {
@@ -1371,7 +1345,7 @@ private:
 	int DoFieldFromJson(const MetaFieldInfo *metaField, JsonValue &stream, bool canMoveSrc, FromJsonParam& p)
 	{
 		// Check nullable
-		if (isBitSet(metaField->desc, FDesc::Nullable)
+		if (IsBitSet(metaField->desc, FDesc::Nullable)
 			&& stream.IsNull())
 		{
 			m_r->fieldStatus[metaField->index] = FStatus::kNull;
@@ -1379,7 +1353,7 @@ private:
 		else
 		{
 			void *pField = GetFieldByOffset(metaField->offset);
-			FromJsonReq elemReq(stream, *m_pAllocator, p.unknownMode, canMoveSrc, p.checkField, pField);
+			FromJsonReq elemReq(stream, *m_pAllocator, p.deserFlag, canMoveSrc, pField);
 			FromJsonResp elemResp(p.errDoc);
 			int ret = metaField->serializerInterface->FromJson(elemReq, elemResp);
 			// Check return
@@ -1390,7 +1364,7 @@ private:
 				return ret;
 			}
 			// Check elem size
-			if (isBitSet(metaField->desc, FDesc::ElemNotEmpty)
+			if (IsBitSet(metaField->desc, FDesc::ElemNotEmpty)
 				&& elemResp.fieldCount == 0)
 			{
 				p.errDoc.ErrorInObject("ElemIsEmpty", metaField->jsonName);
@@ -1423,7 +1397,7 @@ private:
 		for (std::vector<MetaFieldInfo>::const_iterator itField = m_pMetaClass->GetFieldsInfo().begin();
 			 itField != m_pMetaClass->GetFieldsInfo().end(); ++itField)
 		{
-			if (isBitSet(itField->desc, FDesc::Optional))
+			if (IsBitSet(itField->desc, FDesc::Optional))
 			{
 				// Optional
 				continue;
@@ -1460,7 +1434,7 @@ private:
 		return (void *) (m_pOuter + offset);
 	}
 
-	static inline bool isBitSet(unsigned int val, unsigned int bit)
+	static inline bool IsBitSet(unsigned int val, unsigned int bit)
 	{
 		return (val & bit) != 0;
 	}

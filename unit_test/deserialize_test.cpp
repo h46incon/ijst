@@ -31,7 +31,7 @@ TEST(Deserialize, IgnoeFieldStatus)
 	// Deserialize
 	{
 		SimpleSt st;
-		int ret = st._.Deserialize(emptyJson, UnknownMode::kKeep, false);
+		int ret = st._.Deserialize(emptyJson, DeserFlag::kNotCheckFieldStatus);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
 	}
@@ -41,7 +41,7 @@ TEST(Deserialize, IgnoeFieldStatus)
 		memcpy(buf, emptyJson.c_str(), emptyJson.size());
 		buf[emptyJson.size()] = '\0';
 		SimpleSt st;
-		int ret = st._.DeserializeInsitu(buf, UnknownMode::kKeep, false);
+		int ret = st._.DeserializeInsitu(buf, DeserFlag::kNotCheckFieldStatus);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
 	}
@@ -50,7 +50,7 @@ TEST(Deserialize, IgnoeFieldStatus)
 	{
 		rapidjson::Document doc(rapidjson::kObjectType);
 		SimpleSt st;
-		int ret = st._.FromJson(doc, UnknownMode::kKeep, false);
+		int ret = st._.FromJson(doc, DeserFlag::kNotCheckFieldStatus);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
 	}
@@ -58,7 +58,7 @@ TEST(Deserialize, IgnoeFieldStatus)
 	{
 		rapidjson::Document doc(rapidjson::kObjectType);
 		SimpleSt st;
-		int ret = st._.MoveFromJson(doc, UnknownMode::kKeep, false);
+		int ret = st._.MoveFromJson(doc, DeserFlag::kNotCheckFieldStatus);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
 	}
@@ -120,9 +120,9 @@ TEST(Deserialize, AdditionalFields)
 		ASSERT_STREQ(st._.GetUnknown()["addi_field3"].GetString(), "a_field3");
 	}
 
-	// throw unknown
+	// ignore unknown
 	{
-		int ret = st._.Deserialize(validJson, UnknownMode::kIgnore, 0);
+		int ret = st._.Deserialize(validJson, DeserFlag::kIgnoreUnknown, 0);
 		ASSERT_EQ(ret, 0);
 
 		ASSERT_EQ(IJST_GET_STATUS(st, int_1), FStatus::kValid);
@@ -135,7 +135,7 @@ TEST(Deserialize, AdditionalFields)
 
 	// error when unknown
 	{
-		int ret = st._.Deserialize(validJson, UnknownMode::kError, 0);
+		int ret = st._.Deserialize(validJson, DeserFlag::kErrorWhenUnknown, 0);
 		const int retExpect = ErrorCode::kDeserializeSomeUnknownMember;
 		ASSERT_EQ(ret, retExpect);
 	}
@@ -379,7 +379,7 @@ TEST(Deserialize, ErrorDoc_ContainerTypeError)
 		const string json = "[1]";
 		StErrCheck st;
 		rapidjson::Document errDoc;
-		int ret = st._.Deserialize(json, UnknownMode::kKeep, true, &errDoc);
+		int ret = st._.Deserialize(json, DeserFlag::kNoneFlag, &errDoc);
 		ASSERT_EQ(ret, kErrTypeError);
 		CheckTypeMismatch(errDoc, "object", "[1]");
 	}
@@ -421,11 +421,11 @@ TEST(Deserialize, ErrorDoc_ContainerTypeError)
 	}
 }
 
-void TestErrCheckCommonError(const string& json, int retExpected, rapidjson::Document& errDoc, EUnknownMode unknownMode = UnknownMode::kKeep)
+void TestErrCheckCommonError(const string& json, int retExpected, rapidjson::Document& errDoc, DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag)
 {
 	StErrCheck st;
 	string errMsg;
-	int ret = st._.Deserialize(json, errMsg, unknownMode);
+	int ret = st._.Deserialize(json, errMsg, deserFlag);
 	ASSERT_EQ(ret, retExpected);
 	errDoc.Parse(errMsg.c_str(), errMsg.length());
 	ASSERT_TRUE(errDoc.IsObject());
@@ -437,7 +437,7 @@ TEST(Deserialize, ErrDoc)
 	{
 		const string json = "ThisIsAErrJson";
 		rapidjson::Document errDoc;
-		TestErrCheckCommonError(json, ErrorCode::kDeserializeParseFaild, errDoc, UnknownMode::kKeep);
+		TestErrCheckCommonError(json, ErrorCode::kDeserializeParseFaild, errDoc);
 		ASSERT_STREQ(errDoc["type"].GetString(), "ParseError");
 		ASSERT_EQ(errDoc["errCode"].GetInt(), (int)rapidjson::kParseErrorValueInvalid);
 
@@ -459,7 +459,7 @@ TEST(Deserialize, ErrDoc)
 	{
 		const string json = "{\"UNKNOWN\": true }";
 		rapidjson::Document errDoc;
-		TestErrCheckCommonError(json, ErrorCode::kDeserializeSomeUnknownMember, errDoc, UnknownMode::kError);
+		TestErrCheckCommonError(json, ErrorCode::kDeserializeSomeUnknownMember, errDoc, DeserFlag::kErrorWhenUnknown);
 		ASSERT_STREQ(errDoc["type"].GetString(), "UnknownMember");
 		ASSERT_STREQ(errDoc["member"].GetString(), "UNKNOWN");
 	}

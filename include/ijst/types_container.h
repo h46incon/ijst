@@ -192,7 +192,7 @@ public:
 			assert(i < field.size());
 			assert(itField != field.end());
 			FromJsonReq elemReq(*itVal, req.allocator,
-								   req.unknownMode, req.canMoveSrc, req.checkField, &*itField);
+								   req.deserFlag, req.canMoveSrc, &*itField);
 			FromJsonResp elemResp(resp.errDoc);
 			// FromJson
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
@@ -316,7 +316,7 @@ public:
 			// Element FromJson
 			_T &elemBuffer = insertRet.first->second;
 			FromJsonReq elemReq(itMember->value, req.allocator,
-								req.unknownMode, req.canMoveSrc, req.checkField, &elemBuffer);
+								req.deserFlag, req.canMoveSrc, &elemBuffer);
 			FromJsonResp elemResp(resp.errDoc);
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
 			if (ret != 0)
@@ -387,7 +387,7 @@ public:
 			memberBuf.name = std::string(itMember->name.GetString(), itMember->name.GetStringLength());
 			ValType &elemBuffer = memberBuf.value;
 			FromJsonReq elemReq(itMember->value, req.allocator,
-								req.unknownMode, req.canMoveSrc, req.checkField, &elemBuffer);
+								req.deserFlag, req.canMoveSrc, &elemBuffer);
 			FromJsonResp elemResp(resp.errDoc);
 
 			int ret = serializerInterface->FromJson(elemReq, elemResp);

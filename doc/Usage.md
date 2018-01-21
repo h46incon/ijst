@@ -233,18 +233,18 @@ assert( IJST_GET_STATUS(st, strName) == ijst::FStatus::kValid );
 ### (反)序列化时的行为
 
 在反序列化时，可能会在 JSON 中遇到未在结构体中声明的字段。将其一味的丢弃是会遭人唾弃的。
-在 Accessor 的反序列化接口中，可以通过一个 `ijst::EUnknownMode` 类型的参数指定相关的行为：
+在 Accessor 的反序列化接口中，可以通过一个 `deserFlag` 类型的参数指定相关的行为：
 
-- kIgnore：忽略 unknown 字段。
-- kKeep： 保存 unknown 字段，这是反序列化 API 中的默认选项。
-- kError： 遇到 unknown 字段时，返回错误。
+- kNoneFlag： 默认选项，会保存 unknown 字段。
+- kIgnoreUnknown： 忽略 unknown 字段。
+- kErrorWhenUnknown： 遇到 unknown 字段时，返回错误。
 
 如：
 
 ```cpp
 // 反序列化时忽略 unknown 字段
 std::string strJson = // Init...
-int ret = sampleStruct._.Deserialize(strJson, ijst::UnknownMode::kIgnore);
+int ret = sampleStruct._.Deserialize(strJson, ijst::DeserFlag::kIgnoreUnknown);
 ```
 
 在序列化时，如未启用 `SerFlag::kIgnoreUnknown` 选项时，会输出的所有 unknown 字段。
