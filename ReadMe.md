@@ -11,10 +11,8 @@ ijst (iJsonStruct) 一个是 C++ Json 序列化/反序列化库：
 
 ## 使用
 ### 安装
-1. 安装 rapidJSON （将其加入 header 搜索路径即可）。
+1. 安装 rapidJSON v1.1.0 以上版本（将其加入 header 搜索路径即可）。
 2. 将 `include/ijst` 文件夹复制进工程。
-
-注：ijst 需要依赖一些 rapidJSON 中未 release 的提交，所以请通过 git 签出其 master 分支。
 
 ### 基本使用
 

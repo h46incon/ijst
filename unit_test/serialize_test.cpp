@@ -353,7 +353,7 @@ TEST(Serialize, SerializeHandler)
 	HandlerWrapper<rapidjson::PrettyWriter<rapidjson::StringBuffer> > writerWrapper(writer);
 	st._.Serialize(writerWrapper);
 	rapidjson::Document doc;
-	doc.Parse(buf.GetString(), buf.GetLength());
+	doc.Parse(buf.GetString(), buf.GetSize() / sizeof(rapidjson::StringBuffer::Ch));
 	ASSERT_FALSE(doc.HasParseError());
 	ASSERT_EQ(doc["i1_v"].GetInt(), 0);
 	ASSERT_EQ(doc["i64_v"].GetInt(), 0);

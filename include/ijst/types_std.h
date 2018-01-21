@@ -65,7 +65,7 @@ public:
 	{
 		m_pOwnDoc = new rapidjson::Document();
 		m_pAllocator = &m_pOwnDoc->GetAllocator();
-		v.CopyFrom(rhs.v, *m_pAllocator, true);
+		v.CopyFrom(rhs.v, *m_pAllocator);
 	}
 
 #if __cplusplus >= 201103L
@@ -332,7 +332,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_raw)
 			pField->m_pAllocator = &req.allocator;
 		}
 		else {
-			pField->v.CopyFrom(req.stream, *pField->m_pAllocator, true);
+			pField->v.CopyFrom(req.stream, *pField->m_pAllocator);
 		}
 		return 0;
 	}
