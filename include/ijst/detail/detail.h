@@ -190,15 +190,18 @@ struct ErrorDocSetter {
 		if (pAllocator == IJSTI_NULL) { return; }
 		pErrMsg->SetObject();
 
-		pErrMsg->AddMember("type",
-						 rapidjson::Value().SetString("ParseError"),
-						 *pAllocator);
-		pErrMsg->AddMember("errCode",
-						 rapidjson::Value().SetInt(static_cast<int>(errCode)),
-						 *pAllocator);
-		pErrMsg->AddMember("err",
-						 rapidjson::StringRef(rapidjson::GetParseError_En(errCode)),
-						 *pAllocator);
+		pErrMsg->AddMember(
+				rapidjson::Value().SetString("type", *pAllocator),
+				rapidjson::Value().SetString("ParseError", *pAllocator),
+				*pAllocator);
+		pErrMsg->AddMember(
+				rapidjson::Value().SetString("errCode", *pAllocator),
+				rapidjson::Value().SetInt(static_cast<int>(errCode)),
+				*pAllocator);
+		pErrMsg->AddMember(
+				rapidjson::Value().SetString("err", *pAllocator),
+				rapidjson::Value().SetString(rapidjson::GetParseError_En(errCode), *pAllocator),
+				*pAllocator);
 	}
 
 	//! Set error message about error of member in object
@@ -211,14 +214,19 @@ struct ErrorDocSetter {
 		errDetail = *pErrMsg;	// move
 
 		pErrMsg->SetObject();
-		pErrMsg->AddMember("type",
-						 rapidjson::Value().SetString(type, *pAllocator),
-						 *pAllocator);
-		pErrMsg->AddMember("member",
-						 rapidjson::Value().SetString(memberName.data(), (rapidjson::SizeType)memberName.size(), *pAllocator),
-						 *pAllocator);
+		pErrMsg->AddMember(
+				rapidjson::Value().SetString("type", *pAllocator),
+				rapidjson::Value().SetString(type, *pAllocator),
+				*pAllocator);
+		pErrMsg->AddMember(
+				rapidjson::Value().SetString("member", *pAllocator),
+				rapidjson::Value().SetString(memberName.data(), (rapidjson::SizeType)memberName.size(), *pAllocator),
+				*pAllocator);
 		if (!errDetail.IsNull()) {
-			pErrMsg->AddMember("err", errDetail, *pAllocator);
+			pErrMsg->AddMember(
+					rapidjson::Value().SetString("err", *pAllocator),
+					errDetail,
+					*pAllocator);
 		}
 	}
 
@@ -232,14 +240,19 @@ struct ErrorDocSetter {
 		errDetail = *pErrMsg;	// move
 
 		pErrMsg->SetObject();
-		pErrMsg->AddMember("type",
-						 rapidjson::Value().SetString(type, *pAllocator),
-						 *pAllocator);
-		pErrMsg->AddMember("index",
-						 rapidjson::Value().SetUint(index),
-						 *pAllocator);
+		pErrMsg->AddMember(
+				rapidjson::Value().SetString("type", *pAllocator),
+				rapidjson::Value().SetString(type, *pAllocator),
+				*pAllocator);
+		pErrMsg->AddMember(
+				rapidjson::Value().SetString("index", *pAllocator),
+				rapidjson::Value().SetUint(index),
+				*pAllocator);
 		if (!errDetail.IsNull()) {
-			pErrMsg->AddMember("err", errDetail, *pAllocator);
+			pErrMsg->AddMember(
+					rapidjson::Value().SetString("err", *pAllocator),
+					errDetail,
+					*pAllocator);
 		}
 	}
 
@@ -253,8 +266,14 @@ struct ErrorDocSetter {
 		errDetail = *pErrMsg;	// move
 
 		pErrMsg->SetObject();
-		pErrMsg->AddMember("type", rapidjson::StringRef("MissingMember"), *pAllocator);
-		pErrMsg->AddMember("members", errDetail, *pAllocator);
+		pErrMsg->AddMember(
+				rapidjson::Value().SetString("type", *pAllocator),
+				rapidjson::Value().SetString("MissingMember", *pAllocator),
+				*pAllocator);
+		pErrMsg->AddMember(
+				rapidjson::Value().SetString("members", *pAllocator),
+				errDetail,
+				*pAllocator);
 	}
 
 	void ElementMapKeyDuplicated(const std::string& keyName)
@@ -262,10 +281,14 @@ struct ErrorDocSetter {
 		if (pAllocator == IJSTI_NULL) { return; }
 
 		pErrMsg->SetObject();
-		pErrMsg->AddMember("type", rapidjson::StringRef("MapKeyDuplicated"), *pAllocator);
-		pErrMsg->AddMember("key",
-						 rapidjson::Value().SetString(keyName.data(), (rapidjson::SizeType)keyName.size(), *pAllocator),
-						 *pAllocator);
+		pErrMsg->AddMember(
+				rapidjson::Value().SetString("type", *pAllocator),
+				rapidjson::Value().SetString("MapKeyDuplicated", *pAllocator),
+				*pAllocator);
+		pErrMsg->AddMember(
+				rapidjson::Value().SetString("key", *pAllocator),
+				rapidjson::Value().SetString(keyName.data(), (rapidjson::SizeType)keyName.size(), *pAllocator),
+				*pAllocator);
 	}
 
 	void ElementTypeMismatch(const char *expectedType, const rapidjson::Value &errVal)
@@ -277,13 +300,18 @@ struct ErrorDocSetter {
 		errVal.Accept(writer);
 
 		pErrMsg->SetObject();
-		pErrMsg->AddMember("type", rapidjson::StringRef("TypeMismatch"), *pAllocator);
-		pErrMsg->AddMember("expectedType",
-						 rapidjson::Value().SetString(expectedType, *pAllocator),
-						 *pAllocator);
-		pErrMsg->AddMember("json",
-						 rapidjson::Value().SetString(ostream.str.data(), (rapidjson::SizeType)ostream.str.size(), *pAllocator),
-						 *pAllocator);
+		pErrMsg->AddMember(
+				rapidjson::Value().SetString("type", *pAllocator),
+				rapidjson::Value().SetString("TypeMismatch", *pAllocator),
+				*pAllocator);
+		pErrMsg->AddMember(
+				rapidjson::Value().SetString("expectedType", *pAllocator),
+				rapidjson::Value().SetString(expectedType, *pAllocator),
+				*pAllocator);
+		pErrMsg->AddMember(
+				rapidjson::Value().SetString("json", *pAllocator),
+				rapidjson::Value().SetString(ostream.str.data(), (rapidjson::SizeType)ostream.str.size(), *pAllocator),
+				*pAllocator);
 	}
 
 	void ElementAddMemberName(const std::string &memberName)
