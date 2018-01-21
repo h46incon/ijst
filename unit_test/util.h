@@ -14,18 +14,18 @@
 #include <ijst/types_std.h>
 #include <ijst/types_container.h>
 #include <ijst/detail/detail.h>
-#define UTEST_SERIALIZE_AND_CHECK(st, doc, fieldPushMode)					\
+#define UTEST_SERIALIZE_AND_CHECK(st, doc, serFlag)							\
 do {																		\
 	std::string json;														\
-	int toStrRet = st._.Serialize(json, (fieldPushMode));					\
+	int toStrRet = st._.Serialize(json, (serFlag));							\
 	ASSERT_EQ(toStrRet, 0);													\
 	doc.Parse(json.c_str(), json.length());									\
 	ASSERT_FALSE(doc.HasParseError());										\
 } while (false)
 
-#define UTEST_PARSE_STR_TO_JSON(str, jsonOutput)								\
-	rapidjson::Document jsonOutput;												\
-	jsonOutput.Parse(str.c_str(), str.length());								\
+#define UTEST_PARSE_STR_TO_JSON(str, jsonOutput)							\
+	rapidjson::Document jsonOutput;											\
+	jsonOutput.Parse(str.c_str(), str.length());							\
 	ASSERT_FALSE(jsonOutput.HasParseError());
 
 inline void CheckTypeMismatch(const rapidjson::Value& errDoc, const char* expectedType, const char* value)

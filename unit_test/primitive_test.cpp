@@ -146,7 +146,7 @@ void DoTestSt(const string& json, VT vDefault
 
 	// Serialize
 	rapidjson::Document doc;
-	UTEST_SERIALIZE_AND_CHECK(st, doc, FPush::kNoneFlag);
+	UTEST_SERIALIZE_AND_CHECK(st, doc, SerFlag::kNoneFlag);
 	JT (*pGetJsonVal)(rapidjson::Value &) = GetJsonVal<JT>;
 	// v
 	ASSERT_EQ(pGetJsonVal(doc["f_v"]), sv0);
@@ -286,7 +286,7 @@ TEST(Primitive, Bool)
 		st.list_v.push_back(false);
 
 		rapidjson::Document doc;
-		UTEST_SERIALIZE_AND_CHECK(st, doc, FPush::kNoneFlag);
+		UTEST_SERIALIZE_AND_CHECK(st, doc, SerFlag::kNoneFlag);
 		bool (*pGetJsonVal)(rapidjson::Value &) = GetJsonVal<bool>;
 		ASSERT_EQ(pGetJsonVal(doc["f_v"]), false);
 		ASSERT_EQ(doc["f_map"].MemberCount(), 3u);
@@ -617,7 +617,7 @@ TEST(Primitive, Raw)
 		st.map_v["v3"] = raw;
 
 		rapidjson::Document doc;
-		UTEST_SERIALIZE_AND_CHECK(st, doc, FPush::kNoneFlag);
+		UTEST_SERIALIZE_AND_CHECK(st, doc, SerFlag::kNoneFlag);
 		ASSERT_EQ(doc["f_v"].GetInt(), 0);
 		ASSERT_TRUE(doc["f_vec"][0].IsNull());
 		ASSERT_EQ(doc["f_vec"][1].GetInt(), 2);

@@ -161,7 +161,7 @@ public:
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartArray());
 
 		for (typename VarType::const_iterator itera = field.begin(); itera != field.end(); ++itera) {
-			SerializeReq elemReq(req.writer, &(*itera), req.fPushMode);
+			SerializeReq elemReq(req.writer, &(*itera), req.serFlag);
 			IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq));
 		}
 
@@ -280,7 +280,7 @@ public:
 			IJSTI_RET_WHEN_WRITE_FAILD(
 					req.writer.Key(key.data(), static_cast<rapidjson::SizeType>(key.size())) );
 
-			SerializeReq elemReq(req.writer, &(itFieldMember->second), req.fPushMode);
+			SerializeReq elemReq(req.writer, &(itFieldMember->second), req.serFlag);
 			IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq));
 		}
 
@@ -355,7 +355,7 @@ public:
 			IJSTI_RET_WHEN_WRITE_FAILD(
 					req.writer.Key(key.data(), static_cast<rapidjson::SizeType>(key.size())) );
 
-			SerializeReq elemReq(req.writer, &(itMember->value), req.fPushMode);
+			SerializeReq elemReq(req.writer, &(itMember->value), req.serFlag);
 			IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq));
 		}
 

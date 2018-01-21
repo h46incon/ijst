@@ -177,14 +177,14 @@ typedef FStatus::_E EFStatus;
  *
  * Options can be combined by bitwise OR operator (|).
  */
-struct FPush {
-	typedef unsigned int Mode;
+struct SerFlag {
+	typedef unsigned int Flag;
 	//! does not set any option.
-	static const Mode kNoneFlag							= 0x00000000;
+	static const Flag kNoneFlag							= 0x00000000;
 	//! set if serialize only valid fields, otherwise will serialize all fields.
-	static const Mode kOnlyValidField					= 0x00000001;
+	static const Flag kOnlyValidField					= 0x00000001;
 	//! set if ignore unknown fields, otherwise will serialize all unknown fields.
-	static const Mode kIgnoreUnknown					= 0x00000002;
+	static const Flag kIgnoreUnknown					= 0x00000002;
 };
 
 /**
@@ -505,7 +505,7 @@ namespace detail {
 
 		struct SerializeReq {
 			// Serialize option about fields
-			FPush::Mode fPushMode;
+			SerFlag::Flag serFlag;
 
 			// Pointer of field to serialize.
 			// The actual type of field should be decide in the derived class
@@ -513,8 +513,8 @@ namespace detail {
 
 			HandlerBase& writer;
 
-			SerializeReq(HandlerBase& _writer, const void *_pField, FPush::Mode _fPushMode)
-					: fPushMode(_fPushMode)
+			SerializeReq(HandlerBase& _writer, const void *_pField, SerFlag::Flag _serFlag)
+					: serFlag(_serFlag)
 					, pField(_pField)
 					, writer(_writer)
 			{ }
@@ -865,28 +865,28 @@ public:
 	/**
 	 * @brief Serialize the structure to string.
 	 *
-	 * @param writer 			writer
-	 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
-	 * @return					Error code
+	 * @param writer 		writer
+	 * @param serFlag	 	Serialization options about fields, options can be combined by bitwise OR operator (|)
+	 * @return				Error code
 	 */
-	int Serialize(HandlerBase& writer, FPush::Mode fieldPushMode = FPush::kNoneFlag)  const
+	int Serialize(HandlerBase& writer, SerFlag::Flag serFlag = SerFlag::kNoneFlag)  const
 	{
-		return DoSerialize(writer, fieldPushMode);
+		return DoSerialize(writer, serFlag);
 	}
 
 	/**
 	 * @brief Serialize the structure to string.
 	 *
-	 * @param strOutput 		The output of result
-	 * @param fieldPushMode 	Serialization options about fields, options can be combined by bitwise OR operator (|)
-	 * @return					Error code
+	 * @param strOutput 	The output of result
+	 * @param serFlag 		Serialization options about fields, options can be combined by bitwise OR operator (|)
+	 * @return				Error code
 	 */
-	int Serialize(IJST_OUT std::string &strOutput, FPush::Mode fieldPushMode = FPush::kNoneFlag)  const
+	int Serialize(IJST_OUT std::string &strOutput, SerFlag::Flag serFlag = SerFlag::kNoneFlag)  const
 	{
 		rapidjson::StringBuffer buffer;
 		detail::JsonWriter writer(buffer);
 		HandlerWrapper<detail::JsonWriter> writerWrapper(writer);
-		IJSTI_RET_WHEN_NOT_ZERO(DoSerialize(writerWrapper, fieldPushMode));
+		IJSTI_RET_WHEN_NOT_ZERO(DoSerialize(writerWrapper, serFlag));
 
 		strOutput = std::string(buffer.GetString(), buffer.GetSize() / sizeof(rapidjson::StringBuffer::Ch));
 		return 0;
@@ -1095,7 +1095,7 @@ private:
 	inline int ISerialize(const SerializeReq &req) const
 	{
 		assert(req.pField == this);
-		return DoSerialize(req.writer, req.fPushMode);
+		return DoSerialize(req.writer, req.serFlag);
 	}
 
 	typedef detail::SerializerInterface::FromJsonReq FromJsonReq;
@@ -1130,20 +1130,20 @@ private:
 	// #endregion
 
 	//! Serialize to string using SAX API
-	int DoSerialize(HandlerBase &writer, FPush::Mode fPushMode) const
+	int DoSerialize(HandlerBase &writer, SerFlag::Flag serFlag) const
 	{
 		if (m_isParentVal) {
-			return DoSerializeFields(writer, fPushMode);
+			return DoSerializeFields(writer, serFlag);
 			// Unknown will be ignored
 		}
 
 		IJSTI_RET_WHEN_WRITE_FAILD(writer.StartObject());
 
 		// Write fields
-		IJSTI_RET_WHEN_NOT_ZERO(DoSerializeFields(writer, fPushMode));
+		IJSTI_RET_WHEN_NOT_ZERO(DoSerializeFields(writer, serFlag));
 
 		// Write buffer if need
-		if (!isBitSet(fPushMode, FPush::kIgnoreUnknown))
+		if (!isBitSet(serFlag, SerFlag::kIgnoreUnknown))
 		{
 			assert(m_r->unknown.IsObject());
 			for (rapidjson::Value::ConstMemberIterator itMember = m_r->unknown.MemberBegin();
@@ -1163,7 +1163,7 @@ private:
 		return 0;
 	}
 
-	int DoSerializeFields(HandlerBase &writer, FPush::Mode fPushMode) const
+	int DoSerializeFields(HandlerBase &writer, SerFlag::Flag serFlag) const
 	{
 		IJST_ASSERT(!m_isParentVal || m_pMetaClass->GetFieldsInfo().size() == 1);
 		for (std::vector<MetaFieldInfo>::const_iterator itMetaField = m_pMetaClass->GetFieldsInfo().begin();
@@ -1176,7 +1176,7 @@ private:
 				case FStatus::kMissing:
 				case FStatus::kParseFailed:
 				{
-					if (fstatus != FStatus::kValid && isBitSet(fPushMode, FPush::kOnlyValidField)) {
+					if (fstatus != FStatus::kValid && isBitSet(serFlag, SerFlag::kOnlyValidField)) {
 						continue;
 					}
 
@@ -1187,7 +1187,7 @@ private:
 								writer.Key(itMetaField->jsonName.data(), (rapidjson::SizeType)itMetaField->jsonName.size()) );
 					}
 					// write value
-					SerializeReq req(writer, pFieldValue, fPushMode);
+					SerializeReq req(writer, pFieldValue, serFlag);
 					IJSTI_RET_WHEN_NOT_ZERO(
 							itMetaField->serializerInterface->Serialize(req));
 				}

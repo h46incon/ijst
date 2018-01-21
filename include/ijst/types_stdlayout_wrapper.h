@@ -88,7 +88,7 @@ namespace detail {
 		virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 		{
 			const VarType& field = *static_cast<const VarType*>(req.pField);
-			SerializeReq elemReq(req.writer, &field.Val(), req.fPushMode);
+			SerializeReq elemReq(req.writer, &field.Val(), req.serFlag);
 			return IJSTI_FSERIALIZER_INS(_T)->Serialize(elemReq);
 		}
 
