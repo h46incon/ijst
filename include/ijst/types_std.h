@@ -336,6 +336,14 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_raw)
 		}
 		return 0;
 	}
+
+	virtual void ShrinkAllocator(void *pField) IJSTI_OVERRIDE
+	{
+		VarType& field = *static_cast<VarType*>(pField);
+		detail::ShrinkAllocatorWithOwnDoc(*field.m_pOwnDoc, field.v, field.m_pAllocator);
+	}
+
+
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
 }	//namespace detail

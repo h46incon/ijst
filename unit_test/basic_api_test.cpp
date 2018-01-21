@@ -420,6 +420,76 @@ TEST(BasicAPI, ChainedOptional)
 	ASSERT_EQ(cref.get_v()->get_map()[""]->get_int_2().Ptr(), &(st.v.map[""].int_2));
 }
 
+
+IJST_DEFINE_STRUCT(
+		StEmpty
+)
+
+IJST_DEFINE_STRUCT(
+		StAllocShrink
+		, (IJST_TST(StEmpty), empty, "val", 0)
+		, (IJST_TVEC(StEmpty), vecEmpty, "vec", 0)
+		, (IJST_TDEQUE(StEmpty), deqEmpty, "deq", 0)
+		, (IJST_TLIST(StEmpty), listEmpty, "list", 0)
+		, (IJST_TMAP(StEmpty), mapEmpty, "map", 0)
+		, (IJST_TOBJ(StEmpty), objEmpty, "obj", 0)
+		, (T_raw, raw, "raw", 0)
+		, (T_Wrapper<T_raw>, rawWrap, "rawWrap", 0)
+)
+
+TEST(BasicAPI, ShrinkAllocator)
+{
+	const std::string srcJson =
+			"{"
+				"\"val\": {\"unk1\": \"v1\"}, "
+				"\"vec\": [{\"unk2\": \"v2\"}, {\"unk22\": \"v22\"}], "
+				"\"deq\": [{\"unk3\": \"v3\"}, {\"unk33\": \"v33\"}], "
+				"\"list\": [{\"unk4\": \"v4\"}, {\"unk44\": \"v44\"}], "
+				"\"map\": {\"k1\": {\"unk5\": \"v5\"}, \"k11\": {\"unk55\": \"v55\"}}, "
+				"\"obj\": {\"k2\": {\"unk6\": \"v6\"}, \"k22\": {\"unk66\": \"v66\"}}, "
+				"\"raw\": \"v7\", "
+				"\"rawWrap\": [\"v8\", true, 0, 1.2, null]"
+			"}";
+
+	rapidjson::Document srcDoc;
+	srcDoc.Parse(srcJson.c_str());
+	ASSERT_FALSE(srcDoc.HasParseError());
+
+	// Deserialize
+	StAllocShrink st;
+	int ret = st._.Deserialize(srcJson);
+	ASSERT_EQ(ret, 0);
+	ASSERT_GT(st._.GetAllocator().Size(), 0u);
+
+	// Shrink and check
+	st._.ShrinkAllocator();
+	ASSERT_EQ(st._.GetAllocator().Size(), 0u);
+	const JsonAllocator *parentAllocator = &st._.GetAllocator();
+	ASSERT_NE(parentAllocator, &st.empty._.GetAllocator());
+	ASSERT_NE(parentAllocator, &st.vecEmpty[0]._.GetAllocator());
+	ASSERT_NE(parentAllocator, &st.vecEmpty[1]._.GetAllocator());
+	ASSERT_NE(parentAllocator, &st.deqEmpty[0]._.GetAllocator());
+	ASSERT_NE(parentAllocator, &st.deqEmpty[1]._.GetAllocator());
+	ASSERT_NE(parentAllocator, &st.listEmpty.front()._.GetAllocator());
+	ASSERT_NE(parentAllocator, &st.listEmpty.back()._.GetAllocator());
+	ASSERT_NE(parentAllocator, &st.mapEmpty["k1"]._.GetAllocator());
+	ASSERT_NE(parentAllocator, &st.mapEmpty["k11"]._.GetAllocator());
+	ASSERT_NE(parentAllocator, &st.objEmpty[0].value._.GetAllocator());
+	ASSERT_NE(parentAllocator, &st.objEmpty[1].value._.GetAllocator());
+	ASSERT_NE(parentAllocator, &st.raw.GetAllocator());
+	ASSERT_NE(parentAllocator, &st.rawWrap.Val().GetAllocator());
+
+	// Serialize and check
+	std::string destJson;
+	st._.Serialize(destJson);
+
+	rapidjson::Document destDoc;
+	destDoc.Parse(destJson.c_str());
+	ASSERT_FALSE(destDoc.HasParseError());
+
+	ASSERT_EQ(srcDoc, destDoc);
+}
+
 struct DummySt {
 	IJST_DEFINE_STRUCT(
 			SimpleSt

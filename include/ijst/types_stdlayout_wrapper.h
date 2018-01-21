@@ -98,6 +98,12 @@ namespace detail {
 			FromJsonReq elemReq(req.stream, req.allocator, req.deserFlag, req.canMoveSrc, &field.Val());
 			return IJSTI_FSERIALIZER_INS(_T)->FromJson(elemReq, resp);
 		}
+
+		virtual void ShrinkAllocator(void *pField) IJSTI_OVERRIDE
+		{
+			VarType& field = *static_cast<VarType*>(pField);
+			return IJSTI_FSERIALIZER_INS(_T)->ShrinkAllocator(&field.Val());
+		}
 	};
 }
 }

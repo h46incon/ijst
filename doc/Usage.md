@@ -146,11 +146,6 @@ rapidjson::Value& jUnknown = sampleStruct._.GetUnknown();
 SampleStruct sampleStruct;
 int ret;
 
-// ToJson
-// 编译时需启用 IJST_ENABLE_TO_JSON_OBJECT 宏
-rapidjson::Document doc;
-ret = sampleStruct._.ToJson(doc, doc.GetAllocator());
-
 // FromJson
 // 编译时需启用 IJST_ENABLE_From_JSON_OBJECT 宏
 rapidjson::Value jVal;
@@ -162,11 +157,6 @@ ret = sampleStruct._.FromJson(jVal);
 
 ```cpp
 int ret;
-
-// Move 序列化，序列化后 sampleStruct 对象的 Unknown 会被窃取
-rapidjson::Value jVal;
-ret = sampleStruct._.MoveToJson(jVal, sampleStruct._.GetAllocator());
-// 因为使用了 sampleStruct 管理的 allocator，需要注意其生命周期
 
 // Move 反序列化，反序列化后 doc 对象的内容会被窃取
 // 因为需要由 ijst 结构体管理 allocator，但由于 rapidJSON API 的限制，所以参数只支持 rapidjson::Document 对象
@@ -270,24 +260,6 @@ ijst::JsonValue& jUnknown = sampleStruct._.GetUnknown();
 ijst::JsonAllocator& alloc = sampleStruct._.GetAllocator();
 jUnknown.SetString("s", 1, alloc);
 ```
-
-如果定义了嵌套了的其他结构体的结构体，且需要修改其 unknown 字段，
-可以先将他们的 allocator 设置为相同的值，这样在 `MoveToJson()` 的时候，可以减少拷贝：
-
-```cpp
-IJST_DEFINE_STRUCT (
-    OuterStruct
-    , (IJST_TST(SampleStruct), stSample, "sample", 0)
-);
-OuterStruct ost;
-
-ost._.InitMembersAllocator();
-// 或
-ost._.SetMembersAllocator(otherAlloc);
-assert(&ost._.GetAllocator() == &ost.stSample._.GetAllocator());
-```
-
-注：反序列化时不需进行此操作。
 
 也和 rapidJSON 一样，管理 allocator 是一个较为麻烦的事。ijst 中提供了 `GetOwnAllocator()` 接口以供有相关需求的使用者使用。
 

@@ -208,15 +208,24 @@ public:
 		return 0;
 	}
 
+	virtual void ShrinkAllocator(void* pField) IJSTI_OVERRIDE
+	{
+		VarType& field = *static_cast<VarType *>(pField);
+		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(ElemType);
+		for (typename VarType::iterator itField = field.begin(); itField != field.end(); ++itField)
+		{
+			serializerInterface->ShrinkAllocator(&*itField);
+		}
+	}
 };
 
 #define IJSTI_SERIALIZER_CONTAINER_DEFINE()																		\
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE												\
-	{ return ContainerSerializerSingleton::GetInstance()->Serialize(req); }
-
-#define IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()															\
+	{ return ContainerSerializerSingleton::GetInstance()->Serialize(req); }										\
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE					\
-	{ return ContainerSerializerSingleton::GetInstance()->FromJson(req, resp); }
+	{ return ContainerSerializerSingleton::GetInstance()->FromJson(req, resp); }								\
+	virtual void ShrinkAllocator(void* pField) IJSTI_OVERRIDE													\
+	{ return ContainerSerializerSingleton::GetInstance()->ShrinkAllocator(pField); }							\
 
 /**
  * Serialization class of Vector types
@@ -228,7 +237,6 @@ class FSerializer<std::vector<_T> > : public SerializerInterface {
 	typedef Singleton<ContainerSerializer<_T, VarType> > ContainerSerializerSingleton;
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
-	IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()
 };
 
 /**
@@ -242,7 +250,6 @@ class FSerializer<std::deque<_T> > : public SerializerInterface {
 
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
-	IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()
 };
 
 /**
@@ -255,7 +262,6 @@ class FSerializer<std::list<_T> > : public SerializerInterface {
 	typedef Singleton<ContainerSerializer<_T, VarType> > ContainerSerializerSingleton;
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
-	IJSTI_SERIALIZER_CONTAINER_DEFINE_FROM_JSON()
 };
 
 /**
@@ -330,6 +336,15 @@ public:
 		return 0;
 	}
 
+	virtual void ShrinkAllocator(void* pField) IJSTI_OVERRIDE
+	{
+		VarType& field = *static_cast<VarType *>(pField);
+		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
+		for (typename VarType::iterator itField = field.begin(); itField != field.end(); ++itField)
+		{
+			serializerInterface->ShrinkAllocator(&itField->second);
+		}
+	}
 };
 
 /**
@@ -403,6 +418,15 @@ public:
 		return 0;
 	}
 
+	virtual void ShrinkAllocator(void* pField) IJSTI_OVERRIDE
+	{
+		VarType& field = *static_cast<VarType*>(pField);
+		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(ValType);
+		for (typename VarType::iterator itField = field.begin(); itField != field.end(); ++itField)
+		{
+			serializerInterface->ShrinkAllocator(&itField->value);
+		}
+	}
 };
 
 }	// namespace detail

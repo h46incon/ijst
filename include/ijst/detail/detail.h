@@ -66,42 +66,6 @@ struct HasType {
 	typedef void Void;
 };
 
-/**
- * Custom swap() to avoid dependency on C++ <algorithm> header
- * @tparam _T 	Type of the arguments to swap, should be instantiated with primitive C++ types only.
- * @note This has the same semantics as std::swap().
- */
-template <typename _T>
-inline void Swap(_T& a, _T& b) RAPIDJSON_NOEXCEPT {
-	_T tmp = IJSTI_MOVE(a);
-	a = IJSTI_MOVE(b);
-	b = IJSTI_MOVE(tmp);
-}
-
-template<typename Itera, typename Target, typename Comp>
-Itera BinarySearch(Itera begin, Itera end, const Target& target, Comp comp)
-{
-	assert(begin <= end);
-
-	while (begin < end) {
-		Itera mid = begin + (end - begin) / 2;
-		int c = comp(*mid, target);
-		if (c > 0) {
-			// target < mid
-			end = mid;
-		}
-		else if (c < 0) {
-			// target > mid
-			begin = mid + 1;
-		}
-		else {
-			// target == mid
-			return mid;
-		}
-	}
-	return end;
-};
-
 template<typename _Ch>
 class GenericHeadOStream {
 public:
@@ -333,6 +297,58 @@ struct ErrorDocSetter {
 	rapidjson::MemoryPoolAllocator<>* const pAllocator;
 	rapidjson::Value* const pErrMsg;
 };
+
+
+/**
+ * Custom swap() to avoid dependency on C++ <algorithm> header
+ * @tparam _T 	Type of the arguments to swap, should be instantiated with primitive C++ types only.
+ * @note This has the same semantics as std::swap().
+ */
+template <typename _T>
+inline void Swap(_T& a, _T& b) RAPIDJSON_NOEXCEPT {
+	_T tmp = IJSTI_MOVE(a);
+	a = IJSTI_MOVE(b);
+	b = IJSTI_MOVE(tmp);
+}
+
+template<typename Itera, typename Target, typename Comp>
+Itera BinarySearch(Itera begin, Itera end, const Target& target, Comp comp)
+{
+	assert(begin <= end);
+
+	while (begin < end) {
+		Itera mid = begin + (end - begin) / 2;
+		int c = comp(*mid, target);
+		if (c > 0) {
+			// target < mid
+			end = mid;
+		}
+		else if (c < 0) {
+			// target > mid
+			begin = mid + 1;
+		}
+		else {
+			// target == mid
+			return mid;
+		}
+	}
+	return end;
+};
+
+inline void ShrinkAllocatorWithOwnDoc(rapidjson::Document& ownDoc, rapidjson::Value& val, rapidjson::MemoryPoolAllocator<>*& pAllocatorOut)
+{
+	if (pAllocatorOut == &ownDoc.GetAllocator()) {
+		if (pAllocatorOut->Capacity() == pAllocatorOut->Size()) {
+			// The capacity will not shrink
+			return;
+		}
+	}
+	rapidjson::Document newDoc;
+	newDoc.CopyFrom(val, newDoc.GetAllocator());
+	ownDoc.Swap(newDoc);
+	val = (rapidjson::Value&) ownDoc;
+	pAllocatorOut = &ownDoc.GetAllocator();
+}
 
 }	// namespace detail
 }	// namespace ijst

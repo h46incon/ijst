@@ -108,11 +108,11 @@
 //! @brief Declare a ijst struct which represent a value instead of members insides a object
 //! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_VALUE(stName, type, fName, desc)	\
-    IJSTI_DEFINE_STRUCT_IMPL(1, true, F, stName, (type, fName, "JSON_ITSELF", desc))
+    IJSTI_DEFINE_STRUCT_IMPL(1, true, F, stName, (type, fName, "", desc))
 //! @brief Declare a ijst struct which represent a value instead of members insides a object with getter
 //! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_VALUE_WITH_GETTER(stName, type, fName, desc)	\
-    IJSTI_DEFINE_STRUCT_IMPL(1, true, T, stName, (type, fName, "JSON_ITSELF", desc))
+    IJSTI_DEFINE_STRUCT_IMPL(1, true, T, stName, (type, fName, "", desc))
 
 //! @brief Get status of field in obj.
 //! @ingroup IJST_MACRO_API
@@ -473,7 +473,6 @@ private:
  *				Inner Interface
  */
 namespace detail {
-	typedef rapidjson::Writer<rapidjson::StringBuffer> JsonWriter;
 
 	//! return Err::kWriteFailed if action return false
 	#define IJSTI_RET_WHEN_WRITE_FAILD(action) 					\
@@ -560,6 +559,8 @@ namespace detail {
 
 		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp)= 0;
 
+		virtual void ShrinkAllocator(void * pField)
+		{ (void)pField; }
 	};
 
 	/**
@@ -578,6 +579,7 @@ namespace detail {
 		typedef void VarType;
 		virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE = 0;
 		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE = 0;
+		virtual void ShrinkAllocator(void * pField) IJSTI_OVERRIDE {}
 	};
 
 	#define IJSTI_FSERIALIZER_INS(_T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< _T> >::GetInstance()
@@ -699,6 +701,11 @@ namespace detail {
 		{
 			_T *pField = (_T *) req.pFieldBuffer;
 			return pField->_.IFromJson(req, resp);
+		}
+
+		virtual void ShrinkAllocator(void *pField) IJSTI_OVERRIDE
+		{
+			((_T*)pField)->_.IShrinkAllocator(pField);
 		}
 	};
 
@@ -879,8 +886,8 @@ public:
 	int Serialize(IJST_OUT std::string &strOutput, SerFlag::Flag serFlag = SerFlag::kNoneFlag)  const
 	{
 		rapidjson::StringBuffer buffer;
-		detail::JsonWriter writer(buffer);
-		HandlerWrapper<detail::JsonWriter> writerWrapper(writer);
+		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+		HandlerWrapper<rapidjson::Writer<rapidjson::StringBuffer> > writerWrapper(writer);
 		IJSTI_RET_WHEN_NOT_ZERO(DoSerialize(writerWrapper, serFlag));
 
 		strOutput = std::string(buffer.GetString(), buffer.GetSize() / sizeof(rapidjson::StringBuffer::Ch));
@@ -969,7 +976,7 @@ public:
 		int ret = Deserialize(strInput.data(), strInput.size(), deserFlag, &errDoc);
 		if (ret != 0) {
 			rapidjson::StringBuffer sb;
-			detail::JsonWriter writer(sb);
+			rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
 			errDoc.Accept(writer);
 			errMsgOut = std::string(sb.GetString(), sb.GetSize() / sizeof(rapidjson::StringBuffer::Ch));
 		}
@@ -1075,6 +1082,17 @@ public:
 	}
 #endif
 
+	/**
+	 * @brief Shrink allocator of each member by recopy unknown fields
+	 *
+	 * The allocator of source json after move deserialize. The memory is wasted if the
+	 * deserialized object exists in long time.
+	 */
+	inline void ShrinkAllocator()
+	{
+		DoShrinkAllocator();
+	}
+
 private:
 	// #region Implement SerializeInterface
 	template <typename, typename> friend class detail::FSerializer;
@@ -1110,6 +1128,12 @@ private:
 		else {
 			return DoFromJson(req.stream, param);
 		}
+	}
+
+	inline void IShrinkAllocator(void* pField)
+	{
+		assert(pField == this);
+		DoShrinkAllocator();
 	}
 
 	// #endregion
@@ -1376,6 +1400,20 @@ private:
 		return 0;
 	}
 
+	void DoShrinkAllocator()
+	{
+		// Shrink allocator of each field
+		for (std::vector<MetaFieldInfo>::const_iterator itFieldInfo = m_pMetaClass->GetFieldsInfo().begin();
+			 itFieldInfo != m_pMetaClass->GetFieldsInfo().end(); ++itFieldInfo)
+		{
+			void *pField = GetFieldByOffset(itFieldInfo->offset);
+			itFieldInfo->serializerInterface->ShrinkAllocator(pField);
+		}
+
+		// Shrink self allocator
+		detail::ShrinkAllocatorWithOwnDoc(m_r->ownDoc, m_r->unknown, m_pAllocator);
+	}
+
 	inline void InitOuterPtr()
 	{
 		m_pOuter = reinterpret_cast<const unsigned char *>(this - m_pMetaClass->GetAccessorOffset());
@@ -1394,16 +1432,16 @@ private:
 		// Check all required field status
 		bool hasErr = false;
 
-		for (std::vector<MetaFieldInfo>::const_iterator itField = m_pMetaClass->GetFieldsInfo().begin();
-			 itField != m_pMetaClass->GetFieldsInfo().end(); ++itField)
+		for (std::vector<MetaFieldInfo>::const_iterator itFieldInfo = m_pMetaClass->GetFieldsInfo().begin();
+			 itFieldInfo != m_pMetaClass->GetFieldsInfo().end(); ++itFieldInfo)
 		{
-			if (IsBitSet(itField->desc, FDesc::Optional))
+			if (IsBitSet(itFieldInfo->desc, FDesc::Optional))
 			{
 				// Optional
 				continue;
 			}
 
-			const EFStatus fStatus = m_r->fieldStatus[itField->index];
+			const EFStatus fStatus = m_r->fieldStatus[itFieldInfo->index];
 			if (fStatus == FStatus::kValid
 				|| fStatus == FStatus::kNull)
 			{
@@ -1413,7 +1451,7 @@ private:
 
 			// Has error
 			hasErr = true;
-			errDoc.ElementAddMemberName(itField->jsonName);
+			errDoc.ElementAddMemberName(itFieldInfo->jsonName);
 		}
 		if (hasErr)
 		{
