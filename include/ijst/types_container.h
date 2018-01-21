@@ -174,7 +174,7 @@ public:
 	{
 		if (!req.stream.IsArray()) {
 			resp.errDoc.ElementTypeMismatch("array", req.stream);
-			return Err::kDeserializeValueTypeError;
+			return ErrorCode::kDeserializeValueTypeError;
 		}
 
 		assert(req.pFieldBuffer != IJST_NULL);
@@ -292,7 +292,7 @@ public:
 	{
 		if (!req.stream.IsObject()) {
 			resp.errDoc.ElementTypeMismatch("object", req.stream);
-			return Err::kDeserializeValueTypeError;
+			return ErrorCode::kDeserializeValueTypeError;
 		}
 
 		assert(req.pFieldBuffer != IJST_NULL);
@@ -310,7 +310,7 @@ public:
 			// Check duplicate
 			if (!insertRet.second) {
 				resp.errDoc.ElementMapKeyDuplicated(fieldName);
-				return Err::kDeserializeMapKeyDuplicated;
+				return ErrorCode::kDeserializeMapKeyDuplicated;
 			}
 
 			// Element FromJson
@@ -367,7 +367,7 @@ public:
 	{
 		if (!req.stream.IsObject()) {
 			resp.errDoc.ElementTypeMismatch("object", req.stream);
-			return Err::kDeserializeValueTypeError;
+			return ErrorCode::kDeserializeValueTypeError;
 		}
 
 		assert(req.pFieldBuffer != IJST_NULL);

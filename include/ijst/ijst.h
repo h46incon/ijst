@@ -281,7 +281,7 @@ public:
 };
 
 //! Error codes.
-struct Err {
+struct ErrorCode {
 	static const int kSucc 							= 0x00000000;
 	static const int kDeserializeValueTypeError 	= 0x00001001;
 	static const int kDeserializeSomeFiledsInvalid 	= 0x00001002;
@@ -478,7 +478,7 @@ namespace detail {
 
 	//! return Err::kWriteFailed if action return false
 	#define IJSTI_RET_WHEN_WRITE_FAILD(action) 					\
-		do { if(!(action)) return Err::kWriteFailed; } while (false)
+		do { if(!(action)) return ErrorCode::kWriteFailed; } while (false)
 	//! return if action return non-0
 	#define IJSTI_RET_WHEN_NOT_ZERO(action) 					\
 		do { int ret = (action); if(ret != 0) return (ret); } while (false)
@@ -920,7 +920,7 @@ public:
 		{
 			detail::ErrorDocSetter errDocSetter(pErrDocOut);
 			errDocSetter.ParseFailed(doc.GetParseError());
-			return Err::kDeserializeParseFaild;
+			return ErrorCode::kDeserializeParseFaild;
 		}
 
 		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, unknownMode, checkField, pErrDocOut);
@@ -1013,7 +1013,7 @@ public:
 		{
 			detail::ErrorDocSetter errDocSetter(pErrDocOut);
 			errDocSetter.ParseFailed(doc.GetParseError());
-			return Err::kDeserializeParseFaild;
+			return ErrorCode::kDeserializeParseFaild;
 		}
 		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, unknownMode, checkField, pErrDocOut);
 	}
@@ -1209,7 +1209,7 @@ private:
 				default:
 					// Error occurs
 					assert(false);
-					return Err::kInnerError;
+					return ErrorCode::kInnerError;
 			}
 		}
 		return 0;
@@ -1240,7 +1240,7 @@ private:
 		// Set fields by members of stream
 		if (!stream.IsObject()) {
 			p.errDoc.ElementTypeMismatch("object", stream);
-			return Err::kDeserializeValueTypeError;
+			return ErrorCode::kDeserializeValueTypeError;
 		}
 
 		p.fieldCount = 0;
@@ -1268,7 +1268,7 @@ private:
 						break;
 					case UnknownMode::kError:
 						p.errDoc.ErrorInObject("UnknownMember", fieldName);
-						return Err::kDeserializeSomeUnknownMember;
+						return ErrorCode::kDeserializeSomeUnknownMember;
 					case UnknownMode::kIgnore:
 						break;
 					default:
@@ -1318,7 +1318,7 @@ private:
 		// Serialize fields by members of stream
 		if (!stream.IsObject()) {
 			p.errDoc.ElementTypeMismatch("object", stream);
-			return Err::kDeserializeValueTypeError;
+			return ErrorCode::kDeserializeValueTypeError;
 		}
 
 		m_r->unknown.SetObject();
@@ -1346,7 +1346,7 @@ private:
 						break;
 					case UnknownMode::kError:
 						p.errDoc.ErrorInObject("UnknownMember", fieldName);
-						return Err::kDeserializeSomeUnknownMember;
+						return ErrorCode::kDeserializeSomeUnknownMember;
 					default:
 						assert(false);
 				}
@@ -1394,7 +1394,7 @@ private:
 				&& elemResp.fieldCount == 0)
 			{
 				p.errDoc.ErrorInObject("ElemIsEmpty", metaField->jsonName);
-				return Err::kDeserializeElemEmpty;
+				return ErrorCode::kDeserializeElemEmpty;
 			}
 			// succ
 			m_r->fieldStatus[metaField->index] = FStatus::kValid;
@@ -1444,7 +1444,7 @@ private:
 		if (hasErr)
 		{
 			errDoc.MissingMember();
-			return Err::kDeserializeSomeFiledsInvalid;
+			return ErrorCode::kDeserializeSomeFiledsInvalid;
 		}
 		return 0;
 	}

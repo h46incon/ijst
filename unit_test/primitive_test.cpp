@@ -221,7 +221,7 @@ void TestMemberTypeMismatch(const string& errJson, const char* type, const char*
 	Struct stErr;
 	string errMsg;
 	int ret = stErr._.Deserialize(errJson, errMsg, ijst::UnknownMode::kKeep, true);
-	int retExpected = Err::kDeserializeValueTypeError;
+	int retExpected = ErrorCode::kDeserializeValueTypeError;
 	ASSERT_EQ(ret, retExpected);
 	CheckMemberTypeMismatch(errMsg, "f_v", type, value);
 }

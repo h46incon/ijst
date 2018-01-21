@@ -138,14 +138,14 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_ubool)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
-		return (req.writer.Bool((*pField) != 0) ? 0 : Err::kWriteFailed);
+		return (req.writer.Bool((*pField) != 0) ? 0 : ErrorCode::kWriteFailed);
 	}
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsBool()) {
 			resp.errDoc.ElementTypeMismatch("bool", req.stream);
-			return Err::kDeserializeValueTypeError;
+			return ErrorCode::kDeserializeValueTypeError;
 		}
 
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
@@ -159,7 +159,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE												\
 	{																											\
 		const VarType *pField = static_cast<const VarType *>(req.pField);										\
-		return (req.writer.Bool(*pField) ? 0 : Err::kWriteFailed);												\
+		return (req.writer.Bool(*pField) ? 0 : ErrorCode::kWriteFailed);										\
 	}																											\
 																												\
 
@@ -168,7 +168,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 	{																											\
 		if (!req.stream.IsBool()) {																				\
 			resp.errDoc.ElementTypeMismatch("bool", req.stream);												\
-			return Err::kDeserializeValueTypeError;																\
+			return ErrorCode::kDeserializeValueTypeError;														\
 		}																										\
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);												\
 		*pField = req.stream.GetBool();																			\
@@ -192,14 +192,14 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
-		return (req.writer.Int(*pField) ? 0 : Err::kWriteFailed);
+		return (req.writer.Int(*pField) ? 0 : ErrorCode::kWriteFailed);
 	}
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsInt()) {
 			resp.errDoc.ElementTypeMismatch("int", req.stream);
-			return Err::kDeserializeValueTypeError;
+			return ErrorCode::kDeserializeValueTypeError;
 		}
 
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
@@ -213,14 +213,14 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int64)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
-		return (req.writer.Int64(*pField) ? 0 : Err::kWriteFailed);
+		return (req.writer.Int64(*pField) ? 0 : ErrorCode::kWriteFailed);
 	}
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsInt64()) {
 			resp.errDoc.ElementTypeMismatch("int64", req.stream);
-			return Err::kDeserializeValueTypeError;
+			return ErrorCode::kDeserializeValueTypeError;
 		}
 
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
@@ -234,14 +234,14 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
-		return (req.writer.Uint(*pField) ? 0 : Err::kWriteFailed);
+		return (req.writer.Uint(*pField) ? 0 : ErrorCode::kWriteFailed);
 	}
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsUint()) {
 			resp.errDoc.ElementTypeMismatch("uint", req.stream);
-			return Err::kDeserializeValueTypeError;
+			return ErrorCode::kDeserializeValueTypeError;
 		}
 
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
@@ -255,14 +255,14 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint64)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
-		return (req.writer.Uint64(*pField) ? 0 : Err::kWriteFailed);
+		return (req.writer.Uint64(*pField) ? 0 : ErrorCode::kWriteFailed);
 	}
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsUint64()) {
 			resp.errDoc.ElementTypeMismatch("uint64", req.stream);
-			return Err::kDeserializeValueTypeError;
+			return ErrorCode::kDeserializeValueTypeError;
 		}
 
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
@@ -276,14 +276,14 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_double)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
-		return (req.writer.Double(*pField) ? 0 : Err::kWriteFailed);
+		return (req.writer.Double(*pField) ? 0 : ErrorCode::kWriteFailed);
 	}
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsNumber()) {
 			resp.errDoc.ElementTypeMismatch("number", req.stream);
-			return Err::kDeserializeValueTypeError;
+			return ErrorCode::kDeserializeValueTypeError;
 		}
 
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
@@ -298,14 +298,14 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_string)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType& field = *static_cast<const VarType *>(req.pField);
-		return (req.writer.String(field.data(), static_cast<rapidjson::SizeType>(field.size())) ? 0 : Err::kWriteFailed);
+		return (req.writer.String(field.data(), static_cast<rapidjson::SizeType>(field.size())) ? 0 : ErrorCode::kWriteFailed);
 	}
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		if (!req.stream.IsString()) {
 			resp.errDoc.ElementTypeMismatch("string", req.stream);
-			return Err::kDeserializeValueTypeError;
+			return ErrorCode::kDeserializeValueTypeError;
 		}
 
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
@@ -319,7 +319,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_raw)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
-		return (pField->V().Accept(req.writer) ? 0 : Err::kWriteFailed);
+		return (pField->V().Accept(req.writer) ? 0 : ErrorCode::kWriteFailed);
 	}
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
