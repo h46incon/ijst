@@ -45,7 +45,7 @@ TEST(Deserialize, IgnoeFieldStatus)
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
 	}
-#if IJST_ENABLE_FROM_JSON_OBJECT
+
 	// From Json
 	{
 		rapidjson::Document doc(rapidjson::kObjectType);
@@ -62,7 +62,6 @@ TEST(Deserialize, IgnoeFieldStatus)
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
 	}
-#endif
 }
 
 
@@ -141,7 +140,6 @@ TEST(Deserialize, AdditionalFields)
 	}
 }
 
-#if IJST_ENABLE_FROM_JSON_OBJECT
 TEST(Deserialize, FromJson)
 {
 	SimpleSt st;
@@ -183,7 +181,6 @@ TEST(Deserialize, MoveFromJson)
 	ASSERT_EQ(st.int_2, 1);
 	ASSERT_STREQ(st.str_2.c_str(), "str2");
 }
-#endif
 
 TEST(Deserialize, Insitu)
 {

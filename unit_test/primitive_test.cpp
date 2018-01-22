@@ -553,7 +553,7 @@ TEST(Primitive, Raw)
 	const string json = "{\"f_v\": \"v1\""
 			", \"f_map\": {\"v1\": null, \"v2\": {\"v21\": false }}, \"f_obj\": {\"o0\": 0, \"o1\": true}"
 			", \"f_vec\": [\"v1\", 2], \"f_deq\": [], \"f_list\": [null]}";
-#if IJST_ENABLE_FROM_JSON_OBJECT
+
 	// Deserialize copy form json
 	{
 		{
@@ -590,7 +590,7 @@ TEST(Primitive, Raw)
 		// Check source doc
 		ASSERT_TRUE(doc.IsNull());
 	}
-#endif
+
 	// Deserialize
 	{
 		ret = st._.Deserialize(json);

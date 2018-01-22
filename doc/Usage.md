@@ -140,20 +140,19 @@ delete[] strJson;
 rapidjson::Value& jUnknown = sampleStruct._.GetUnknown();
 ```
 
-另外，也可以将结构体和 `rapidjson::Value` 间转换：
+另外，也可以从 `rapidjson::Value` 反序列化：
 
 ```cpp
 SampleStruct sampleStruct;
 int ret;
 
 // FromJson
-// 编译时需启用 IJST_ENABLE_From_JSON_OBJECT 宏
 rapidjson::Value jVal;
 ret = sampleStruct._.FromJson(jVal);
 
 ```
 
-在某些情况下，只需关心序列化/反序列后的结果，而不需关心其源对象是否会被破坏，则可以用 **Move** 类型的接口以提高效率。这些接口会尝试使用窃取资源的方式以减少拷贝：
+在某些情况下，只需关心序列化/反序列后的结果，而不需关心其源对象是否会被破坏，则可以用 **MoveFromJson** 以提高效率。该接口会尝试使用窃取资源的方式以减少拷贝：
 
 ```cpp
 int ret;
