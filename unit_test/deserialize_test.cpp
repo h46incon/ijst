@@ -35,16 +35,6 @@ TEST(Deserialize, IgnoeFieldStatus)
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
 	}
-	// DeserializeInsitu
-	{
-		char * buf = new char [emptyJson.size() + 1];
-		memcpy(buf, emptyJson.c_str(), emptyJson.size());
-		buf[emptyJson.size()] = '\0';
-		SimpleSt st;
-		int ret = st._.DeserializeInsitu(buf, DeserFlag::kNotCheckFieldStatus);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
-	}
 
 	// From Json
 	{
@@ -182,20 +172,6 @@ TEST(Deserialize, MoveFromJson)
 	ASSERT_STREQ(st.str_2.c_str(), "str2");
 }
 
-TEST(Deserialize, Insitu)
-{
-	SimpleSt st;
-	string validJson = "{\"int_val_2\":1, \"str_val_2\":\"str2\"}";
-	char* buf = new char[validJson.length() + 1];
-	strncpy(buf, validJson.c_str(), validJson.length() + 1);
-	int ret = st._.DeserializeInsitu(buf);
-	ASSERT_EQ(ret, 0);
-
-	// Check st
-	ASSERT_EQ(st.int_2, 1);
-	ASSERT_STREQ(st.str_2.c_str(), "str2");
-	delete[] buf;
-}
 IJST_DEFINE_STRUCT(
 		NullableSt
 		, (T_int, int_1, "int_val_1", FDesc::Optional)
@@ -319,16 +295,6 @@ TEST(Deserialize, ParseFlags)
 		NotEmptySt st;
 		int ret = st._.Deserialize<rapidjson::kParseCommentsFlag>(json.c_str(), json.length());
 		ASSERT_EQ(ret, 0);
-	}
-
-	// DeserializeInsitu
-	{
-		NotEmptySt st;
-		char* buf = new char[json.length() + 1];
-		strncpy(buf, json.c_str(), json.length() + 1);
-		int ret = st._.DeserializeInsitu<rapidjson::kParseCommentsFlag>(buf);
-		ASSERT_EQ(ret, 0);
-		delete[] buf;
 	}
 }
 

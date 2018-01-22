@@ -974,56 +974,6 @@ public:
 	}
 
 	/**
-	 * @brief Deserialize insitu from str.
-	 *
-	 * @tparam parseFlags		parseFlags of rapidjson parse method
-	 *
-	 * @param str				Input C string
-	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
-	 * @param pErrDocOut		Error message output. Null if do not need error message
-	 * @return					Error code
-	 *
-	 * @note The context in str may be changed after deserialize
-	 * @note Make sure the lifecycle of str is longer than this object
-	 */
-	 template<unsigned parseFlags>
-	int DeserializeInsitu(char *str,
-						  DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-						  rapidjson::Document *pErrDocOut = IJST_NULL)
-	{
-		// The new object will call FromJson() interfaces in most situation
-		// So clear own allocator will not bring much benefice
-		m_pAllocator = &m_r->ownDoc.GetAllocator();
-		rapidjson::Document doc(m_pAllocator);
-		doc.ParseInsitu<parseFlags>(str);
-		if (doc.HasParseError())
-		{
-			detail::ErrorDocSetter errDocSetter(pErrDocOut);
-			errDocSetter.ParseFailed(doc.GetParseError());
-			return ErrorCode::kDeserializeParseFaild;
-		}
-		return DoFromJsonWrap<JsonValue>(&Accessor::DoMoveFromJson, doc, deserFlag, pErrDocOut);
-	}
-
-	/**
-	 * @brief Deserialize insitu from str.
-	 *
-	 * @param str				Input C string
-	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
-	 * @param pErrDocOut		Error message output. Null if do not need error message
-	 * @return					Error code
-	 *
-	 * @note The context in str may be changed after deserialize
-	 * @note Make sure the lifecycle of str is longer than this object
-	 */
-	int DeserializeInsitu(char *str,
-						  DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-						  rapidjson::Document *pErrDocOut = IJST_NULL)
-	{
-		return this->template DeserializeInsitu<rapidjson::kParseDefaultFlags>(str, deserFlag, pErrDocOut);
-	}
-
-	/**
 	 * @brief Deserialize from json object.
 	 *
 	 * @param srcJson			Input json object

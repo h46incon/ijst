@@ -128,14 +128,6 @@ std::string strJson;
 //... Init strJson
 ret = sampleStruct._.Deserialize(strJson);
 
-// Parse insitu 反序列化
-// 反序列化后源字符串会被修改，需注意其生命周期
-char* strJson = new char[N]; 
-//... Init
-ret = sampleStruct._.DeserializeInsitu(strJson);
-//... after sampleStruct.~SampleStruct()
-delete[] strJson;
-
 // 访问 Unknown 字段
 rapidjson::Value& jUnknown = sampleStruct._.GetUnknown();
 ```
@@ -312,7 +304,7 @@ st->_.Serialize(writerWrapper);
 ```
 
 ### 反序列化
-在 `Deserialize()` 和 `DeserializeInsitu()` 接口中，提供了一个模板参数 `parseFlags`，可以指定反序列化时的行为。
+在 `Deserialize()` 接口中，提供了一个模板参数 `parseFlags`，可以指定反序列化时的行为。
 该参数会传递给 rapidJSON 的 `Parse()` 方法，可以实现支持注释，全精度 double 等功能。详请请见 [rapidJSON#Parsing](http://rapidjson.org/md_doc_dom.html#Parsing)。
 
 如以下代码可以在反序列化时支持注释：
