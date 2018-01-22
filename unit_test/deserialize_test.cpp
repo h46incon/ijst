@@ -2,6 +2,7 @@
 // Created by h46incon on 2017/9/30.
 //
 #include "util.h"
+#include <ijst/types_stdlayout_wrapper.h>
 
 using std::vector;
 using std::map;
@@ -25,7 +26,7 @@ TEST(Deserialize, Empty)
 	ASSERT_EQ(ret, retExpected);
 }
 
-TEST(Deserialize, IgnoeFieldStatus)
+TEST(Deserialize, IgnoreFieldStatus)
 {
 	string emptyJson = "{}";
 	// Deserialize
@@ -295,6 +296,141 @@ TEST(Deserialize, ParseFlags)
 		NotEmptySt st;
 		int ret = st._.Deserialize<rapidjson::kParseCommentsFlag>(json.c_str(), json.length());
 		ASSERT_EQ(ret, 0);
+	}
+}
+
+IJST_DEFINE_STRUCT(
+		StEmpty
+)
+
+IJST_DEFINE_STRUCT(
+		StAllocShrink
+		, (IJST_TST(StEmpty), empty, "val", 0)
+		, (IJST_TVEC(StEmpty), vecEmpty, "vec", 0)
+		, (IJST_TDEQUE(StEmpty), deqEmpty, "deq", 0)
+		, (IJST_TLIST(StEmpty), listEmpty, "list", 0)
+		, (IJST_TMAP(StEmpty), mapEmpty, "map", 0)
+		, (IJST_TOBJ(StEmpty), objEmpty, "obj", 0)
+		, (T_raw, raw, "raw", 0)
+		, (T_Wrapper<T_raw>, rawWrap, "rawWrap", 0)
+)
+
+#define UTEST_ASSERT_USER_OWN_ALLOCATOR(st)		\
+	ASSERT_EQ(&(st)._.GetAllocator(), &(st)._.GetOwnAllocator())
+
+void CheckUseOwnAllocator(StAllocShrink& st)
+{
+	UTEST_ASSERT_USER_OWN_ALLOCATOR(st.empty);
+	UTEST_ASSERT_USER_OWN_ALLOCATOR(st.vecEmpty[0]);
+	UTEST_ASSERT_USER_OWN_ALLOCATOR(st.vecEmpty[1]);
+	UTEST_ASSERT_USER_OWN_ALLOCATOR(st.deqEmpty[0]);
+	UTEST_ASSERT_USER_OWN_ALLOCATOR(st.deqEmpty[1]);
+	UTEST_ASSERT_USER_OWN_ALLOCATOR(st.listEmpty.front());
+	UTEST_ASSERT_USER_OWN_ALLOCATOR(st.listEmpty.back());
+	UTEST_ASSERT_USER_OWN_ALLOCATOR(st.mapEmpty["k1"]);
+	UTEST_ASSERT_USER_OWN_ALLOCATOR(st.mapEmpty["k11"]);
+	UTEST_ASSERT_USER_OWN_ALLOCATOR(st.objEmpty[0].value);
+	UTEST_ASSERT_USER_OWN_ALLOCATOR(st.objEmpty[1].value);
+	ASSERT_EQ(&st.raw.GetOwnAllocator(), &st.raw.GetAllocator());
+	ASSERT_EQ(&st.rawWrap.Val().GetOwnAllocator(), &st.rawWrap.Val().GetAllocator());
+}
+
+void CheckUseParentAllocatorAndShrink(StAllocShrink &st, const rapidjson::Value &srcJson)
+{
+	//check use parend allocator
+	ijst::JsonAllocator* parentAllocator = &st._.GetAllocator();
+	ASSERT_EQ(parentAllocator, &st.empty._.GetAllocator());
+	ASSERT_EQ(parentAllocator, &st.vecEmpty[0]._.GetAllocator());
+	ASSERT_EQ(parentAllocator, &st.vecEmpty[1]._.GetAllocator());
+	ASSERT_EQ(parentAllocator, &st.deqEmpty[0]._.GetAllocator());
+	ASSERT_EQ(parentAllocator, &st.deqEmpty[1]._.GetAllocator());
+	ASSERT_EQ(parentAllocator, &st.listEmpty.front()._.GetAllocator());
+	ASSERT_EQ(parentAllocator, &st.listEmpty.back()._.GetAllocator());
+	ASSERT_EQ(parentAllocator, &st.mapEmpty["k1"]._.GetAllocator());
+	ASSERT_EQ(parentAllocator, &st.mapEmpty["k11"]._.GetAllocator());
+	ASSERT_EQ(parentAllocator, &st.objEmpty[0].value._.GetAllocator());
+	ASSERT_EQ(parentAllocator, &st.objEmpty[1].value._.GetAllocator());
+	ASSERT_EQ(parentAllocator, &st.raw.GetAllocator());
+	ASSERT_EQ(parentAllocator, &st.rawWrap.Val().GetAllocator());
+
+	// Shrink and check
+	st._.ShrinkAllocator();
+	ASSERT_EQ(st._.GetAllocator().Size(), 0u);
+	st._.GetAllocator().Clear();
+	st._.GetOwnAllocator().Clear();
+	CheckUseOwnAllocator(st);
+
+	// Serialize and check
+	std::string destJson;
+	st._.Serialize(destJson);
+
+	rapidjson::Document destDoc;
+	destDoc.Parse(destJson.c_str());
+	ASSERT_FALSE(destDoc.HasParseError());
+	ASSERT_EQ(srcJson, (rapidjson::Value&)destDoc);
+}
+
+TEST(Deserialize, Allocator)
+{
+	const std::string srcJson =
+			"{"
+				"\"val\": {\"unk1\": \"v1\"}, "
+				"\"vec\": [{\"unk2\": \"v2\"}, {\"unk22\": \"v22\"}], "
+				"\"deq\": [{\"unk3\": \"v3\"}, {\"unk33\": \"v33\"}], "
+				"\"list\": [{\"unk4\": \"v4\"}, {\"unk44\": \"v44\"}], "
+				"\"map\": {\"k1\": {\"unk5\": \"v5\"}, \"k11\": {\"unk55\": \"v55\"}}, "
+				"\"obj\": {\"k2\": {\"unk6\": \"v6\"}, \"k22\": {\"unk66\": \"v66\"}}, "
+				"\"raw\": \"v7\", "
+				"\"rawWrap\": [\"v8\", true, 0, 1.2, null]"
+			"}";
+
+	rapidjson::Document srcDoc;
+	srcDoc.Parse(srcJson.c_str());
+	ASSERT_FALSE(srcDoc.HasParseError());
+
+	//*** Deserialize by copy unknown
+	{
+		StAllocShrink st;
+		int ret = st._.Deserialize(srcJson);
+		ASSERT_EQ(ret, 0);
+		ASSERT_EQ(st._.GetAllocator().Size(), 0u);
+
+		CheckUseOwnAllocator(st);
+	}
+
+	//*** Deserialize by move unknown
+	{
+		StAllocShrink st;
+		int ret = st._.Deserialize(srcJson, DeserFlag::kMoveTempDocUnknown);
+		ASSERT_EQ(ret, 0);
+		ASSERT_GT(st._.GetAllocator().Size(), 0u);
+
+		CheckUseParentAllocatorAndShrink(st, srcDoc);
+	}
+
+	//*** FromJson
+	{
+		StAllocShrink st;
+		int ret = st._.FromJson(srcDoc);
+		ASSERT_EQ(ret, 0);
+		ASSERT_EQ(st._.GetAllocator().Size(), 0u);
+
+		CheckUseOwnAllocator(st);
+	}
+
+	//*** MoveFromJson
+	{
+		StAllocShrink st;
+		{
+			rapidjson::Document tempDoc;
+			tempDoc.CopyFrom(srcDoc, tempDoc.GetAllocator());
+			int ret = st._.MoveFromJson(tempDoc);
+			ASSERT_EQ(ret, 0);
+			// tempDoc is destroyed here
+		}
+		ASSERT_GT(st._.GetAllocator().Size(), 0u);
+
+		CheckUseParentAllocatorAndShrink(st, srcDoc);
 	}
 }
 

@@ -328,10 +328,11 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_raw)
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 
 		if (req.canMoveSrc) {
-			pField->v.Swap(req.stream);
 			pField->m_pAllocator = &req.allocator;
+			pField->v.Swap(req.stream);
 		}
 		else {
+			pField->m_pAllocator = &pField->m_pOwnDoc->GetAllocator();
 			pField->v.CopyFrom(req.stream, *pField->m_pAllocator);
 		}
 		return 0;
