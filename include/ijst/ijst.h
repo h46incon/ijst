@@ -280,6 +280,7 @@ public:
 	{ return h.EndArray(elementCount); }
 };
 
+
 //! Error codes.
 struct ErrorCode {
 	static const int kSucc 							= 0x00000000;
@@ -1097,6 +1098,7 @@ private:
 
 	inline void IShrinkAllocator(void* pField)
 	{
+		(void)pField;
 		assert(pField == this);
 		DoShrinkAllocator();
 	}
@@ -1106,15 +1108,16 @@ private:
 	//! Serialize to string using SAX API
 	int DoSerialize(HandlerBase &writer, SerFlag::Flag serFlag) const
 	{
+		rapidjson::SizeType fieldCount = 0;
 		if (m_isParentVal) {
-			return DoSerializeFields(writer, serFlag);
+			return DoSerializeFields(writer, serFlag, fieldCount);
 			// Unknown will be ignored
 		}
 
 		IJSTI_RET_WHEN_WRITE_FAILD(writer.StartObject());
 
 		// Write fields
-		IJSTI_RET_WHEN_NOT_ZERO(DoSerializeFields(writer, serFlag));
+		IJSTI_RET_WHEN_NOT_ZERO(DoSerializeFields(writer, serFlag, fieldCount));
 
 		// Write buffer if need
 		if (!IsBitSet(serFlag, SerFlag::kIgnoreUnknown))
@@ -1131,13 +1134,15 @@ private:
 				IJSTI_RET_WHEN_WRITE_FAILD(
 						itMember->value.Accept(writer) );
 			}
+
+			fieldCount += m_r->unknown.MemberCount();
 		}
 
-		IJSTI_RET_WHEN_WRITE_FAILD(writer.EndObject());
+		IJSTI_RET_WHEN_WRITE_FAILD(writer.EndObject(fieldCount));
 		return 0;
 	}
 
-	int DoSerializeFields(HandlerBase &writer, SerFlag::Flag serFlag) const
+	int DoSerializeFields(HandlerBase &writer, SerFlag::Flag serFlag, IJST_OUT rapidjson::SizeType& fieldCountOut) const
 	{
 		IJST_ASSERT(!m_isParentVal || m_pMetaClass->GetFieldsInfo().size() == 1);
 		for (std::vector<MetaFieldInfo>::const_iterator itMetaField = m_pMetaClass->GetFieldsInfo().begin();
@@ -1164,6 +1169,7 @@ private:
 					SerializeReq req(writer, pFieldValue, serFlag);
 					IJSTI_RET_WHEN_NOT_ZERO(
 							itMetaField->serializerInterface->Serialize(req));
+					++fieldCountOut;
 				}
 					break;
 
@@ -1176,6 +1182,7 @@ private:
 					}
 					// write value
 					IJSTI_RET_WHEN_WRITE_FAILD(writer.Null());
+					++fieldCountOut;
 				}
 					break;
 
@@ -1459,6 +1466,60 @@ private:
 	bool m_isValid;
 	bool m_isParentVal;
 	//</editor-fold>
+};
+
+/**
+ * @brief Provide `bool f(Handler)` functor used by rapidjson::Document.Populate()
+ *
+ * @tparam Handler		rapidjson::Handler
+ */
+template<typename Handler>
+class SAXGeneratorWrapper : public HandlerBase
+{
+public:
+	typedef typename Handler::Ch Ch;
+	explicit SAXGeneratorWrapper(const Accessor& accessor, SerFlag::Flag serFlag = SerFlag::kNoneFlag) :
+			m_accessor(accessor), m_serFlag (serFlag), m_h(IJST_NULL) {}
+
+	bool operator() (Handler& h)
+	{
+		m_h = &h;
+		int ret = m_accessor.Serialize(*this, m_serFlag);
+		return ret == 0;
+	}
+
+	bool Null() IJSTI_OVERRIDE
+	{ return m_h->Null(); }
+	bool Bool(bool b) IJSTI_OVERRIDE
+	{ return m_h->Bool(b); }
+	bool Int(int i) IJSTI_OVERRIDE
+	{ return m_h->Int(i); }
+	bool Uint(unsigned i) IJSTI_OVERRIDE
+	{ return m_h->Uint(i); }
+	bool Int64(int64_t i) IJSTI_OVERRIDE
+	{ return m_h->Int64(i); }
+	bool Uint64(uint64_t i) IJSTI_OVERRIDE
+	{ return m_h->Uint64(i); }
+	bool Double(double d) IJSTI_OVERRIDE
+	{ return m_h->Double(d); }
+	bool RawNumber(const Ch *str, rapidjson::SizeType length, bool copy = false) IJSTI_OVERRIDE
+	{ return m_h->RawNumber(str, length, copy); }
+	bool String(const Ch *str, rapidjson::SizeType length, bool copy = false) IJSTI_OVERRIDE
+	{ return m_h->String(str, length, copy); }
+	bool StartObject() IJSTI_OVERRIDE
+	{ return m_h->StartObject(); }
+	bool Key(const Ch *str, rapidjson::SizeType length, bool copy = false) IJSTI_OVERRIDE
+	{ return m_h->Key(str, length, copy); }
+	bool EndObject(rapidjson::SizeType memberCount = 0) IJSTI_OVERRIDE
+	{ return m_h->EndObject(memberCount); }
+	bool StartArray() IJSTI_OVERRIDE
+	{ return m_h->StartArray(); }
+	bool EndArray(rapidjson::SizeType elementCount = 0) IJSTI_OVERRIDE
+	{ return m_h->EndArray(elementCount); }
+private:
+	const Accessor& m_accessor;
+	SerFlag::Flag m_serFlag;
+	Handler* m_h;
 };
 
 template<typename _T>

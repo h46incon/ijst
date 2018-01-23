@@ -165,7 +165,8 @@ public:
 			IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq));
 		}
 
-		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.EndArray());
+		IJSTI_RET_WHEN_WRITE_FAILD(
+				req.writer.EndArray(static_cast<rapidjson::SizeType>(field.size())) );
 
 		return 0;
 	}
@@ -290,7 +291,8 @@ public:
 			IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq));
 		}
 
-		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.EndObject());
+		IJSTI_RET_WHEN_WRITE_FAILD(
+				req.writer.EndObject(static_cast<rapidjson::SizeType>(field.size())) );
 		return 0;
 	}
 
@@ -374,7 +376,8 @@ public:
 			IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq));
 		}
 
-		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.EndObject());
+		IJSTI_RET_WHEN_WRITE_FAILD(
+				req.writer.EndObject(static_cast<rapidjson::SizeType>(field.size())) );
 		return 0;
 	}
 

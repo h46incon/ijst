@@ -5,6 +5,7 @@
 #include "util.h"
 
 #include <rapidjson/prettywriter.h>
+#include <sstream>
 
 using std::vector;
 using std::map;
@@ -61,12 +62,6 @@ TEST(Serialize, EmptyValue_PushAllField)
 
 	ASSERT_TRUE(doc["vec_val_2"].IsArray());
 	ASSERT_TRUE(doc["vec_val_2"].Empty());
-}
-
-TEST(Serialize, AllocatorLifeCycle)
-{
-	// TODO: Use inner and out allocator
-	// TODO: reinit after serialize
 }
 
 TEST(Serialize, NullValue)
@@ -336,26 +331,74 @@ IJST_DEFINE_STRUCT(
 		, (T_int, i64, "i64_v", 0)
 )
 
+void InitComplicate3(Complicate3& st)
+{
+	const MetaClassInfo &metaInfo = st._.GetMetaInfo();
+	for (int i = 1; i <= 64; ++i)
+	{
+		std::stringstream ss;
+		ss << "i" << i << "_v";
+		string fieldName = ss.str();
+		const MetaFieldInfo *fieldInfo = metaInfo.FindFieldByJsonName(fieldName);
+		ASSERT_TRUE(fieldInfo != NULL);
+		int* v = (int*)(void*)((char*)&st + fieldInfo->offset);
+		st._.Set(*v, i);
+	}
+}
+
+void CheckComplicate3Serialized(const rapidjson::Document& doc)
+{
+	ASSERT_FALSE(doc.HasParseError());
+	for (int i = 1; i <= 64; ++i)
+	{
+		std::stringstream ss;
+		ss << "i" << i << "_v";
+		string fieldName = ss.str();
+		ASSERT_EQ(doc[fieldName.c_str()].GetInt(), i);
+	}
+}
+
 TEST(Serialize, BigStruct)
 {
 	Complicate3 st;
+	InitComplicate3(st);
 	rapidjson::Document doc;
 	UTEST_SERIALIZE_AND_CHECK(st, doc, SerFlag::kNoneFlag);
-	ASSERT_EQ(doc["i1_v"].GetInt(), 0);
-	ASSERT_EQ(doc["i64_v"].GetInt(), 0);
+	CheckComplicate3Serialized(doc);
 }
 
 TEST(Serialize, SerializeHandler)
 {
 	Complicate3 st;
+	InitComplicate3(st);
 	rapidjson::StringBuffer buf;
 	rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buf);
 	HandlerWrapper<rapidjson::PrettyWriter<rapidjson::StringBuffer> > writerWrapper(writer);
 	st._.Serialize(writerWrapper);
 	rapidjson::Document doc;
 	doc.Parse(buf.GetString(), buf.GetSize() / sizeof(rapidjson::StringBuffer::Ch));
-	ASSERT_FALSE(doc.HasParseError());
-	ASSERT_EQ(doc["i1_v"].GetInt(), 0);
-	ASSERT_EQ(doc["i64_v"].GetInt(), 0);
+	CheckComplicate3Serialized(doc);
 }
 
+TEST(Serialize, GeneratorWrapper)
+{
+	// only valid fields
+	{
+		Complicate3 st;
+		SAXGeneratorWrapper<rapidjson::Document> generator(st._, SerFlag::kOnlyValidField);
+		rapidjson::Document doc;
+		doc.Populate(generator);
+		ASSERT_FALSE(doc.HasParseError());
+		ASSERT_TRUE(doc.IsObject());
+		ASSERT_EQ(doc.MemberCount(), 0u);
+	}
+	// all fields
+	{
+		Complicate3 st;
+		InitComplicate3(st);
+		SAXGeneratorWrapper<rapidjson::Document> generator(st._);
+		rapidjson::Document doc;
+		doc.Populate(generator);
+		CheckComplicate3Serialized(doc);
+	}
+}

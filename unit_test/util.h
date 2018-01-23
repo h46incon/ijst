@@ -21,6 +21,14 @@ do {																		\
 	ASSERT_EQ(toStrRet, 0);													\
 	doc.Parse(json.c_str(), json.length());									\
 	ASSERT_FALSE(doc.HasParseError());										\
+	{																		\
+		ijst::SAXGeneratorWrapper<rapidjson::Document> 						\
+			generator(st._, serFlag);										\
+		rapidjson::Document docTemp;										\
+		docTemp.Populate(generator);										\
+		ASSERT_FALSE(docTemp.HasParseError());								\
+		ASSERT_EQ((rapidjson::Value&)docTemp, (rapidjson::Value&)doc);		\
+	}																		\
 } while (false)
 
 #define UTEST_PARSE_STR_TO_JSON(str, jsonOutput)							\
