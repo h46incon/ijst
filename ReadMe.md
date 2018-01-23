@@ -123,4 +123,4 @@ assert (pData == NULL);
 ```
 
 ### 详细说明
-移步 [Usage](doc/Usage.md)，或 [简陋的Reference](doc/Doxygen/html)
+移步 [Usage](docs/Usage.md)，或 [简陋的Reference](docs/Doxygen/html)
