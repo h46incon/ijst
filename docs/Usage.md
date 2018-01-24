@@ -229,10 +229,10 @@ assert(jUnknown.IsObject() == true);
 ijst 提供了相关的接口获取和设置 allocator 对象：
 
 ```cpp
-ijst::JsonValue& jUnknown = sampleStruct._.GetUnknown();
+rapidjson::Value& jUnknown = sampleStruct._.GetUnknown();
 
 // 获取当前使用的 allocator 
-ijst::JsonAllocator& alloc = sampleStruct._.GetAllocator();
+rapidjson::MemoryPoolAllocator<>& alloc = sampleStruct._.GetAllocator();
 jUnknown.SetString("s", 1, alloc);
 ```
 

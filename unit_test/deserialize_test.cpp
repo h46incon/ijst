@@ -345,7 +345,7 @@ void CheckUseOwnAllocator(StAllocShrink& st)
 void CheckUseParentAllocatorAndShrink(StAllocShrink &st, const rapidjson::Value &srcJson)
 {
 	//check use parend allocator
-	ijst::JsonAllocator* parentAllocator = &st._.GetAllocator();
+	rapidjson::MemoryPoolAllocator<>* parentAllocator = &st._.GetAllocator();
 	ASSERT_EQ(parentAllocator, &st.empty._.GetAllocator());
 	ASSERT_EQ(parentAllocator, &st.vecEmpty[0]._.GetAllocator());
 	ASSERT_EQ(parentAllocator, &st.vecEmpty[1]._.GetAllocator());

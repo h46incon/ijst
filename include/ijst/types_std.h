@@ -105,19 +105,19 @@ public:
 	}
 
 	//! Get actually value in object
-	JsonValue& V() {return v;}
-	const JsonValue& V() const {return v;}
+	rapidjson::Value& V() {return v;}
+	const rapidjson::Value& V() const {return v;}
 	//! See ijst::Accessor::GetAllocator
-	JsonAllocator& GetAllocator() {return *m_pAllocator;}
-	const JsonAllocator& GetAllocator() const {return *m_pAllocator;}
+	rapidjson::MemoryPoolAllocator<>& GetAllocator() {return *m_pAllocator;}
+	const rapidjson::MemoryPoolAllocator<>& GetAllocator() const {return *m_pAllocator;}
 	//! See ijst::Accessor::GetOwnAllocator
-	JsonAllocator& GetOwnAllocator() {return m_pOwnDoc->GetAllocator();}
-	const JsonAllocator& GetOwnAllocator() const {return m_pOwnDoc->GetAllocator();}
+	rapidjson::MemoryPoolAllocator<>& GetOwnAllocator() {return m_pOwnDoc->GetAllocator();}
+	const rapidjson::MemoryPoolAllocator<>& GetOwnAllocator() const {return m_pOwnDoc->GetAllocator();}
 
 private:
 	friend class detail::FSerializer<T_raw>;
-	JsonValue v;
-	JsonAllocator* m_pAllocator;
+	rapidjson::Value v;
+	rapidjson::MemoryPoolAllocator<>* m_pAllocator;
 	rapidjson::Document* m_pOwnDoc;		// use pointer to make T_raw be a standard-layout type
 };
 

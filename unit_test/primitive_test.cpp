@@ -658,7 +658,7 @@ TEST(Primitive, Raw_BasicAPI)
 		// Rvalue Copy constructor
 		T_raw src;
 		src.V().SetString("src_v", src.GetAllocator());
-		JsonAllocator* pSrcAlloc = &src.GetAllocator();
+		rapidjson::MemoryPoolAllocator<>* pSrcAlloc = &src.GetAllocator();
 
 		T_raw dst(std::move(src));
 		ASSERT_STREQ(dst.V().GetString(), "src_v");
@@ -670,7 +670,7 @@ TEST(Primitive, Raw_BasicAPI)
 		// Rvalue assignment
 		T_raw src;
 		src.V().SetString("src_v", src.GetAllocator());
-		JsonAllocator* pSrcAlloc = &src.GetAllocator();
+		rapidjson::MemoryPoolAllocator<>* pSrcAlloc = &src.GetAllocator();
 
 		T_raw dst;
 		dst = std::move(src);
