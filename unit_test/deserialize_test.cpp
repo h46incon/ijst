@@ -290,11 +290,18 @@ TEST(Deserialize, NotEmpty)
 
 TEST(Deserialize, ParseFlags)
 {
-	string json = "{/*this is a comment*/}";
-	// Deserialize
+	// comment
 	{
+		string json = "{/*this is a comment*/}";
 		NotEmptySt st;
 		int ret = st._.Deserialize<rapidjson::kParseCommentsFlag>(json.c_str(), json.length());
+		ASSERT_EQ(ret, 0);
+	}
+	// trailing comma
+	{
+		string json = "{\"v\": 0, }";
+		NotEmptySt st;
+		int ret = st._.Deserialize<rapidjson::kParseTrailingCommasFlag>(json.c_str(), json.length());
 		ASSERT_EQ(ret, 0);
 	}
 }
@@ -401,7 +408,7 @@ TEST(Deserialize, Allocator)
 	//*** Deserialize by move unknown
 	{
 		StAllocShrink st;
-		int ret = st._.Deserialize(srcJson, DeserFlag::kMoveTempDocUnknown);
+		int ret = st._.Deserialize(srcJson, DeserFlag::kMoveFromIntermediateDoc);
 		ASSERT_EQ(ret, 0);
 		ASSERT_GT(st._.GetAllocator().Size(), 0u);
 
