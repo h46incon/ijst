@@ -131,7 +131,11 @@
 #define IJST_OUT
 //! @brief Helper declare macro with comma.
 //! @ingroup IJST_MACRO_API
-#define IJST_TYPE(...)			::ijst::detail::ArgumentType<void( __VA_ARGS__)>::type
+#if __cplusplus < 201103L
+	#define IJST_TYPE(...)			::ijst::detail::ArgumentType<void( __VA_ARGS__)>::type
+#else
+	#define IJST_TYPE(...)			decltype(__VA_ARGS__())
+#endif
 
 namespace ijst {
 //! Field description.
