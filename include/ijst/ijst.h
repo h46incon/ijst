@@ -593,7 +593,7 @@ namespace detail {
 		typedef void VarType;
 		virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE = 0;
 		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE = 0;
-		virtual void ShrinkAllocator(void * pField) IJSTI_OVERRIDE {}
+		virtual void ShrinkAllocator(void * pField) IJSTI_OVERRIDE { (void)pField; }
 	};
 
 	#define IJSTI_FSERIALIZER_INS(_T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< _T> >::GetInstance()
