@@ -757,6 +757,7 @@ namespace detail {
  *
  * User can access and modify fields, serialize and deserialize of a structure via it.
  */
+template<typename Dummy = void>
 class Accessor {
 public:
 	//! Constructor
@@ -1506,7 +1507,7 @@ class SAXGeneratorWrapper : public HandlerBase
 {
 public:
 	typedef typename Handler::Ch Ch;
-	explicit SAXGeneratorWrapper(const Accessor& accessor, SerFlag::Flag serFlag = SerFlag::kNoneFlag) :
+	explicit SAXGeneratorWrapper(const Accessor<>& accessor, SerFlag::Flag serFlag = SerFlag::kNoneFlag) :
 			m_accessor(accessor), m_serFlag (serFlag), m_h(IJST_NULL) {}
 
 	bool operator() (Handler& h)
@@ -1545,7 +1546,7 @@ public:
 	bool EndArray(rapidjson::SizeType elementCount = 0) IJSTI_OVERRIDE
 	{ return m_h->EndArray(elementCount); }
 private:
-	const Accessor& m_accessor;
+	const Accessor<>& m_accessor;
 	SerFlag::Flag m_serFlag;
 	Handler* m_h;
 };
@@ -1612,7 +1613,7 @@ inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 	#define IJSTI_IDL_FNAME_STR(fType, fName, sName, desc)		#fName
 
 	#define IJSTI_STRUCT_PUBLIC_DEFINE()														\
-		typedef ::ijst::Accessor _ijstStructAccessorType;										\
+		typedef ::ijst::Accessor<> _ijstStructAccessorType;									\
 		_ijstStructAccessorType _;
 
 	#define IJSTI_DEFINE_CLASS_END(stName)														\
@@ -1663,6 +1664,30 @@ inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 			}
 
 }	// namespace ijst
+
+//! list of templates could been declared extern
+#define IJSTI_EXTERNAL_TEMPLATE_XLIST											\
+		IJSTX(class ijst::Accessor<>)											\
+		IJSTX(struct rapidjson::UTF8<>)											\
+		IJSTX(class rapidjson::GenericDocument<rapidjson::UTF8<> >)			\
+		IJSTX(class rapidjson::GenericValue<rapidjson::UTF8<> >)				\
+		IJSTX(class rapidjson::MemoryPoolAllocator<>)							\
+		IJSTX(class rapidjson::GenericStringBuffer<rapidjson::UTF8<> >)		\
+		IJSTX(class rapidjson::Writer<rapidjson::GenericStringBuffer<rapidjson::UTF8<> > >)
+
+//! extern declare template list
+#if IJST_EXTERN_TEMPLATE
+	#define IJSTX(...)	extern template __VA_ARGS__;
+	IJSTI_EXTERNAL_TEMPLATE_XLIST
+	#undef IJSTX
+#endif
+
+//! explicit declare template list
+#if IJST_EXPLICIT_TEMPLATE
+	#define IJSTX(...)	template __VA_ARGS__;
+	IJSTI_EXTERNAL_TEMPLATE_XLIST
+	#undef IJSTX
+#endif
 
 #include "detail/ijst_repeat_def.inc"
 

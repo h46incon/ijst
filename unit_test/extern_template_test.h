@@ -5,6 +5,8 @@
 #ifndef UNIT_TEST_IJST_EXTERN_TEMPLATE_TEST_H
 #define UNIT_TEST_IJST_EXTERN_TEMPLATE_TEST_H
 
+#if __cplusplus >= 201103L
+
 #include <ijst/ijst.h>
 #include <ijst/types_std.h>
 #include <ijst/types_container.h>
@@ -90,4 +92,7 @@ TEST(Template, UTEST_PP_CONCAT(UT_TEST_NAME, Static))
 	writer.EndObject();
 	ASSERT_STREQ(sb.GetString(), "{}");
 }
+
+#endif	// _cplusplus >= 201103L
+
 #endif //UNIT_TEST_IJST_EXTERN_TEMPLATE_TEST_H
