@@ -14,6 +14,8 @@ set(TEST_SRC
         deserialize_test.cpp
         primitive_test.cpp
         detail_test.cpp
+        extern_template_extern_test.cpp
+        extern_template_explicit_test.cpp
         )
 # NOTE: Please check output target here
 # if target is executable:

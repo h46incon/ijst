@@ -87,6 +87,33 @@
  *
  */
 
+/**
+ * @ingroup IJST_MACRO_API
+ *
+ * ijst support extern template to speed up compilation. To enable this option,
+ * set the macro to 1 before including ijst headers. User should declare
+ * IJST_EXPLICIT_TEMPLATE in one of cpp files to instantiation the templates.
+ *
+ * @note require extern template support (since C++11) to enable this option
+ *
+ * @see IJST_EXPLICIT_TEMPLATE
+ */
+#ifndef IJST_EXTERN_TEMPLATE
+	#define IJST_EXTERN_TEMPLATE	0
+#endif
+
+/**
+ * @ingroup IJST_MACRO_API
+ *
+ * ijst support extern template to speed up compilation. User should declare
+ * IJST_EXPLICIT_TEMPLATE in one of cpp files to instantiation the templates.
+ *
+ * @see IJST_EXTERN_TEMPLATE
+ */
+#ifndef IJST_EXPLICIT_TEMPLATE
+	#define IJST_EXPLICIT_TEMPLATE	0
+#endif
+
 //! @brief Declare a ijst struct.
 //! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_STRUCT(...) \
@@ -616,7 +643,7 @@ namespace detail {
 
 		MetaClassInfoIniter()
 		{
-			_T::_InitMetaInfo(this);
+			_T::template _InitMetaInfo<true>(this);
 		}
 	};
 
@@ -1530,6 +1557,25 @@ inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 	return detail::Singleton<detail::MetaClassInfoIniter<_T> >::GetInstance()->metaClass;
 }
 
+	#define IJSTI_STRUCT_META_INITER_DECLARE(stName)	\
+		template void stName::template _InitMetaInfo<true>(::ijst::detail::MetaClassInfoIniter< stName >*);
+
+//! IJSTI_STRUCT_EXTERN_TEMPLATE
+#if IJST_EXTERN_TEMPLATE
+	#define IJSTI_STRUCT_EXTERN_TEMPLATE(stName)	\
+		extern IJSTI_STRUCT_META_INITER_DECLARE(stName)
+#else
+	#define IJSTI_STRUCT_EXTERN_TEMPLATE(stName)	// empty
+#endif
+
+//! IJSTI_STRUCT_EXPLICIT_TEMPLATE
+#if IJST_EXPLICIT_TEMPLATE
+	#define IJSTI_STRUCT_EXPLICIT_TEMPLATE(stName)	\
+		IJSTI_STRUCT_META_INITER_DECLARE(stName)
+#else
+	#define IJSTI_STRUCT_EXPLICIT_TEMPLATE(stName)	//emtpy
+#endif
+
 //! IJSTI_DEFINE_STRUCT_IMPL
 //! Wrapper of IJST_DEFINE_STRUCT_IMPL_*
 //! @param N			fields size
@@ -1569,6 +1615,11 @@ inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 		typedef ::ijst::Accessor _ijstStructAccessorType;										\
 		_ijstStructAccessorType _;
 
+	#define IJSTI_DEFINE_CLASS_END(stName)														\
+		};																						\
+		IJSTI_STRUCT_EXTERN_TEMPLATE(stName)													\
+		IJSTI_STRUCT_EXPLICIT_TEMPLATE(stName)
+
 	#define IJSTI_DEFINE_FIELD(fType, fName, ... )												\
 			fType fName;
 
@@ -1590,6 +1641,7 @@ inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 			typedef ::ijst::detail::MetaClassInfoIniter< stName > _MetaInfoT;					\
 			typedef ::ijst::detail::Singleton<_MetaInfoT> _MetaInfoS;							\
 			friend _MetaInfoT;																	\
+			template<bool DummyTrue	>															\
 			static void _InitMetaInfo(_MetaInfoT* metaInfo)										\
 			{																					\
 				IJSTI_TRY_INIT_META_BEFORE_MAIN(_MetaInfoT);									\

@@ -87,7 +87,7 @@
 		IJSTI_METAINFO_DEFINE_START(stName, n)	 															IJSTM_BSLASH
 			BOOST_PP_REPEAT(n, IJSTM_METAINFO_ADD, ~)														IJSTM_BSLASH
 		IJSTI_METAINFO_DEFINE_END()	 																		IJSTM_BSLASH
-	};
+	IJSTI_DEFINE_CLASS_END(stName)
 
 	#undef n
 

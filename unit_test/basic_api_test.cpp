@@ -441,23 +441,5 @@ TEST(BasicAPI, DefineInStruct)
 	ASSERT_EQ(st.int_1, 1);
 }
 
-#if __cplusplus >= 201103L
-void TestDefineInFunction()
-{
-	IJST_DEFINE_STRUCT(
-		StInFunc
-		, (T_int, int_1, "int_val_1", 0)
-	);
-
-	StInFunc st;
-	IJST_SET(st, int_1, 1);
-	ASSERT_EQ(st.int_1, 1);
-}
-
-TEST(BasicAPI, DefineInFunction)
-{
-	TestDefineInFunction();
-}
-#endif
 }
 
