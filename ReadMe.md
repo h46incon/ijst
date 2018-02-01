@@ -6,7 +6,7 @@ ijst (iJsonStruct) 一个是 C++ Json 序列化/反序列化库：
 - 支持 Getter Chaining，可以很简单地访问路径较深的字段。
 - 支持 unknown 字段和可选字段。
 - 轻量。header-only，仅依赖 stl 和 [rapidJSON](https://github.com/Tencent/rapidjson)。
-- 兼容 C++ 98/03。
+- 兼容 C++98/03。支持 C++11 特性，如 move、extern template 等。
 
 ## 使用
 ### 安装
@@ -134,7 +134,8 @@ ijst 因有额外的工作，会带来一些性能上的开销，但也比常用
 
 测试环境：Corei7-4790@3.60GHz_vc2017_win64，测试代码[nativejson-benchmark](https://github.com/miloyip/nativejson-benchmark)。
  
+注：不同环境测出来的性能会有差异，ijst 的性能一般在 rapidJSON 的 1/4 ~ 1/2。
 
 ### 详细说明
 
-ijst 的其他功能，如字段状态，Unknown 字段，JSON 注释等，请移步 [Usage](docs/Usage.md)，或 `docs/Doxygen/html`。
+ijst 的其他功能，如字段状态，Unknown 字段，JSON 注释等，请移步 [Usage](docs/usage.md)，或 `docs/Doxygen/html`。
