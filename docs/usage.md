@@ -368,6 +368,28 @@ assert(st.val["v2"] == 4);
 
 # 其他
 
+## 使用 extern template 加速编译
+
+作为一个 header-only，且较多使用模板的库，编译性能是个值得注意的问题。
+一般情况下，ijst 及其定义的结构体需要在每个 cpp 文件中都进行一次编译，这会带来额外的编译开销。
+
+所幸 C++11 支持的 extern template，可以选择仅在一个 cpp 文件中实例化模板。 ijst 可以利用该特性，并根据宏定义确定其所用的模板的实例化行为，以加速编译：
+
+```cpp
+// header.h
+#define IJST_EXTERN_TEMPLATE    // 默认阻止 ijst 所用模板的实例化
+#include <ijst/ijst.h>
+
+
+// f1.cpp, f2.cpp, f3.cpp, ...
+#include "header.h"             // 在该文件中不会实例化模板
+
+
+// explicit.cpp
+#define IJST_EXPLICIT_TEMPLATE  // 在该文件中显示实例化模板
+#include "header.h"
+```
+
 ## 元信息
 
 ijst 在实现时需要记录相关的元信息，也提供了接口获取这些信息：
