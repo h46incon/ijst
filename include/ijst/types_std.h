@@ -3,8 +3,8 @@
  *		Created by h46incon on 2017/11/2.
  **************************************************************************************************/
 
-#ifndef _IJST_TYPES_STD_HPP_INCLUDE_
-#define	_IJST_TYPES_STD_HPP_INCLUDE_
+#ifndef IJST_TYPES_STD_HPP_INCLUDE_
+#define	IJST_TYPES_STD_HPP_INCLUDE_
 
 #include "ijst.h"
 
@@ -126,9 +126,9 @@ private:
 namespace ijst {
 namespace detail {
 
-#define IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(_Type)						\
-	template<> class FSerializer< _Type> : public SerializerInterface {		\
-		typedef _Type VarType;												\
+#define IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T)							\
+	template<> class FSerializer< T > : public SerializerInterface {		\
+		typedef T VarType;													\
 	public:
 
 #define IJSTI_DEFINE_SERIALIZE_INTERFACE_END()								\
@@ -350,4 +350,4 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 }	//namespace detail
 }	//namespace ijst
 
-#endif //_IJST_TYPES_STD_HPP_INCLUDE_
+#endif //IJST_TYPES_STD_HPP_INCLUDE_

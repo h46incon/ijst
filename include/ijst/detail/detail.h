@@ -2,8 +2,8 @@
 // Created by h46incon on 2017/12/26.
 //
 
-#ifndef _IJST_DETAIL_HPP_INCLUDE_
-#define _IJST_DETAIL_HPP_INCLUDE_
+#ifndef IJST_DETAIL_HPP_INCLUDE_
+#define IJST_DETAIL_HPP_INCLUDE_
 
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
@@ -33,7 +33,7 @@ namespace detail{
 // forward declaration
 class SerializerInterface;
 class MetaClassInfoSetter;
-template<typename _T>
+template<typename T>
 class MetaClassInfoIniter;
 
 typedef rapidjson::Value JsonValue;
@@ -42,14 +42,14 @@ typedef rapidjson::Document JsonDocument;
 
 /**
  * Singleton interface
- * @tparam _T type
+ * @tparam T type
  */
-template<typename _T>
+template<typename T>
 class Singleton {
 public:
-	inline static _T *GetInstance()
+	inline static T *GetInstance()
 	{
-		static _T instance;
+		static T instance;
 		return &instance;
 	}
 
@@ -63,20 +63,20 @@ public:
 private:
 	static void* initInstanceTag;
 };
-template<typename _T> void *Singleton<_T>::initInstanceTag = Singleton<_T>::GetInstance();
+template<typename T> void *Singleton<T>::initInstanceTag = Singleton<T>::GetInstance();
 
-template <typename _T>
+template <typename T>
 struct HasType {
 	typedef void Void;
 };
 
-template<typename _Ch>
+template<typename Ch_>
 class GenericHeadOStream {
 public:
 	explicit GenericHeadOStream(size_t _capacity)
 			: m_capacity (_capacity), m_headOnly(true) { str.reserve(m_capacity + kEllipseSize); }
 
-	typedef _Ch Ch;
+	typedef Ch_ Ch;
 	//! Write a character.
 	void Put(Ch c)
 	{
@@ -305,12 +305,12 @@ struct ErrorDocSetter {
 
 /**
  * Custom swap() to avoid dependency on C++ <algorithm> header
- * @tparam _T 	Type of the arguments to swap, should be instantiated with primitive C++ types only.
+ * @tparam T 	Type of the arguments to swap, should be instantiated with primitive C++ types only.
  * @note This has the same semantics as std::swap().
  */
-template <typename _T>
-inline void Swap(_T& a, _T& b) RAPIDJSON_NOEXCEPT {
-	_T tmp = IJSTI_MOVE(a);
+template <typename T>
+inline void Swap(T& a, T& b) RAPIDJSON_NOEXCEPT {
+	T tmp = IJSTI_MOVE(a);
 	a = IJSTI_MOVE(b);
 	b = IJSTI_MOVE(tmp);
 }
@@ -357,4 +357,4 @@ inline void ShrinkAllocatorWithOwnDoc(JsonDocument& ownDoc, JsonValue& val, Json
 }	// namespace detail
 }	// namespace ijst
 
-#endif //_IJST_DETAIL_HPP_INCLUDE_
+#endif //IJST_DETAIL_HPP_INCLUDE_

@@ -3,50 +3,50 @@
  *		Created by h46incon on 2017/12/26.
  **************************************************************************************************/
 
-#ifndef _IJST_TYPES_CONTAINER_HPP_INCLUDE_
-#define _IJST_TYPES_CONTAINER_HPP_INCLUDE_
+#ifndef IJST_TYPES_CONTAINER_HPP_INCLUDE_
+#define IJST_TYPES_CONTAINER_HPP_INCLUDE_
 
 #include "ijst.h"
 #include <map>
 #include <list>
 #include <deque>
 
-//! @brief Declare a vector<_T> field.
+//! @brief Declare a vector<T> field.
 //! @ingroup IJST_MACRO_API
-#define IJST_TVEC(_T)	::std::vector< _T >
-//! @brief Declare a deque<_T> field.
+#define IJST_TVEC(T)	::std::vector< T >
+//! @brief Declare a deque<T> field.
 //! @ingroup IJST_MACRO_API
-#define IJST_TDEQUE(_T)	::std::deque< _T >
-//! @brief Declare a vector<_T> field.
+#define IJST_TDEQUE(T)	::std::deque< T >
+//! @brief Declare a vector<T> field.
 //! @ingroup IJST_MACRO_API
-#define IJST_TLIST(_T)	::std::list< _T >
-//! @brief Declare a map<string, _T> field of json object
+#define IJST_TLIST(T)	::std::list< T >
+//! @brief Declare a map<string, T> field of json object
 //! @ingroup IJST_MACRO_API
-#define IJST_TMAP(_T)	IJST_TYPE(::std::map< ::std::string, _T >)
+#define IJST_TMAP(T)	IJST_TYPE(::std::map< ::std::string, T >)
 //! @brief Declare a vector of members of json object
 //! @ingroup IJST_MACRO_API
-#define IJST_TOBJ(_T)	::std::vector< ::ijst::T_Member< _T > >
-//! @brief Declare a object field which _T is a ijst struct type.
+#define IJST_TOBJ(T)	::std::vector< ::ijst::T_Member< T > >
+//! @brief Declare a object field which T is a ijst struct type.
 //! @ingroup IJST_MACRO_API
-#define IJST_TST(_T)	_T
+#define IJST_TST(T)		T
 
 namespace ijst {
 
 /**
  * @brief Memeber in json object
  *
- * @tparam _T	value type
+ * @tparam T	value type
  */
-template<typename _T>
+template<typename T>
 struct T_Member {
-	typedef _T ValType;
+	typedef T ValType;
 	std::string name;
-	_T value;
+	T value;
 
 	T_Member(): name(), value() {}
-	T_Member(const std::string& _name, const _T& _value): name(_name), value(_value) {}
+	T_Member(const std::string& _name, const T& _value): name(_name), value(_value) {}
 #if __cplusplus >= 201103L
-	T_Member(std::string&& _name, _T&& _value): name(_name), value(_value) {}
+	T_Member(std::string&& _name, T&& _value): name(_name), value(_value) {}
 #endif
 };
 
@@ -54,11 +54,11 @@ struct T_Member {
  * Specialization for map type of Optional template.
  * This specialization add operator[] (string key) for getter chaining.
  *
- * @tparam _TElem
+ * @tparam TElem
  */
-template <typename _TElem>
-class Optional <std::map<std::string, _TElem> > {
-	typedef std::map<std::string, _TElem> ValType;
+template <typename TElem>
+class Optional <std::map<std::string, TElem> > {
+	typedef std::map<std::string, TElem> ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 public:
 	/**
@@ -67,17 +67,17 @@ public:
 	 * @param key 	key
 	 * @return 		Optional(elemInstance) if key is found, Optional(null) else
 	 */
-	Optional<_TElem> operator[](const std::string& key) const
+	Optional<TElem> operator[](const std::string& key) const
 	{
 		if (m_pVal == IJST_NULL) {
-			return Optional<_TElem>(IJST_NULL);
+			return Optional<TElem>(IJST_NULL);
 		}
-		typename std::map<std::string, _TElem>::iterator it = m_pVal->find(key);
+		typename std::map<std::string, TElem>::iterator it = m_pVal->find(key);
 		if (it == m_pVal->end()){
-			return Optional<_TElem>(IJST_NULL);
+			return Optional<TElem>(IJST_NULL);
 		}
 		else {
-			return Optional<_TElem>(&it->second);
+			return Optional<TElem>(&it->second);
 		}
 	}
 };
@@ -86,12 +86,12 @@ public:
  * const version Specialization for map type of Optional template.
  * This specialization add operator[] (string key) for getter chaining.
  *
- * @tparam _TElem	Element type
+ * @tparam TElem	Element type
  */
-template <typename _TElem>
-class Optional <const std::map<std::string, _TElem> >
+template <typename TElem>
+class Optional <const std::map<std::string, TElem> >
 {
-	typedef const std::map<std::string, _TElem> ValType;
+	typedef const std::map<std::string, TElem> ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 public:
 	/**
@@ -100,17 +100,17 @@ public:
 	 * @param key 	key
 	 * @return 		Optional(const elemInstance) if key is found, Optional(null) else
 	 */
-	Optional<const _TElem> operator[](const std::string& key) const
+	Optional<const TElem> operator[](const std::string& key) const
 	{
 		if (m_pVal == IJST_NULL) {
-			return Optional<const _TElem>(IJST_NULL);
+			return Optional<const TElem>(IJST_NULL);
 		}
-		typename std::map<std::string, _TElem>::const_iterator it = m_pVal->find(key);
+		typename std::map<std::string, TElem>::const_iterator it = m_pVal->find(key);
 		if (it == m_pVal->end()){
-			return Optional<const _TElem>(IJST_NULL);
+			return Optional<const TElem>(IJST_NULL);
 		}
 		else {
-			return Optional<const _TElem>(&it->second);
+			return Optional<const TElem>(&it->second);
 		}
 	}
 };
@@ -119,22 +119,22 @@ public:
  * Specialization for vector or deque type of Optional template.
  * This specialization add operator[] (size_type i) for getter chaining.
  *
- * @tparam _TElem	Element type
+ * @tparam TElem	Element type
  */
 #define IJSTI_OPTIONAL_ARRAY_DEFINE(is_const, Container)													\
-	template<typename _TElem>																				\
-	class Optional<is_const Container<_TElem> >																\
+	template<typename TElem>																				\
+	class Optional<is_const Container<TElem> >																\
 	{ 																										\
-		typedef is_const Container<_TElem> ValType;															\
+		typedef is_const Container<TElem> ValType;															\
 		IJSTI_OPTIONAL_BASE_DEFINE(ValType)																	\
 	public:																									\
 		/** return Optional(elemeInstance) if i is valid, Optional(null) else. */							\
-		Optional<is_const _TElem> operator[](typename Container<_TElem>::size_type i) const					\
+		Optional<is_const TElem> operator[](typename Container<TElem>::size_type i) const					\
 		{																									\
 			if (m_pVal == IJST_NULL || m_pVal->size() <= i) {												\
-				return Optional<is_const _TElem>(IJST_NULL);												\
+				return Optional<is_const TElem>(IJST_NULL);												\
 			}																								\
-			return Optional<is_const _TElem>(&(*m_pVal)[i]);												\
+			return Optional<is_const TElem>(&(*m_pVal)[i]);												\
 		}																									\
 	};
 
@@ -230,24 +230,24 @@ public:
 
 /**
  * Serialization class of Vector types
- * @tparam _T class
+ * @tparam T class
  */
-template<class _T>
-class FSerializer<std::vector<_T> > : public SerializerInterface {
-	typedef std::vector<_T> VarType;
-	typedef Singleton<ContainerSerializer<_T, VarType> > ContainerSerializerSingleton;
+template<class T>
+class FSerializer<std::vector<T> > : public SerializerInterface {
+	typedef std::vector<T> VarType;
+	typedef Singleton<ContainerSerializer<T, VarType> > ContainerSerializerSingleton;
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
 };
 
 /**
  * Serialization class of Deque types
- * @tparam _T class
+ * @tparam T class
  */
-template<class _T>
-class FSerializer<std::deque<_T> > : public SerializerInterface {
-	typedef std::deque<_T> VarType;
-	typedef Singleton<ContainerSerializer<_T, VarType> > ContainerSerializerSingleton;
+template<class T>
+class FSerializer<std::deque<T> > : public SerializerInterface {
+	typedef std::deque<T> VarType;
+	typedef Singleton<ContainerSerializer<T, VarType> > ContainerSerializerSingleton;
 
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
@@ -255,30 +255,30 @@ public:
 
 /**
  * Serialization class of Deque types
- * @tparam _T class
+ * @tparam T class
  */
-template<class _T>
-class FSerializer<std::list<_T> > : public SerializerInterface {
-	typedef std::list<_T> VarType;
-	typedef Singleton<ContainerSerializer<_T, VarType> > ContainerSerializerSingleton;
+template<class T>
+class FSerializer<std::list<T> > : public SerializerInterface {
+	typedef std::list<T> VarType;
+	typedef Singleton<ContainerSerializer<T, VarType> > ContainerSerializerSingleton;
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
 };
 
 /**
  * Serialization class of Map types
- * @tparam _T class
+ * @tparam T class
  */
-template<class _T>
-class FSerializer<std::map<std::string, _T> > : public SerializerInterface {
-	typedef std::map<std::string, _T> VarType;
+template<class T>
+class FSerializer<std::map<std::string, T> > : public SerializerInterface {
+	typedef std::map<std::string, T> VarType;
 public:
 
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		assert(req.pField != IJST_NULL);
 		const VarType& field = *static_cast<const VarType *>(req.pField);
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(_T);
+		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(T);
 
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartObject());
 
@@ -306,14 +306,14 @@ public:
 		assert(req.pFieldBuffer != IJST_NULL);
 		VarType& field = *static_cast<VarType *>(req.pFieldBuffer);
 		field.clear();
-		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
+		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(T);
 
 		for (rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
 			 itMember != req.stream.MemberEnd(); ++itMember)
 		{
 			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
 			// New a elem buffer in container first to avoid copy
-			typename VarType::value_type buf(fieldName, _T());
+			typename VarType::value_type buf(fieldName, T());
 			std::pair<typename VarType::iterator, bool> insertRet = field.insert(IJSTI_MOVE(buf));
 			// Check duplicate
 			if (!insertRet.second) {
@@ -322,7 +322,7 @@ public:
 			}
 
 			// Element FromJson
-			_T &elemBuffer = insertRet.first->second;
+			T &elemBuffer = insertRet.first->second;
 			FromJsonReq elemReq(itMember->value, req.allocator,
 								req.deserFlag, req.canMoveSrc, &elemBuffer);
 			FromJsonResp elemResp(resp.errDoc);
@@ -341,7 +341,7 @@ public:
 	virtual void ShrinkAllocator(void* pField) IJSTI_OVERRIDE
 	{
 		VarType& field = *static_cast<VarType *>(pField);
-		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(_T);
+		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(T);
 		for (typename VarType::iterator itField = field.begin(); itField != field.end(); ++itField)
 		{
 			serializerInterface->ShrinkAllocator(&itField->second);
@@ -351,11 +351,11 @@ public:
 
 /**
  * Serialization class of Object types
- * @tparam _T class
+ * @tparam T class
  */
-template<class _T>
-class FSerializer<std::vector<T_Member<_T> > > : public SerializerInterface {
-	typedef T_Member<_T> MemberType;
+template<class T>
+class FSerializer<std::vector<T_Member<T> > > : public SerializerInterface {
+	typedef T_Member<T> MemberType;
 	typedef typename MemberType::ValType ValType;
 	typedef std::vector<MemberType> VarType;
 public:
@@ -435,4 +435,4 @@ public:
 }	// namespace detail
 }	// namespace ijst
 
-#endif //_IJST_TYPES_CONTAINER_HPP_INCLUDE_
+#endif //IJST_TYPES_CONTAINER_HPP_INCLUDE_

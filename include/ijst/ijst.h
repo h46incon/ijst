@@ -2,8 +2,8 @@
 // Created by h46incon on 2017/9/19.
 //
 
-#ifndef _IJST_HPP_INCLUDE_
-#define _IJST_HPP_INCLUDE_
+#ifndef IJST_HPP_INCLUDE_
+#define IJST_HPP_INCLUDE_
 
 #include "detail/detail.h"
 
@@ -79,7 +79,7 @@
  *	User could overwrite by define this macro such as "offsetof()".
  */
 #ifndef IJST_OFFSETOF
-	#define IJST_OFFSETOF(_T, member)	((size_t)&(((_T*)0)->member))
+	#define IJST_OFFSETOF(T, member)	((size_t)&(((T*)0)->member))
 #endif
 
 /** @defgroup IJST_MACRO_API ijst macro API
@@ -159,7 +159,7 @@
 //! @brief Helper declare macro with comma.
 //! @ingroup IJST_MACRO_API
 #if __cplusplus < 201103L
-	#define IJST_TYPE(...)			::ijst::detail::ArgumentType<void( __VA_ARGS__)>::type
+	#define IJST_TYPE(...)			::ijst::detail::ArgumentType<void(__VA_ARGS__)>::type
 #else
 	#define IJST_TYPE(...)			decltype(__VA_ARGS__())
 #endif
@@ -180,7 +180,7 @@ struct FDesc {
 //! Field status.
 struct FStatus {
 public:
-	enum _E {
+	enum E_ {
 		kNotAField,
 		kMissing,
 		kNull,
@@ -188,7 +188,7 @@ public:
 		kValid,
 	};
 };
-typedef FStatus::_E EFStatus;
+typedef FStatus::E_ EFStatus;
 
 /**
  * @brief Serialization options about fields.
@@ -238,14 +238,14 @@ struct DeserFlag {
  *
  * Using raw rapidjson::Handler concept have to make function as a template, which is not convince is some situations.
  *
- * @tparam _Ch	character type of string
+ * @tparam Ch_	character type of string
  *
  * @see HandlerWrapper
  */
-template<typename _Ch>
+template<typename Ch_>
 class GenericHandlerBase {
 public:
-	typedef _Ch Ch;
+	typedef Ch_ Ch;
 
 	virtual bool Null()= 0;
 	virtual bool Bool(bool b)= 0;
@@ -322,27 +322,27 @@ struct ErrorCode {
 	static const int kWriteFailed					= 0x00003001;
 };
 
-#define IJSTI_OPTIONAL_BASE_DEFINE(_T)						\
+#define IJSTI_OPTIONAL_BASE_DEFINE(T)						\
 	public:													\
 		/** @brief Constructor */ 							\
-		explicit Optional(_T* _pVal) : m_pVal(_pVal) {}		\
+		explicit Optional(T* _pVal) : m_pVal(_pVal) {}		\
 		/** @brief Get holding pointer */ 					\
-		_T* Ptr() const { return m_pVal; }					\
+		T* Ptr() const { return m_pVal; }					\
 	private:												\
-		_T* const m_pVal;
+		T* const m_pVal;
 
 /**
  * @brief Helper for implementing getter chaining.
  *
- * @tparam _T 	type
+ * @tparam T 	type
  *
  * @note	The specialized template for container is declared in "types_container.h",
  * 			which implements operator [].
  */
-template <typename _T, typename = void>
+template <typename T, typename = void>
 class Optional
 {
-	typedef _T ValType;
+	typedef T ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 };
 
@@ -352,12 +352,12 @@ class Optional
  * Specialization for ijst struct (defined via IJST_DEFINE_STRUCT and so on) of Optional template.
  * This specialization add operator->() for getter chaining.
  *
- * @tparam _T	ijst struct type
+ * @tparam T	ijst struct type
  */
-template <typename _T>
-class Optional<_T, typename detail::HasType<typename _T::_ijstStructAccessorType>::Void >
+template <typename T>
+class Optional<T, typename detail::HasType<typename T::_ijstStructAccessorType>::Void >
 {
-	typedef _T ValType;
+	typedef T ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 public:
 	/**
@@ -365,9 +365,9 @@ public:
 	 *
 	 * @return 	valid instance when data is not null, invalid instance when data is null
 	 */
-	_T* operator->() const
+	T* operator->() const
 	{
-		static _T empty(false);
+		static T empty(false);
 		if (m_pVal == IJST_NULL) {
 			return &empty;
 		}
@@ -405,12 +405,12 @@ struct MetaFieldInfo { // NOLINT
 class MetaClassInfo {
 public:
 	/**
-	 * @brief Get meta information for ijst struct _T.
+	 * @brief Get meta information for ijst struct T.
 	 *
-	 * @tparam _T 	ijst struct
+	 * @tparam T 	ijst struct
 	 * @return		MetaClassInfo instance
 	 */
-	template<typename _T>
+	template<typename T>
 	static const MetaClassInfo& GetMetaInfo();
 
 	/**
@@ -462,7 +462,7 @@ public:
 
 private:
 	friend class detail::MetaClassInfoSetter;
-	template<typename _T> friend class detail::MetaClassInfoIniter;
+	template<typename T> friend class detail::MetaClassInfoIniter;
 	MetaClassInfo() : accessorOffset(0), mapInited(false) { }
 
 	MetaClassInfo(const MetaClassInfo&);	// = delete
@@ -522,9 +522,9 @@ namespace detail {
 		} while (false)
 
 	#if IJST_AUTO_META_INIT
-		#define IJSTI_TRY_INIT_META_BEFORE_MAIN(_T)			::ijst::detail::Singleton< _T>::InitInstanceBeforeMain();
+		#define IJSTI_TRY_INIT_META_BEFORE_MAIN(T)			::ijst::detail::Singleton< T >::InitInstanceBeforeMain();
 	#else
-		#define IJSTI_TRY_INIT_META_BEFORE_MAIN(_T)
+		#define IJSTI_TRY_INIT_META_BEFORE_MAIN(T)
 	#endif
 
 	/**
@@ -607,13 +607,13 @@ namespace detail {
 	/**
 	 * Template interface of serialization class
 	 * This template is unimplemented, and will throw a compile error when use it.
-	 * @tparam _T class
+	 * @tparam T class
 	 */
-	template<typename _T, typename = void>
+	template<typename T, typename = void>
 	class FSerializer : public SerializerInterface {
 	public:
 		#if __cplusplus >= 201103L
-		static_assert(!std::is_same<_T, _T>::value,
+		static_assert(!std::is_same<T, T>::value,
 					  "This base template should not be instantiated. (Maybe use wrong param when define ijst struct)");
 		#endif
 
@@ -623,27 +623,27 @@ namespace detail {
 		virtual void ShrinkAllocator(void * pField) IJSTI_OVERRIDE { (void)pField; }
 	};
 
-	#define IJSTI_FSERIALIZER_INS(_T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< _T> >::GetInstance()
+	#define IJSTI_FSERIALIZER_INS(T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< T > >::GetInstance()
 
 	/**	========================================================================================
 	 *				Private
 	 */
 	/**
 	 * Meta info initer
-	 * Push meta class info of _T in specialized constructor MetaInfo<_T>().
-	 * @tparam _T: class. Concept require _T::_InitMetaInfo(MetaInfo*)
+	 * Push meta class info of T in specialized constructor MetaInfo<T>().
+	 * @tparam T: class. Concept require T::_initMetaInfo(MetaInfo*)
 	 */
-	template<typename _T>
+	template<typename T>
 	class MetaClassInfoIniter {
 	public:
 		MetaClassInfo metaClass;
 
 	private:
-		friend class Singleton<MetaClassInfoIniter<_T> >;
+		friend class Singleton<MetaClassInfoIniter<T> >;
 
 		MetaClassInfoIniter()
 		{
-			_T::template _InitMetaInfo<true>(this);
+			T::template _initMetaInfo<true>(this);
 		}
 	};
 
@@ -725,28 +725,28 @@ namespace detail {
 
 	/**
 	 * Serialization of ijst struct types
-	 * @tparam _T class
+	 * @tparam T class
 	 */
-	template<class _T>
-	class FSerializer<_T, typename HasType<typename _T::_ijstStructAccessorType>::Void>: public SerializerInterface {
+	template<class T>
+	class FSerializer<T, typename HasType<typename T::_ijstStructAccessorType>::Void>: public SerializerInterface {
 	public:
-		typedef _T VarType;
+		typedef T VarType;
 
 		virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 		{
-			_T *pField = (_T *) req.pField;
+			T *pField = (T *) req.pField;
 			return pField->_.ISerialize(req);
 		}
 
 		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 		{
-			_T *pField = (_T *) req.pFieldBuffer;
+			T *pField = (T *) req.pFieldBuffer;
 			return pField->_.IFromJson(req, resp);
 		}
 
 		virtual void ShrinkAllocator(void *pField) IJSTI_OVERRIDE
 		{
-			((_T*)pField)->_.IShrinkAllocator(pField);
+			((T*)pField)->_.IShrinkAllocator(pField);
 		}
 	};
 
@@ -856,16 +856,16 @@ public:
 	}
 
 	//! Set field to val and mark it valid.
-	template<typename _T1, typename _T2>
-	inline void Set(_T1 &field, const _T2 &value)
+	template<typename T1, typename T2>
+	inline void Set(T1 &field, const T2 &value)
 	{
 		MarkValid(&field);
 		field = value;
 	}
 
 	//! Set field to val and mark it valid. The type of field and value must be same.
-	template<typename _T>
-	inline void SetStrict(_T &field, const _T &value)
+	template<typename T>
+	inline void SetStrict(T &field, const T &value)
 	{
 		Set(field, value);
 	}
@@ -1551,15 +1551,15 @@ private:
 	Handler* m_h;
 };
 
-template<typename _T>
+template<typename T>
 inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 {
-	IJSTI_TRY_INIT_META_BEFORE_MAIN(detail::MetaClassInfoIniter<_T>);
-	return detail::Singleton<detail::MetaClassInfoIniter<_T> >::GetInstance()->metaClass;
+	IJSTI_TRY_INIT_META_BEFORE_MAIN(detail::MetaClassInfoIniter<T>);
+	return detail::Singleton<detail::MetaClassInfoIniter<T> >::GetInstance()->metaClass;
 }
 
 	#define IJSTI_STRUCT_META_INITER_DECLARE(stName)	\
-		template void stName::template _InitMetaInfo<true>(::ijst::detail::MetaClassInfoIniter< stName >*);
+		template void stName::template _initMetaInfo<true>(::ijst::detail::MetaClassInfoIniter< stName >*);
 
 //! IJSTI_STRUCT_EXTERN_TEMPLATE
 #if IJST_EXTERN_TEMPLATE
@@ -1639,13 +1639,13 @@ inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 			}
 
 	#define IJSTI_METAINFO_DEFINE_START(stName, N)												\
-			typedef ::ijst::detail::MetaClassInfoIniter< stName > _MetaInfoT;					\
-			typedef ::ijst::detail::Singleton<_MetaInfoT> _MetaInfoS;							\
-			friend _MetaInfoT;																	\
+			typedef ::ijst::detail::MetaClassInfoIniter< stName > _metaInfoT;					\
+			typedef ::ijst::detail::Singleton<_metaInfoT> _metaInfoS;							\
+			friend _metaInfoT;																	\
 			template<bool DummyTrue	>															\
-			static void _InitMetaInfo(_MetaInfoT* metaInfo)										\
+			static void _initMetaInfo(_metaInfoT* metaInfo)										\
 			{																					\
-				IJSTI_TRY_INIT_META_BEFORE_MAIN(_MetaInfoT);									\
+				IJSTI_TRY_INIT_META_BEFORE_MAIN(_metaInfoT);									\
 				/*Do not call MetaInfoS::GetInstance() int this function */			 			\
 				::ijst::detail::MetaClassInfoSetter mSetter(metaInfo->metaClass);				\
 				mSetter.InitBegin(#stName, N, IJST_OFFSETOF(stName, _));
@@ -1691,4 +1691,4 @@ inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 
 #include "detail/ijst_repeat_def.inc"
 
-#endif //_IJST_HPP_INCLUDE_
+#endif //IJST_HPP_INCLUDE_
