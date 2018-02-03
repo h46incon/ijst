@@ -54,6 +54,19 @@ inline void CheckTypeMismatch(const rapidjson::Value& errDoc, const char* expect
 	ASSERT_STREQ(ostream.str.c_str(), errDoc["json"].GetString());
 }
 
+inline void CheckMemberValueIsDefault(const char* fieldName, int retCode, const std::string& errMsg)
+{
+	int retExpect = ijst::ErrorCode::kDeserializeValueIsDefault;
+	ASSERT_EQ(retExpect, retCode);
+	rapidjson::Document errDoc;
+	errDoc.Parse(errMsg.data(), errMsg.length());
+	ASSERT_FALSE(errDoc.HasParseError());
+	ASSERT_TRUE(errDoc.IsObject());
+	ASSERT_STREQ(errDoc["type"].GetString(), "ErrInObject");
+	ASSERT_STREQ(errDoc["member"].GetString(), fieldName);
+	ASSERT_STREQ(errDoc["err"]["type"].GetString(), "ValueIsDefault");
+}
+
 inline void CheckMemberTypeMismatch(const std::string& errMsg, const char* fieldName, const char* expectedType, const char* value)
 {
 	UTEST_PARSE_STR_TO_JSON(errMsg, doc)

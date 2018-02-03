@@ -173,10 +173,7 @@ public:
 
 	virtual int FromJson(const FromJsonReq &req, FromJsonResp &resp) IJSTI_OVERRIDE
 	{
-		if (!req.stream.IsArray()) {
-			resp.errDoc.ElementTypeMismatch("array", req.stream);
-			return ErrorCode::kDeserializeValueTypeError;
-		}
+		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsArray()), "array");
 
 		assert(req.pFieldBuffer != IJST_NULL);
 		VarType& field = *static_cast<VarType *>(req.pFieldBuffer);
@@ -193,7 +190,7 @@ public:
 			assert(i < field.size());
 			assert(itField != field.end());
 			FromJsonReq elemReq(*itVal, req.allocator,
-								   req.deserFlag, req.canMoveSrc, &*itField);
+								req.deserFlag, req.canMoveSrc, &*itField, 0);
 			FromJsonResp elemResp(resp.errDoc);
 			// FromJson
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
@@ -203,9 +200,10 @@ public:
 				resp.errDoc.ErrorInArray("ErrInArray", (rapidjson::SizeType)field.size());
 				return ret;
 			}
-			++resp.fieldCount;
 		}
 		assert(i == field.size());
+
+		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((field.empty()));
 		return 0;
 	}
 
@@ -298,10 +296,7 @@ public:
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
-		if (!req.stream.IsObject()) {
-			resp.errDoc.ElementTypeMismatch("object", req.stream);
-			return ErrorCode::kDeserializeValueTypeError;
-		}
+		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsObject()), "object");
 
 		assert(req.pFieldBuffer != IJST_NULL);
 		VarType& field = *static_cast<VarType *>(req.pFieldBuffer);
@@ -324,7 +319,7 @@ public:
 			// Element FromJson
 			T &elemBuffer = insertRet.first->second;
 			FromJsonReq elemReq(itMember->value, req.allocator,
-								req.deserFlag, req.canMoveSrc, &elemBuffer);
+								req.deserFlag, req.canMoveSrc, &elemBuffer, 0);
 			FromJsonResp elemResp(resp.errDoc);
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
 			if (ret != 0)
@@ -333,8 +328,8 @@ public:
 				resp.errDoc.ErrorInObject("ErrInMap", fieldName);
 				return ret;
 			}
-			++resp.fieldCount;
 		}
+		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((field.empty()));
 		return 0;
 	}
 
@@ -383,10 +378,7 @@ public:
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
-		if (!req.stream.IsObject()) {
-			resp.errDoc.ElementTypeMismatch("object", req.stream);
-			return ErrorCode::kDeserializeValueTypeError;
-		}
+		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsObject()), "object");
 
 		assert(req.pFieldBuffer != IJST_NULL);
 		VarType& field = *static_cast<VarType *>(req.pFieldBuffer);
@@ -405,7 +397,7 @@ public:
 			memberBuf.name = std::string(itMember->name.GetString(), itMember->name.GetStringLength());
 			ValType &elemBuffer = memberBuf.value;
 			FromJsonReq elemReq(itMember->value, req.allocator,
-								req.deserFlag, req.canMoveSrc, &elemBuffer);
+								req.deserFlag, req.canMoveSrc, &elemBuffer, 0);
 			FromJsonResp elemResp(resp.errDoc);
 
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
@@ -415,9 +407,9 @@ public:
 				field.resize(i);
 				return ret;
 			}
-			++resp.fieldCount;
 		}
 		assert(i == field.size());
+		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((field.empty()));
 		return 0;
 	}
 

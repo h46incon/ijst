@@ -22,7 +22,7 @@ TEST(Deserialize, Empty)
 	string emptyJson = "{}";
 	SimpleSt st;
 	int ret = st._.Deserialize(emptyJson);
-	int retExpected = ErrorCode::kDeserializeSomeFiledsInvalid;
+	int retExpected = ErrorCode::kDeserializeSomeFieldsInvalid;
 	ASSERT_EQ(ret, retExpected);
 }
 
@@ -61,7 +61,7 @@ TEST(Deserialize, ParseError)
 	string errJson = "{withoutQuote:1}";
 	SimpleSt st;
 	int ret = st._.Deserialize(errJson);
-	int retExpected = ErrorCode::kDeserializeParseFaild;
+	int retExpected = ErrorCode::kDeserializeParseFailed;
 	ASSERT_EQ(ret, retExpected);
 }
 
@@ -190,7 +190,7 @@ TEST(Deserialize, NullValue)
 	{
 		string json = "{}";
 		ret = st._.Deserialize(json);
-		retExpected = ErrorCode::kDeserializeSomeFiledsInvalid;
+		retExpected = ErrorCode::kDeserializeSomeFieldsInvalid;
 		ASSERT_EQ(ret, retExpected);
 	}
 
@@ -240,51 +240,52 @@ TEST(Deserialize, NullValue)
 
 IJST_DEFINE_STRUCT(
 		NotEmptySt
-		, (IJST_TVEC(T_int), vec_v, "vec", FDesc::ElemNotEmpty | FDesc::Optional)
-		, (IJST_TMAP(T_int), map_v, "map", FDesc::ElemNotEmpty | FDesc::Optional)
+		, (IJST_TVEC(T_int), vec_v, "vec", FDesc::NotDefault | FDesc::Optional)
+		, (IJST_TDEQUE(T_int), deq_v, "deq", FDesc::NotDefault | FDesc::Optional)
+		, (IJST_TLIST(T_int), list_v, "list", FDesc::NotDefault | FDesc::Optional)
+		, (IJST_TMAP(T_int), map_v, "map", FDesc::NotDefault | FDesc::Optional)
+		, (IJST_TOBJ(T_int), obj_v, "obj", FDesc::NotDefault | FDesc::Optional)
 )
 
+void CheckNotEmpty(const string& validJson, const string& fieldEmptyJson, const char* emptyFiledName)
+{
+	// valid
+	{
+		NotEmptySt st;
+		int ret = st._.Deserialize(validJson);
+		ASSERT_EQ(ret, 0);
+	}
+	// empty
+	{
+		NotEmptySt st;
+		string errMsg;
+		int ret = st._.Deserialize(fieldEmptyJson, errMsg);
+		CheckMemberValueIsDefault(emptyFiledName, ret, errMsg);
+	}
+}
 TEST(Deserialize, NotEmpty)
 {
-	NotEmptySt st;
-	int ret;
-	int retExpected;
 
 	// Field empty
 	{
+		NotEmptySt st;
+		int ret;
 		string json = "{}";
 		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 	}
 
-	// vec elem empty
 	{
-		string json = "{\"vec\": [], \"map\": {\"v\": 1}}";
-		ret = st._.Deserialize(json);
-		retExpected = ErrorCode::kDeserializeElemEmpty;
-		ASSERT_EQ(ret, retExpected);
-	}
-
-	// map elem empty
-	{
-		string json = "{\"vec\": [1], \"map\": {}}";
-		ret = st._.Deserialize(json);
-		retExpected = ErrorCode::kDeserializeElemEmpty;
-		ASSERT_EQ(ret, retExpected);
-	}
-
-	// vec valid
-	{
-		string json = "{\"vec\": [1]}";
-		ret = st._.Deserialize(json);
-		ASSERT_EQ(ret, 0);
-	}
-
-	// map valid
-	{
-		string json = "{\"map\": {\"v\": 1}}";
-		ret = st._.Deserialize(json);
-		ASSERT_EQ(ret, 0);
+		CheckNotEmpty("{\"vec\": [0]}",
+					  "{\"vec\": []}", "vec");
+		CheckNotEmpty("{\"deq\": [0]}",
+					  "{\"deq\": []}", "deq");
+		CheckNotEmpty("{\"list\": [0]}",
+					  "{\"list\": []}", "list");
+		CheckNotEmpty("{\"map\": {\"v\": 0}}",
+					  "{\"map\": {}}", "map");
+		CheckNotEmpty("{\"obj\": {\"v\": 0}}",
+					  "{\"obj\": {}}", "obj");
 	}
 }
 
@@ -444,7 +445,7 @@ TEST(Deserialize, Allocator)
 TEST(Deserialize, ErrDoc_MemberMissing)
 {
 	string json = "{}";
-	const int retExpected = ErrorCode::kDeserializeSomeFiledsInvalid;
+	const int retExpected = ErrorCode::kDeserializeSomeFieldsInvalid;
 	NullableSt st;
 	string errMsg;
 	int ret = st._.Deserialize(json, errMsg);
@@ -543,7 +544,7 @@ TEST(Deserialize, ErrDoc)
 	{
 		const string json = "ThisIsAErrJson";
 		rapidjson::Document errDoc;
-		TestErrCheckCommonError(json, ErrorCode::kDeserializeParseFaild, errDoc);
+		TestErrCheckCommonError(json, ErrorCode::kDeserializeParseFailed, errDoc);
 		ASSERT_STREQ(errDoc["type"].GetString(), "ParseError");
 		ASSERT_EQ(errDoc["errCode"].GetInt(), (int)rapidjson::kParseErrorValueInvalid);
 
@@ -553,7 +554,7 @@ TEST(Deserialize, ErrDoc)
 		StErrCheck st;
 		string errMsg;
 		int ret = st._.Deserialize(json, errMsg);
-		const int retExpected = ErrorCode::kDeserializeParseFaild;
+		const int retExpected = ErrorCode::kDeserializeParseFailed;
 		ASSERT_EQ(ret, retExpected);
 		errDoc.Parse(errMsg.c_str(), errMsg.length());
 		ASSERT_TRUE(errDoc.IsObject());

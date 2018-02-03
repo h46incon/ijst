@@ -282,6 +282,17 @@ struct ErrorDocSetter {
 				*pAllocator);
 	}
 
+	void ElementValueIsDefault()
+	{
+		if (pAllocator == IJSTI_NULL) { return; }
+
+		pErrMsg->SetObject();
+		pErrMsg->AddMember(
+				JsonValue().SetString("type", *pAllocator),
+				JsonValue().SetString("ValueIsDefault", *pAllocator),
+				*pAllocator);
+	}
+
 	void ElementAddMemberName(const std::string &memberName)
 	{
 		if (pAllocator == IJSTI_NULL) { return; }
@@ -302,57 +313,64 @@ struct ErrorDocSetter {
 	JsonValue* const pErrMsg;
 };
 
-
-/**
- * Custom swap() to avoid dependency on C++ <algorithm> header
- * @tparam T 	Type of the arguments to swap, should be instantiated with primitive C++ types only.
- * @note This has the same semantics as std::swap().
- */
-template <typename T>
-inline void Swap(T& a, T& b) RAPIDJSON_NOEXCEPT {
-	T tmp = IJSTI_MOVE(a);
-	a = IJSTI_MOVE(b);
-	b = IJSTI_MOVE(tmp);
-}
-
-template<typename Itera, typename Target, typename Comp>
-Itera BinarySearch(Itera begin, Itera end, const Target& target, Comp comp)
-{
-	assert(begin <= end);
-
-	while (begin < end) {
-		Itera mid = begin + (end - begin) / 2;
-		int c = comp(*mid, target);
-		if (c > 0) {
-			// target < mid
-			end = mid;
-		}
-		else if (c < 0) {
-			// target > mid
-			begin = mid + 1;
-		}
-		else {
-			// target == mid
-			return mid;
-		}
+struct Util {
+	/**
+	 * Custom swap() to avoid dependency on C++ <algorithm> header
+	 * @tparam T 	Type of the arguments to swap, should be instantiated with primitive C++ types only.
+	 * @note This has the same semantics as std::swap().
+	 */
+	template <typename T>
+	static inline void Swap(T& a, T& b) RAPIDJSON_NOEXCEPT {
+		T tmp = IJSTI_MOVE(a);
+		a = IJSTI_MOVE(b);
+		b = IJSTI_MOVE(tmp);
 	}
-	return end;
+
+	template<typename Itera, typename Target, typename Comp>
+	static Itera BinarySearch(Itera begin, Itera end, const Target& target, Comp comp)
+	{
+		assert(begin <= end);
+
+		while (begin < end) {
+			Itera mid = begin + (end - begin) / 2;
+			int c = comp(*mid, target);
+			if (c > 0) {
+				// target < mid
+				end = mid;
+			}
+			else if (c < 0) {
+				// target > mid
+				begin = mid + 1;
+			}
+			else {
+				// target == mid
+				return mid;
+			}
+		}
+		return end;
+	};
+
+	static void ShrinkAllocatorWithOwnDoc(JsonDocument& ownDoc, JsonValue& val, JsonAllocator*& pAllocatorOut)
+	{
+		if (pAllocatorOut == &ownDoc.GetAllocator()) {
+			if (pAllocatorOut->Capacity() == pAllocatorOut->Size()) {
+				// The capacity will not shrink
+				return;
+			}
+		}
+		JsonDocument newDoc;
+		newDoc.CopyFrom(val, newDoc.GetAllocator());
+		ownDoc.Swap(newDoc);
+		val = (JsonValue&) ownDoc;
+		pAllocatorOut = &ownDoc.GetAllocator();
+	}
+
+	static bool IsBitSet(unsigned int val, unsigned int bit)
+	{
+		return (val & bit) != 0;
+	}
+
 };
-
-inline void ShrinkAllocatorWithOwnDoc(JsonDocument& ownDoc, JsonValue& val, JsonAllocator*& pAllocatorOut)
-{
-	if (pAllocatorOut == &ownDoc.GetAllocator()) {
-		if (pAllocatorOut->Capacity() == pAllocatorOut->Size()) {
-			// The capacity will not shrink
-			return;
-		}
-	}
-	JsonDocument newDoc;
-	newDoc.CopyFrom(val, newDoc.GetAllocator());
-	ownDoc.Swap(newDoc);
-	val = (JsonValue&) ownDoc;
-	pAllocatorOut = &ownDoc.GetAllocator();
-}
 
 }	// namespace detail
 }	// namespace ijst

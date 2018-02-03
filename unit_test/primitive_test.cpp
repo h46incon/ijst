@@ -7,6 +7,7 @@
 #include <ijst/types_std.h>
 #include <ijst/types_stdlayout_wrapper.h>
 #include <limits>
+#include <sstream>
 using std::vector;
 using std::map;
 using std::string;
@@ -61,7 +62,8 @@ string GetJsonVal<string>(rapidjson::Value& jVal)
 #define UTEST_DEFINE_STRUCT(StName, PrimType) 				\
 	IJST_DEFINE_STRUCT(										\
 		StName												\
-		, (PrimType, v, "f_v", 0)							\
+		, (PrimType, vd, "f_vd", 0)							\
+		, (PrimType, v, "f_v", FDesc::NotDefault)		\
 		, (IJST_TMAP(PrimType), map_v, "f_map", 0)			\
 		, (IJST_TVEC(PrimType), vec_v, "f_vec", 0)			\
 		, (IJST_TDEQUE(PrimType), deq_v, "f_deq", 0)		\
@@ -76,50 +78,60 @@ string GetJsonVal<string>(rapidjson::Value& jVal)
  * @tparam JT 		JsonVarType
  */
 template <typename Struct, typename VT, typename JT>
-void DoTestSt(const string& json, VT vDefault
+void DoTestSt(const string& json, const string& jvDefault, VT vDefault, JT svDefault
 			, VT v0, VT map1, VT map2, VT vec0, VT vec1, VT deq0, VT deq1, VT lst0, VT lst1, VT obj0, VT obj1
 			, VT nv0, VT nmap1, VT nmap3, VT nvec0, VT nvec1, VT nvec2, VT ndeq0, VT ndeq1, VT nlst0, VT nlst1, VT nobj0, VT nobj2
 			, JT sv0, JT smap1, JT smap2, JT smap3, JT svec0, JT svec1, JT svec2, JT sdeq0, JT sdeq1, JT slst0, JT slst1, JT sobj0, JT sobj1, JT sobj2
 )
 {
-	Struct st;
-	// Default value
+	//=== Default value
 	{
+		Struct st;
 		ASSERT_EQ(st._.GetUnknown().MemberCount(), 0u);
 		ASSERT_EQ(st.v, vDefault);
 	}
 
-	// Deserialize
+	//=== Deserialize value is default
 	{
-		int ret = st._.Deserialize(json);
-		ASSERT_EQ(ret, 0);
-		// v
-		ASSERT_EQ(st.v, v0);
-		// map
-		ASSERT_EQ(st.map_v.size(), 2u);
-		ASSERT_EQ(st.map_v["v1"], map1);
-		ASSERT_EQ(st.map_v["v2"], map2);
-		// vec
-		ASSERT_EQ(st.vec_v.size(), 2u);
-		ASSERT_EQ(st.vec_v[0], vec0);
-		ASSERT_EQ(st.vec_v[1], vec1);
-		// deq
-		ASSERT_EQ(st.deq_v.size(), 2u);
-		ASSERT_EQ(st.deq_v[0], deq0);
-		ASSERT_EQ(st.deq_v[1], deq1);
-		// list
-		ASSERT_EQ(st.list_v.size(), 2u);
-		ASSERT_EQ(st.list_v.front(), lst0);
-		ASSERT_EQ(st.list_v.back(), lst1);
-		// obj
-		ASSERT_EQ(st.obj_v.size(), 2u);
-		ASSERT_EQ(st.obj_v[0].name, "o0");
-		ASSERT_EQ(st.obj_v[0].value, obj0);
-		ASSERT_EQ(st.obj_v[1].name, "o1");
-		ASSERT_EQ(st.obj_v[1].value, obj1);
+		Struct st;
+		std::stringstream ss;
+		ss << "{\"f_v\": " << jvDefault << "}";
+		string errMsg;
+		string json = ss.str();
+		int ret = st._.Deserialize(json, errMsg);
+		CheckMemberValueIsDefault("f_v", ret, errMsg);
 	}
+	//=== Deserialize
+	Struct st;
+	int ret = st._.Deserialize(json);
+	ASSERT_EQ(ret, 0);
+	// v
+	ASSERT_EQ(st.vd, vDefault);
+	ASSERT_EQ(st.v, v0);
+	// map
+	ASSERT_EQ(st.map_v.size(), 2u);
+	ASSERT_EQ(st.map_v["v1"], map1);
+	ASSERT_EQ(st.map_v["v2"], map2);
+	// vec
+	ASSERT_EQ(st.vec_v.size(), 2u);
+	ASSERT_EQ(st.vec_v[0], vec0);
+	ASSERT_EQ(st.vec_v[1], vec1);
+	// deq
+	ASSERT_EQ(st.deq_v.size(), 2u);
+	ASSERT_EQ(st.deq_v[0], deq0);
+	ASSERT_EQ(st.deq_v[1], deq1);
+	// list
+	ASSERT_EQ(st.list_v.size(), 2u);
+	ASSERT_EQ(st.list_v.front(), lst0);
+	ASSERT_EQ(st.list_v.back(), lst1);
+	// obj
+	ASSERT_EQ(st.obj_v.size(), 2u);
+	ASSERT_EQ(st.obj_v[0].name, "o0");
+	ASSERT_EQ(st.obj_v[0].value, obj0);
+	ASSERT_EQ(st.obj_v[1].name, "o1");
+	ASSERT_EQ(st.obj_v[1].value, obj1);
 
-	// Fields modify
+	//=== Fields modify
 	// v
 	IJST_SET(st, v, nv0);
 	// map
@@ -144,11 +156,12 @@ void DoTestSt(const string& json, VT vDefault
 	st.obj_v.push_back(T_Member<VT>(string("no2"), nobj2));
 
 
-	// Serialize
+	//=== Serialize
 	rapidjson::Document doc;
 	UTEST_SERIALIZE_AND_CHECK(st, doc, SerFlag::kNoneFlag);
 	JT (*pGetJsonVal)(rapidjson::Value &) = GetJsonVal<JT>;
 	// v
+	ASSERT_EQ(pGetJsonVal(doc["f_vd"]), svDefault);
 	ASSERT_EQ(pGetJsonVal(doc["f_v"]), sv0);
 	// map
 	ASSERT_EQ(doc["f_map"].MemberCount(), 3u);
@@ -182,13 +195,13 @@ void DoTestSt(const string& json, VT vDefault
  * @tparam JT 		JsonVarType
  */
 template <typename Struct, typename VT, typename JT>
-void TestSt(const string& json, VT vDefault
+void TestSt(const string& json, const string& jvDefault, VT vDefault
 		, VT v0, VT map1, VT map2, VT vec0, VT vec1, VT deq0, VT deq1, VT lst0, VT lst1, VT obj0, VT obj1
 		, VT nv0, VT nmap1, VT nmap3, VT nvec0, VT nvec1, VT nvec2, VT ndeq0, VT ndeq1, VT nlst0, VT nlst1, VT nobj0, VT nobj2
 )
 {
 	DoTestSt<Struct, VT, JT>(
-			json, vDefault
+			json, jvDefault, vDefault, (JT)vDefault
 			, v0, map1, map2, vec0, vec1, deq0, deq1, lst0, lst1, obj0, obj1
 			, nv0, nmap1, nmap3, nvec0, nvec1, nvec2, ndeq0, ndeq1, nlst0, nlst1, nobj0, nobj2
 			, (JT)nv0, (JT)nmap1, (JT)map2, (JT)nmap3, (JT)nvec0, (JT)nvec1, (JT)nvec2, (JT)ndeq0, (JT)ndeq1, (JT)nlst0, (JT)nlst1, (JT)nobj0, (JT)obj1, (JT)nobj2
@@ -199,16 +212,15 @@ void TestSt(const string& json, VT vDefault
  * Struct test
  * @tparam Struct 	ijst struct type
  * @tparam VT 		VarType
- * @tparam JT 		JsonVarType
  */
 template <typename Struct, typename VT>
-void TestSt(const string& json, VT vDefault
+void TestSt(const string& json, const string& jvDefault, VT vDefault
 		, VT v0, VT map1, VT map2, VT vec0, VT vec1, VT deq0, VT deq1, VT lst0, VT lst1, VT obj0, VT obj1
 		, VT nv0, VT nmap1, VT nmap3, VT nvec0, VT nvec1, VT nvec2, VT ndeq0, VT ndeq1, VT nlst0, VT nlst1, VT nobj0, VT nobj2
 )
 {
 	DoTestSt<Struct, VT, VT>(
-			json, vDefault
+			json, jvDefault, vDefault, vDefault
 			, v0, map1, map2, vec0, vec1, deq0, deq1, lst0, lst1, obj0, obj1
 			, nv0, nmap1, nmap3, nvec0, nvec1, nvec2, ndeq0, ndeq1, nlst0, nlst1, nobj0, nobj2
 			, nv0, nmap1, map2, nmap3, nvec0, nvec1, nvec2, ndeq0, ndeq1, nlst0, nlst1, nobj0, obj1, nobj2
@@ -228,8 +240,10 @@ void TestMemberTypeMismatch(const string& errJson, const char* type, const char*
 
 IJST_DEFINE_STRUCT(
 		StBool
-		, (T_bool, v, "f_v", 0)
+		, (T_bool, vd, "f_vd", 0)
+		, (T_bool, v, "f_v", FDesc::NotDefault)
 		, (IJST_TMAP(T_bool), map_v, "f_map", 0)
+		, (IJST_TVEC(T_wbool), vec_v, "f_vec", 0)  // use vector<T_wbool> because not support vector<T_bool>
 		, (IJST_TDEQUE(T_bool), deq_v, "f_deq", 0)
 		, (IJST_TLIST(T_bool), list_v, "f_list", 0)
 		, (IJST_TOBJ(T_bool), obj_v, "f_obj", 0)
@@ -241,68 +255,14 @@ TEST(Primitive, Bool)
 	string errorJson = "{\"f_v\": \"1\"}";
 	TestMemberTypeMismatch<StBool>(errorJson, "bool", "\"1\"");
 
-	StBool st;
-	// Default value
-	{
-		ASSERT_EQ(st._.GetUnknown().MemberCount(), 0u);
-		ASSERT_EQ(st.v, false);
-	}
-
-
-	const string json = "{\"f_v\": true"
-			", \"f_map\": {\"v1\": true, \"v2\": false}, \"f_obj\": {\"o1\": true, \"o2\": false} "
-			", \"f_deq\": [false, true], \"f_list\": [true, false]}";
-	// Deserialize
-	{
-		int ret = st._.Deserialize(json);
-		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(st.v, true);
-		ASSERT_EQ(st.map_v.size(), 2u);
-		ASSERT_EQ(st.map_v["v1"], true);
-		ASSERT_EQ(st.map_v["v2"], false);
-		ASSERT_EQ(st.obj_v.size(), 2u);
-		ASSERT_EQ(st.obj_v[0].name, "o1");
-		ASSERT_EQ(st.obj_v[0].value, true);
-		ASSERT_EQ(st.obj_v[1].name, "o2");
-		ASSERT_EQ(st.obj_v[1].value, false);
-		ASSERT_EQ(st.deq_v.size(), 2u);
-		ASSERT_EQ(st.deq_v[0], false);
-		ASSERT_EQ(st.deq_v[1], true);
-		ASSERT_EQ(st.list_v.size(), 2u);
-		ASSERT_EQ(st.list_v.front(), true);
-		ASSERT_EQ(st.list_v.back(), false);
-	}
-
-	// Serialize
-	{
-		IJST_SET(st, v, false);
-		st.map_v["v1"] = true;
-		st.map_v["v3"] = false;
-		st.deq_v.clear();
-		st.deq_v.push_front(true);
-		st.deq_v.push_back(false);
-		st.list_v.clear();
-		st.list_v.push_front(true);
-		st.list_v.push_back(false);
-
-		rapidjson::Document doc;
-		UTEST_SERIALIZE_AND_CHECK(st, doc, SerFlag::kNoneFlag);
-		bool (*pGetJsonVal)(rapidjson::Value &) = GetJsonVal<bool>;
-		ASSERT_EQ(pGetJsonVal(doc["f_v"]), false);
-		ASSERT_EQ(doc["f_map"].MemberCount(), 3u);
-		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v1"]), true);
-		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v2"]), false);
-		ASSERT_EQ(pGetJsonVal(doc["f_map"]["v3"]), false);
-		ASSERT_EQ(doc["f_obj"].MemberCount(), 2u);
-		ASSERT_EQ(pGetJsonVal(doc["f_obj"]["o1"]), true);
-		ASSERT_EQ(pGetJsonVal(doc["f_obj"]["o2"]), false);
-		ASSERT_EQ(doc["f_deq"].Size(), 2u);
-		ASSERT_EQ(pGetJsonVal(doc["f_deq"][0]), true);
-		ASSERT_EQ(pGetJsonVal(doc["f_deq"][1]), false);
-		ASSERT_EQ(doc["f_list"].Size(), 2u);
-		ASSERT_EQ(pGetJsonVal(doc["f_list"][0]), true);
-		ASSERT_EQ(pGetJsonVal(doc["f_list"][1]), false);
-	}
+	const string json = "{\"f_vd\":false, \"f_v\": true"
+			", \"f_map\": {\"v1\": true, \"v2\": false}, \"f_obj\":{\"o0\": false, \"o1\": true}"
+			", \"f_vec\": [false, true], \"f_deq\": [true, false], \"f_list\": [false, true]}";
+	TestSt<StBool, T_bool, bool> (
+			json, "false", false
+			, true, true, false, false, true, true, false, false, true, false, true
+			, false, false, false, true, false, true, false, true, true, false, true, false
+	);
 }
 
 UTEST_DEFINE_STRUCT(StUBool, T_ubool)
@@ -315,11 +275,11 @@ TEST(Primitive, UBool)
 	errorJson = "{\"f_v\": 1}";
 	TestMemberTypeMismatch<StUBool>(errorJson, "bool", "1");
 
-	const string json = "{\"f_v\": true"
+	const string json = "{\"f_vd\": false, \"f_v\": true"
 			", \"f_map\": {\"v1\": true, \"v2\": false}, \"f_obj\": {\"o0\": false, \"o1\": true}"
 			", \"f_vec\": [false, true], \"f_deq\": [true, false], \"f_list\": [false, true]}";
 	DoTestSt<StUBool, uint8_t, bool> (
-			json, 0
+			json, "false", 0, false
 			, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1
 			, 0, 0,	0, 1, 0, 1, 0, 1, 1, 0, 1, 0
 			, false, false, false, false, true, false, true, false, true, true, false, true, true, false
@@ -333,11 +293,11 @@ TEST(Primitive, WBool)
 	string errorJson = "{\"f_v\": \"1\"}";
 	TestMemberTypeMismatch<StWBool>(errorJson, "bool", "\"1\"");
 
-	const string json = "{\"f_v\": true"
+	const string json = "{\"f_vd\":false, \"f_v\": true"
 			", \"f_map\": {\"v1\": true, \"v2\": false}, \"f_obj\":{\"o0\": false, \"o1\": true}"
 			", \"f_vec\": [false, true], \"f_deq\": [true, false], \"f_list\": [false, true]}";
 	TestSt<StWBool, T_wbool, bool> (
-			json, false
+			json, "false", false
 			, true, true, false, false, true, true, false, false, true, false, true
 			, false, false, false, true, false, true, false, true, true, false, true, false
 	);
@@ -352,13 +312,13 @@ TEST(Primitive, Int)
 
 	StInt st;
 
-	const string json = "{\"f_v\": 0"
+	const string json = "{\"f_vd\": 0, \"f_v\": -1"
 			", \"f_map\": {\"v1\": -65537, \"v2\": 65536}, \"f_obj\": {\"o0\": 314, \"o1\": 628}"
 			", \"f_vec\": [-2147483648, 2147483647], \"f_deq\": [-1, 1], \"f_list\": [-2, 2]}";
 
 	TestSt<StInt, int> (
-			json, 0
-			, 0, -65537, 65536, -2147483647-1, 2147483647, -1, 1, -2, 2, 314, 628
+			json, "0", 0
+			, -1, -65537, 65536, -2147483647-1, 2147483647, -1, 1, -2, 2, 314, 628
 			, -2147483647-1, 0, 65536, -65536, 2147483647, -2147483647-1, 10, -10, 20, -20, 628, 314
 	);
 }
@@ -378,15 +338,15 @@ TEST(Primitive, Int64)
 		TestMemberTypeMismatch<StInt64>(errorJson, "int64", "9223372036854775808");
 	}
 
-	const string json = "{\"f_v\": 0"
+	const string json = "{\"f_vd\": 0, \"f_v\": -1"
 			", \"f_map\": {\"v1\": 2, \"v2\": 4}, \"f_obj\": {\"o0\": 6, \"o1\": 8}"
 			", \"f_vec\": [-9223372036854775808, 9223372036854775807], \"f_deq\": [-1, 1], \"f_list\": [-2, 2]}";
 	const int64_t i64Min = std::numeric_limits<int64_t>::min();
 	const int64_t i64Max = std::numeric_limits<int64_t>::max();
 
 	TestSt<StInt64, int64_t>(
-			json, 0
-			, 0, 2, 4, i64Min, 9223372036854775807, -1, 1, -2, 2, 6, 8
+			json, "0", 0
+			, -1, 2, 4, i64Min, 9223372036854775807, -1, 1, -2, 2, 6, 8
 			, i64Min, i64Min, i64Max, 0, i64Min, 9223372036854775807, 10, -10, 20, -20, 30, -30
 	);
 }
@@ -406,13 +366,13 @@ TEST(Primitive, UInt)
 		TestMemberTypeMismatch<StUInt>(errorJson, "uint", "4294967296");
 	}
 
-	const string json = "{\"f_v\": 0"
+	const string json = "{\"f_vd\": 0, \"f_v\": 1"
 			", \"f_map\": {\"v1\": 2, \"v2\": 4}, \"f_obj\": {\"o0\": 6, \"o1\": 8}"
 			", \"f_vec\": [4294967295, 1], \"f_deq\": [0, 1], \"f_list\": [2, 3]}";
 
 	TestSt<StUInt, unsigned int> (
-			json, 0
-			, 0, 2, 4, 4294967295U, 1, 0, 1, 2, 3, 6, 8
+			json, "0", 0
+			, 1, 2, 4, 4294967295U, 1, 0, 1, 2, 3, 6, 8
 			, 4294967295U, 200, 4294967295U, 4294967295U, 2, 4, 4, 5, 6, 7, 8, 9
 	);
 }
@@ -432,13 +392,13 @@ TEST(Primitive, UInt64)
 		TestMemberTypeMismatch<StUInt64>(errorJson, "uint64", "18446744073709551616");
 	}
 
-	const string json = "{\"f_v\": 0"
+	const string json = "{\"f_vd\": 0, \"f_v\": 1"
 			", \"f_map\": {\"v1\": 2, \"v2\": 4}, \"f_obj\": {\"o0\": 6, \"o1\": 8}"
 			", \"f_vec\": [18446744073709551615, 1], \"f_deq\": [0, 1], \"f_list\": [2, 3]}";
 
 	TestSt<StUInt64, uint64_t> (
-			json, 0
-			, 0, 2, 4, 18446744073709551615ul, 1, 0, 1, 2, 3, 6, 8
+			json, "0", 0
+			, 1, 2, 4, 18446744073709551615ul, 1, 0, 1, 2, 3, 6, 8
 			, 18446744073709551615ul, 18446744073709551615ul, 0, 0, 18446744073709551615ul, 200, 4, 5, 6, 7, 9, 10
 	);
 }
@@ -455,13 +415,13 @@ TEST(Primitive, Double)
 		TestMemberTypeMismatch<StDouble>(errorJson, "number", "\"1\"");
 	}
 
-	const string json = "{\"f_v\": 0.0"
+	const string json = "{\"f_vd\": 0, \"f_v\": 0.1"
 			", \"f_map\": {\"v1\": 2.2, \"v2\": 4.4},\"f_obj\": {\"o0\": 6.6, \"o1\": 8.8}"
 			", \"f_vec\": [-0.1, 0.2], \"f_deq\": [1, -1], \"f_list\": [100, -100]}";
 
 	TestSt<StDouble, double> (
-			json, 0.0
-			, 0.0, 2.2, 4.4, -0.1, 0.2, 1.0, -1.0, 100.0, -100.0, 6.6, 8.8
+			json, "0.0", 0.0
+			, 0.1, 2.2, 4.4, -0.1, 0.2, 1.0, -1.0, 100.0, -100.0, 6.6, 8.8
 			, 1.1, 22.2, 44.4, 0.1, -100.2, 200.2, 2.0, -2.0, -200.0, 200.0, -300.0, 300.0
 
 	);
@@ -476,12 +436,12 @@ TEST(Primitive, Str)
 		TestMemberTypeMismatch<StString>(errorJson, "string", "0");
 	}
 
-	const string json = "{\"f_v\": \"true\""
+	const string json = "{\"f_vd\": \"\", \"f_v\": \"true\""
 			", \"f_map\": {\"v1\": \"false\", \"v2\": \"v22\"}, \"f_obj\": {\"o0\": \"o0\", \"o1\": \"o1\"}"
 			", \"f_vec\": [\"0\", \"1\"], \"f_deq\": [\"\", \"null\"], \"f_list\": [\"0\", \"NaN\"]}";
 
 	TestSt<StString, string>(
-			json, ""
+			json, "\"\"", ""
 			, "true", "false", "v22", "0", "1", "", "null", "0", "NaN", "o0", "o1"
 			, "false", "0.2", "0.4", "map1", "true", "map3", "", "0", "NaN", "null", "o00", "o11"
 	);
@@ -495,13 +455,13 @@ TEST(Primitive, Wrapper)
 		string errorJson = "{\"f_v\": \"0\"}";
 		TestMemberTypeMismatch<StWrapper>(errorJson, "int", "\"0\"");
 	}
-	const string json = "{\"f_v\": 0"
+	const string json = "{\"f_vd\": 0, \"f_v\": -1"
 			", \"f_map\": {\"v1\": -65537, \"v2\": 65536}, \"f_obj\": {\"o0\": -3, \"o1\": 3} "
 			", \"f_vec\": [-2147483648, 2147483647], \"f_deq\": [-1, 1], \"f_list\": [-2, 2]}";
 
 	TestSt<StWrapper, T_Wrapper<int>, int> (
-			json, 0
-			, 0, -65537, 65536, -2147483647-1, 2147483647, -1, 1, -2, 2, -3, 3
+			json, "0", 0
+			, -1, -65537, 65536, -2147483647-1, 2147483647, -1, 1, -2, 2, -3, 3
 			, -2147483647-1, 0, 65536, -65536, 2147483647, -2147483647-1, 10, -10, 20, -20, 30, -30
 	);
 }
@@ -511,6 +471,7 @@ UTEST_DEFINE_STRUCT(StRaw, T_raw)
 void CheckStRawDeserialize(StRaw &st)
 {
 	// Check st
+	ASSERT_TRUE(st.vd.V().IsNull());
 	ASSERT_STREQ(st.v.V().GetString(), "v1");
 
 	ASSERT_EQ(st.map_v.size(), 2u);
@@ -550,10 +511,17 @@ TEST(Primitive, Raw)
 		ASSERT_TRUE(st.v.V().IsNull());
 	}
 
-	const string json = "{\"f_v\": \"v1\""
+	const string json = "{\"f_vd\": null, \"f_v\": \"v1\""
 			", \"f_map\": {\"v1\": null, \"v2\": {\"v21\": false }}, \"f_obj\": {\"o0\": 0, \"o1\": true}"
 			", \"f_vec\": [\"v1\", 2], \"f_deq\": [], \"f_list\": [null]}";
 
+	// Deserialize value is default
+	{
+		const string json = "{\"f_v\": null}";
+		string errMsg;
+		int ret = st._.Deserialize(json, errMsg);
+		CheckMemberValueIsDefault("f_v", ret, errMsg);
+	}
 	// Deserialize copy form json
 	{
 		{
@@ -563,6 +531,7 @@ TEST(Primitive, Raw)
 			ret = st._.FromJson(doc);
 			ASSERT_EQ(ret, 0);
 			// Check source doc
+			ASSERT_TRUE(st.vd.V().IsNull());
 			ASSERT_STREQ(doc["f_v"].GetString(), "v1");
 			ASSERT_TRUE(doc["f_map"]["v1"].IsNull());
 			ASSERT_EQ(doc["f_map"]["v2"]["v21"].GetBool(), false);
@@ -618,6 +587,7 @@ TEST(Primitive, Raw)
 
 		rapidjson::Document doc;
 		UTEST_SERIALIZE_AND_CHECK(st, doc, SerFlag::kNoneFlag);
+		ASSERT_TRUE(doc["f_vd"].IsNull());
 		ASSERT_EQ(doc["f_v"].GetInt(), 0);
 		ASSERT_TRUE(doc["f_vec"][0].IsNull());
 		ASSERT_EQ(doc["f_vec"][1].GetInt(), 2);

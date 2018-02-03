@@ -95,7 +95,7 @@ namespace detail {
 		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 		{
 			VarType& field = *static_cast<VarType*>(req.pFieldBuffer);
-			FromJsonReq elemReq(req.stream, req.allocator, req.deserFlag, req.canMoveSrc, &field.Val());
+			FromJsonReq elemReq(req.stream, req.allocator, req.deserFlag, req.canMoveSrc, &field.Val(), req.fDesc);
 			return IJSTI_FSERIALIZER_INS(T)->FromJson(elemReq, resp);
 		}
 

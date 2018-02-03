@@ -172,9 +172,9 @@ struct FDesc {
 	static const Mode Optional 			= 0x00000001;
 	//! Field can be null.
 	static const Mode Nullable 			= 0x00000002;
-	//! Field is a container, and has at least one element.
-	static const Mode ElemNotEmpty 		= 0x00000004;
-	// FDesc of Element (i.e. Nullable, ElemNotEmpty) inside container is hard to represent, has not plan to implement it
+	//! Field's value is not default, e.g, int is not 0, string, vector, map is not empty
+	static const Mode NotDefault 		= 0x00000004;
+	// FDesc of Element (i.e. Nullable, NotDefault) inside container is hard to represent, has not plan to implement it
 };
 
 //! Field status.
@@ -313,9 +313,9 @@ public:
 struct ErrorCode {
 	static const int kSucc 							= 0x00000000;
 	static const int kDeserializeValueTypeError 	= 0x00001001;
-	static const int kDeserializeSomeFiledsInvalid 	= 0x00001002;
-	static const int kDeserializeParseFaild 		= 0x00001003;
-	static const int kDeserializeElemEmpty 			= 0x00001004;
+	static const int kDeserializeSomeFieldsInvalid 	= 0x00001002;
+	static const int kDeserializeParseFailed 		= 0x00001003;
+	static const int kDeserializeValueIsDefault		= 0x00001004;
 	static const int kDeserializeSomeUnknownMember	= 0x00001005;
 	static const int kDeserializeMapKeyDuplicated	= 0x00001006;
 	static const int kInnerError 					= 0x00002001;
@@ -424,7 +424,7 @@ public:
 	int FindIndex(size_t offset) const
 	{
 		std::vector<size_t>::const_iterator it =
-				detail::BinarySearch(m_offsets.begin(), m_offsets.end(), offset, IntComp);
+				detail::Util::BinarySearch(m_offsets.begin(), m_offsets.end(), offset, IntComp);
 		if (it != m_offsets.end() && *it == offset) {
 			return static_cast<int>(it - m_offsets.begin());
 		}
@@ -444,7 +444,7 @@ public:
 	const MetaFieldInfo* FindFieldByJsonName(const std::string &name) const
 	{
 		std::vector<NameMap>::const_iterator it =
-				detail::BinarySearch(m_nameMap.begin(), m_nameMap.end(), name, NameMapComp);
+				detail::Util::BinarySearch(m_nameMap.begin(), m_nameMap.end(), name, NameMapComp);
 		if (it != m_nameMap.end() && (*it->pName) == name) {
 			return it->metaField;
 		}
@@ -517,9 +517,23 @@ namespace detail {
 			if (doc.HasParseError()) {								\
 				detail::ErrorDocSetter errDocSetter(pErrDocOut);	\
 				errDocSetter.ParseFailed(doc.GetParseError());		\
-				return ErrorCode::kDeserializeParseFaild;			\
+				return ErrorCode::kDeserializeParseFailed;			\
 			}														\
 		} while (false)
+	//! return error and set error doc when type mismatch
+	#define IJSTI_RET_WHEN_TYPE_MISMATCH(checkCode, expType)			\
+		if (!(checkCode)) {												\
+			resp.errDoc.ElementTypeMismatch(expType, req.stream);		\
+			return ErrorCode::kDeserializeValueTypeError;				\
+		}
+	//! return error and set error doc when value is default
+	#define IJSTI_RET_WHEN_VALUE_IS_DEFAULT(checkCode)					\
+		if (detail::Util::IsBitSet(req.fDesc, FDesc::NotDefault) 		\
+				&& (checkCode)) {										\
+            resp.errDoc.ElementValueIsDefault();						\
+            return ErrorCode::kDeserializeValueIsDefault;				\
+		}
+
 
 	#if IJST_AUTO_META_INIT
 		#define IJSTI_TRY_INIT_META_BEFORE_MAIN(T)			::ijst::detail::Singleton< T >::InitInstanceBeforeMain();
@@ -575,24 +589,24 @@ namespace detail {
 			bool canMoveSrc;
 
 			DeserFlag::Flag deserFlag;
+			FDesc::Mode fDesc;
 
 			FromJsonReq(JsonValue &_stream, JsonAllocator &_allocator,
 						DeserFlag::Flag _deserFlag, bool _canMoveSrc,
-						void *_pField)
+						void *_pField, FDesc::Mode _fDesc)
 					: pFieldBuffer(_pField)
-					  , stream(_stream)
-					  , allocator(_allocator)
-					  , canMoveSrc(_canMoveSrc)
-					  , deserFlag(_deserFlag)
+					, stream(_stream)
+					, allocator(_allocator)
+					, canMoveSrc(_canMoveSrc)
+					, deserFlag(_deserFlag)
+					, fDesc(_fDesc)
 			{ }
 		};
 
 		struct FromJsonResp {
-			size_t fieldCount;
 			ErrorDocSetter& errDoc;
 
 			explicit FromJsonResp(ErrorDocSetter& _errDoc) :
-					fieldCount(0),
 					errDoc(_errDoc)
 			{ }
 
@@ -701,7 +715,7 @@ namespace detail {
 			const size_t n = d.fieldsInfo.size();
 			for (size_t i = 1; i < n; i++) {
 				for (size_t j = i; j > 0 && d.fieldsInfo[j - 1].offset > d.fieldsInfo[j].offset; j--) {
-					detail::Swap(d.fieldsInfo[j], d.fieldsInfo[j - 1]);
+					detail::Util::Swap(d.fieldsInfo[j], d.fieldsInfo[j - 1]);
 				}
 			}
 		}
@@ -709,7 +723,7 @@ namespace detail {
 		void InsertNameMap(size_t len, const MetaClassInfo::NameMap& v)
 		{
 			std::vector<MetaClassInfo::NameMap>::iterator it =
-					BinarySearch(d.m_nameMap.begin(), d.m_nameMap.begin() + len, *v.pName, MetaClassInfo::NameMapComp);
+					Util::BinarySearch(d.m_nameMap.begin(), d.m_nameMap.begin() + len, *v.pName, MetaClassInfo::NameMapComp);
 			size_t i = static_cast<size_t>(it - d.m_nameMap.begin());
 			// assert name is unique
 			assert(i == len || (*v.pName) != (*it->pName));
@@ -958,7 +972,7 @@ public:
 		// So clear own allocator will not bring much benefit
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
 
-		if (IsBitSet(deserFlag, DeserFlag::kMoveFromIntermediateDoc)) {
+		if (detail::Util::IsBitSet(deserFlag, DeserFlag::kMoveFromIntermediateDoc)) {
 			rapidjson::Document doc(m_pAllocator);
 			IJSTI_PARSE_AND_RET_WHEN_ERROR;
 			return DoFromJsonWrap<rapidjson::Value>(&Accessor::DoMoveFromJson, doc, deserFlag, pErrDocOut);
@@ -1103,10 +1117,9 @@ private:
 	struct FromJsonParam{
 		DeserFlag::Flag deserFlag;
 		detail::ErrorDocSetter& errDoc;
-		size_t& fieldCount;
 
-		FromJsonParam(DeserFlag::Flag _deserFlag, detail::ErrorDocSetter& _errDoc, size_t& _fieldCount)
-				: deserFlag(_deserFlag), errDoc(_errDoc), fieldCount(_fieldCount)
+		FromJsonParam(DeserFlag::Flag _deserFlag, detail::ErrorDocSetter& _errDoc)
+				: deserFlag(_deserFlag), errDoc(_errDoc)
 		{}
 	};
 
@@ -1114,7 +1127,7 @@ private:
 	{
 		assert(req.pFieldBuffer == this);
 
-		FromJsonParam param(req.deserFlag, resp.errDoc, resp.fieldCount);
+		FromJsonParam param(req.deserFlag, resp.errDoc);
 		if (req.canMoveSrc) {
 			m_pAllocator = &req.allocator;
 			return DoMoveFromJson(req.stream, param);
@@ -1149,7 +1162,7 @@ private:
 		IJSTI_RET_WHEN_NOT_ZERO(DoSerializeFields(writer, serFlag, fieldCount));
 
 		// Write buffer if need
-		if (!IsBitSet(serFlag, SerFlag::kIgnoreUnknown))
+		if (!detail::Util::IsBitSet(serFlag, SerFlag::kIgnoreUnknown))
 		{
 			assert(m_r->unknown.IsObject());
 			for (rapidjson::Value::ConstMemberIterator itMember = m_r->unknown.MemberBegin();
@@ -1184,7 +1197,7 @@ private:
 				case FStatus::kMissing:
 				case FStatus::kParseFailed:
 				{
-					if (fstatus != FStatus::kValid && IsBitSet(serFlag, SerFlag::kOnlyValidField)) {
+					if (fstatus != FStatus::kValid && detail::Util::IsBitSet(serFlag, SerFlag::kOnlyValidField)) {
 						continue;
 					}
 
@@ -1228,9 +1241,8 @@ private:
 	template<typename TJsonValue, typename Func>
 	int DoFromJsonWrap(Func func, TJsonValue &stream, DeserFlag::Flag deserFlag, rapidjson::Document* pErrDocOut)
 	{
-		size_t fieldCount = 0;
 		detail::ErrorDocSetter errDoc(pErrDocOut);
-		FromJsonParam param(deserFlag, errDoc, fieldCount);
+		FromJsonParam param(deserFlag, errDoc);
 		return (this->*func)(stream, param);
 	}
 
@@ -1253,7 +1265,6 @@ private:
 			return ErrorCode::kDeserializeValueTypeError;
 		}
 
-		p.fieldCount = 0;
 		// For each member
 		rapidjson::Value::MemberIterator itNextRemain = stream.MemberBegin();
 		for (rapidjson::Value::MemberIterator itMember = stream.MemberBegin();
@@ -1266,11 +1277,11 @@ private:
 
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
-				if (IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
+				if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
 					p.errDoc.ErrorInObject("UnknownMember", fieldName);
 					return ErrorCode::kDeserializeSomeUnknownMember;
 				}
-				if (!IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
+				if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
 					// Move unknown fields to the front of array first
 					// TODO: This is relay on the implementation details of rapidjson's object storage (array), how to check?
 					if (itNextRemain != itMember) {
@@ -1288,21 +1299,20 @@ private:
 
 			IJSTI_RET_WHEN_NOT_ZERO(
 					DoFieldFromJson(pMetaField, memberStream, /*canMoveSrc=*/true, p) );
-			++p.fieldCount;
 		}
 
 		// Clean deserialized
 		if (stream.MemberCount() != 0) {
 			stream.EraseMember(itNextRemain, stream.MemberEnd());
 		}
-		if (IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
+		if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
 			m_r->unknown.SetObject();
 		}
 		else {
 			m_r->unknown.SetNull().Swap(stream);
 		}
 
-		if (!IsBitSet(p.deserFlag, DeserFlag::kNotCheckFieldStatus)) {
+		if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kNotCheckFieldStatus)) {
 			return CheckFieldState(p.errDoc);
 		}
 		else {
@@ -1327,7 +1337,6 @@ private:
 		}
 
 		m_r->unknown.SetObject();
-		p.fieldCount = 0;
 		// For each member
 		for (rapidjson::Value::ConstMemberIterator itMember = stream.MemberBegin();
 			 itMember != stream.MemberEnd(); ++itMember)
@@ -1338,11 +1347,11 @@ private:
 
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
-				if (IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
+				if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
 					p.errDoc.ErrorInObject("UnknownMember", fieldName);
 					return ErrorCode::kDeserializeSomeUnknownMember;
 				}
-				if (!IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
+				if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
 					m_r->unknown.AddMember(
 							rapidjson::Value().SetString(fieldName.data(), (rapidjson::SizeType)fieldName.size(), *m_pAllocator),
 							rapidjson::Value().CopyFrom(itMember->value, *m_pAllocator),
@@ -1355,10 +1364,9 @@ private:
 			rapidjson::Value& memberStream = const_cast<rapidjson::Value&>(itMember->value);
 			IJSTI_RET_WHEN_NOT_ZERO(
 					DoFieldFromJson(pMetaField, memberStream, /*canMoveSrc=*/false, p) );
-			++p.fieldCount;
 		}
 
-		if (!IsBitSet(p.deserFlag, DeserFlag::kNotCheckFieldStatus)) {
+		if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kNotCheckFieldStatus)) {
 			return CheckFieldState(p.errDoc);
 		}
 		else {
@@ -1370,7 +1378,7 @@ private:
 	int DoFieldFromJson(const MetaFieldInfo *metaField, rapidjson::Value &stream, bool canMoveSrc, FromJsonParam& p)
 	{
 		// Check nullable
-		if (IsBitSet(metaField->desc, FDesc::Nullable)
+		if (detail::Util::IsBitSet(metaField->desc, FDesc::Nullable)
 			&& stream.IsNull())
 		{
 			m_r->fieldStatus[metaField->index] = FStatus::kNull;
@@ -1378,22 +1386,14 @@ private:
 		else
 		{
 			void *pField = GetFieldByOffset(metaField->offset);
-			FromJsonReq elemReq(stream, *m_pAllocator, p.deserFlag, canMoveSrc, pField);
+			FromJsonReq elemReq(stream, *m_pAllocator, p.deserFlag, canMoveSrc, pField, metaField->desc);
 			FromJsonResp elemResp(p.errDoc);
 			int ret = metaField->serializerInterface->FromJson(elemReq, elemResp);
 			// Check return
-			if (ret != 0)
-			{
+			if (ret != 0) {
 				m_r->fieldStatus[metaField->index] = FStatus::kParseFailed;
 				p.errDoc.ErrorInObject("ErrInObject", metaField->jsonName);
 				return ret;
-			}
-			// Check elem size
-			if (IsBitSet(metaField->desc, FDesc::ElemNotEmpty)
-				&& elemResp.fieldCount == 0)
-			{
-				p.errDoc.ErrorInObject("ElemIsEmpty", metaField->jsonName);
-				return ErrorCode::kDeserializeElemEmpty;
 			}
 			// succ
 			m_r->fieldStatus[metaField->index] = FStatus::kValid;
@@ -1412,7 +1412,7 @@ private:
 		}
 
 		// Shrink self allocator
-		detail::ShrinkAllocatorWithOwnDoc(m_r->ownDoc, m_r->unknown, m_pAllocator);
+		detail::Util::ShrinkAllocatorWithOwnDoc(m_r->ownDoc, m_r->unknown, m_pAllocator);
 	}
 
 	inline void InitOuterPtr()
@@ -1436,7 +1436,7 @@ private:
 		for (std::vector<MetaFieldInfo>::const_iterator itFieldInfo = m_pMetaClass->GetFieldsInfo().begin();
 			 itFieldInfo != m_pMetaClass->GetFieldsInfo().end(); ++itFieldInfo)
 		{
-			if (IsBitSet(itFieldInfo->desc, FDesc::Optional))
+			if (detail::Util::IsBitSet(itFieldInfo->desc, FDesc::Optional))
 			{
 				// Optional
 				continue;
@@ -1457,7 +1457,7 @@ private:
 		if (hasErr)
 		{
 			errDoc.MissingMember();
-			return ErrorCode::kDeserializeSomeFiledsInvalid;
+			return ErrorCode::kDeserializeSomeFieldsInvalid;
 		}
 		return 0;
 	}
@@ -1471,11 +1471,6 @@ private:
 	inline void *GetFieldByOffset(std::size_t offset) const
 	{
 		return (void *) (m_pOuter + offset);
-	}
-
-	static inline bool IsBitSet(unsigned int val, unsigned int bit)
-	{
-		return (val & bit) != 0;
 	}
 
 	typedef std::vector<EFStatus> FieldStatusType;

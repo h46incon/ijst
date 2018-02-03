@@ -32,7 +32,7 @@ IJST_DEFINE_STRUCT (
     , (T_bool, bSex, "sex", 0)     // 只是举一个bool的栗子
     // 接下来是复杂的字段
     , (IJST_TVEC(T_uint64), vecFriendsID, "friends_id", ijst::FDesc::Optional)      // Optional，可能没朋友
-    , (IJST_TMAP(IJST_TVEC(T_string)), mapWhatEver, "what_ever", ijst::FDesc::ElemNotEmpty)    // ElemNotEmpty 表示这个 map 里至少有一对键值
+    , (IJST_TMAP(IJST_TVEC(T_string)), mapWhatEver, "what_ever", ijst::FDesc::ElemNotEmpty)    // NotDefault 表示这个 map 里至少有一对键值
 );
 
 // 定义该类型的变量

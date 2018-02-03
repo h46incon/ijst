@@ -143,13 +143,11 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_ubool)
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
-		if (!req.stream.IsBool()) {
-			resp.errDoc.ElementTypeMismatch("bool", req.stream);
-			return ErrorCode::kDeserializeValueTypeError;
-		}
+		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsBool()), "bool");
+		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((req.stream.GetBool() == false));
 
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
-		*pField = static_cast<VarType >(req.stream.GetBool() ? 1 : 0);
+		*pField = static_cast<VarType>(req.stream.GetBool() ? 1 : 0);
 		return 0;
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
@@ -166,12 +164,10 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 #define IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()																\
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE					\
 	{																											\
-		if (!req.stream.IsBool()) {																				\
-			resp.errDoc.ElementTypeMismatch("bool", req.stream);												\
-			return ErrorCode::kDeserializeValueTypeError;														\
-		}																										\
+		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsBool()), "bool");											\
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);												\
 		*pField = req.stream.GetBool();																			\
+		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((*pField == false));													\
 		return 0;																								\
 	}
 
@@ -197,13 +193,10 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int)
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
-		if (!req.stream.IsInt()) {
-			resp.errDoc.ElementTypeMismatch("int", req.stream);
-			return ErrorCode::kDeserializeValueTypeError;
-		}
-
+		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsInt()), "int");
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = req.stream.GetInt();
+		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((*pField == 0));
 		return 0;
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
@@ -218,13 +211,10 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int64)
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
-		if (!req.stream.IsInt64()) {
-			resp.errDoc.ElementTypeMismatch("int64", req.stream);
-			return ErrorCode::kDeserializeValueTypeError;
-		}
-
+		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsInt64()), "int64");
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = req.stream.GetInt64();
+		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((*pField == 0));
 		return 0;
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
@@ -239,13 +229,10 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint)
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
-		if (!req.stream.IsUint()) {
-			resp.errDoc.ElementTypeMismatch("uint", req.stream);
-			return ErrorCode::kDeserializeValueTypeError;
-		}
-
+		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsUint()), "uint");
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = req.stream.GetUint();
+		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((*pField == 0));
 		return 0;
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
@@ -260,13 +247,10 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint64)
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
-		if (!req.stream.IsUint64()) {
-			resp.errDoc.ElementTypeMismatch("uint64", req.stream);
-			return ErrorCode::kDeserializeValueTypeError;
-		}
-
+		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsUint64()), "uint64");
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = req.stream.GetUint64();
+		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((*pField == 0));
 		return 0;
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
@@ -281,13 +265,10 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_double)
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
-		if (!req.stream.IsNumber()) {
-			resp.errDoc.ElementTypeMismatch("number", req.stream);
-			return ErrorCode::kDeserializeValueTypeError;
-		}
-
+		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsNumber()), "number");
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = req.stream.GetDouble();
+		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((*pField == 0.0));
 		return 0;
 	}
 
@@ -303,13 +284,10 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_string)
 
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
-		if (!req.stream.IsString()) {
-			resp.errDoc.ElementTypeMismatch("string", req.stream);
-			return ErrorCode::kDeserializeValueTypeError;
-		}
-
+		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsString()), "string");
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = std::string(req.stream.GetString(), req.stream.GetStringLength());
+		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((pField->empty()));
 		return 0;
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
@@ -335,13 +313,14 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_raw)
 			pField->m_pAllocator = &pField->m_pOwnDoc->GetAllocator();
 			pField->v.CopyFrom(req.stream, *pField->m_pAllocator);
 		}
+		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((pField->v.IsNull()));
 		return 0;
 	}
 
 	virtual void ShrinkAllocator(void *pField) IJSTI_OVERRIDE
 	{
 		VarType& field = *static_cast<VarType*>(pField);
-		detail::ShrinkAllocatorWithOwnDoc(*field.m_pOwnDoc, field.v, field.m_pAllocator);
+		detail::Util::ShrinkAllocatorWithOwnDoc(*field.m_pOwnDoc, field.v, field.m_pAllocator);
 	}
 
 
