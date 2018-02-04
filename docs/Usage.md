@@ -92,7 +92,7 @@ SampleStruct sampleStruct;
 
     变量名不能为 `_`（一个下划线）。如果使用 `IJST_DEFINE_STRUCT_WITH_GETTER`，变量名也不能为 `get_其他变量名`。
 
-    尽量不要使用 `_` 开头的变量名，这可能会和 ijst 的内部实现产生冲突。
+    不要使用 `_ijst` 开头的变量名，这可能会和 ijst 的内部实现产生冲突。
 
 - **JsonName**
 

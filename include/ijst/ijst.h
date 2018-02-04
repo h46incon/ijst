@@ -355,7 +355,7 @@ class Optional
  * @tparam T	ijst struct type
  */
 template <typename T>
-class Optional<T, typename detail::HasType<typename T::_ijstStructAccessorType>::Void >
+class Optional<T, typename detail::HasType<typename T::_ijst_AccessorType>::Void >
 {
 	typedef T ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
@@ -645,7 +645,7 @@ namespace detail {
 	/**
 	 * Meta info initer
 	 * Push meta class info of T in specialized constructor MetaInfo<T>().
-	 * @tparam T: class. Concept require T::_initMetaInfo(MetaInfo*)
+	 * @tparam T: class. Concept require T::_ijst_InitMetaInfo<bool>(MetaInfo*)
 	 */
 	template<typename T>
 	class MetaClassInfoIniter {
@@ -657,7 +657,7 @@ namespace detail {
 
 		MetaClassInfoIniter()
 		{
-			T::template _initMetaInfo<true>(this);
+			T::template _ijst_InitMetaInfo<true>(this);
 		}
 	};
 
@@ -742,7 +742,7 @@ namespace detail {
 	 * @tparam T class
 	 */
 	template<class T>
-	class FSerializer<T, typename HasType<typename T::_ijstStructAccessorType>::Void>: public SerializerInterface {
+	class FSerializer<T, typename HasType<typename T::_ijst_AccessorType>::Void>: public SerializerInterface {
 	public:
 		typedef T VarType;
 
@@ -1554,7 +1554,7 @@ inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 }
 
 	#define IJSTI_STRUCT_META_INITER_DECLARE(stName)	\
-		template void stName::template _initMetaInfo<true>(::ijst::detail::MetaClassInfoIniter< stName >*);
+		template void stName::template _ijst_InitMetaInfo<true>(stName::_ijst_MetaInfoT*);
 
 //! IJSTI_STRUCT_EXTERN_TEMPLATE
 #if IJST_EXTERN_TEMPLATE
@@ -1608,13 +1608,8 @@ inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 	#define IJSTI_IDL_FNAME_STR(fType, fName, sName, desc)		#fName
 
 	#define IJSTI_STRUCT_PUBLIC_DEFINE()														\
-		typedef ::ijst::Accessor<> _ijstStructAccessorType;									\
-		_ijstStructAccessorType _;
-
-	#define IJSTI_DEFINE_CLASS_END(stName)														\
-		};																						\
-		IJSTI_STRUCT_EXTERN_TEMPLATE(stName)													\
-		IJSTI_STRUCT_EXPLICIT_TEMPLATE(stName)
+		typedef ::ijst::Accessor<> _ijst_AccessorType;											\
+		_ijst_AccessorType _;
 
 	#define IJSTI_DEFINE_FIELD(fType, fName, ... )												\
 			fType fName;
@@ -1634,13 +1629,13 @@ inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 			}
 
 	#define IJSTI_METAINFO_DEFINE_START(stName, N)												\
-			typedef ::ijst::detail::MetaClassInfoIniter< stName > _metaInfoT;					\
-			typedef ::ijst::detail::Singleton<_metaInfoT> _metaInfoS;							\
-			friend _metaInfoT;																	\
+			typedef ::ijst::detail::MetaClassInfoIniter< stName > _ijst_MetaInfoT;				\
+			typedef ::ijst::detail::Singleton<_ijst_MetaInfoT> _ijst_MetaInfoS;					\
+			friend _ijst_MetaInfoT;																\
 			template<bool DummyTrue	>															\
-			static void _initMetaInfo(_metaInfoT* metaInfo)										\
+			static void _ijst_InitMetaInfo(_ijst_MetaInfoT* metaInfo)							\
 			{																					\
-				IJSTI_TRY_INIT_META_BEFORE_MAIN(_metaInfoT);									\
+				IJSTI_TRY_INIT_META_BEFORE_MAIN(_ijst_MetaInfoT);								\
 				/*Do not call MetaInfoS::GetInstance() int this function */			 			\
 				::ijst::detail::MetaClassInfoSetter mSetter(metaInfo->metaClass);				\
 				mSetter.InitBegin(#stName, N, IJST_OFFSETOF(stName, _));
@@ -1658,16 +1653,22 @@ inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 				mSetter.InitEnd();																\
 			}
 
+	#define IJSTI_DEFINE_CLASS_END(stName)														\
+		};																						\
+		IJSTI_STRUCT_EXTERN_TEMPLATE(stName)													\
+		IJSTI_STRUCT_EXPLICIT_TEMPLATE(stName)
+
+
 }	// namespace ijst
 
 //! list of templates could been declared extern
 #define IJSTI_EXTERNAL_TEMPLATE_XLIST											\
 		IJSTX(class ijst::Accessor<>)											\
 		IJSTX(struct rapidjson::UTF8<>)											\
-		IJSTX(class rapidjson::GenericDocument<rapidjson::UTF8<> >)			\
+		IJSTX(class rapidjson::GenericDocument<rapidjson::UTF8<> >)				\
 		IJSTX(class rapidjson::GenericValue<rapidjson::UTF8<> >)				\
 		IJSTX(class rapidjson::MemoryPoolAllocator<>)							\
-		IJSTX(class rapidjson::GenericStringBuffer<rapidjson::UTF8<> >)		\
+		IJSTX(class rapidjson::GenericStringBuffer<rapidjson::UTF8<> >)			\
 		IJSTX(class rapidjson::Writer<rapidjson::GenericStringBuffer<rapidjson::UTF8<> > >)
 
 //! extern declare template list
