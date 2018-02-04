@@ -46,7 +46,7 @@ public:
 	operator bool() const { return m_val; }
 
 private:
-	template <typename T> T_wbool(T);	// deleted
+	template <typename T> T_wbool(T) IJSTI_DELETED;
 	bool m_val;
 };
 

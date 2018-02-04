@@ -395,5 +395,5 @@ const string json = "{\"id\": \"ThisIsAString\"}";
 SampleStruct st;
 string errMsg;
 st._.Deserialize(json, errMsg);
-// errMsg = {"type":"ErrInObject","member":"id","err":{"type":"TypeMismatch","expectedType":"int","json":"\"ThisIsAString\""}}
+// errMsg = {"type":"ErrInObject","member":"iId","jsonKey":"id","err":{"type":"TypeMismatch","expectedType":"int","json":"\"ThisIsAString\""}}
 ```

@@ -197,7 +197,7 @@ public:
 			if (ret != 0)
 			{
 				field.resize(i);
-				resp.errDoc.ErrorInArray("ErrInArray", (rapidjson::SizeType)field.size());
+				resp.errDoc.ErrorInArray(static_cast<rapidjson::SizeType>(field.size()));
 				return ret;
 			}
 		}
@@ -325,7 +325,7 @@ public:
 			if (ret != 0)
 			{
 				field.erase(fieldName);
-				resp.errDoc.ErrorInObject("ErrInMap", fieldName);
+				resp.errDoc.ErrorInMap(fieldName);
 				return ret;
 			}
 		}
@@ -403,7 +403,7 @@ public:
 			int ret = serializerInterface->FromJson(elemReq, elemResp);
 			if (ret != 0)
 			{
-				resp.errDoc.ErrorInObject("ErrInMap", memberBuf.name);
+				resp.errDoc.ErrorInMap(memberBuf.name);
 				field.resize(i);
 				return ret;
 			}

@@ -465,8 +465,8 @@ private:
 	template<typename T> friend class detail::MetaClassInfoIniter;
 	MetaClassInfo() : accessorOffset(0), mapInited(false) { }
 
-	MetaClassInfo(const MetaClassInfo&);	// = delete
-	MetaClassInfo& operator=(MetaClassInfo);		// = delete
+	MetaClassInfo(const MetaClassInfo&) IJSTI_DELETED;
+	MetaClassInfo& operator=(MetaClassInfo) IJSTI_DELETED;
 
 	struct NameMap {
 		NameMap(const std::string* _pName, const MetaFieldInfo* _metaField)
@@ -1278,7 +1278,7 @@ private:
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
 				if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
-					p.errDoc.ErrorInObject("UnknownMember", fieldName);
+					p.errDoc.UnknownMember(fieldName);
 					return ErrorCode::kDeserializeSomeUnknownMember;
 				}
 				if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
@@ -1348,7 +1348,7 @@ private:
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
 				if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
-					p.errDoc.ErrorInObject("UnknownMember", fieldName);
+					p.errDoc.UnknownMember(fieldName);
 					return ErrorCode::kDeserializeSomeUnknownMember;
 				}
 				if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
@@ -1392,7 +1392,7 @@ private:
 			// Check return
 			if (ret != 0) {
 				m_r->fieldStatus[metaField->index] = FStatus::kParseFailed;
-				p.errDoc.ErrorInObject("ErrInObject", metaField->jsonName);
+				p.errDoc.ErrorInObject(metaField->fieldName, metaField->jsonName);
 				return ret;
 			}
 			// succ

@@ -99,7 +99,7 @@ void DoTestSt(const string& json, const string& jvDefault, VT vDefault, JT svDef
 		string errMsg;
 		string json = ss.str();
 		int ret = st._.Deserialize(json, errMsg);
-		CheckMemberValueIsDefault("f_v", ret, errMsg);
+		CheckMemberValueIsDefault("v", "f_v", ret, errMsg);
 	}
 	//=== Deserialize
 	Struct st;
@@ -235,7 +235,7 @@ void TestMemberTypeMismatch(const string& errJson, const char* type, const char*
 	int ret = stErr._.Deserialize(errJson, errMsg);
 	int retExpected = ErrorCode::kDeserializeValueTypeError;
 	ASSERT_EQ(ret, retExpected);
-	CheckMemberTypeMismatch(errMsg, "f_v", type, value);
+	CheckMemberTypeMismatch(errMsg, "v", "f_v", type, value);
 }
 
 IJST_DEFINE_STRUCT(
@@ -520,7 +520,7 @@ TEST(Primitive, Raw)
 		const string json = "{\"f_v\": null}";
 		string errMsg;
 		int ret = st._.Deserialize(json, errMsg);
-		CheckMemberValueIsDefault("f_v", ret, errMsg);
+		CheckMemberValueIsDefault("v", "f_v", ret, errMsg);
 	}
 	// Deserialize copy form json
 	{

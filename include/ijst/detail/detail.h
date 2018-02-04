@@ -15,15 +15,17 @@
 namespace ijst{
 namespace detail{
 #if __cplusplus >= 201103L
+	#define IJSTI_NULL 			nullptr
 	#define IJSTI_MOVE(val) 	std::move((val))
 	#define IJSTI_OVERRIDE		override
 	#define IJSTI_NOEXCEPT		noexcept
-	#define IJSTI_NULL 			nullptr
+	#define IJSTI_DELETED		= delete
 #else
+	#define IJSTI_NULL 			NULL
 	#define IJSTI_MOVE(val) 	(val)
 	#define IJSTI_OVERRIDE
 	#define IJSTI_NOEXCEPT
-	#define IJSTI_NULL 			NULL
+	#define IJSTI_DELETED
 #endif
 
 // Expands to the concatenation of its two arguments.
@@ -173,7 +175,7 @@ struct ErrorDocSetter {
 	}
 
 	//! Set error message about error of member in object
-	void ErrorInObject(const char* type, const std::string& memberName)
+	void ErrorInObject(const std::string& memberName, const std::string& jsonKey)
 	{
 		if (pAllocator == IJSTI_NULL) { return; }
 
@@ -184,11 +186,41 @@ struct ErrorDocSetter {
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
 				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString(type, *pAllocator),
+				JsonValue().SetString("ErrInObject", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
 				JsonValue().SetString("member", *pAllocator),
-				JsonValue().SetString(memberName.data(), (rapidjson::SizeType)memberName.size(), *pAllocator),
+				JsonValue().SetString(memberName.data(), static_cast<rapidjson::SizeType>(memberName.size()), *pAllocator),
+				*pAllocator);
+		pErrMsg->AddMember(
+				JsonValue().SetString("jsonKey", *pAllocator),
+				JsonValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
+				*pAllocator);
+		if (!errDetail.IsNull()) {
+			pErrMsg->AddMember(
+					JsonValue().SetString("err", *pAllocator),
+					errDetail,
+					*pAllocator);
+		}
+	}
+
+	//! Set error message about error of member in object
+	void ErrorInMap(const std::string& jsonKey)
+	{
+		if (pAllocator == IJSTI_NULL) { return; }
+
+		// backup errMsg
+		JsonValue errDetail;
+		errDetail = *pErrMsg;	// move
+
+		pErrMsg->SetObject();
+		pErrMsg->AddMember(
+				JsonValue().SetString("type", *pAllocator),
+				JsonValue().SetString("ErrInMap", *pAllocator),
+				*pAllocator);
+		pErrMsg->AddMember(
+				JsonValue().SetString("member", *pAllocator),
+				JsonValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
 				*pAllocator);
 		if (!errDetail.IsNull()) {
 			pErrMsg->AddMember(
@@ -199,7 +231,7 @@ struct ErrorDocSetter {
 	}
 
 	//! Set error message about error of member in array
-	void ErrorInArray(const char* type, unsigned index)
+	void ErrorInArray(unsigned index)
 	{
 		if (pAllocator == IJSTI_NULL) { return; }
 
@@ -210,7 +242,7 @@ struct ErrorDocSetter {
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
 				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString(type, *pAllocator),
+				JsonValue().SetString("ErrInArray", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
 				JsonValue().SetString("index", *pAllocator),
@@ -244,6 +276,25 @@ struct ErrorDocSetter {
 				*pAllocator);
 	}
 
+	void UnknownMember(const std::string& jsonKey)
+	{
+		if (pAllocator == IJSTI_NULL) { return; }
+
+		// backup errMsg
+		JsonValue errDetail;
+		errDetail = *pErrMsg;	// move
+
+		pErrMsg->SetObject();
+		pErrMsg->AddMember(
+				JsonValue().SetString("type", *pAllocator),
+				JsonValue().SetString("UnknownMember", *pAllocator),
+				*pAllocator);
+		pErrMsg->AddMember(
+				JsonValue().SetString("jsonKey", *pAllocator),
+				JsonValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
+				*pAllocator);
+	}
+
 	void ElementMapKeyDuplicated(const std::string& keyName)
 	{
 		if (pAllocator == IJSTI_NULL) { return; }
@@ -255,7 +306,7 @@ struct ErrorDocSetter {
 				*pAllocator);
 		pErrMsg->AddMember(
 				JsonValue().SetString("key", *pAllocator),
-				JsonValue().SetString(keyName.data(), (rapidjson::SizeType)keyName.size(), *pAllocator),
+				JsonValue().SetString(keyName.data(), static_cast<rapidjson::SizeType>(keyName.size()), *pAllocator),
 				*pAllocator);
 	}
 
@@ -278,7 +329,7 @@ struct ErrorDocSetter {
 				*pAllocator);
 		pErrMsg->AddMember(
 				JsonValue().SetString("json", *pAllocator),
-				JsonValue().SetString(ostream.str.data(), (rapidjson::SizeType)ostream.str.size(), *pAllocator),
+				JsonValue().SetString(ostream.str.data(), static_cast<rapidjson::SizeType>(ostream.str.size()), *pAllocator),
 				*pAllocator);
 	}
 
@@ -302,7 +353,7 @@ struct ErrorDocSetter {
 		assert(pErrMsg->IsArray());
 
 		pErrMsg->PushBack(
-				JsonValue().SetString(memberName.data(), (rapidjson::SizeType)memberName.size(), *pAllocator),
+				JsonValue().SetString(memberName.data(), static_cast<rapidjson::SizeType>(memberName.size()), *pAllocator),
 				*pAllocator
 		);
 	}

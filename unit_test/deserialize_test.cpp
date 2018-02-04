@@ -247,7 +247,7 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TOBJ(T_int), obj_v, "obj", FDesc::NotDefault | FDesc::Optional)
 )
 
-void CheckNotEmpty(const string& validJson, const string& fieldEmptyJson, const char* emptyFiledName)
+void CheckNotEmpty(const string& validJson, const string& fieldEmptyJson, const char* emptyMemberName, const char* emptyJsonKey)
 {
 	// valid
 	{
@@ -260,7 +260,7 @@ void CheckNotEmpty(const string& validJson, const string& fieldEmptyJson, const 
 		NotEmptySt st;
 		string errMsg;
 		int ret = st._.Deserialize(fieldEmptyJson, errMsg);
-		CheckMemberValueIsDefault(emptyFiledName, ret, errMsg);
+		CheckMemberValueIsDefault(emptyMemberName, emptyJsonKey, ret, errMsg);
 	}
 }
 TEST(Deserialize, NotEmpty)
@@ -277,15 +277,20 @@ TEST(Deserialize, NotEmpty)
 
 	{
 		CheckNotEmpty("{\"vec\": [0]}",
-					  "{\"vec\": []}", "vec");
+					  "{\"vec\": []}",
+					  "vec_v", "vec");
 		CheckNotEmpty("{\"deq\": [0]}",
-					  "{\"deq\": []}", "deq");
+					  "{\"deq\": []}",
+					  "deq_v", "deq");
 		CheckNotEmpty("{\"list\": [0]}",
-					  "{\"list\": []}", "list");
+					  "{\"list\": []}",
+					  "list_v", "list");
 		CheckNotEmpty("{\"map\": {\"v\": 0}}",
-					  "{\"map\": {}}", "map");
+					  "{\"map\": {}}",
+					  "map_v", "map");
 		CheckNotEmpty("{\"obj\": {\"v\": 0}}",
-					  "{\"obj\": {}}", "obj");
+					  "{\"obj\": {}}",
+					  "obj_v", "obj");
 	}
 }
 
@@ -468,14 +473,14 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TLIST(T_ubool), list_v, "f_list", FDesc::Optional)
 )
 
-void TestErrCheckTypeError(const std::string& errJson, const char* memberName, const char* expectedType, const char* jsonVal)
+void TestErrCheckTypeError(const std::string& errJson, const char* memberName, const char* jsonKey, const char* expectedType, const char* jsonVal)
 {
 	const int kErrTypeError = ErrorCode::kDeserializeValueTypeError;
 	StErrCheck st;
 	string errMsg;
 	int ret = st._.Deserialize(errJson, errMsg);
 	ASSERT_EQ(ret, kErrTypeError);
-	CheckMemberTypeMismatch(errMsg, memberName, expectedType, jsonVal);
+	CheckMemberTypeMismatch(errMsg, memberName, jsonKey, expectedType, jsonVal);
 }
 
 TEST(Deserialize, ErrorDoc_ContainerTypeError)
@@ -494,37 +499,37 @@ TEST(Deserialize, ErrorDoc_ContainerTypeError)
 	// Type error bool
 	{
 		const string json = "{\"f_v\": \"ERROR_HERE\"}";
-		TestErrCheckTypeError(json, "f_v", "bool", "\"ERROR_HERE\"");
+		TestErrCheckTypeError(json, "v", "f_v", "bool", "\"ERROR_HERE\"");
 	}
 
 	// Type error map
 	{
 		const string json = "{\"f_map\": false}";
-		TestErrCheckTypeError(json, "f_map", "object", "false");
+		TestErrCheckTypeError(json, "map_v", "f_map", "object", "false");
 	}
 
 	// Type error object
 	{
 		const string json = "{\"f_obj\": null}";
-		TestErrCheckTypeError(json, "f_obj", "object", "null");
+		TestErrCheckTypeError(json, "obj_v", "f_obj", "object", "null");
 	}
 
 	// Type error vec
 	{
 		const string json = "{\"f_vec\": true}";
-		TestErrCheckTypeError(json, "f_vec", "array", "true");
+		TestErrCheckTypeError(json, "vec_v", "f_vec", "array", "true");
 	}
 
 	// Type error deq
 	{
 		const string json = "{\"f_deq\": false}";
-		TestErrCheckTypeError(json, "f_deq", "array", "false");
+		TestErrCheckTypeError(json, "deq_v", "f_deq", "array", "false");
 	}
 
 	// Type error list
 	{
 		const string json = "{\"f_list\": true}";
-		TestErrCheckTypeError(json, "f_list", "array", "true");
+		TestErrCheckTypeError(json, "list_v", "f_list", "array", "true");
 	}
 }
 
@@ -564,11 +569,18 @@ TEST(Deserialize, ErrDoc)
 
 	// Member Unknown
 	{
+		// Copy unknown
 		const string json = "{\"UNKNOWN\": true }";
 		rapidjson::Document errDoc;
 		TestErrCheckCommonError(json, ErrorCode::kDeserializeSomeUnknownMember, errDoc, DeserFlag::kErrorWhenUnknown);
 		ASSERT_STREQ(errDoc["type"].GetString(), "UnknownMember");
-		ASSERT_STREQ(errDoc["member"].GetString(), "UNKNOWN");
+		ASSERT_STREQ(errDoc["jsonKey"].GetString(), "UNKNOWN");
+
+		// Move unknown
+		TestErrCheckCommonError(json, ErrorCode::kDeserializeSomeUnknownMember, errDoc,
+								DeserFlag::kErrorWhenUnknown | DeserFlag::kMoveFromIntermediateDoc);
+		ASSERT_STREQ(errDoc["type"].GetString(), "UnknownMember");
+		ASSERT_STREQ(errDoc["jsonKey"].GetString(), "UNKNOWN");
 	}
 
 	// Error in object has been checked in many places
@@ -579,7 +591,8 @@ TEST(Deserialize, ErrDoc)
 		rapidjson::Document errDoc;
 		TestErrCheckCommonError(json, ErrorCode::kDeserializeValueTypeError, errDoc);
 		ASSERT_STREQ(errDoc["type"].GetString(), "ErrInObject");
-		ASSERT_STREQ(errDoc["member"].GetString(), "f_map");
+		ASSERT_STREQ(errDoc["member"].GetString(), "map_v");
+		ASSERT_STREQ(errDoc["jsonKey"].GetString(), "f_map");
 		ASSERT_STREQ(errDoc["err"]["type"].GetString(), "ErrInMap");
 		ASSERT_STREQ(errDoc["err"]["member"].GetString(), "v1");
 		CheckTypeMismatch(errDoc["err"]["err"], "bool", "\"ERROR_HERE\"");
@@ -591,7 +604,8 @@ TEST(Deserialize, ErrDoc)
 		rapidjson::Document errDoc;
 		TestErrCheckCommonError(json, ErrorCode::kDeserializeMapKeyDuplicated, errDoc);
 		ASSERT_STREQ(errDoc["type"].GetString(), "ErrInObject");
-		ASSERT_STREQ(errDoc["member"].GetString(), "f_map");
+		ASSERT_STREQ(errDoc["member"].GetString(), "map_v");
+		ASSERT_STREQ(errDoc["jsonKey"].GetString(), "f_map");
 		ASSERT_STREQ(errDoc["err"]["type"].GetString(), "MapKeyDuplicated");
 		ASSERT_STREQ(errDoc["err"]["key"].GetString(), "v2");
 	}
@@ -602,7 +616,8 @@ TEST(Deserialize, ErrDoc)
 		rapidjson::Document errDoc;
 		TestErrCheckCommonError(json, ErrorCode::kDeserializeValueTypeError, errDoc);
 		ASSERT_STREQ(errDoc["type"].GetString(), "ErrInObject");
-		ASSERT_STREQ(errDoc["member"].GetString(), "f_obj");
+		ASSERT_STREQ(errDoc["member"].GetString(), "obj_v");
+		ASSERT_STREQ(errDoc["jsonKey"].GetString(), "f_obj");
 		ASSERT_STREQ(errDoc["err"]["type"].GetString(), "ErrInMap");
 		ASSERT_STREQ(errDoc["err"]["member"].GetString(), "o0");
 		CheckTypeMismatch(errDoc["err"]["err"], "bool", "null");
@@ -614,7 +629,8 @@ TEST(Deserialize, ErrDoc)
 		rapidjson::Document errDoc;
 		TestErrCheckCommonError(json, ErrorCode::kDeserializeValueTypeError, errDoc);
 		ASSERT_STREQ(errDoc["type"].GetString(), "ErrInObject");
-		ASSERT_STREQ(errDoc["member"].GetString(), "f_vec");
+		ASSERT_STREQ(errDoc["member"].GetString(), "vec_v");
+		ASSERT_STREQ(errDoc["jsonKey"].GetString(), "f_vec");
 		ASSERT_STREQ(errDoc["err"]["type"].GetString(), "ErrInArray");
 		ASSERT_EQ(errDoc["err"]["index"].GetInt(), 0);
 		CheckTypeMismatch(errDoc["err"]["err"], "bool", "1024");
@@ -626,7 +642,8 @@ TEST(Deserialize, ErrDoc)
 		rapidjson::Document errDoc;
 		TestErrCheckCommonError(json, ErrorCode::kDeserializeValueTypeError, errDoc);
 		ASSERT_STREQ(errDoc["type"].GetString(), "ErrInObject");
-		ASSERT_STREQ(errDoc["member"].GetString(), "f_deq");
+		ASSERT_STREQ(errDoc["member"].GetString(), "deq_v");
+		ASSERT_STREQ(errDoc["jsonKey"].GetString(), "f_deq");
 		ASSERT_STREQ(errDoc["err"]["type"].GetString(), "ErrInArray");
 		ASSERT_EQ(errDoc["err"]["index"].GetInt(), 0);
 		CheckTypeMismatch(errDoc["err"]["err"], "bool", "2048");
@@ -638,7 +655,8 @@ TEST(Deserialize, ErrDoc)
 		rapidjson::Document errDoc;
 		TestErrCheckCommonError(json, ErrorCode::kDeserializeValueTypeError, errDoc);
 		ASSERT_STREQ(errDoc["type"].GetString(), "ErrInObject");
-		ASSERT_STREQ(errDoc["member"].GetString(), "f_list");
+		ASSERT_STREQ(errDoc["member"].GetString(), "list_v");
+		ASSERT_STREQ(errDoc["jsonKey"].GetString(), "f_list");
 		ASSERT_STREQ(errDoc["err"]["type"].GetString(), "ErrInArray");
 		ASSERT_EQ(errDoc["err"]["index"].GetInt(), 0);
 		CheckTypeMismatch(errDoc["err"]["err"], "bool", "4096");
