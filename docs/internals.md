@@ -29,6 +29,60 @@ IJST_DEFINE_STRUCT (
 2. json_name 使用双引号包起来，是因为 JSON key 命名没有 C++ 变量命名时的限制，比如可以以空格开始或结尾，或带有逗号。
 3. field_type 数据类型不直接使用 C++ 类型，一是因为不支持所有的 C++ 类型，二是需要与实现隔离。
 
+### 宏实参的逗号
+在 field_type 中，可能需要使用类似 `map<string, int>` 这样的定义。此类模板声明中的逗号，会把这个声明分割成几个参数，即 `map<string` 和 `int>`。
+这个问题不大好处理。在简单的宏里，可以使用如下方法绕过：
+
+```cpp
+#define COMMA ,
+SOME_MACRO(map<string COMMA int>)
+```
+
+但是 ijst 中的宏会经过多层替换，无法使用这个技巧。所以需要想办法把逗号用 `()` 包起来。
+最直接的想法是把所有的 field_type 用括号包起来，然后在使用的时候解包：
+
+```cpp
+#define UNPACK(x)   x
+#define SOME_MACRO(field_type, field_name)  UNPACK field_type field_name
+// 使用
+SOME_MACRO((map<string, int>), m);
+```
+
+如此一来就需要将所有的 filed_type 定义都加上括号，较为不便。如果能达到普通类型，按正常写法，带逗号的类型则按某种特殊方法，也可以接受。
+
+C++11 后，使用 `decltype` 关键字实现起来不难：
+
+```cpp
+#define IJST_TYPE(...)	decltype(__VA_ARGS__())
+```
+
+还是以上面的 map 为例，宏调用 `IJST_TYPE(map<string, int>)` 展开后是 `decltype(map<string, int>())`，逗号已经被括号包起来了。
+`map<string, int>()` 这个表达式的结果是 *prvalue* （参考 [value_category](http://en.cppreference.com/w/cpp/language/value_category)），
+而 `decltype` 对 *prvalue* 求值的结果是 *T* （非左值或右值引用，参考 [decltype](http://en.cppreference.com/w/cpp/language/decltype)），即 `map<string, int>` 本身。
+
+C++11 前，则需要更复杂一点，需要借助模板的 Function type（[参考](https://stackoverflow.com/a/13842784)）：
+
+```cpp
+template<typename T>
+struct ArgumentType;
+
+template<typename T, typename U>
+struct ArgumentType<U(T)> {typedef T type;};
+
+
+#define IJST_TYPE(...)	ArgumentType<void(__VA_ARGS__)>::type
+```
+
+这样，`IJST_TYPE(map<string, int>)` 会被替换为 `ArgumentType<void(map<string, int>)>::type`，即 `map<string, int>`。
+
+一句题外话，C++ template 的尖括号语法也引发了一些问题：有些情况下，无法确定尖括号是模板的参数列表，还是大于小于比较符。所以有时需要写出这样的代码：
+
+```cpp
+ClassA::template Foo<0>(1);
+ClassA a;
+a.template Bar<2>(3)
+```
+
 接下来，就是使用这样的宏定义生成代码。
 
 ## 不定参数的宏
@@ -42,10 +96,10 @@ IJST_DEFINE_STRUCT (
 // 获取 IJST_DEFINE_STRUCT 宏中 field 的数量
 #define IJSTI_PP_NFIELD(...) \
     IJSTI_PP_NFIELD_IMPL(__VA_ARGS__ \
-     ,64 ,63 ,62 ,61 ,60 ,59 ,58 ,57 ,56 ,55 ,54 ,53 ,52 ,51 ,50 ,49 ,48 ,47 ,46 ,45 ,44 ,43 ,42 ,41 ,40 ,39 ,38 ,37 ,36 ,35 ,34 ,33 ,32 ,31 ,30 ,29 ,28 ,27 ,26 ,25 ,24 ,23 ,22 ,21 ,20 ,19 ,18 ,17 ,16 ,15 ,14 ,13 ,12 ,11 ,10 ,9 ,8 ,7 ,6 ,5 ,4 ,3 ,2 ,1 ,0 \
+     ,64 ,63 ,62 ,61 ,60 , /*...*/ ,3 ,2 ,1 ,0 \
     )
 #define IJSTI_PP_NFIELD_IMPL( \
-   e0 , e1 , e2 , e3 , e4 , e5 , e6 , e7 , e8 , e9 , e10 , e11 , e12 , e13 , e14 , e15 , e16 , e17 , e18 , e19 , e20 , e21 , e22 , e23 , e24 , e25 , e26 , e27 , e28 , e29 , e30 , e31 , e32 , e33 , e34 , e35 , e36 , e37 , e38 , e39 , e40 , e41 , e42 , e43 , e44 , e45 , e46 , e47 , e48 , e49 , e50 , e51 , e52 , e53 , e54 , e55 , e56 , e57 , e58 , e59 , e60 , e61 , e62 , e63 , e64, \
+   e0 , e1 , e2 , e3 , e4 , /*...*/ , e60 , e61 , e62 , e63 , e64, \
    N, ...) N
 ```
 
@@ -159,6 +213,7 @@ public:
 private:
 	static void* initInstanceTag;
 }
+//模板的静态成员可以在头文件中定义
 template<typename T> void *Singleton<T>::initInstanceTag = &Singleton<_T>::GetInstance();
 ```
 
