@@ -80,7 +80,7 @@
 		BOOST_PP_REPEAT(n, IJSTM_DEFINE_FIELD, ~)															IJSTM_BSLASH
 		IJSTI_PP_CONCAT(IJSTI_DEFINE_GETTER_, needGetter) (n BOOST_PP_ENUM_TRAILING_PARAMS(n,f))			IJSTM_BSLASH
 		explicit stName(bool isValid = true): 	 															IJSTM_BSLASH
-			_(&(_ijst_MetaInfoS::GetInstance()->metaClass), isRawVal, isValid)	 							IJSTM_BSLASH
+			_(&(_ijst_MetaInfoS::GetInstance().metaClass), isRawVal, isValid)	 							IJSTM_BSLASH
 			BOOST_PP_REPEAT(n, IJSTM_FIELD_INIT, ~)															IJSTM_BSLASH
 			{}	 																							IJSTM_BSLASH
 	private:	 																							IJSTM_BSLASH

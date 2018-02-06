@@ -49,10 +49,10 @@ typedef rapidjson::Document JsonDocument;
 template<typename T>
 class Singleton {
 public:
-	inline static T *GetInstance()
+	inline static T& GetInstance()
 	{
 		static T instance;
-		return &instance;
+		return instance;
 	}
 
 	inline static void InitInstanceBeforeMain()
@@ -65,7 +65,7 @@ public:
 private:
 	static void* initInstanceTag;
 };
-template<typename T> void *Singleton<T>::initInstanceTag = Singleton<T>::GetInstance();
+template<typename T> void* Singleton<T>::initInstanceTag = &Singleton<T>::GetInstance();
 
 template <typename T>
 struct HasType {

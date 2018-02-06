@@ -89,20 +89,20 @@ namespace detail {
 		{
 			const VarType& field = *static_cast<const VarType*>(req.pField);
 			SerializeReq elemReq(req.writer, &field.Val(), req.serFlag);
-			return IJSTI_FSERIALIZER_INS(T)->Serialize(elemReq);
+			return IJSTI_FSERIALIZER_INS(T).Serialize(elemReq);
 		}
 
 		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 		{
 			VarType& field = *static_cast<VarType*>(req.pFieldBuffer);
 			FromJsonReq elemReq(req.stream, req.allocator, req.deserFlag, req.canMoveSrc, &field.Val(), req.fDesc);
-			return IJSTI_FSERIALIZER_INS(T)->FromJson(elemReq, resp);
+			return IJSTI_FSERIALIZER_INS(T).FromJson(elemReq, resp);
 		}
 
 		virtual void ShrinkAllocator(void *pField) IJSTI_OVERRIDE
 		{
 			VarType& field = *static_cast<VarType*>(pField);
-			return IJSTI_FSERIALIZER_INS(T)->ShrinkAllocator(&field.Val());
+			return IJSTI_FSERIALIZER_INS(T).ShrinkAllocator(&field.Val());
 		}
 	};
 }

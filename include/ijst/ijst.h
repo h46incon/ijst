@@ -676,14 +676,14 @@ namespace detail {
 		}
 
 		void PushMetaField(const std::string &fieldName, const std::string& jsonName,
-						   std::size_t offset, FDesc::Mode desc, SerializerInterface *serializerInterface)
+						   std::size_t offset, FDesc::Mode desc, SerializerInterface& intf)
 		{
 			MetaFieldInfo metaField;
 			metaField.jsonName = jsonName;
 			metaField.fieldName = fieldName;
 			metaField.offset = offset;
 			metaField.desc = desc;
-			metaField.serializerInterface = serializerInterface;
+			metaField.serializerInterface = &intf;
 			d.fieldsInfo.push_back(IJSTI_MOVE(metaField));
 		}
 
@@ -1550,10 +1550,10 @@ private:
 };
 
 template<typename T>
-inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
+inline const MetaClassInfo& MetaClassInfo::GetMetaInfo()
 {
-	IJSTI_TRY_INIT_META_BEFORE_MAIN(detail::MetaClassInfoIniter<T>);
-	return detail::Singleton<detail::MetaClassInfoTyped<T> >::GetInstance()->metaClass;
+	IJSTI_TRY_INIT_META_BEFORE_MAIN(detail::MetaClassInfoTyped<T>);
+	return detail::Singleton<detail::MetaClassInfoTyped<T> >::GetInstance().metaClass;
 }
 
 	#define IJSTI_STRUCT_META_INITER_DECLARE(stName)	\

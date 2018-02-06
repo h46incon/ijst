@@ -156,13 +156,13 @@ public:
 	{
 		assert(req.pField != IJST_NULL);
 		const VarType& field = *static_cast<const VarType*>(req.pField);
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(ElemType);
+		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(ElemType);
 
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartArray());
 
 		for (typename VarType::const_iterator itera = field.begin(); itera != field.end(); ++itera) {
 			SerializeReq elemReq(req.writer, &(*itera), req.serFlag);
-			IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq));
+			IJSTI_RET_WHEN_NOT_ZERO(intf.Serialize(elemReq));
 		}
 
 		IJSTI_RET_WHEN_WRITE_FAILD(
@@ -180,7 +180,7 @@ public:
 		field.clear();
 		// Alloc buffer
 		field.resize(req.stream.Size());
-		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(ElemType);
+		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(ElemType);
 
 		size_t i = 0;
 		typename VarType::iterator itField = field.begin();
@@ -193,7 +193,7 @@ public:
 								req.deserFlag, req.canMoveSrc, &*itField, 0);
 			FromJsonResp elemResp(resp.errDoc);
 			// FromJson
-			int ret = serializerInterface->FromJson(elemReq, elemResp);
+			int ret = intf.FromJson(elemReq, elemResp);
 			if (ret != 0)
 			{
 				field.resize(i);
@@ -210,21 +210,21 @@ public:
 	virtual void ShrinkAllocator(void* pField) IJSTI_OVERRIDE
 	{
 		VarType& field = *static_cast<VarType *>(pField);
-		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(ElemType);
+		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(ElemType);
 		for (typename VarType::iterator itField = field.begin(); itField != field.end(); ++itField)
 		{
-			serializerInterface->ShrinkAllocator(&*itField);
+			intf.ShrinkAllocator(&*itField);
 		}
 	}
 };
 
 #define IJSTI_SERIALIZER_CONTAINER_DEFINE()																		\
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE												\
-	{ return ContainerSerializerSingleton::GetInstance()->Serialize(req); }										\
+	{ return ContainerSerializerSingleton::GetInstance().Serialize(req); }										\
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE					\
-	{ return ContainerSerializerSingleton::GetInstance()->FromJson(req, resp); }								\
+	{ return ContainerSerializerSingleton::GetInstance().FromJson(req, resp); }									\
 	virtual void ShrinkAllocator(void* pField) IJSTI_OVERRIDE													\
-	{ return ContainerSerializerSingleton::GetInstance()->ShrinkAllocator(pField); }							\
+	{ return ContainerSerializerSingleton::GetInstance().ShrinkAllocator(pField); }
 
 /**
  * Serialization class of Vector types
@@ -276,7 +276,7 @@ public:
 	{
 		assert(req.pField != IJST_NULL);
 		const VarType& field = *static_cast<const VarType *>(req.pField);
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(T);
+		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(T);
 
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartObject());
 
@@ -286,7 +286,7 @@ public:
 					req.writer.Key(key.data(), static_cast<rapidjson::SizeType>(key.size())) );
 
 			SerializeReq elemReq(req.writer, &(itFieldMember->second), req.serFlag);
-			IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq));
+			IJSTI_RET_WHEN_NOT_ZERO(intf.Serialize(elemReq));
 		}
 
 		IJSTI_RET_WHEN_WRITE_FAILD(
@@ -301,7 +301,7 @@ public:
 		assert(req.pFieldBuffer != IJST_NULL);
 		VarType& field = *static_cast<VarType *>(req.pFieldBuffer);
 		field.clear();
-		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(T);
+		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(T);
 
 		for (rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
 			 itMember != req.stream.MemberEnd(); ++itMember)
@@ -321,7 +321,7 @@ public:
 			FromJsonReq elemReq(itMember->value, req.allocator,
 								req.deserFlag, req.canMoveSrc, &elemBuffer, 0);
 			FromJsonResp elemResp(resp.errDoc);
-			int ret = serializerInterface->FromJson(elemReq, elemResp);
+			int ret = intf.FromJson(elemReq, elemResp);
 			if (ret != 0)
 			{
 				field.erase(fieldName);
@@ -336,10 +336,10 @@ public:
 	virtual void ShrinkAllocator(void* pField) IJSTI_OVERRIDE
 	{
 		VarType& field = *static_cast<VarType *>(pField);
-		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(T);
+		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(T);
 		for (typename VarType::iterator itField = field.begin(); itField != field.end(); ++itField)
 		{
-			serializerInterface->ShrinkAllocator(&itField->second);
+			intf.ShrinkAllocator(&itField->second);
 		}
 	}
 };
@@ -358,7 +358,7 @@ public:
 	{
 		assert(req.pField != IJST_NULL);
 		const VarType& field = *static_cast<const VarType *>(req.pField);
-		SerializerInterface *interface = IJSTI_FSERIALIZER_INS(ValType);
+		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(ValType);
 
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartObject());
 
@@ -368,7 +368,7 @@ public:
 					req.writer.Key(key.data(), static_cast<rapidjson::SizeType>(key.size())) );
 
 			SerializeReq elemReq(req.writer, &(itMember->value), req.serFlag);
-			IJSTI_RET_WHEN_NOT_ZERO(interface->Serialize(elemReq));
+			IJSTI_RET_WHEN_NOT_ZERO(intf.Serialize(elemReq));
 		}
 
 		IJSTI_RET_WHEN_WRITE_FAILD(
@@ -384,7 +384,7 @@ public:
 		VarType& field = *static_cast<VarType *>(req.pFieldBuffer);
 		field.clear();
 		// pField->shrink_to_fit();
-		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(ValType);
+		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(ValType);
 
 		// Alloc buffer
 		field.resize(req.stream.MemberCount());
@@ -400,7 +400,7 @@ public:
 								req.deserFlag, req.canMoveSrc, &elemBuffer, 0);
 			FromJsonResp elemResp(resp.errDoc);
 
-			int ret = serializerInterface->FromJson(elemReq, elemResp);
+			int ret = intf.FromJson(elemReq, elemResp);
 			if (ret != 0)
 			{
 				resp.errDoc.ErrorInMap(memberBuf.name);
@@ -416,10 +416,10 @@ public:
 	virtual void ShrinkAllocator(void* pField) IJSTI_OVERRIDE
 	{
 		VarType& field = *static_cast<VarType*>(pField);
-		SerializerInterface *serializerInterface = IJSTI_FSERIALIZER_INS(ValType);
+		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(ValType);
 		for (typename VarType::iterator itField = field.begin(); itField != field.end(); ++itField)
 		{
-			serializerInterface->ShrinkAllocator(&itField->value);
+			intf.ShrinkAllocator(&itField->value);
 		}
 	}
 };
