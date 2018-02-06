@@ -36,7 +36,7 @@ namespace detail{
 class SerializerInterface;
 class MetaClassInfoSetter;
 template<typename T>
-class MetaClassInfoIniter;
+class MetaClassInfoTyped;
 
 typedef rapidjson::Value JsonValue;
 typedef rapidjson::MemoryPoolAllocator<> JsonAllocator;

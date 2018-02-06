@@ -462,7 +462,7 @@ public:
 
 private:
 	friend class detail::MetaClassInfoSetter;
-	template<typename T> friend class detail::MetaClassInfoIniter;
+	template<typename T> friend class detail::MetaClassInfoTyped;
 	MetaClassInfo() : accessorOffset(0), mapInited(false) { }
 
 	MetaClassInfo(const MetaClassInfo&) IJSTI_DELETED;
@@ -643,19 +643,22 @@ namespace detail {
 	 *				Private
 	 */
 	/**
-	 * Meta info initer
+	 * MetaClassInfo of T
 	 * Push meta class info of T in specialized constructor MetaInfo<T>().
-	 * @tparam T: class. Concept require T::_ijst_InitMetaInfo<bool>(MetaInfo*)
+	 *
+	 * @tparam T 	class. Concept require T::_ijst_InitMetaInfo<bool>(MetaInfo*)
+	 *
+	 * @note		Use Singleton<MetaClassInfoTyped<T> > to get the instance
 	 */
 	template<typename T>
-	class MetaClassInfoIniter {
+	class MetaClassInfoTyped {
 	public:
 		MetaClassInfo metaClass;
 
 	private:
-		friend class Singleton<MetaClassInfoIniter<T> >;
+		friend class Singleton<MetaClassInfoTyped<T> >;
 
-		MetaClassInfoIniter()
+		MetaClassInfoTyped()
 		{
 			T::template _ijst_InitMetaInfo<true>(this);
 		}
@@ -1550,7 +1553,7 @@ template<typename T>
 inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 {
 	IJSTI_TRY_INIT_META_BEFORE_MAIN(detail::MetaClassInfoIniter<T>);
-	return detail::Singleton<detail::MetaClassInfoIniter<T> >::GetInstance()->metaClass;
+	return detail::Singleton<detail::MetaClassInfoTyped<T> >::GetInstance()->metaClass;
 }
 
 	#define IJSTI_STRUCT_META_INITER_DECLARE(stName)	\
@@ -1629,7 +1632,7 @@ inline const MetaClassInfo &MetaClassInfo::GetMetaInfo()
 			}
 
 	#define IJSTI_METAINFO_DEFINE_START(stName, N)												\
-			typedef ::ijst::detail::MetaClassInfoIniter< stName > _ijst_MetaInfoT;				\
+			typedef ::ijst::detail::MetaClassInfoTyped< stName > _ijst_MetaInfoT;				\
 			typedef ::ijst::detail::Singleton<_ijst_MetaInfoT> _ijst_MetaInfoS;					\
 			friend _ijst_MetaInfoT;																\
 			template<bool DummyTrue	>															\
