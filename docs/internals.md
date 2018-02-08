@@ -317,7 +317,7 @@ FSerialize<FIELD_TYPE>::VarType var;
 
 ```cpp
 template <typename T>
-struct HasType { typedef void Void; };
+struct IfHasType { typedef void Void; };
 
 // IDL 接口中的数据类型
 #define T_int   int
@@ -326,7 +326,7 @@ struct HasType { typedef void Void; };
 // FSerializer 实现
 template<> class FSerializer<int> : public SerializerInterface { /*...*/};
 template<typename T>        // ijst 结构体都会定义 _ijst_AccessorType
-class FSerializer<T, typename HasType<typename T::_ijst_AccessorType>::Void>: public SerializerInterface { /*...*/ };
+class FSerializer<T, typename IfHasType<typename T::_ijst_AccessorType>::Void>: public SerializerInterface { /*...*/ };
 
 // 声明 IDL 对应的数据类型，FIELD_TYPE 是 IDL 中声明的数据类型
 FIELD_TYPE var;
@@ -334,18 +334,66 @@ FIELD_TYPE var;
 
 这里的检查不是特别严谨，但是正常情况下，这里检查的类型都是特定的类型，暂时可以接受，后续可进行修改。
 
-## use tech in xmacro?
+## 序列化/反序列化
 
-# Getter Chaining
-## Optional
-## NULL pointer deference, this check null warning
+在实现时这部分时，由于对 JSON 库了解得不够，曾经走了一些奇怪的弯路。
+现在留下的实现，使用的都是比较直接的思路：底层库是 RapidJSON，序列化时使用 SAX API，反序列化时使用 DOM API。
+
+为什么反序列化时不用 DOM API？原因如下：
+1. 太难实现了。
+2. 目前反序列化的性能瓶颈不是由 DOM API 引起的。
+3. 使用 SAX API 的话，在反序列化 vector 时，无法保证扩容时元素能用 move 的方式移动，无法保证能比 DOM API 效率更高。
+
+在这个基础上，提供 API 时尽量能暴露出 RapidJSON 所有的功能，比如 `ParseFlags` 等。
+但是目前 ijst 只能处理 UTF8 的 JSON，这在未来需要改进。
+
+## Getter Chaining
+
+在访问深层路径的元素的时候，只需在最终得到结果，而不应该关心中间步骤是否成功。其中一个方法是使用异常，但这在大多数场景中都是不可接受的。
+ijst 提供了 Getter Chaining 来解决这个问题。
+
+Getter Chaining 的模式是这样的： `ST OP F1 OP F2 OP F3 ...`，其中 `Fn` 可以用来表示某个成员。
+因为 OP 必须处于两个操作数的中间，所以无法使用宏，而只能使用函数或者操作符重载。
+这里的目标是提供一个静态类型的操作，每步 OP 返回的结构应该都是有具体类型的，所以需要使用模板：
+
+```cpp
+template<typename T>
+Optional<T> GetOpt(T& field);
+// 这样无法 chaining ：st._.GetOpt(st.v1)->_.GetOpt(???.v2)
+
+template<typename T>
+Optional<T> GetOpt2(size_t offset);
+// 这样使用很麻烦： st._GetOpt2<int>(OFFSET_OF(st, v))->_.GetOpt2<string>(OFFSET_OF(st2, v));
+```
+
+现在一直没有找到别的比较好的办法，所以 ijst 对每个字段生成一个 `get_` 方法。
+
+另外， `Optional` 需要根据不同类型提供操作符重载，而且处理其内部储存的值 nullptr 时的返回结果：
+1. vector<T> 类型：重载 `Optional<T> operator [](size_type i)`，内部值为 nullptr 或元素不存在时返回 `Optional<T>(nullptr)`。
+2. map<string, T> 类型：重载 `Optional<T> operator [](string key)`，内部值为 nullptr 或元素不存在时返回 `Optional<T>(nullptr)`。
+3. ijst 结构体类型（通过 SFINAE 判断，假设类型为 Tijst ）：重载 `Tijst* operator ->()`，内部值为 nullptr 时，返回 `&Tijst(false)`。
+
+其中，在 `Tijst(false)` 表示该 ijst 结构体对象是个无效的对象。
+这里，另外一个选择是直接返回 nullptr，然后在 ijst 的 `get_*` 方法中，对 `this` 进行判断，也能达到效果：
+
+```cpp
+struct SampleType {
+    int v1;
+    Optional<int> get_v1() {
+        if (this == nullptr) return Optional<int>(nullptr);
+        else ...
+    }
+}
+```
+在大多数的编程器实现中，是可以通过 nullptr 的类指针变量调用其成员函数的。但是 C++ 标准并未对此做出保证，而且 `this == nullptr` 这个判断可能会引发编译器警告。
+所以 ijst 在 `Accessor` 中增加一个字段，表示其是否有效。
 
 # 优化
 ## Extern template
+## xmacro
 ## Batch new
 
 # 其他
 ## constexpr if
 ## Allocator，怎么释放的坑
 ## Unknown reference
-## X Macro
