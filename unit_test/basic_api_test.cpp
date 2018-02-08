@@ -324,6 +324,23 @@ TEST(BasicAPI, Constructor4RValue)
 
 #endif
 
+TEST(BasicAPI, GetOptional)
+{
+	// Only test GetOptional simply, other case is tested in ChainedOptional with get_* method
+	SimpleSt st;
+	{
+		ASSERT_EQ(NULL, st._.GetOptional(st.int_1).Ptr());
+		IJST_MARK_VALID(st, int_1);
+		ASSERT_EQ(&st.int_1, st._.GetOptional(st.int_1).Ptr());
+	}
+
+	{
+		ASSERT_EQ(NULL, st._.GetOptional(st.str_1).Ptr());
+		IJST_MARK_VALID(st, str_1);
+		ASSERT_EQ(&st.str_1, st._.GetOptional(st.str_1).Ptr());
+	}
+}
+
 IJST_DEFINE_STRUCT(
 		Complicate
 		, (IJST_TST(SimpleSt), st, "st_v", 0)

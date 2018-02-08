@@ -924,6 +924,44 @@ public:
 	inline const rapidjson::MemoryPoolAllocator<> &GetOwnAllocator() const { return m_r->ownDoc.GetAllocator(); }
 
 	/**
+	 * @brief Get Optional wrapper of field
+	 *
+	 * @tparam T 		Field type
+	 * @param field 	Field reference in the parent object
+	 * @return 			Optional(&field) if struct and field is valid, Optional(nullptr) else
+	 */
+	template <typename T>
+	Optional<const T> GetOptional(const T& field) const
+	{
+		IJST_ASSERT(HasField(&field));
+		if (m_isValid && GetStatus(&field) == ijst::FStatus::kValid) {
+			return ::ijst::Optional<const T>(&field);
+		}
+		else {
+			return ::ijst::Optional<const T>(IJSTI_NULL);
+		}
+	}
+
+	/**
+	 * @brief Get Optional wrapper of field
+	 *
+	 * @tparam T 		Field type
+	 * @param field 	Field reference in the parent object
+	 * @return 			Optional(&field) if struct and field is valid, Optional(nullptr) else
+	 */
+	template <typename T>
+	Optional<T> GetOptional(T& field)
+	{
+		IJST_ASSERT(HasField(&field));
+		if (m_isValid && GetStatus(&field) == ijst::FStatus::kValid) {
+			return ::ijst::Optional<T>(&field);
+		}
+		else {
+			return ::ijst::Optional<T>(IJSTI_NULL);
+		}
+	}
+
+	/**
 	 * @brief Serialize the structure to string.
 	 *
 	 * @param writer 		writer
@@ -1619,17 +1657,9 @@ inline const MetaClassInfo& MetaClassInfo::GetMetaInfo()
 
 	#define IJSTI_FIELD_GETTER(fType, fName, ... )												\
 			::ijst::Optional<const fType > IJSTI_PP_CONCAT(IJST_GETTER_PREFIX, fName)() const 	\
-			{																					\
-				if (!this->_.IsValid() || this->_.GetStatus(&fName) != ijst::FStatus::kValid)	\
-					{ return ::ijst::Optional<const fType >(IJST_NULL); }						\
-				return ::ijst::Optional<const fType >(&fName);									\
-			}																					\
+			{ return this->_.GetOptional(this->fName); }										\
 			::ijst::Optional< fType > IJSTI_PP_CONCAT(IJST_GETTER_PREFIX, fName)()				\
-			{																					\
-				if (!this->_.IsValid() || this->_.GetStatus(&fName) != ijst::FStatus::kValid)	\
-					{ return ::ijst::Optional< fType >(IJST_NULL); }							\
-				return ::ijst::Optional< fType >(&fName);										\
-			}
+			{ return this->_.GetOptional(this->fName); }
 
 	#define IJSTI_METAINFO_DEFINE_START(stName, N)												\
 			typedef ::ijst::detail::MetaClassInfoTyped< stName > _ijst_MetaInfoT;				\
