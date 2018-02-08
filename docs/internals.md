@@ -60,7 +60,7 @@ C++11 后，使用 `decltype` 关键字实现起来不难：
 `map<string, int>()` 这个表达式的结果是 *prvalue* （参考 [value_category](http://en.cppreference.com/w/cpp/language/value_category)），
 而 `decltype` 对 *prvalue* 求值的结果是 *T* （非左值或右值引用，参考 [decltype](http://en.cppreference.com/w/cpp/language/decltype)），即 `map<string, int>` 本身。
 
-C++11 前，则需要更复杂一点，需要借助模板的 Function type（[参考](https://stackoverflow.com/a/13842784)）：
+C++11 前，则需要更复杂一点，需要借助模板的 Function type（参考 [StackOverFlow](https://stackoverflow.com/a/13842784)）：
 
 ```cpp
 template<typename T>
@@ -82,6 +82,22 @@ ClassA::template Foo<0>(1);
 ClassA a;
 a.template Bar<2>(3)
 ```
+
+### MSVC 中的 __VA_ARGS__
+
+下面这段代码：
+
+```cpp
+#define PLUS(a1, a2) ((a1)+(a2))
+#define VA(...) PLUS(__VA_ARGS__)
+VA(1,2）
+```
+
+正常情况下 `PLUS(__VA_ARGS__)` 会把参数解包，替换的结果应该是 `((1)+(2))`。
+但在 MSVC 中， `PLUS` 会把 `__VA_ARGS__` 当成一个参数传递，得到的结果是 `((1,2)+())`。
+MSVC 认为这是正确的结果，并不打算修改（参考 [StackOverflow](https://stackoverflow.com/a/7459803)），所以代码中需要对此进行兼容。
+// TODO: workaround of __VA_ARGS__ in MSVC
+
 
 接下来，就是使用这样的宏定义生成代码。
 
@@ -132,7 +148,8 @@ IJSTM_HASH  define      // 生成 "# define"
 ## 元信息注册
 
 C++ 不支持反射，所以只能主动注册元信息。元信息套路，就是通过*类型*得到一个 map，注册的时候往这个 map 里写入信息，读取的时候从里面获取信息。
-即元信息是和类型对应的。直接的想法是使用 `map<type_index(type_id(Type)), MetaClassInfo>` 储存这个映射关系，但这样实现单例模式会有不便。
+即元信息是和类型对应的。直接的想法是使用 `map<type_index(type_id(Type)), MetaClassInfo>` 储存这个映射关系，但这样实现单例模式会有不便，且很难保证在元信息会在使用前被插入。
+比如常用的做法在一个全局变量初始化的过程中完成元信息的写入，但在这多个编译单元存在的情况下可能会发生问题，参考 [StackOverflow](https://stackoverflow.com/questions/9459980/c-global-variable-not-initialized-when-linked-through-static-libraries-but-ok)
 
 ijst 的选择是使用模板，实现类型与元信息的映射以及单例：
 
@@ -222,20 +239,113 @@ template<typename T> void *Singleton<T>::initInstanceTag = &Singleton<_T>::GetIn
 但是一旦有代码访问了 `GlobalAccess()`，就会导致它的实例化。而它在初始化的时候，就会访问 `GetInstance()` 函数，引发单例的初始化。
 //TODO: 一般的静态变量不保证能被初始化，但模板这种定义在头文件的内
 
-## MS_VC，逗号, use tech in xmacro?
-## 单例、 InitBeforeMain
-## Stangdard layout
+## 元信息内容
+
+必要的元信息包括字段的类型以及定位方式，加上业务所需的其他信息。具体到 ijst，业务信息包括字段对应的 JSON 键值、描述（如 Optional 等）、相关操作代码的函数地址。
+
+### 类型及地址
+
+作为一个静态类型语言，无法通过类型信息在运行期动态地创建该类型的变量，其更多的作用是作为某个 map 的key。
+和前面一样， ijst 选择使用模板特化来达到这个目的，所以并不在运行期直接使用类型信息。
+
+对于定位方式，C++ 有一个强大的工具来保存一个变量的访问方法：指针。实际上，ijst 保存的是字段在结构体内的偏移。在使用的使用，通过结构体的指针，加上偏移，即可得到该字段的指针。
+C++ 提供了 `offsetof` 宏来获取这个偏移，但是它最大的缺点是要求一个结构体必须是 *standard-layout* 的，而常用的 `std::vector` 和 `std::map` 都无法保证满足这个条件。
+ijst 虽然提供了 `T_Wrapper` 类，以保存非 *standard-layout* 结构的指针的方式，将其包装为一个 *standard-layout* 的类型。但是这样在使用便利和运行效率上有会受到一定的影响。
+
+最终 ijst 在这里放弃符合 C++ 标准，使用零指针偏移的方法取得这个偏移量：
+
+```cpp
+#define IJST_OFFSETOF(T, member)    ((size_t)&(((T*)0)->member))
+```
+
+这是一个常见的做法，但是这是有一定问题的。首先是 `T.member` 可能会重载 `&` 操作符，因为需要进行操作的都是 ijst 预定义的类型，这个问题可以避免。
+另一个问题是在标准中，这种方法无法保证避免零指针的解引用。在经过各个编译环境的测试，都可以获取到正确的偏移，所以使用了这种方法。
+
+### 业务信息
+业务信息中的 JSON 键值、描述等都可以直接从 IDL 中获取。但是相关的操作代码，比如序列化/反序列化等，需要自行生成并储存其地址。
+序列化/反序列化等的实现是另一个话题。为便于生成获取这些函数地址的代码，采用模板特化的方法实现这些方法：
+
+```cpp
+// 为便于编码，使用多态。实际也可以直接保存函数地址
+class SerializerInterface {
+    // 接口
+};
+
+// 模板定义，这个通用的模版不应该被实例化
+template<typename T, typename = void>
+class FSerializer : public SerializerInterface {
+};
+
+// 对于每种类型，编写相关的序列化/反序列化代码
+template<> class FSerializer<T_int> : public SerializerInterface {
+    // 实现
+};
+
+// 获取和储存对象地址，FIELD_TYPE 是 IDL 中声明的数据类型
+SerializerInterface& intf = Singleton<FSerializer<FIELD_TYPE> >::GetInstance();
+
+// 注：FIELD_TYPE 是不能提前完全确定的，比如 vector<T_int> 或 vector<vector<T_int> > 都是支持的，所以不能使用宏拼接函数名
+// 如： SerializerInterface& intf = FSerializer##TYPE::GetInstance();
+```
+
+### SFINAE
+注意到，`FSerializer` 的参数中除了 `T`，还多了一个参数。这是为了使用 SFINAE 技术。
+需要使用这个技术是因为 ijst 支持结构体的嵌套。这导致了模板特化时需要分辨类型是否是 ijst 结构体。
+
+如果不使用 SFINAE，可以这样实现：
+
+```cpp
+// Type tags;
+template<typename T> struct Primitive<T> {};
+template<typename T> struct IjstStruct<T> {};
+
+// IDL 接口中的数据类型
+#define T_int   Primitive<int>
+#define T_ST(T) IjstStruct<T>
+
+// FSerializer 实现
+template<> class FSerializer<Primitive<int> > : public SerializerInterface
+{ typedef int VarType; /*其他实现*/ };
+template<typename T> class FSerializer<IjstStruct<T> > : public SerializerInterface
+{ typedef T VarType; /*其他实现*/ };
+
+// 声明 IDL 对应的数据类型，FIELD_TYPE 是 IDL 中声明的数据类型
+FSerialize<FIELD_TYPE>::VarType var;
+```
+
+这样会增加模板的数量，而且会让结构体定义时依赖 `FSerializer`。使用 SFINAE 的方案如下：
+
+```cpp
+template <typename T>
+struct HasType { typedef void Void; };
+
+// IDL 接口中的数据类型
+#define T_int   int
+#define T_ST(T) T
+
+// FSerializer 实现
+template<> class FSerializer<int> : public SerializerInterface { /*...*/};
+template<typename T>        // ijst 结构体都会定义 _ijst_AccessorType
+class FSerializer<T, typename HasType<typename T::_ijst_AccessorType>::Void>: public SerializerInterface { /*...*/ };
+
+// 声明 IDL 对应的数据类型，FIELD_TYPE 是 IDL 中声明的数据类型
+FIELD_TYPE var;
+```
+
+这里的检查不是特别严谨，但是正常情况下，这里检查的类型都是特定的类型，暂时可以接受，后续可进行修改。
+
+## use tech in xmacro?
 
 # Getter Chaining
 ## Optional
 ## NULL pointer deference, this check null warning
 
-# 其他
-## SFINAE
-## constexpr if
-## ArugmentType
+# 优化
+## Extern template
 ## Batch new
+
+# 其他
+## constexpr if
 ## Allocator，怎么释放的坑
 ## Unknown reference
 ## X Macro
-## Extern template
