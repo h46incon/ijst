@@ -390,7 +390,53 @@ struct SampleType {
 
 # 优化
 ## Extern template
-## xmacro
+作为一个纯头文件、且大量使用模板的库，编译速度是一个值得注意的问题。
+一方面，在开发的时候需要照顾编译器的感受，减少模板的使用（现在通过gcc `-ftime-report` 测出的结果，模板实例化的时间占比约 20%）。
+另一方面，可以使用 C++11 的 extern template 功能避免在多个 cpp 文件中重复实例化模板。
+
+其中，ijst 使用的 RapidJSON 相关的模板类，如 `Value`，`MemoryPoolAllocator<>` 等可以很容易地使用此类方法：
+
+```
+#if IJST_EXTERN_TEMPLATE
+extern template class GenericValue<UTF8<> >;
+extern template class MemoryPoolAllocator<>;
+#endif
+
+#if IJST_EXPLICIT_TEMPLATE
+template class GenericValue<UTF8<> >;
+template class MemoryPoolAllocator<>;
+#endif
+```
+
+另外，ijst 本身也有代码量较大的模板，如 `FSerialize`。
+但是每个 ijst 结构体会使用不同的参数实例化 `FSerialize`，而且很难控制不对同一个类型的 `FSerializer` 进行多次显示实例化（这会引起编译错误）。所以不能**直接**控制 `FSerializer` 的实例化。
+ijst 的方法是尽量收归 `FSerializer` 实例化的地方，现在仅会在 ijst 结构体的 `_ijst_InitMetaInfo()` 及其调用的函数中引发 `FSerializer` 的实例化。
+所以只需控制 `_ijst_InitMetaInfo()` 方法的实例化即可。为此，需要将这个函数用模板实现（添加一个无用的模板参数即可）。
+
+另外一个代码量较大的类是 `Accessor`，和上面一样，使用模板实现这个类即可。
+
+### XMacro
+
+可以注意到，extern template 和模板显式实例化声明时的模板总数相同的。这里可以使用 XMacro 减少重复代码量，并降低出错的可能：
+
+```cpp
+#define IJSTI_EXTERNAL_TEMPLATE_XLIST											\
+		IJSTX(class rapidjson::GenericValue<rapidjson::UTF8<> >)				\
+		IJSTX(class rapidjson::MemoryPoolAllocator<>)
+
+#if IJST_EXTERN_TEMPLATE
+	#define IJSTX(...)	extern template __VA_ARGS__;
+	IJSTI_EXTERNAL_TEMPLATE_XLIST
+	#undef IJSTX
+#endif
+
+#if IJST_EXPLICIT_TEMPLATE
+	#define IJSTX(...)	template __VA_ARGS__;
+	IJSTI_EXTERNAL_TEMPLATE_XLIST
+	#undef IJSTX
+#endif
+```
+
 ## Batch new
 
 # 其他
