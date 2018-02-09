@@ -241,7 +241,7 @@ template<typename T> void *Singleton<T>::initInstanceTag = &Singleton<_T>::GetIn
 
 ## 元信息内容
 
-必要的元信息包括字段的类型以及定位方式，加上业务所需的其他信息。具体到 ijst，业务信息包括字段对应的 JSON 键值、描述（如 Optional 等）、相关操作代码的函数地址。
+必要的元信息包括字段的类型以及定位方式，加上业务所需的其他信息。具体到 ijst，业务信息包括字段对应的 JSON 键名、描述（如 Optional 等）、相关操作代码的函数地址。
 
 ### 类型及地址
 
@@ -262,7 +262,7 @@ ijst 虽然提供了 `T_Wrapper` 类，以保存非 *standard-layout* 结构的�
 另一个问题是在标准中，这种方法无法保证避免零指针的解引用。在经过各个编译环境的测试，都可以获取到正确的偏移，所以使用了这种方法。
 
 ### 业务信息
-业务信息中的 JSON 键值、描述等都可以直接从 IDL 中获取。但是相关的操作代码，比如序列化/反序列化等，需要自行生成并储存其地址。
+业务信息中的 JSON 键名、描述等都可以直接从 IDL 中获取。但是相关的操作代码，比如序列化/反序列化等，需要自行生成并储存其地址。
 序列化/反序列化等的实现是另一个话题。为便于生成获取这些函数地址的代码，采用模板特化的方法实现这些方法：
 
 ```cpp
@@ -388,7 +388,42 @@ struct SampleType {
 在大多数的编程器实现中，是可以通过 nullptr 的类指针变量调用其成员函数的。但是 C++ 标准并未对此做出保证，而且 `this == nullptr` 这个判断可能会引发编译器警告。
 所以 ijst 在 `Accessor` 中增加一个字段，表示其是否有效。
 
-# 优化
+# 小优化
+
+## 减少 new 操作
+ijst 的目标不是一个性能很高的库，但性能也需要在可接受范围内，所以实现时不大考虑性能，在后期通过 profiler 查出性能瓶颈后再进行优化。
+
+实现完大体功能后，进行 benchmark，发现反序列化性能和 RapidJSON 有非常大的差距（90 ms vs. 10 ms）。
+Profile 后发现，`new` 和 `delete` 操作的独占时间比较高。
+
+首先是在 `FSerializer::FromJson()` 中加入了错误信息的功能，在实现时会根据是否需要返回错误信息，动态 new `Document` 对象。
+将这部分逻辑改成在栈上使用 `Document` 对象后，反序列化的耗时降至约 38 ms，其中 *canada.json* 这个测试用例的耗时从 54 ms 降至 12 ms。
+
+然后是 `Accessor` 的构造中，有三次 `new` 操作。将其整合成一次后，耗时降低 3 ms，即 35 ms。合并的方法是将这几个需要 new 的对象放入结构体：
+
+```cpp
+struct Resource {
+    rapidjson::Value unknown;
+    rapidjson::Document ownDoc;
+    FieldStatusType fieldStatus;
+};
+Resource* m_r;
+
+// operator new 一次性分配空间
+m_r = static_cast<Resource *>(operator new(sizeof(Resource)));
+
+// placement new 在分配好的空间上完成构造
+new(&m_r->fieldStatus) FieldStatusType(m_pMetaClass->GetFieldsInfo().size(), FStatus::kMissing);
+new(&m_r->unknown)rapidjson::Value(rapidjson::kObjectType);
+new(&m_r->ownDoc) rapidjson::Document();
+```
+
+另外，在 `Accessor::CheckFieldStatus()` 中，有一个未使用的 `std::stringstream` 变量，删去后耗时降低 5 ms，即 30 ms（原因不明）。
+
+## 使用简单的数据结构
+ijst 中，存在需要许多使用 map 的场景，如通过 JSON 键名查字段元信息，通过字段 offset 查找字段的状态等。
+最开始使用 `std::map` 储存这些对应关系，后来发现内存占用较高。后来改为使用数组 + 二分查找的方法，在不降低效率的同时，将内存占用减少了 1/3 ~ 1/2。
+
 ## Extern template
 作为一个纯头文件、且大量使用模板的库，编译速度是一个值得注意的问题。
 一方面，在开发的时候需要照顾编译器的感受，减少模板的使用（现在通过gcc `-ftime-report` 测出的结果，模板实例化的时间占比约 20%）。
@@ -414,6 +449,8 @@ ijst 的方法是尽量收归 `FSerializer` 实例化的地方，现在仅会在
 所以只需控制 `_ijst_InitMetaInfo()` 方法的实例化即可。为此，需要将这个函数用模板实现（添加一个无用的模板参数即可）。
 
 另外一个代码量较大的类是 `Accessor`，和上面一样，使用模板实现这个类即可。
+
+开发过程中，可使用 objdump 工具检查模板是否被实例化。
 
 ### XMacro
 

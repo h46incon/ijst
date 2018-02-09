@@ -404,7 +404,7 @@ metaInfo = st._.GetMetaInfo();
 // 通过 metaInfo 可以访问元信息
 ```
 
-ijst 记录的元信息包括字段的偏移量、名字、对应的 JSON 键值、FieldDesc 等。
+ijst 记录的元信息包括字段的偏移量、名字、对应的 JSON 键名、FieldDesc 等。
 注意因为 C++ 较难记录和在运行时使用类型信息，所以元信息中并没有记录，而 ijst 对类型的处理是通过 template 在编译期进行的。
 
 ## 错误信息
