@@ -95,9 +95,12 @@ VA(1,2）
 
 正常情况下 `PLUS(__VA_ARGS__)` 会把参数解包，替换的结果应该是 `((1)+(2))`。
 但在 MSVC 中， `PLUS` 会把 `__VA_ARGS__` 当成一个参数传递，得到的结果是 `((1,2)+())`。
-MSVC 认为这是正确的结果，并不打算修改（参考 [StackOverflow](https://stackoverflow.com/a/7459803)），所以代码中需要对此进行兼容。
-// TODO: workaround of __VA_ARGS__ in MSVC
+MSVC 认为这是正确的结果，并不打算修改（参考 [StackOverflow](https://stackoverflow.com/a/7459803)），所以代码中需要对此进行兼容：
 
+```cpp
+#define IJSTI_EXPAND(...) __VA_ARGS__
+#define VA(...) IJSTI_EXPAND(PLUS(__VA_ARGS__))
+```
 
 接下来，就是使用这样的宏定义生成代码。
 
@@ -206,38 +209,6 @@ struct MetaClassInfoTyped {
         }  \
     };
 ```
-### 关于单例
-
-单例模式有很多种实现方法，但是 C++03 还没有标准的锁，所以只能借助静态变量实现单例模式。
-虽然模板的静态成员可以在头文件中定义，但这样会导致饿汉初始化。而使用函数内的静态变量则会灵活一些。
-需要注意的是，C++11 之前函数静态变量的初始化是不保证线程安全的，这种情况下需要借助类静态变量（TODO：模板类的静态变量在什么时候初始化？）：
-
-```cpp
-template<typename T>
-class Singleton {
-public:
-    static T& GetInstance()
-    {
-        static T ins;   // C++11 前非线程安全
-        return ins;
-    }
-
-	inline static void GlobalAccess()
-	{
-		volatile void* dummy = initInstanceTag;     // 使用 volatile 变量避免代码被优化掉
-		(void)dummy;
-	}
-private:
-	static void* initInstanceTag;
-}
-//模板的静态成员可以在头文件中定义
-template<typename T> void *Singleton<T>::initInstanceTag = &Singleton<_T>::GetInstance();
-```
-
-一般情况下，`GetInstance()` 内的静态变量会在第一次访问该函数的时候初始化。
-另外，C++ 模板的成员仅在有访问的时候才会实例化。所以一般情况下，`initInstanceTag` 是不会被实例化的。
-但是一旦有代码访问了 `GlobalAccess()`，就会导致它的实例化。而它在初始化的时候，就会访问 `GetInstance()` 函数，引发单例的初始化。
-//TODO: 一般的静态变量不保证能被初始化，但模板这种定义在头文件的内
 
 ## 元信息内容
 

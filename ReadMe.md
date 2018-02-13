@@ -134,7 +134,7 @@ ijst 因有额外的工作，会带来一些性能上的开销，但也比常用
 
 测试环境：Corei7-4790@3.60GHz_vc2017_win64，测试代码[nativejson-benchmark](https://github.com/miloyip/nativejson-benchmark)。
  
-注：不同环境测得的性能会有差异，ijst 的性能一般在 rapidJSON 的 1/4 ~ 1/2。
+注：不同环境测得的性能会有差异，一般而言，ijst 的序列化性能和 RapidJSON 相似，反序列化性能为其 1/4 ~ 1/2。
 
 ### 详细说明
 
