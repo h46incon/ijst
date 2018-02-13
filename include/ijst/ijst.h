@@ -50,15 +50,16 @@
 /**
  * @ingroup IJST_CONFIG
  *
- *	If define IJST_AUTO_META_INIT before include this header, the meta class information will init before main.
- *	That's will make it thread-safe to init meta class information before C++11.
- *	The feature is enable default before C++11. So set the value to 0 to force disable it.
+ *  ijst use static object in function to implement singleton, but it's not thread-safe before C++11.
+ *  If declare IJST_TRY_INIT_META_BEFORE_MAIN to 1, ijst will init the singleton's instance when
+ *  a static member of template class initialization, that init before main() in many compilers to avoid thread-safety problem.
+ *	The feature is enable default before C++11.
  */
-#ifndef IJST_AUTO_META_INIT
+#ifndef IJST_TRY_INIT_META_BEFORE_MAIN
 	#if __cplusplus < 201103L
-		#define IJST_AUTO_META_INIT		1
+		#define IJST_TRY_INIT_META_BEFORE_MAIN		1
 	#else
-		#define IJST_AUTO_META_INIT		0
+		#define IJST_TRY_INIT_META_BEFORE_MAIN		0
 	#endif
 #endif
 
@@ -535,8 +536,8 @@ namespace detail {
 		}
 
 
-	#if IJST_AUTO_META_INIT
-		#define IJSTI_TRY_INIT_META_BEFORE_MAIN(T)			::ijst::detail::Singleton< T >::InitInstanceBeforeMain();
+	#if IJST_TRY_INIT_META_BEFORE_MAIN
+		#define IJSTI_TRY_INIT_META_BEFORE_MAIN(T)			::ijst::detail::Singleton< T >::InitInstanceInGlobal();
 	#else
 		#define IJSTI_TRY_INIT_META_BEFORE_MAIN(T)
 	#endif

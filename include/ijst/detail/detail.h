@@ -58,17 +58,19 @@ public:
 		return instance;
 	}
 
-	inline static void InitInstanceBeforeMain()
+	inline static void InitInstanceInGlobal()
 	{
-		// When accessing initInstanceTag in code, the GetInstance() function will be called before main
-		volatile void* dummy = initInstanceTag;
+		// When accessing gInstance in code, the GetInstance() function will be called in
+		// global scope (before main in many compilers)
+		volatile T* dummy = gInstance;
 		(void)dummy;
 	}
 
 private:
-	static void* initInstanceTag;
+	static T* gInstance;
 };
-template<typename T> void* Singleton<T>::initInstanceTag = &Singleton<T>::GetInstance();
+// static member of template class could declare in header
+template<typename T> T* Singleton<T>::gInstance = &Singleton<T>::GetInstance();
 
 template <typename T>
 struct HasType {
