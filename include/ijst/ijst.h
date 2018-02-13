@@ -1617,13 +1617,13 @@ inline const MetaClassInfo& MetaClassInfo::GetMetaInfo()
 //! Wrapper of IJST_DEFINE_STRUCT_IMPL_*
 //! @param N			fields size
 //! @param isRawVal		is struct a raw value: true/false
-//! @param needGetter	need Get* function: T/F
+//! @param needGetter	need get_* function: T/F
 //! @param stName		struct name
 //! @param ...			fields define: [(fType, fName, sName, desc)]*
 #ifdef _MSC_VER
 	//! @params	N, isRawVal, needGetter, stName, ...
 	#define IJSTI_DEFINE_STRUCT_IMPL(N, ...) \
-		IJSTI_PP_CONCAT(IJSTI_PP_CONCAT(IJSTI_DEFINE_STRUCT_IMPL_, N)(__VA_ARGS__), )
+		IJSTI_EXPAND(IJSTI_PP_CONCAT(IJSTI_DEFINE_STRUCT_IMPL_, N)(__VA_ARGS__))
 #else
 	//! Wrapper of IJST_DEFINE_STRUCT_IMPL_*
 	//! @param needGetter: must be T or F
@@ -1635,7 +1635,7 @@ inline const MetaClassInfo& MetaClassInfo::GetMetaInfo()
 //! Define getter of fields
 #ifdef _MSC_VER
 	#define IJSTI_DEFINE_GETTER_T(N, ...)	\
-		IJSTI_PP_CONCAT(IJSTI_PP_CONCAT(IJSTI_DEFINE_GETTER_IMPL_, N)(__VA_ARGS__), )
+		IJSTI_EXPAND(IJSTI_PP_CONCAT(IJSTI_DEFINE_GETTER_IMPL_, N)(__VA_ARGS__))
 #else
 	#define IJSTI_DEFINE_GETTER_T(N, ...)	\
 		IJSTI_PP_CONCAT(IJSTI_DEFINE_GETTER_IMPL_, N)(__VA_ARGS__)

@@ -32,6 +32,9 @@ namespace detail{
 #define IJSTI_PP_CONCAT(x, y) 		IJSTI_PP_CONCAT_I(x, y)
 #define IJSTI_PP_CONCAT_I(x, y) 	x ## y
 
+// Expand __VA_ARGS__ for msvc preprocessor
+#define IJSTI_EXPAND(...)			__VA_ARGS__
+
 // forward declaration
 class SerializerInterface;
 class MetaClassInfoSetter;
