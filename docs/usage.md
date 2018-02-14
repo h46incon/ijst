@@ -66,9 +66,9 @@ SampleStruct sampleStruct;
 
         ijst 分别用以下宏表达 JSON 的 list：
 
-        - `IJST_TVEC(T)`：将 list 序列化为 `std::vector<T>`。 
-        - `IJST_TDEQUE(T)`：将 list 序列化为 `std::deque<T>`。 
-        - `IJST_TLIST(T)`：将 list 序列化为 `std::list<T>`。 
+        - `IJST_TVEC(T)`：将 list 序列化为 `std::vector<T>`。
+        - `IJST_TDEQUE(T)`：将 list 序列化为 `std::deque<T>`。
+        - `IJST_TLIST(T)`：将 list 序列化为 `std::list<T>`。
 
         用以下宏表达非固定键的 object：
 
@@ -123,7 +123,7 @@ std::string strOut;
 ret = sampleStruct._.Serialize(strOut);
 
 // 反序列化
-std::string strJson;    
+std::string strJson;
 //... Init strJson
 ret = sampleStruct._.Deserialize(strJson);
 
@@ -143,9 +143,8 @@ ret = sampleStruct._.FromJson(jVal);
 
 ```
 
-这些例子中省略了一些默认参数。可通过这些参数指定序列化/反序列化时的具体行为。
-完整的接口定义请参考 [简陋的Reference](Doxygen/html)，或直接阅读源码中的函数说明。
-但是在阅读 API 文档前，建议继续往下阅读以得到大致的了解。
+这些例子中省略了一些默认参数。可通过这些参数指定序列化/反序列化时的具体行为。API 的默认参数提供最不容易出错的行为，但可能会引起一些额外的性能损耗。
+完整的接口定义请参考 [简陋的Reference](Doxygen/html)，或直接阅读源码中的函数说明。但是在阅读 API 文档前，建议继续往下阅读以得到大致的了解。
 
 
 # 字段的状态
@@ -231,7 +230,7 @@ ijst 提供了相关的接口获取和设置 allocator 对象：
 ```cpp
 rapidjson::Value& jUnknown = sampleStruct._.GetUnknown();
 
-// 获取当前使用的 allocator 
+// 获取当前使用的 allocator
 rapidjson::MemoryPoolAllocator<>& alloc = sampleStruct._.GetAllocator();
 jUnknown.SetString("s", 1, alloc);
 ```
@@ -351,8 +350,8 @@ assert(st.v[2] == 2);
 ```cpp
 const std::string json = R"(
 {
-    "v1": 2, 
-    "v2": 4, 
+    "v1": 2,
+    "v2": 4,
     "v3": 8
 })";
 
@@ -368,6 +367,28 @@ assert(st.val["v2"] == 4);
 
 # 其他
 
+## 使用 extern template 加速编译
+
+作为一个 header-only，且较多使用模板的库，编译性能是个值得注意的问题。
+一般情况下，ijst 及其定义的结构体需要在每个 cpp 文件中都进行一次编译，这会带来额外的编译开销。
+
+所幸 C++11 支持的 extern template，可以选择仅在一个 cpp 文件中实例化模板。 ijst 可以利用该特性，并根据宏定义确定其所用的模板的实例化行为，以加速编译：
+
+```cpp
+// header.h
+#define IJST_EXTERN_TEMPLATE    // 默认阻止 ijst 所用模板的实例化
+#include <ijst/ijst.h>
+
+
+// f1.cpp, f2.cpp, f3.cpp, ...
+#include "header.h"             // 在该文件中不会实例化模板
+
+
+// explicit.cpp
+#define IJST_EXPLICIT_TEMPLATE  // 在该文件中显示实例化模板
+#include "header.h"
+```
+
 ## 元信息
 
 ijst 在实现时需要记录相关的元信息，也提供了接口获取这些信息：
@@ -382,7 +403,7 @@ metaInfo = st._.GetMetaInfo();
 // 通过 metaInfo 可以访问元信息
 ```
 
-ijst 记录的元信息包括字段的偏移量、名字、对应的 JSON 键值、FieldDesc 等。
+ijst 记录的元信息包括字段的偏移量、名字、对应的 JSON 键名、FieldDesc 等。
 注意因为 C++ 较难记录和在运行时使用类型信息，所以元信息中并没有记录，而 ijst 对类型的处理是通过 template 在编译期进行的。
 
 ## 错误信息
