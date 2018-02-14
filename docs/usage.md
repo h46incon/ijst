@@ -66,9 +66,9 @@ SampleStruct sampleStruct;
 
         ijst 分别用以下宏表达 JSON 的 list：
 
-        - `IJST_TVEC(T)`：将 list 序列化为 `std::vector<T>`。 
-        - `IJST_TDEQUE(T)`：将 list 序列化为 `std::deque<T>`。 
-        - `IJST_TLIST(T)`：将 list 序列化为 `std::list<T>`。 
+        - `IJST_TVEC(T)`：将 list 序列化为 `std::vector<T>`。
+        - `IJST_TDEQUE(T)`：将 list 序列化为 `std::deque<T>`。
+        - `IJST_TLIST(T)`：将 list 序列化为 `std::list<T>`。
 
         用以下宏表达非固定键的 object：
 
@@ -123,7 +123,7 @@ std::string strOut;
 ret = sampleStruct._.Serialize(strOut);
 
 // 反序列化
-std::string strJson;    
+std::string strJson;
 //... Init strJson
 ret = sampleStruct._.Deserialize(strJson);
 
@@ -143,9 +143,8 @@ ret = sampleStruct._.FromJson(jVal);
 
 ```
 
-这些例子中省略了一些默认参数。可通过这些参数指定序列化/反序列化时的具体行为。
-完整的接口定义请参考 [简陋的Reference](Doxygen/html)，或直接阅读源码中的函数说明。
-但是在阅读 API 文档前，建议继续往下阅读以得到大致的了解。
+这些例子中省略了一些默认参数。可通过这些参数指定序列化/反序列化时的具体行为。API 的默认参数提供最不容易出错的行为，但可能会引起一些额外的性能损耗。
+完整的接口定义请参考 [简陋的Reference](Doxygen/html)，或直接阅读源码中的函数说明。但是在阅读 API 文档前，建议继续往下阅读以得到大致的了解。
 
 
 # 字段的状态
@@ -231,7 +230,7 @@ ijst 提供了相关的接口获取和设置 allocator 对象：
 ```cpp
 rapidjson::Value& jUnknown = sampleStruct._.GetUnknown();
 
-// 获取当前使用的 allocator 
+// 获取当前使用的 allocator
 rapidjson::MemoryPoolAllocator<>& alloc = sampleStruct._.GetAllocator();
 jUnknown.SetString("s", 1, alloc);
 ```
@@ -351,8 +350,8 @@ assert(st.v[2] == 2);
 ```cpp
 const std::string json = R"(
 {
-    "v1": 2, 
-    "v2": 4, 
+    "v1": 2,
+    "v2": 4,
     "v3": 8
 })";
 
