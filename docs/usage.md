@@ -15,7 +15,7 @@ IJST_DEFINE_STRUCT (
 // IJST_DEFINE_STRUCT_WITH_GETTER 宏用法同上
 ```
 
-通过该宏可以指定结构体的名字和每个字段的信息。该宏会声明相关的 class，以及注册相关的元信息。
+通过该宏可以指定结构体的名字和每个字段的信息。
 
 一个例子：
 
@@ -32,7 +32,7 @@ IJST_DEFINE_STRUCT (
     , (T_bool, bSex, "sex", 0)     // 只是举一个bool的栗子
     // 接下来是复杂的字段
     , (IJST_TVEC(T_uint64), vecFriendsID, "friends_id", ijst::FDesc::Optional)      // Optional，可能没朋友
-    , (IJST_TMAP(IJST_TVEC(T_string)), mapWhatEver, "what_ever", ijst::FDesc::ElemNotEmpty)    // NotDefault 表示这个 map 里至少有一对键值
+    , (IJST_TMAP(IJST_TVEC(T_string)), mapWhatEver, "what_ever", ijst::FDesc::NotDefault)    // NotDefault 表示这个 map 不为默认值，即不为空
 );
 
 // 定义该类型的变量
@@ -53,11 +53,10 @@ SampleStruct sampleStruct;
 
     - **原子类型**
 
-        在 `ijst/types_std.h` 中定义。提供的类型为 `T_int, T_int64, T_uint, T_uint64, T_string, T_raw, T_bool, T_ubool, T_wbool`。
+        在 `ijst/types_std.h` 中定义。提供的类型有 `T_int, T_int64, T_uint, T_uint64, T_string, T_raw, T_bool, T_ubool, T_wbool`。
 
-        因为 `std::vector<bool>` 的特殊性， ijst 提供了 `T_bool(bool), T_ubool(uin8_t), T_wbool(BoolWrapper)` 这几种类型来储存 bool 变量。
+        由于 `std::vector<bool>` 的特殊性， ijst 提供了 `T_bool(bool), T_ubool(uint8_t), T_wbool(BoolWrapper)` 这几种类型来储存 bool 变量。
 
-        这些原子类型可以满足大部分的使用需求。
         如果不能确定某个字段的类型，则可以使用 `T_raw` 类型操作原始的 `rapidjson::Value` 对象。
 
     - **容器类型**
@@ -80,7 +79,7 @@ SampleStruct sampleStruct;
 
     - **ijst 结构体类型**
 
-        在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TST(_type)`。
+        在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TST(T)`。
 
         可使用该宏在结构体中包含其他的结构体，如 `IJST_TST(SampleStruct)`。
 
@@ -96,7 +95,7 @@ SampleStruct sampleStruct;
 
 - **JsonName**
 
-    JSON 中的键名。
+    字段对应的 JSON key。
 
 - **FieldDesc**
 
@@ -104,15 +103,14 @@ SampleStruct sampleStruct;
 
     - Optional：该字段在 JSON 中不必须出现。
     - Nullable：该字段的 JSON 值可能为 null。
-    - ElemNotEmpty：该字段是个容器类型，且至少有一个元素。
+    - NotDefault：该字段不能为默认值，如数组不能为空，`T_int` 值不能为0。
 
 
 # 接口
 
-在定义了一个 ijst 结构体后，除了用户定义的字段，其还会添加一个名为 `_` 的 `Accessor` 类型成员。
-通过该成员可以完成对象的序列化、反序列化等操作。
+在生成一个 ijst 结构体代码，除了用户定义的字段，还会添加一个名为 `_` 的 `Accessor` 类型成员。 通过该成员可以完成对象的序列化、反序列化等操作。
 
-默认情况下，可以将结构体和 JSON 字符串间转换：
+如可以将结构体和 JSON 字符串间转换：
 
 ```cpp
 SampleStruct sampleStruct;
@@ -144,7 +142,7 @@ ret = sampleStruct._.FromJson(jVal);
 ```
 
 这些例子中省略了一些默认参数。可通过这些参数指定序列化/反序列化时的具体行为。API 的默认参数提供最不容易出错的行为，但可能会引起一些额外的性能损耗。
-完整的接口定义请参考 [简陋的Reference](Doxygen/html)，或直接阅读源码中的函数说明。但是在阅读 API 文档前，建议继续往下阅读以得到大致的了解。
+完整的接口定义请参考 [Doxygen/html](Doxygen/html)，或直接阅读源码中的函数说明。但是在阅读 API 文档前，建议继续往下阅读以得到大致的了解。
 
 
 # 字段的状态
@@ -224,7 +222,7 @@ assert(jUnknown.IsObject() == true);
 
 ## Allocator
 
-和 rapidJSON 一样，在修改原生的 `rapidjson::Value` 时，可能需要使用其配套的 allocator 对象。
+和 RapidJSON 一样，在修改原生的 `rapidjson::Value` 时，可能需要使用其配套的 allocator 对象。
 ijst 提供了相关的接口获取和设置 allocator 对象：
 
 ```cpp
@@ -244,9 +242,10 @@ jUnknown.SetString("s", 1, alloc);
 这样的话，ijst 会使用父类的 allocator，并使用移动资源的方式避免 unknown 字段的复制。但这样会带来一些问题：
 
 - 在对象析构前，源 doc （或反序列时产生的临时 doc）的 allocator 不会被释放。
-- 若某嵌套对象使用右值拷贝的方式，复制给另外一个对象，那么其仍然会使用源对象的 allocator，即父对象的 allocator。在源父对象析构后，其 allocator 会失效。
+- 若某嵌套对象使用右值拷贝的方式复制给另外一个对象，那么其仍然会使用源对象的 allocator，即父对象的 allocator。在源父对象析构后，其 allocator 会失效。
 
 在使用这些方法时，需要更加小心。
+
 另外，Accessor 也提供了 `ShrinkAllocator()` 方法，让所有嵌套的对象（包括自身）使用本身的 allocator 重新复制 unknown 字段，并释放原来的 allocator。
 
 管理 allocator 是一个较为麻烦的事。ijst 中提供了 `GetOwnAllocator()` 接口以供有相关需求的使用者使用。
@@ -290,7 +289,7 @@ assert(ptr == NULL);
 
 ## 反序列化
 在 `Deserialize()` 接口中，提供了一个模板参数 `parseFlags`，可以指定反序列化时的行为。
-该参数会传递给 rapidJSON 的 `Parse()` 方法，可以在解析时忽略注释，尾部逗号等：
+该参数会传递给 RapidJSON 的 `Parse()` 方法，可以在解析时忽略注释，尾部逗号等：
 
 - 注释
 ```cpp
@@ -304,21 +303,21 @@ string json = "{\"v\": 0, }";
 st._.Deserialize<rapidjson::kParseTrailingCommasFlag>(json.c_str(), json.length());
 ```
 
-更多的选项请见 [rapidJSON#Parsing](http://rapidjson.org/md_doc_dom.html#Parsing)。
+更多的选项请见 [RapidJSON#Parsing](http://rapidjson.org/md_doc_dom.html#Parsing)。
 
 ## 序列化
-在 `Serialize()` 接口中，可以传入 rapidJSON Handler，以实现特殊的需求。
+在 `Serialize()` 接口中，可以传入 RapidJSON Handler，以实现特殊的需求。
 
 如以下代码可使用 `rapidjson::PrettyWriter` 生成格式化的 JSON 字符串：
 ```cpp
 rapidjson::StringBuffer buf;
 rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buf);
-// 为便于实现，ijst 以继承的方式使用不同的 Handler，可以使用 ijst::HandlerWrapper 转换 rapidJSON Handler 模板
+// 为便于实现，ijst 以继承的方式使用不同的 Handler，可以使用 ijst::HandlerWrapper 转换 RapidJSON Handler 模板
 ijst::HandlerWrapper<rapidjson::PrettyWriter<rapidjson::StringBuffer> > writerWrapper(writer);
 st->_.Serialize(writerWrapper);
 ```
 
-另外，也可以直接通过 SAX 事件，直接生成 `rapidjson::Document` 对象：
+另外，也可以通过 SAX 事件，直接生成 `rapidjson::Document` 对象：
 
 ```cpp
 ijst::SAXGeneratorWrapper<rapidjson::Document> generator(st._, SerFlag::kNoneFlag);
@@ -356,12 +355,12 @@ const std::string json = R"(
 })";
 
 IJST_DEFINE_VALUE(
-		MapVal, IJST_TMAP(T_int), val, 0
+		MapVal, IJST_TMAP(T_int), v2, 0
 )
 
 MapVal vec;
 st._.Deserialize(json);
-assert(st.val["v2"] == 4);
+assert(st.v2["v2"] == 4);
 ```
 
 
@@ -404,7 +403,7 @@ metaInfo = st._.GetMetaInfo();
 ```
 
 ijst 记录的元信息包括字段的偏移量、名字、对应的 JSON 键名、FieldDesc 等。
-注意因为 C++ 较难记录和在运行时使用类型信息，所以元信息中并没有记录，而 ijst 对类型的处理是通过 template 在编译期进行的。
+注意因为 C++ 较难在运行时使用类型信息，所以元信息中并没有记录。
 
 ## 错误信息
 
