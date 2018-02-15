@@ -203,6 +203,8 @@ struct SerFlag {
 	static const Flag kIgnoreMissing					= 0x00000001;
 	//! set if ignore unknown fields, otherwise will serialize all unknown fields.
 	static const Flag kIgnoreUnknown					= 0x00000002;
+	//! set if ignore fields with kNull status.
+	static const Flag kIgnoreNull						= 0x00000004;
 };
 
 /**
@@ -1257,6 +1259,10 @@ private:
 
 				case FStatus::kNull:
 				{
+					if (detail::Util::IsBitSet(serFlag, SerFlag::kIgnoreNull)) {
+						continue;
+					}
+
 					if (!m_isParentVal) {
 						// write key
 						IJSTI_RET_WHEN_WRITE_FAILD(

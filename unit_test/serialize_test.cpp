@@ -20,6 +20,73 @@ IJST_DEFINE_STRUCT(
 		, (T_string, str_2, "str_val_2", 0)
 )
 
+TEST(Serialize, SerFlag)
+{
+	//--- Init
+	Inner innerSt;
+	// int_1 valid
+	IJST_SET(innerSt, int_1, 1);
+	ASSERT_EQ(IJST_GET_STATUS(innerSt, int_1), FStatus::kValid);
+	// int_2 null but with value
+	IJST_SET(innerSt, int_2, 2);
+	IJST_MARK_NULL(innerSt, int_2);
+	ASSERT_EQ(IJST_GET_STATUS(innerSt, int_2), FStatus::kNull);
+	// str_1 missing but with value
+	IJST_SET(innerSt, str_1, "str1");
+	IJST_MARK_MISSING(innerSt, str_1);
+	ASSERT_EQ(IJST_GET_STATUS(innerSt, str_1), FStatus::kMissing);
+	// str_2 missing in default
+	ASSERT_EQ(IJST_GET_STATUS(innerSt, str_2), FStatus::kMissing);
+
+
+	//--- kNoneFlag
+	{
+		rapidjson::Document doc;
+		UTEST_SERIALIZE_AND_CHECK(innerSt, doc, SerFlag::kNoneFlag);
+
+		ASSERT_EQ(doc["int_val_1"].GetInt(), 1);
+		ASSERT_TRUE(doc["int_val_2"].IsNull());	// null
+		ASSERT_STREQ(doc["str_val_1"].GetString(), "str1");
+		ASSERT_STREQ(doc["str_val_2"].GetString(), "");
+	}
+
+	//--- kIgnoreMissing
+	{
+		rapidjson::Document doc;
+		UTEST_SERIALIZE_AND_CHECK(innerSt, doc, SerFlag::kIgnoreMissing);
+
+		ASSERT_EQ(doc["int_val_1"].GetInt(), 1);
+		ASSERT_TRUE(doc["int_val_2"].IsNull());	// null
+		ASSERT_FALSE(doc.HasMember("str_val_1"));
+		ASSERT_FALSE(doc.HasMember("str_val_2"));
+	}
+
+	//--- kIgnoreNull
+	{
+		rapidjson::Document doc;
+		UTEST_SERIALIZE_AND_CHECK(innerSt, doc, SerFlag::kIgnoreNull);
+
+		ASSERT_FALSE(doc.HasMember("int_val_2"));
+
+		ASSERT_EQ(doc["int_val_1"].GetInt(), 1);
+		ASSERT_STREQ(doc["str_val_1"].GetString(), "str1");
+		ASSERT_STREQ(doc["str_val_2"].GetString(), "");
+	}
+
+	//--- kIgnoreNull | kIgnoreMissing
+	{
+		rapidjson::Document doc;
+		UTEST_SERIALIZE_AND_CHECK(innerSt, doc, SerFlag::kIgnoreMissing | SerFlag::kIgnoreNull);
+
+		ASSERT_EQ(doc["int_val_1"].GetInt(), 1);
+		ASSERT_FALSE(doc.HasMember("int_val_2"));
+		ASSERT_FALSE(doc.HasMember("str_val_1"));
+		ASSERT_FALSE(doc.HasMember("str_val_2"));
+	}
+
+	//--- kIgnoreUnknown will be tested in Serialize.Unknown
+}
+
 IJST_DEFINE_STRUCT(
 		NestSt
 		, (IJST_TVEC(T_int), vec_1, "vec_val_1", 0)
@@ -28,18 +95,19 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TVEC(IJST_TST(Inner)), vec_2, "vec_val_2", 0)
 )
 
-TEST(Serialize, EmptyValue)
+TEST(Serialize, NestedOnlyValidField)
 {
 	NestSt nestSt;
 
 	// Empty struct
 	rapidjson::Document doc;
+	// All fields are kMissing status
 	UTEST_SERIALIZE_AND_CHECK(nestSt, doc, SerFlag::kIgnoreMissing);
 	ASSERT_TRUE(doc.IsObject());
 	ASSERT_TRUE(doc.MemberCount() == 0);
 }
 
-TEST(Serialize, EmptyValue_PushAllField)
+TEST(Serialize, NestedPushAllField)
 {
 	NestSt nestSt;
 	// Empty struct
@@ -64,34 +132,6 @@ TEST(Serialize, EmptyValue_PushAllField)
 	ASSERT_TRUE(doc["vec_val_2"].Empty());
 }
 
-TEST(Serialize, NullValue)
-{
-	Inner innerSt;
-	IJST_SET(innerSt, int_1, 1);
-	IJST_SET(innerSt, int_2, 2);
-	IJST_MARK_NULL(innerSt, int_2);
-
-	rapidjson::Document doc;
-	UTEST_SERIALIZE_AND_CHECK(innerSt, doc, SerFlag::kNoneFlag);
-
-	ASSERT_EQ(IJST_GET_STATUS(innerSt, int_2), FStatus::kNull);
-	ASSERT_EQ(doc["int_val_1"].GetInt(), 1);
-	ASSERT_TRUE(doc["int_val_2"].IsNull());
-}
-
-TEST(Serialize, MarkMissing)
-{
-	Inner innerSt;
-	IJST_SET(innerSt, int_1, 1);
-	IJST_SET(innerSt, int_2, 2);
-	IJST_MARK_MISSING(innerSt, int_2);
-
-	rapidjson::Document doc;
-	UTEST_SERIALIZE_AND_CHECK(innerSt, doc, SerFlag::kIgnoreMissing);
-
-	ASSERT_EQ(doc["int_val_1"].GetInt(), 1);
-	ASSERT_FALSE(doc.HasMember("int_val_2"));
-}
 
 IJST_DEFINE_STRUCT(
 		ObjRefSt
@@ -101,7 +141,7 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TMAP(IJST_TVEC(IJST_TST(Inner))), inner_mv, "inner_mv_val", 0)
 )
 
-TEST(Serialize, AdditionalJsonField)
+TEST(Serialize, Unknown)
 {
 	ObjRefSt st;
 
