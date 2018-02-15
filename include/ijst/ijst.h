@@ -185,7 +185,6 @@ public:
 		kNotAField,
 		kMissing,
 		kNull,
-		kParseFailed,
 		kValid,
 	};
 };
@@ -1235,14 +1234,13 @@ private:
 			// Check field state
 			const EFStatus fstatus = m_r->fieldStatus[itMetaField->index];
 			switch (fstatus) {
-				case FStatus::kValid:
 				case FStatus::kMissing:
-				case FStatus::kParseFailed:
-				{
-					if (fstatus != FStatus::kValid && detail::Util::IsBitSet(serFlag, SerFlag::kOnlyValidField)) {
+					if (detail::Util::IsBitSet(serFlag, SerFlag::kOnlyValidField)) {
 						continue;
 					}
-
+					// Fall through
+				case FStatus::kValid:
+				{
 					const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
 					if (!m_isParentVal) {
 						// write key
@@ -1433,7 +1431,7 @@ private:
 			int ret = metaField->serializerInterface->FromJson(elemReq, elemResp);
 			// Check return
 			if (ret != 0) {
-				m_r->fieldStatus[metaField->index] = FStatus::kParseFailed;
+				m_r->fieldStatus[metaField->index] = FStatus::kMissing;
 				p.errDoc.ErrorInObject(metaField->fieldName, metaField->jsonName);
 				return ret;
 			}
