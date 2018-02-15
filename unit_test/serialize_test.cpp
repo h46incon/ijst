@@ -34,7 +34,7 @@ TEST(Serialize, EmptyValue)
 
 	// Empty struct
 	rapidjson::Document doc;
-	UTEST_SERIALIZE_AND_CHECK(nestSt, doc, SerFlag::kOnlyValidField);
+	UTEST_SERIALIZE_AND_CHECK(nestSt, doc, SerFlag::kIgnoreMissing);
 	ASSERT_TRUE(doc.IsObject());
 	ASSERT_TRUE(doc.MemberCount() == 0);
 }
@@ -87,7 +87,7 @@ TEST(Serialize, MarkMissing)
 	IJST_MARK_MISSING(innerSt, int_2);
 
 	rapidjson::Document doc;
-	UTEST_SERIALIZE_AND_CHECK(innerSt, doc, SerFlag::kOnlyValidField);
+	UTEST_SERIALIZE_AND_CHECK(innerSt, doc, SerFlag::kIgnoreMissing);
 
 	ASSERT_EQ(doc["int_val_1"].GetInt(), 1);
 	ASSERT_FALSE(doc.HasMember("int_val_2"));
@@ -114,7 +114,7 @@ TEST(Serialize, AdditionalJsonField)
 	{
 		rapidjson::Document doc;
 		string json;
-		int ret = st._.Serialize(json, SerFlag::kIgnoreUnknown | SerFlag::kOnlyValidField);
+		int ret = st._.Serialize(json, SerFlag::kIgnoreUnknown | SerFlag::kIgnoreMissing);
 		ASSERT_EQ(ret, 0);
 		doc.Parse(json.c_str(), json.length());
 		ASSERT_FALSE(doc.HasParseError());
@@ -385,7 +385,7 @@ TEST(Serialize, GeneratorWrapper)
 	// only valid fields
 	{
 		Complicate3 st;
-		SAXGeneratorWrapper<rapidjson::Document> generator(st._, SerFlag::kOnlyValidField);
+		SAXGeneratorWrapper<rapidjson::Document> generator(st._, SerFlag::kIgnoreMissing);
 		rapidjson::Document doc;
 		doc.Populate(generator);
 		ASSERT_FALSE(doc.HasParseError());

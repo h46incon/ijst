@@ -150,7 +150,7 @@ ret = sampleStruct._.FromJson(jVal);
 ijst 会记录每个字段的状态（在 `ijst::FStatus` 中定义），这些状态会影响**序列化**时的行为。可能的状态如下：
 
 - kValid：已设置为有效值。按实际值序列化。
-- kMissing：未设置有效值。如序列化时启用 `SerFlag::kOnlyValidField` 选项，则不参与序列化。
+- kMissing：未设置有效值。如序列化时启用 `SerFlag::kIgnoreMissing` 选项，则不参与序列化。
 - kNull：值为 null。序列化时值为 null。
 
 ijst 初始化时，所有字段都是 `kMissing` 状态。可通过相关宏获取或改变其状态：

@@ -199,8 +199,8 @@ struct SerFlag {
 	typedef unsigned int Flag;
 	//! does not set any option.
 	static const Flag kNoneFlag							= 0x00000000;
-	//! set if serialize only valid fields, otherwise will serialize all fields.
-	static const Flag kOnlyValidField					= 0x00000001;
+	//! set if ignore fields with kMissing status.
+	static const Flag kIgnoreMissing					= 0x00000001;
 	//! set if ignore unknown fields, otherwise will serialize all unknown fields.
 	static const Flag kIgnoreUnknown					= 0x00000002;
 };
@@ -1235,7 +1235,7 @@ private:
 			const EFStatus fstatus = m_r->fieldStatus[itMetaField->index];
 			switch (fstatus) {
 				case FStatus::kMissing:
-					if (detail::Util::IsBitSet(serFlag, SerFlag::kOnlyValidField)) {
+					if (detail::Util::IsBitSet(serFlag, SerFlag::kIgnoreMissing)) {
 						continue;
 					}
 					// Fall through
