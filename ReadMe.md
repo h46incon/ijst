@@ -79,13 +79,6 @@ assert (ret == 0);
 如果所需访问的字段的路径比较深的时候，为避免累赘的判断，可使用 `get_*` 方法，比如：
 
 ```cpp
-int* ptr = st.get_vecField()[0].get_mapField()["key"].get_intField().Ptr();
-if (ptr != NULL)  //...
-```
-
-具体如下：
-
-```cpp
 //*** 和 IJST_DEFINE_STRUCT 类似
 IJST_DEFINE_STRUCT_WITH_GETTER(
     StIn
@@ -101,9 +94,9 @@ public:
     //... 普通的字段，同 IJST_DEFINE_STRUCT
     
     // Getters
-    ijst::Optional<T_int> get_iData();
-    ijst::Optional<std::vector<T_int> > get_vecData();
-    ijst::Optional<std::map<std::string, T_int> > get_mapData();
+    ijst::Optional<int> get_iData();
+    ijst::Optional<std::vector<int> > get_vecData();
+    ijst::Optional<std::map<std::string, int> > get_mapData();
 private:
 };
 */
@@ -112,12 +105,20 @@ IJST_DEFINE_STRUCT_WITH_GETTER(
     StOut
     , (IJST_TST(StOut), stIn, "inner", ijst::FDesc::Optional)
 )
+StOut st;
 
 //*** 可以通过连串的 get_* 尝试直接访问字段，而不用关注路径的中间节点是否存在
-StOut st;
-int* pData = st.get_stIn()->get_vecData()[2].Ptr();
+// 下行语句可访问 "/stIn/vecData/2"
+// int* pData = st.get_stIn()->get_vecData()[2].Ptr();
+// 即：
+int* pData = st         // StOut 对象
+    .get_stIn()         // 访问 stIn 字段
+    ->get_vecData()     // 访问 vecData 字段，注意需使用 -> 操作符
+    [2]                 // 访问数组中第2个元素
+    .Ptr();             // 获取最后结果的地址
 assert (pData == NULL);
-// 如果路径中的每个字段都是 kValid 的，且 vector 或 map 中的下标或键存在，则最终得到的指针会指向该字段：
+
+// 如果路径中的每个字段都是 kValid 的，且 vector 的下标存在，则最终得到的指针会指向该字段：
 // int* pData = st.get_stIn()->get_vecData()[2].Ptr() == &st.stIn.vecData[2];
 ```
 

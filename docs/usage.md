@@ -259,14 +259,31 @@ ijst 也提供了类似的**静态类型**的方法：为每个字段定义 `get
 ```cpp
 // 需使用 *_WITH_GETTER 宏
 IJST_DEFINE_STRUCT_WITH_GETTER(
-    StIn
+    StFoo
     , (IJST_TVEC(T_int), bar, "bar", 0)
 )
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
     StOut
-    , (IJST_TST(StIn), foo, "foo", 0)
+    , (IJST_TST(StFoo), foo, "foo", 0)
 )
+
+// 默认情况下会生成下面的定义
+/*
+class StFoo {
+public:
+    std::vector<int> bar;
+    ijst::Optional<std::vector<int> > get_bar();
+    // ...
+}
+
+class StOut {
+public:
+    StFoo foo;
+    ijst::Optional<StFoo> get_foo();
+    // ...
+}
+*/
 
 StOut st;
 
@@ -283,6 +300,9 @@ assert(ptr == NULL);
 - `std::vector<TElem>` 类型。重载 `Optional<TElem> operator[size_type i]` 操作符，在指针为 NULL，或 `i` 无效时，返回指向 NULL 的对象。
 - `std::map<std::string, TElem>` 类型。重载 `Optional<TElem> operator[std::string& key]` 操作符，在指针为 NULL，或 `key` 无效时，返回指向 NULL 的对象。
 
+另外，生成的 Getter 方法的默认前缀是 `get_`，可通过 `IJST_GETTER_PREFIX` 宏自定义该前缀。
+
+注意，不同于 [C# 的 Null-conditional Operators](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/operators/null-conditional-operators)，该操作**不**提供短路能力。
 
 # 序列化/反序列化的其他选项
 
