@@ -1662,7 +1662,7 @@ inline const MetaClassInfo& MetaClassInfo::GetMetaInfo()
 
 	#define IJSTI_FIELD_GETTER(fType, fName, ... )												\
 			::ijst::Optional<const fType > IJSTI_PP_CONCAT(IJST_GETTER_PREFIX, fName)() const 	\
-			{ return this->_.GetOptional(this->fName); }										\
+			{ return static_cast<const _ijst_AccessorType&>(this->_).GetOptional(this->fName); }\
 			::ijst::Optional< fType > IJSTI_PP_CONCAT(IJST_GETTER_PREFIX, fName)()				\
 			{ return this->_.GetOptional(this->fName); }
 
