@@ -293,24 +293,28 @@ FSerialize<FIELD_TYPE>::VarType var;
 使用 SFINAE 的方案如下：
 
 ```cpp
-template <typename T>
-struct IfHasType { typedef void Void; };
+template <typename T, Accessor<void> T::*>
+struct IfIsAccessor {
+	typedef void Void;
+};
 
 // IDL 接口中的数据类型
 #define T_int   int
 #define T_ST(T) T
 
 // FSerializer 实现
-template<> class FSerializer<int> : public SerializerInterface { /*...*/};
+template<typename T> 
+class FSerializer<T, typename IfIsAccessor<T, T::_>::Void>: public SerializerInterface { /*...*/ };
 
-template<typename T>        // ijst 结构体都会定义 _ijst_AccessorType
-class FSerializer<T, typename IfHasType<typename T::_ijst_AccessorType>::Void>: public SerializerInterface { /*...*/ };
+// FSerializer 其他的实例化...
+template<> class FSerializer<int> : public SerializerInterface { /*...*/};
 
 // 声明 IDL 对应的数据类型，FIELD_TYPE 是 IDL 中声明的数据类型
 FIELD_TYPE var;
 ```
 
-这里的检查不是特别严谨，后续可进行修改。另外，在实现 `ijst::Optional` 时也需要使用 SFINAE 判断类型是否为 ijst 结构体。
+该 SFINAE 检查的条件是：一个类中有类型为 `Accessor`，名字为 `_` 的成员。
+另外，在实现 `ijst::Optional` 时也需要使用 SFINAE 判断类型是否为 ijst 结构体。
 
 # 序列化/反序列化
 

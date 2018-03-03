@@ -13,6 +13,11 @@
 #include <string>
 
 namespace ijst{
+
+// forward declaration
+template<typename>
+class Accessor;
+
 namespace detail{
 #if __cplusplus >= 201103L
 	#define IJSTI_NULL 			nullptr
@@ -72,8 +77,8 @@ private:
 // static member of template class could declare in header
 template<typename T> T* Singleton<T>::gInstance = &Singleton<T>::GetInstance();
 
-template <typename T>
-struct HasType {
+template <typename T, Accessor<void> T::*>
+struct IfIsAccessor {
 	typedef void Void;
 };
 

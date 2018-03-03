@@ -98,3 +98,26 @@ TEST(Detail, CancelableWriter)
 	ASSERT_TRUE(val[9].IsNull());
 	ASSERT_EQ(val.Size(), 10u);
 }
+
+#include <ijst/ijst.h>
+
+struct StructWithField_ {
+	int _;
+};
+
+struct StructWithMethod_ {
+	void _()  { }
+};
+
+TEST(Detail, AccessorSFINAE)
+{
+	ijst::Optional<StructWithField_> stf(NULL);
+	ASSERT_EQ(NULL, stf.Ptr());
+	// compile error:
+	// stf->_;
+
+	ijst::Optional<StructWithMethod_> stm(NULL);
+	ASSERT_EQ(NULL, stm.Ptr());
+	// compile error:
+	// stm->_();
+}

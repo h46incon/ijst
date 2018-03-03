@@ -357,7 +357,7 @@ class Optional
  * @tparam T	ijst struct type
  */
 template <typename T>
-class Optional<T, typename detail::HasType<typename T::_ijst_AccessorType>::Void >
+class Optional<T, typename detail::IfIsAccessor<T, &T::_>::Void >
 {
 	typedef T ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
@@ -747,7 +747,7 @@ namespace detail {
 	 * @tparam T class
 	 */
 	template<class T>
-	class FSerializer<T, typename HasType<typename T::_ijst_AccessorType>::Void>: public SerializerInterface {
+	class FSerializer<T, typename IfIsAccessor<T, &T::_>::Void>: public SerializerInterface {
 	public:
 		typedef T VarType;
 
@@ -776,7 +776,7 @@ namespace detail {
  *
  * User can access and modify fields, serialize and deserialize of a structure via it.
  */
-template<typename Dummy = void>
+template<typename DummyVoid = void>
 class Accessor {
 public:
 	//! Constructor
@@ -1536,7 +1536,8 @@ private:
 	bool m_isValid;
 	bool m_isParentVal;
 	//</editor-fold>
-};
+};	// class Accessor
+
 
 /**
  * @brief Provide `bool f(Handler)` functor used by rapidjson::Document.Populate()
