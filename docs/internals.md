@@ -246,7 +246,7 @@ class SerializerInterface {
 };
 
 // 模板定义，这个通用的模版不应该被实例化
-template<typename T, typename = void>
+template<typename T, typename Enable = void>
 class FSerializer : public SerializerInterface {
 };
 
@@ -264,7 +264,7 @@ SerializerInterface& intf = Singleton<FSerializer<FIELD_TYPE> >::GetInstance();
 
 **SFINAE**
 
-`FSerializer` 中除了 `T`，还有另外一个类型参数，这是为了使用 SFINAE 技术。因为 ijst 支持结构体的嵌套，所以需要针对“ijst 结构体”这种类型进行特化。
+`FSerializer` 中除了 `T`，还有另外一个类型参数 `Enable`，这是为了使用 SFINAE 技术。因为 ijst 支持结构体的嵌套，所以需要针对“ijst 结构体”这种类型进行特化。
 
 如果不使用 SFINAE，可以这样实现：
 
@@ -310,7 +310,21 @@ class FSerializer<T, typename IfHasType<typename T::_ijst_AccessorType>::Void>: 
 FIELD_TYPE var;
 ```
 
-这里的检查不是特别严谨，后续可进行修改。另外，在实现 `ijst::Optional` 时也需要使用 SFINAE 判断类型是否为 ijst 结构体。
+该 SFINAE 中，使用一个类型是否有 `_ijst_AccessorType` 的类型定义判断其是否为 ijst 结构体。
+
+另外一个方法是根据类型中是否有类型为 `Accessor`，名字为 `_` 的成员判断：
+
+```cpp
+template <typename T, Accessor<void> T::*>
+struct IfIsAccessor {
+	typedef void Void;
+};
+
+template<typename T> 
+class FSerializer<T, typename IfIsAccessor<T, T::_>::Void>: public SerializerInterface { /*...*/ };
+```
+
+另外，在实现 `ijst::Optional` 时也需要使用 SFINAE 判断类型是否为 ijst 结构体。
 
 # 序列化/反序列化
 

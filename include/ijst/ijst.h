@@ -336,12 +336,13 @@ struct ErrorCode {
 /**
  * @brief Helper for implementing getter chaining.
  *
- * @tparam T 	type
+ * @tparam T 		type
+ * @tparam Enable	type for SFINAE
  *
  * @note	The specialized template for container is declared in "types_container.h",
  * 			which implements operator [].
  */
-template <typename T, typename = void>
+template <typename T, typename Enable = void>
 class Optional
 {
 	typedef T ValType;
@@ -357,7 +358,7 @@ class Optional
  * @tparam T	ijst struct type
  */
 template <typename T>
-class Optional<T, typename detail::HasType<typename T::_ijst_AccessorType>::Void >
+class Optional<T, /*EnableIf*/ typename detail::HasType<typename T::_ijst_AccessorType>::Void >
 {
 	typedef T ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
@@ -623,9 +624,11 @@ namespace detail {
 	/**
 	 * Template interface of serialization class
 	 * This template is unimplemented, and will throw a compile error when use it.
-	 * @tparam T class
+	 *
+	 * @tparam T 		class
+	 * @tparam Enable	type for SFINAE
 	 */
-	template<typename T, typename = void>
+	template<typename T, typename Enable = void>
 	class FSerializer : public SerializerInterface {
 	public:
 		#if __cplusplus >= 201103L
@@ -747,7 +750,7 @@ namespace detail {
 	 * @tparam T class
 	 */
 	template<class T>
-	class FSerializer<T, typename HasType<typename T::_ijst_AccessorType>::Void>: public SerializerInterface {
+	class FSerializer<T, /*EnableIf*/ typename HasType<typename T::_ijst_AccessorType>::Void>: public SerializerInterface {
 	public:
 		typedef T VarType;
 
@@ -774,9 +777,11 @@ namespace detail {
 /**
  * @brief Accessor of ijst struct
  *
+ * @tparam DummyVoid		Dummy parameter to make class become template
+ *
  * User can access and modify fields, serialize and deserialize of a structure via it.
  */
-template<typename Dummy = void>
+template<typename DummyVoid = void>
 class Accessor {
 public:
 	//! Constructor
@@ -1536,7 +1541,7 @@ private:
 	bool m_isValid;
 	bool m_isParentVal;
 	//</editor-fold>
-};
+};	// class Accessor
 
 /**
  * @brief Provide `bool f(Handler)` functor used by rapidjson::Document.Populate()
