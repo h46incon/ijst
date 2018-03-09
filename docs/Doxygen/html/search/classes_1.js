@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['err',['Err',['../structijst_1_1_err.html',1,'ijst']]]
+  ['deserflag',['DeserFlag',['../structijst_1_1_deser_flag.html',1,'ijst']]]
 ];

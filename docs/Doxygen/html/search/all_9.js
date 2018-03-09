@@ -1,9 +1,9 @@
 var searchData=
 [
-  ['kerror',['kError',['../structijst_1_1_unknown_mode.html#a6dc62339d5bfb581e5223c4f98445980a54c78016248d3de72dfba3fb606cb4c1',1,'ijst::UnknownMode']]],
-  ['kignore',['kIgnore',['../structijst_1_1_unknown_mode.html#a6dc62339d5bfb581e5223c4f98445980ae2f74a392a5b6f92fca1bc5d6b8dafff',1,'ijst::UnknownMode']]],
-  ['kignoreunknown',['kIgnoreUnknown',['../structijst_1_1_f_push.html#a6f1ebcb39f3f27a1e3156d21fb5572dd',1,'ijst::FPush']]],
-  ['kkeep',['kKeep',['../structijst_1_1_unknown_mode.html#a6dc62339d5bfb581e5223c4f98445980a4724ea4d4adac7dd02ccd3d0dc40ff95',1,'ijst::UnknownMode']]],
-  ['knoneflag',['kNoneFlag',['../structijst_1_1_f_push.html#aba08d71c42a8420d6eae6a9d64c45740',1,'ijst::FPush']]],
-  ['konlyvalidfield',['kOnlyValidField',['../structijst_1_1_f_push.html#ae67f45cc59bd52a809496fceae9aa85c',1,'ijst::FPush']]]
+  ['markmissing',['MarkMissing',['../classijst_1_1_accessor.html#a70a1af1449ec0324120a94ca26d11f4f',1,'ijst::Accessor']]],
+  ['marknull',['MarkNull',['../classijst_1_1_accessor.html#ae59c9325c74733edccaaf922dbc3698c',1,'ijst::Accessor']]],
+  ['markvalid',['MarkValid',['../classijst_1_1_accessor.html#a8ab9ab837c4a987ba7cab75e9e854283',1,'ijst::Accessor']]],
+  ['metaclassinfo',['MetaClassInfo',['../classijst_1_1_meta_class_info.html',1,'ijst']]],
+  ['metafieldinfo',['MetaFieldInfo',['../structijst_1_1_meta_field_info.html',1,'ijst']]],
+  ['movefromjson',['MoveFromJson',['../classijst_1_1_accessor.html#aedf9ea2474b94606705024cbc19cc00b',1,'ijst::Accessor']]]
 ];

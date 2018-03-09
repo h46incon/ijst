@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.14"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>ijst: ijst::Optional&lt; _T, typename &gt; Class Template Reference</title>
+<title>ijst: ijst::Optional&lt; T, Enable &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -69,7 +69,7 @@ $(function() {
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classijst_1_1_optional-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">ijst::Optional&lt; _T, typename &gt; Class Template Reference</div>  </div>
+<div class="title">ijst::Optional&lt; T, Enable &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -80,29 +80,30 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:af5cb16b84b9b6652291ec5f0fd30dd6c"><td class="memItemLeft" align="right" valign="top"><a id="af5cb16b84b9b6652291ec5f0fd30dd6c"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_optional.html#af5cb16b84b9b6652291ec5f0fd30dd6c">Optional</a> (ValType *_pVal)</td></tr>
-<tr class="memdesc:af5cb16b84b9b6652291ec5f0fd30dd6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor. <br /></td></tr>
-<tr class="separator:af5cb16b84b9b6652291ec5f0fd30dd6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a29ed4448f0628aa98f2a8428c29f0db1"><td class="memItemLeft" align="right" valign="top"><a id="a29ed4448f0628aa98f2a8428c29f0db1"></a>
-ValType *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_optional.html#a29ed4448f0628aa98f2a8428c29f0db1">Ptr</a> () const</td></tr>
-<tr class="memdesc:a29ed4448f0628aa98f2a8428c29f0db1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get holding pointer. <br /></td></tr>
-<tr class="separator:a29ed4448f0628aa98f2a8428c29f0db1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21ba4a13768dfca25fbef4ce877d52bb"><td class="memItemLeft" align="right" valign="top"><a id="a21ba4a13768dfca25fbef4ce877d52bb"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_optional.html#a21ba4a13768dfca25fbef4ce877d52bb">Optional</a> (ValType *_pVal)</td></tr>
+<tr class="memdesc:a21ba4a13768dfca25fbef4ce877d52bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor. <br /></td></tr>
+<tr class="separator:a21ba4a13768dfca25fbef4ce877d52bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e37e13cead517b143cd1264205c46ae"><td class="memItemLeft" align="right" valign="top"><a id="a2e37e13cead517b143cd1264205c46ae"></a>
+ValType *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_optional.html#a2e37e13cead517b143cd1264205c46ae">Ptr</a> () const</td></tr>
+<tr class="memdesc:a2e37e13cead517b143cd1264205c46ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get holding pointer. <br /></td></tr>
+<tr class="separator:a2e37e13cead517b143cd1264205c46ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename _T, typename = Accessor&gt;<br />
-class ijst::Optional&lt; _T, typename &gt;</h3>
+<div class="textblock"><h3>template&lt;typename T, typename Enable = void&gt;<br />
+class ijst::Optional&lt; T, Enable &gt;</h3>
 
 <p>Helper for implementing getter chaining. </p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
-    <tr><td class="paramname">_T</td><td>type</td></tr>
+    <tr><td class="paramname">T</td><td>type </td></tr>
+    <tr><td class="paramname">Enable</td><td>type for SFINAE</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section note"><dt>Note</dt><dd>The specialized template for container is declared in "types_container.h", which implements operator []. </dd></dl>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
-<li>include/ijst/<a class="el" href="ijst_8h_source.html">ijst.h</a></li>
+<li>D:/Code/IJST/include/ijst/<a class="el" href="ijst_8h_source.html">ijst.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

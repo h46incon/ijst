@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['kignoreunknown',['kIgnoreUnknown',['../structijst_1_1_f_push.html#a6f1ebcb39f3f27a1e3156d21fb5572dd',1,'ijst::FPush']]],
-  ['knoneflag',['kNoneFlag',['../structijst_1_1_f_push.html#aba08d71c42a8420d6eae6a9d64c45740',1,'ijst::FPush']]],
-  ['konlyvalidfield',['kOnlyValidField',['../structijst_1_1_f_push.html#ae67f45cc59bd52a809496fceae9aa85c',1,'ijst::FPush']]]
+  ['notdefault',['NotDefault',['../structijst_1_1_f_desc.html#ab1fa35378c97967c53b15f35f5932f58',1,'ijst::FDesc']]],
+  ['nullable',['Nullable',['../structijst_1_1_f_desc.html#a2a49f1fa62a8bc69dc454bd09293e55a',1,'ijst::FDesc']]]
 ];

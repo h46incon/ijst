@@ -73,6 +73,10 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
+<tr class="memitem:ga0a952f31bee1b4ab68de866a3627377b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga0a952f31bee1b4ab68de866a3627377b">IJST_EXTERN_TEMPLATE</a>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:ga0a952f31bee1b4ab68de866a3627377b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6cd7ccbeb00d7629989102fee00c95e0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga6cd7ccbeb00d7629989102fee00c95e0">IJST_EXPLICIT_TEMPLATE</a>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:ga6cd7ccbeb00d7629989102fee00c95e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga804c5cd00b0fb21e0cce444fbdbb2628"><td class="memItemLeft" align="right" valign="top"><a id="ga804c5cd00b0fb21e0cce444fbdbb2628"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga804c5cd00b0fb21e0cce444fbdbb2628">IJST_DEFINE_STRUCT</a>(...)&#160;&#160;&#160;IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), false, F, __VA_ARGS__)</td></tr>
 <tr class="memdesc:ga804c5cd00b0fb21e0cce444fbdbb2628"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a ijst struct. <br /></td></tr>
@@ -82,11 +86,11 @@ Macros</h2></td></tr>
 <tr class="memdesc:ga248e2230fb5721c366c25dfe01726467"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a ijst struct with getter. <br /></td></tr>
 <tr class="separator:ga248e2230fb5721c366c25dfe01726467"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga9a7578b0ff485923cdf5e767045c1aac"><td class="memItemLeft" align="right" valign="top"><a id="ga9a7578b0ff485923cdf5e767045c1aac"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga9a7578b0ff485923cdf5e767045c1aac">IJST_DEFINE_VALUE</a>(stName,  type,  fName,  desc)&#160;&#160;&#160;IJSTI_DEFINE_STRUCT_IMPL(1, true, F, stName, (type, fName, &quot;JSON_ITSELF&quot;, desc))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga9a7578b0ff485923cdf5e767045c1aac">IJST_DEFINE_VALUE</a>(stName,  type,  fName,  desc)&#160;&#160;&#160;IJSTI_DEFINE_STRUCT_IMPL(1, true, F, stName, (type, fName, &quot;&quot;, desc))</td></tr>
 <tr class="memdesc:ga9a7578b0ff485923cdf5e767045c1aac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a ijst struct which represent a value instead of members insides a object. <br /></td></tr>
 <tr class="separator:ga9a7578b0ff485923cdf5e767045c1aac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4f3aa516f58bb021fc49315caa166842"><td class="memItemLeft" align="right" valign="top"><a id="ga4f3aa516f58bb021fc49315caa166842"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga4f3aa516f58bb021fc49315caa166842">IJST_DEFINE_VALUE_WITH_GETTER</a>(stName,  type,  fName,  desc)&#160;&#160;&#160;IJSTI_DEFINE_STRUCT_IMPL(1, true, T, stName, (type, fName, &quot;JSON_ITSELF&quot;, desc))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga4f3aa516f58bb021fc49315caa166842">IJST_DEFINE_VALUE_WITH_GETTER</a>(stName,  type,  fName,  desc)&#160;&#160;&#160;IJSTI_DEFINE_STRUCT_IMPL(1, true, T, stName, (type, fName, &quot;&quot;, desc))</td></tr>
 <tr class="memdesc:ga4f3aa516f58bb021fc49315caa166842"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a ijst struct which represent a value instead of members insides a object with getter. <br /></td></tr>
 <tr class="separator:ga4f3aa516f58bb021fc49315caa166842"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga3c0818554e2548c1b8289c07c1d8028c"><td class="memItemLeft" align="right" valign="top"><a id="ga3c0818554e2548c1b8289c07c1d8028c"></a>
@@ -122,36 +126,70 @@ Macros</h2></td></tr>
 <tr class="memdesc:gae7f850a89a3ef950d48ace594a6e391f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Empty macro to mark a param is a output. <br /></td></tr>
 <tr class="separator:gae7f850a89a3ef950d48ace594a6e391f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga75d166e91e4b9209a1e01a86a45258ce"><td class="memItemLeft" align="right" valign="top"><a id="ga75d166e91e4b9209a1e01a86a45258ce"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga75d166e91e4b9209a1e01a86a45258ce">IJST_TYPE</a>(...)&#160;&#160;&#160;::ijst::detail::ArgumentType&lt;void( __VA_ARGS__)&gt;::type</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga75d166e91e4b9209a1e01a86a45258ce">IJST_TYPE</a>(...)&#160;&#160;&#160;decltype(__VA_ARGS__())</td></tr>
 <tr class="memdesc:ga75d166e91e4b9209a1e01a86a45258ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper declare macro with comma. <br /></td></tr>
 <tr class="separator:ga75d166e91e4b9209a1e01a86a45258ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gacddbc1fbed340c90e8253b9601d666e1"><td class="memItemLeft" align="right" valign="top"><a id="gacddbc1fbed340c90e8253b9601d666e1"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#gacddbc1fbed340c90e8253b9601d666e1">IJST_TVEC</a>(_T)&#160;&#160;&#160;::std::vector&lt; _T&gt;</td></tr>
-<tr class="memdesc:gacddbc1fbed340c90e8253b9601d666e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a vector&lt;_T&gt; field. <br /></td></tr>
-<tr class="separator:gacddbc1fbed340c90e8253b9601d666e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gacee036185d8d5ec59196327d0997f2a4"><td class="memItemLeft" align="right" valign="top"><a id="gacee036185d8d5ec59196327d0997f2a4"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#gacee036185d8d5ec59196327d0997f2a4">IJST_TDEQUE</a>(_T)&#160;&#160;&#160;::std::deque&lt; _T&gt;</td></tr>
-<tr class="memdesc:gacee036185d8d5ec59196327d0997f2a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a deque&lt;_T&gt; field. <br /></td></tr>
-<tr class="separator:gacee036185d8d5ec59196327d0997f2a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf0b02427beff5891badf49cb8523b5ad"><td class="memItemLeft" align="right" valign="top"><a id="gaf0b02427beff5891badf49cb8523b5ad"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#gaf0b02427beff5891badf49cb8523b5ad">IJST_TLIST</a>(_T)&#160;&#160;&#160;::std::list&lt; _T&gt;</td></tr>
-<tr class="memdesc:gaf0b02427beff5891badf49cb8523b5ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a vector&lt;_T&gt; field. <br /></td></tr>
-<tr class="separator:gaf0b02427beff5891badf49cb8523b5ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga0e656e9939e3722fb2affdc9bc045caf"><td class="memItemLeft" align="right" valign="top"><a id="ga0e656e9939e3722fb2affdc9bc045caf"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga0e656e9939e3722fb2affdc9bc045caf">IJST_TMAP</a>(_T)&#160;&#160;&#160;<a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga75d166e91e4b9209a1e01a86a45258ce">IJST_TYPE</a>(::std::map&lt; ::std::string, _T&gt;)</td></tr>
-<tr class="memdesc:ga0e656e9939e3722fb2affdc9bc045caf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a map&lt;string, _T&gt; field of json object. <br /></td></tr>
-<tr class="separator:ga0e656e9939e3722fb2affdc9bc045caf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga7cd9734ae0dff02f45fc0f8e0be34e7d"><td class="memItemLeft" align="right" valign="top"><a id="ga7cd9734ae0dff02f45fc0f8e0be34e7d"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga7cd9734ae0dff02f45fc0f8e0be34e7d">IJST_TOBJ</a>(_T)&#160;&#160;&#160;::std::vector&lt; ::<a class="el" href="structijst_1_1_t___member.html">ijst::T_Member</a>&lt; _T&gt; &gt;</td></tr>
-<tr class="memdesc:ga7cd9734ae0dff02f45fc0f8e0be34e7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a vector of members of json object. <br /></td></tr>
-<tr class="separator:ga7cd9734ae0dff02f45fc0f8e0be34e7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaa49717bfd99585849b323fdff5f96534"><td class="memItemLeft" align="right" valign="top"><a id="gaa49717bfd99585849b323fdff5f96534"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#gaa49717bfd99585849b323fdff5f96534">IJST_TST</a>(_T)&#160;&#160;&#160;_T</td></tr>
-<tr class="memdesc:gaa49717bfd99585849b323fdff5f96534"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a object field which _T is a ijst struct type. <br /></td></tr>
-<tr class="separator:gaa49717bfd99585849b323fdff5f96534"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gadfb29e4f2292882d280dad6d832a2653"><td class="memItemLeft" align="right" valign="top"><a id="gadfb29e4f2292882d280dad6d832a2653"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#gadfb29e4f2292882d280dad6d832a2653">IJST_TVEC</a>(T)&#160;&#160;&#160;::std::vector&lt; T &gt;</td></tr>
+<tr class="memdesc:gadfb29e4f2292882d280dad6d832a2653"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a vector&lt;T&gt; field. <br /></td></tr>
+<tr class="separator:gadfb29e4f2292882d280dad6d832a2653"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5a669426dd6ea0b99ba0ecc4840b4445"><td class="memItemLeft" align="right" valign="top"><a id="ga5a669426dd6ea0b99ba0ecc4840b4445"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga5a669426dd6ea0b99ba0ecc4840b4445">IJST_TDEQUE</a>(T)&#160;&#160;&#160;::std::deque&lt; T &gt;</td></tr>
+<tr class="memdesc:ga5a669426dd6ea0b99ba0ecc4840b4445"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a deque&lt;T&gt; field. <br /></td></tr>
+<tr class="separator:ga5a669426dd6ea0b99ba0ecc4840b4445"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga52b6adc71e515441efd3982a57efd9ff"><td class="memItemLeft" align="right" valign="top"><a id="ga52b6adc71e515441efd3982a57efd9ff"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga52b6adc71e515441efd3982a57efd9ff">IJST_TLIST</a>(T)&#160;&#160;&#160;::std::list&lt; T &gt;</td></tr>
+<tr class="memdesc:ga52b6adc71e515441efd3982a57efd9ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a vector&lt;T&gt; field. <br /></td></tr>
+<tr class="separator:ga52b6adc71e515441efd3982a57efd9ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gacfb8e557f48661d396b937583907d567"><td class="memItemLeft" align="right" valign="top"><a id="gacfb8e557f48661d396b937583907d567"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#gacfb8e557f48661d396b937583907d567">IJST_TMAP</a>(T)&#160;&#160;&#160;<a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga75d166e91e4b9209a1e01a86a45258ce">IJST_TYPE</a>(::std::map&lt; ::std::string, T &gt;)</td></tr>
+<tr class="memdesc:gacfb8e557f48661d396b937583907d567"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a map&lt;string, T&gt; field of json object. <br /></td></tr>
+<tr class="separator:gacfb8e557f48661d396b937583907d567"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad544f353f1249df3d51beab3c1d3d57a"><td class="memItemLeft" align="right" valign="top"><a id="gad544f353f1249df3d51beab3c1d3d57a"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#gad544f353f1249df3d51beab3c1d3d57a">IJST_TOBJ</a>(T)&#160;&#160;&#160;::std::vector&lt; ::<a class="el" href="structijst_1_1_t___member.html">ijst::T_Member</a>&lt; T &gt; &gt;</td></tr>
+<tr class="memdesc:gad544f353f1249df3d51beab3c1d3d57a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a vector of members of json object. <br /></td></tr>
+<tr class="separator:gad544f353f1249df3d51beab3c1d3d57a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4808b64dca3705a3f3794b25739305d4"><td class="memItemLeft" align="right" valign="top"><a id="ga4808b64dca3705a3f3794b25739305d4"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga4808b64dca3705a3f3794b25739305d4">IJST_TST</a>(T)&#160;&#160;&#160;T</td></tr>
+<tr class="memdesc:ga4808b64dca3705a3f3794b25739305d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declare a object field which T is a ijst struct type. <br /></td></tr>
+<tr class="separator:ga4808b64dca3705a3f3794b25739305d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>macro API </p>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="ga6cd7ccbeb00d7629989102fee00c95e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga6cd7ccbeb00d7629989102fee00c95e0">&#9670;&nbsp;</a></span>IJST_EXPLICIT_TEMPLATE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define IJST_EXPLICIT_TEMPLATE&#160;&#160;&#160;0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>ijst support extern template to speed up compilation. User should declare IJST_EXPLICIT_TEMPLATE in one of cpp files to instantiation the templates.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga0a952f31bee1b4ab68de866a3627377b">IJST_EXTERN_TEMPLATE</a> </dd></dl>
+
+</div>
+</div>
+<a id="ga0a952f31bee1b4ab68de866a3627377b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga0a952f31bee1b4ab68de866a3627377b">&#9670;&nbsp;</a></span>IJST_EXTERN_TEMPLATE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define IJST_EXTERN_TEMPLATE&#160;&#160;&#160;0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>ijst support extern template to speed up compilation. To enable this option, set the macro to 1 before including ijst headers. User should declare IJST_EXPLICIT_TEMPLATE in one of cpp files to instantiation the templates.</p>
+<dl class="section note"><dt>Note</dt><dd>require extern template support (since C++11) to enable this option</dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="group___i_j_s_t___m_a_c_r_o___a_p_i.html#ga6cd7ccbeb00d7629989102fee00c95e0">IJST_EXPLICIT_TEMPLATE</a> </dd></dl>
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

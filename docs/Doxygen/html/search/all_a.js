@@ -1,10 +1,5 @@
 var searchData=
 [
-  ['markmissing',['MarkMissing',['../classijst_1_1_accessor.html#a5aaa3d341dbde2b133166460f77f418e',1,'ijst::Accessor']]],
-  ['marknull',['MarkNull',['../classijst_1_1_accessor.html#a2a59b013035546aa2c0130ff3d3e22d6',1,'ijst::Accessor']]],
-  ['markvalid',['MarkValid',['../classijst_1_1_accessor.html#acc89ff294e690f6ee9c04bed91d1c1cf',1,'ijst::Accessor']]],
-  ['metaclassinfo',['MetaClassInfo',['../classijst_1_1_meta_class_info.html',1,'ijst']]],
-  ['metafieldinfo',['MetaFieldInfo',['../structijst_1_1_meta_field_info.html',1,'ijst']]],
-  ['movefromjson',['MoveFromJson',['../classijst_1_1_accessor.html#a428b03176f5a9618431030a4e252d1e3',1,'ijst::Accessor']]],
-  ['movetojson',['MoveToJson',['../classijst_1_1_accessor.html#a278d71776712d5f2da02200ee6a0bae4',1,'ijst::Accessor']]]
+  ['notdefault',['NotDefault',['../structijst_1_1_f_desc.html#ab1fa35378c97967c53b15f35f5932f58',1,'ijst::FDesc']]],
+  ['nullable',['Nullable',['../structijst_1_1_f_desc.html#a2a49f1fa62a8bc69dc454bd09293e55a',1,'ijst::FDesc']]]
 ];

@@ -73,18 +73,14 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:ga97574c0c87e47e5aa8bbfe72d164fc39"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#ga97574c0c87e47e5aa8bbfe72d164fc39">IJST_ENABLE_TO_JSON_OBJECT</a>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:ga97574c0c87e47e5aa8bbfe72d164fc39"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga553a8fae4c8b828f234773763b3c0172"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#ga553a8fae4c8b828f234773763b3c0172">IJST_ENABLE_FROM_JSON_OBJECT</a>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:ga553a8fae4c8b828f234773763b3c0172"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6bbaed85b1593b30eb4cd8dfb9bdc4c8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#ga6bbaed85b1593b30eb4cd8dfb9bdc4c8">IJST_GETTER_PREFIX</a>&#160;&#160;&#160;get_</td></tr>
 <tr class="separator:ga6bbaed85b1593b30eb4cd8dfb9bdc4c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaace1f29573feac3bd111e22cdb0f99e8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#gaace1f29573feac3bd111e22cdb0f99e8">IJST_AUTO_META_INIT</a>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:gaace1f29573feac3bd111e22cdb0f99e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6d4a07952701dc0e015747f3bb25b89b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#ga6d4a07952701dc0e015747f3bb25b89b">IJST_TRY_INIT_META_BEFORE_MAIN</a>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:ga6d4a07952701dc0e015747f3bb25b89b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaeb07a09d0c928c6ccd5a853d2b17dfc9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#gaeb07a09d0c928c6ccd5a853d2b17dfc9">IJST_ASSERT</a>(x)&#160;&#160;&#160;assert(x)</td></tr>
 <tr class="separator:gaeb07a09d0c928c6ccd5a853d2b17dfc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gadf3ac4651674dc52ed4f63a540c67992"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#gadf3ac4651674dc52ed4f63a540c67992">IJST_OFFSETOF</a>(_T,  member)&#160;&#160;&#160;((size_t)&amp;(((_T*)0)-&gt;member))</td></tr>
-<tr class="separator:gadf3ac4651674dc52ed4f63a540c67992"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1ab52ff9af53da91d154cfae5c49b3ee"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#ga1ab52ff9af53da91d154cfae5c49b3ee">IJST_OFFSETOF</a>(T,  member)&#160;&#160;&#160;((size_t)&amp;(((T*)0)-&gt;member))</td></tr>
+<tr class="separator:ga1ab52ff9af53da91d154cfae5c49b3ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Configuration macros for library features. </p>
@@ -110,51 +106,6 @@ Macros</h2></td></tr>
 
 </div>
 </div>
-<a id="gaace1f29573feac3bd111e22cdb0f99e8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gaace1f29573feac3bd111e22cdb0f99e8">&#9670;&nbsp;</a></span>IJST_AUTO_META_INIT</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define IJST_AUTO_META_INIT&#160;&#160;&#160;0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>If define IJST_AUTO_META_INIT before include this header, the meta class information will init before main. That's will make it thread-safe to init meta class information before C++11. The feature is enable default before C++11. So set the value to 0 to force disable it. </p>
-
-</div>
-</div>
-<a id="ga553a8fae4c8b828f234773763b3c0172"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga553a8fae4c8b828f234773763b3c0172">&#9670;&nbsp;</a></span>IJST_ENABLE_FROM_JSON_OBJECT</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define IJST_ENABLE_FROM_JSON_OBJECT&#160;&#160;&#160;0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>By default, ijst can only deserialize the structure from string. If users need to deserialize the structure from a rapidjson::Value, specify this flag to 1. </p>
-
-</div>
-</div>
-<a id="ga97574c0c87e47e5aa8bbfe72d164fc39"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga97574c0c87e47e5aa8bbfe72d164fc39">&#9670;&nbsp;</a></span>IJST_ENABLE_TO_JSON_OBJECT</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define IJST_ENABLE_TO_JSON_OBJECT&#160;&#160;&#160;0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>By default, ijst can only serialize the structure to string. If users need to serialize the structure to a rapidjson::Value, specify this flag to 1. </p>
-
-</div>
-</div>
 <a id="ga6bbaed85b1593b30eb4cd8dfb9bdc4c8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga6bbaed85b1593b30eb4cd8dfb9bdc4c8">&#9670;&nbsp;</a></span>IJST_GETTER_PREFIX</h2>
 
@@ -171,8 +122,8 @@ Macros</h2></td></tr>
 
 </div>
 </div>
-<a id="gadf3ac4651674dc52ed4f63a540c67992"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gadf3ac4651674dc52ed4f63a540c67992">&#9670;&nbsp;</a></span>IJST_OFFSETOF</h2>
+<a id="ga1ab52ff9af53da91d154cfae5c49b3ee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga1ab52ff9af53da91d154cfae5c49b3ee">&#9670;&nbsp;</a></span>IJST_OFFSETOF</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -181,7 +132,7 @@ Macros</h2></td></tr>
           <td class="memname">#define IJST_OFFSETOF</td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname">_T, </td>
+          <td class="paramname">T, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -192,11 +143,26 @@ Macros</h2></td></tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td>&#160;&#160;&#160;((size_t)&amp;(((_T*)0)-&gt;member))</td>
+          <td></td><td>&#160;&#160;&#160;((size_t)&amp;(((T*)0)-&gt;member))</td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>By default, the offset of each field is computed by "((Struct*)0)-&gt;field". User could overwrite by define this macro such as "offsetof()". </p>
+
+</div>
+</div>
+<a id="ga6d4a07952701dc0e015747f3bb25b89b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga6d4a07952701dc0e015747f3bb25b89b">&#9670;&nbsp;</a></span>IJST_TRY_INIT_META_BEFORE_MAIN</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define IJST_TRY_INIT_META_BEFORE_MAIN&#160;&#160;&#160;0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>ijst use static object in function to implement singleton, but it's not thread-safe before C++11. If declare IJST_TRY_INIT_META_BEFORE_MAIN to 1, ijst will init the singleton's instance when a static member of template class initialization, that init before main() in many compilers to avoid thread-safety problem. The feature is enable default before C++11. </p>
 
 </div>
 </div>
