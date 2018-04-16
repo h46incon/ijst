@@ -1674,7 +1674,7 @@ inline const MetaClassInfo& MetaClassInfo::GetMetaInfo()
 	#define IJSTI_METAINFO_DEFINE_START(stName, N)												\
 			typedef ::ijst::detail::MetaClassInfoTyped< stName > _ijst_MetaInfoT;				\
 			typedef ::ijst::detail::Singleton<_ijst_MetaInfoT> _ijst_MetaInfoS;					\
-			friend _ijst_MetaInfoT;																\
+			friend class ::ijst::detail::MetaClassInfoTyped< stName >;							\
 			template<bool DummyTrue	>															\
 			static void _ijst_InitMetaInfo(_ijst_MetaInfoT* metaInfo)							\
 			{																					\
