@@ -5,13 +5,26 @@ ijst (iJsonStruct) 一个是 C++ Json 序列化/反序列化库：
 - 只需定义**一次**结构体，无须重复添加元信息。
 - 支持 Getter Chaining，可以很简单地访问路径较深的字段。
 - 支持 unknown 字段和可选字段。
-- 轻量。header-only，仅依赖 stl 和 [RapidJSON](https://github.com/Tencent/rapidjson)。
-- 兼容 C++98/03。支持 C++11 特性，如右值构造、extern template 等。
+- 轻量：header-only，仅依赖 stl 和 [RapidJSON](https://github.com/Tencent/rapidjson)。
+- 兼容 C++ 98/03。支持 C++ 11 特性，如右值构造、extern template 等。
+- 反序列失败时，会有详细的错误信息。
 
 ## 使用
 ### 安装
 1. 安装 RapidJSON v1.1.0 以上版本（将其加入 header 搜索路径即可）。
 2. 将 `include/ijst` 文件夹复制进工程。
+
+### 单元测试（可选）
+可通过以下命令安装依赖并执行单元测试：
+
+```shell
+cd IJST
+git submodule update --init
+mkdir CMakeBuild && cd CMakeBuild
+cmake ..
+make
+./unit_test/unit_test
+```
 
 ### 基本使用
 
@@ -133,7 +146,7 @@ ijst 因有额外的工作，会带来一些性能上的开销，但也比常用
 | ijst      | 16    | 23      |
 | JsonCpp   | 128   | 109     |
 
-测试环境：Corei7-4790@3.60GHz_vc2017_win64，测试代码： [nativejson-benchmark](https://github.com/miloyip/nativejson-benchmark)。
+测试环境：Corei7-4790_3.60GHz_vc2017_win7x64，测试代码： [nativejson-benchmark](https://github.com/miloyip/nativejson-benchmark)。
  
 注：不同环境测得的性能会有差异，一般而言，ijst 的序列化性能和 RapidJSON 相似，反序列化性能为其 1/4 ~ 1/2。
 
