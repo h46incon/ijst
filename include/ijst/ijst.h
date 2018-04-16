@@ -73,16 +73,6 @@
 	#define IJST_ASSERT(x) assert(x)
 #endif
 
-/**
- * @ingroup IJST_CONFIG
- *
- *	By default, the offset of each field is computed by "((Struct*)0)->field".
- *	User could overwrite by define this macro such as "offsetof()".
- */
-#ifndef IJST_OFFSETOF
-	#define IJST_OFFSETOF(T, member)	((size_t)&(((T*)0)->member))
-#endif
-
 /** @defgroup IJST_MACRO_API ijst macro API
  *  @brief macro API
  *
@@ -1658,6 +1648,8 @@ inline const MetaClassInfo& MetaClassInfo::GetMetaInfo()
 	#define IJSTI_IDL_DESC(fType, fName, sName, desc)		desc
 	#define IJSTI_IDL_FNAME_STR(fType, fName, sName, desc)		#fName
 
+	#define IJSTI_OFFSETOF(base, member)	(size_t(&base->member) - size_t(base))
+
 	#define IJSTI_STRUCT_PUBLIC_DEFINE()														\
 		typedef ::ijst::Accessor<> _ijst_AccessorType;											\
 		_ijst_AccessorType _;
@@ -1679,15 +1671,17 @@ inline const MetaClassInfo& MetaClassInfo::GetMetaInfo()
 			static void _ijst_InitMetaInfo(_ijst_MetaInfoT* metaInfo)							\
 			{																					\
 				IJSTI_TRY_INIT_META_BEFORE_MAIN(_ijst_MetaInfoT);								\
-				/*Do not call MetaInfoS::GetInstance() int this function */			 			\
+				/* Do not call MetaInfoS::GetInstance() int this function */			 		\
+				char dummyBuffer[sizeof(stName)];												\
+				const stName* stPtr = reinterpret_cast< stName*>(dummyBuffer);					\
 				::ijst::detail::MetaClassInfoSetter mSetter(metaInfo->metaClass);				\
-				mSetter.InitBegin(#stName, N, IJST_OFFSETOF(stName, _));
+				mSetter.InitBegin(#stName, N, IJSTI_OFFSETOF(stPtr, _));
 
 	#define IJSTI_METAINFO_ADD(stName, fDef)  													\
 			mSetter.PushMetaField(																\
 				IJSTI_IDL_FNAME_STR fDef,														\
 				IJSTI_IDL_SNAME fDef, 															\
-				IJST_OFFSETOF(stName, IJSTI_IDL_FNAME fDef),									\
+				IJSTI_OFFSETOF(stPtr, IJSTI_IDL_FNAME fDef),									\
 				IJSTI_IDL_DESC fDef, 															\
 				IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef)										\
 			);
