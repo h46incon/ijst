@@ -10,7 +10,6 @@
 #include <ijst/ijst.h>
 #include <ijst/types_std.h>
 #include <ijst/types_container.h>
-#include <ijst/types_stdlayout_wrapper.h>
 #include <gtest/gtest.h>
 
 using namespace ijst;
@@ -34,14 +33,13 @@ IJST_DEFINE_STRUCT_WITH_GETTER(
 		, (IJST_TVEC(T_string), vs, "vs", 0)
 		, (IJST_TMAP(T_bool), mb, "mb", 0)
 		, (IJST_TST(Empty), e, "e", 0)
-		, (T_Wrapper<T_uint>, wu, "wu", 0)
 )
 
 TEST(Template, UTEST_PP_CONCAT(UT_TEST_NAME, Accessor))
 {
 	const std::string json = "{\"i\": 0, \"r\": null, "
 			"\"vs\": [\"v\"], \"mb\": {\"k\": true}, "
-			"\"e\": {}, \"wu\": 1, \"unknown\": false}";
+			"\"e\": {}, \"unknown\": false}";
 
 	ExternTest st;
 	std::string errMsg;
@@ -54,7 +52,6 @@ TEST(Template, UTEST_PP_CONCAT(UT_TEST_NAME, Accessor))
 	ASSERT_EQ(st._.GetUnknown()["unknown"].GetBool(), false);
 
 	// Set
-	IJST_SET(st, wu, 0);
 	IJST_SET_STRICT(st, i, -1);
 
 	// Serialize
@@ -63,7 +60,6 @@ TEST(Template, UTEST_PP_CONCAT(UT_TEST_NAME, Accessor))
 	rapidjson::Document doc;
 	doc.Parse(out.data(), out.length());
 	ASSERT_FALSE(doc.HasParseError());
-	ASSERT_EQ(doc["wu"].GetUint(), 0u);
 	ASSERT_EQ(doc["i"].GetInt(), -1);
 	ASSERT_TRUE(doc["r"].IsNull());
 }

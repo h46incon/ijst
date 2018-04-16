@@ -5,7 +5,6 @@
 #include "util.h"
 
 #include <ijst/types_std.h>
-#include <ijst/types_stdlayout_wrapper.h>
 #include <limits>
 #include <sstream>
 using std::vector;
@@ -447,24 +446,6 @@ TEST(Primitive, Str)
 	);
 }
 
-UTEST_DEFINE_STRUCT(StWrapper, T_Wrapper<int>)
-TEST(Primitive, Wrapper)
-{
-	// Deserialize error
-	{
-		string errorJson = "{\"f_v\": \"0\"}";
-		TestMemberTypeMismatch<StWrapper>(errorJson, "int", "\"0\"");
-	}
-	const string json = "{\"f_vd\": 0, \"f_v\": -1"
-			", \"f_map\": {\"v1\": -65537, \"v2\": 65536}, \"f_obj\": {\"o0\": -3, \"o1\": 3} "
-			", \"f_vec\": [-2147483648, 2147483647], \"f_deq\": [-1, 1], \"f_list\": [-2, 2]}";
-
-	TestSt<StWrapper, T_Wrapper<int>, int> (
-			json, "0", 0
-			, -1, -65537, 65536, -2147483647-1, 2147483647, -1, 1, -2, 2, -3, 3
-			, -2147483647-1, 0, 65536, -65536, 2147483647, -2147483647-1, 10, -10, 20, -20, 30, -30
-	);
-}
 
 UTEST_DEFINE_STRUCT(StRaw, T_raw)
 

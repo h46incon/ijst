@@ -3,86 +3,9 @@
 //
 
 #include "util.h"
-#include <ijst/types_stdlayout_wrapper.h>
 using namespace ijst;
 
 namespace dummy_ns {
-
-TEST(BasicAPI, Wrapper)
-{
-	// default constructor
-	T_Wrapper<std::string> val;
-	ASSERT_TRUE(val.Val().empty());
-
-	val.Val() = "Val";
-	{
-		const T_Wrapper<std::string>& valRef = val;
-		ASSERT_EQ(valRef.Val(), "Val");
-	}
-
-	// Copy constructor
-	{
-		T_Wrapper<std::string> val2 (val);
-		ASSERT_EQ(val2.Val(), "Val");
-	}
-
-	// Copy constructor for TVal
-	{
-		std::string innerV = val.Val();
-		T_Wrapper<std::string> val2(innerV);
-		ASSERT_EQ(val2.Val(), "Val");
-	}
-
-	// Assignment
-	{
-		T_Wrapper<std::string> val2;
-		val2 = val;
-		ASSERT_EQ(val2.Val(), "Val");
-	}
-
-	// Assignment for TVal
-	{
-		std::string innerV = val.Val();
-		T_Wrapper<std::string> val2;
-		val2 = innerV;
-		ASSERT_EQ(val2.Val(), "Val");
-	}
-
-	// Check source
-	ASSERT_EQ(val.Val(), "Val");
-
-#if __cplusplus >= 201103L
-	// Copy constructor for RValue
-	{
-		T_Wrapper<std::string> valTemp (val);
-		T_Wrapper<std::string> val2 (std::move(valTemp));
-		ASSERT_EQ(val2.Val(), "Val");
-	}
-
-	// Copy constructor for TVal RValue
-	{
-		std::string innerV = val.Val();
-		T_Wrapper<std::string> val2(std::move(innerV));
-		ASSERT_EQ(val2.Val(), "Val");
-	}
-
-	// Assignment for RValue
-	{
-		T_Wrapper<std::string> valTemp (val);
-		T_Wrapper<std::string> val2;
-		val2 = std::move(valTemp);
-		ASSERT_EQ(val2.Val(), "Val");
-	}
-
-	// Assignment for TVal
-	{
-		std::string innerV = val.Val();
-		T_Wrapper<std::string> val2;
-		val2 = std::move(innerV);
-		ASSERT_EQ(val2.Val(), "Val");
-	}
-#endif
-}
 
 IJST_DEFINE_VALUE(
 		ValVec, IJST_TVEC(T_int), v, 0

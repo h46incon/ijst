@@ -2,7 +2,6 @@
 // Created by h46incon on 2017/9/30.
 //
 #include "util.h"
-#include <ijst/types_stdlayout_wrapper.h>
 
 using std::vector;
 using std::map;
@@ -325,7 +324,6 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TMAP(StEmpty), mapEmpty, "map", 0)
 		, (IJST_TOBJ(StEmpty), objEmpty, "obj", 0)
 		, (T_raw, raw, "raw", 0)
-		, (T_Wrapper<T_raw>, rawWrap, "rawWrap", 0)
 )
 
 #define UTEST_ASSERT_USER_OWN_ALLOCATOR(st)		\
@@ -345,7 +343,6 @@ void CheckUseOwnAllocator(StAllocShrink& st)
 	UTEST_ASSERT_USER_OWN_ALLOCATOR(st.objEmpty[0].value);
 	UTEST_ASSERT_USER_OWN_ALLOCATOR(st.objEmpty[1].value);
 	ASSERT_EQ(&st.raw.GetOwnAllocator(), &st.raw.GetAllocator());
-	ASSERT_EQ(&st.rawWrap.Val().GetOwnAllocator(), &st.rawWrap.Val().GetAllocator());
 }
 
 void CheckUseParentAllocatorAndShrink(StAllocShrink &st, const rapidjson::Value &srcJson)
@@ -364,7 +361,6 @@ void CheckUseParentAllocatorAndShrink(StAllocShrink &st, const rapidjson::Value 
 	ASSERT_EQ(parentAllocator, &st.objEmpty[0].value._.GetAllocator());
 	ASSERT_EQ(parentAllocator, &st.objEmpty[1].value._.GetAllocator());
 	ASSERT_EQ(parentAllocator, &st.raw.GetAllocator());
-	ASSERT_EQ(parentAllocator, &st.rawWrap.Val().GetAllocator());
 
 	// Shrink and check
 	st._.ShrinkAllocator();
@@ -393,8 +389,7 @@ TEST(Deserialize, Allocator)
 				"\"list\": [{\"unk4\": \"v4\"}, {\"unk44\": \"v44\"}], "
 				"\"map\": {\"k1\": {\"unk5\": \"v5\"}, \"k11\": {\"unk55\": \"v55\"}}, "
 				"\"obj\": {\"k2\": {\"unk6\": \"v6\"}, \"k22\": {\"unk66\": \"v66\"}}, "
-				"\"raw\": \"v7\", "
-				"\"rawWrap\": [\"v8\", true, 0, 1.2, null]"
+				"\"raw\": \"v7\""
 			"}";
 
 	rapidjson::Document srcDoc;
