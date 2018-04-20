@@ -305,70 +305,70 @@ TEST(Serialize, EmptyStruct)
 
 IJST_DEFINE_STRUCT(
 		Complicate3
-		, (T_int, i1, "i1_v", 0)
-		, (T_int, i2, "i2_v", 0)
-		, (T_int, i3, "i3_v", 0)
-		, (T_int, i4, "i4_v", 0)
-		, (T_int, i5, "i5_v", 0)
-		, (T_int, i6, "i6_v", 0)
-		, (T_int, i7, "i7_v", 0)
-		, (T_int, i8, "i8_v", 0)
-		, (T_int, i9, "i9_v", 0)
-		, (T_int, i10, "i10_v", 0)
-		, (T_int, i11, "i11_v", 0)
-		, (T_int, i12, "i12_v", 0)
-		, (T_int, i13, "i13_v", 0)
-		, (T_int, i14, "i14_v", 0)
-		, (T_int, i15, "i15_v", 0)
-		, (T_int, i16, "i16_v", 0)
-		, (T_int, i17, "i17_v", 0)
-		, (T_int, i18, "i18_v", 0)
-		, (T_int, i19, "i19_v", 0)
-		, (T_int, i20, "i20_v", 0)
-		, (T_int, i21, "i21_v", 0)
-		, (T_int, i22, "i22_v", 0)
-		, (T_int, i23, "i23_v", 0)
-		, (T_int, i24, "i24_v", 0)
-		, (T_int, i25, "i25_v", 0)
-		, (T_int, i26, "i26_v", 0)
-		, (T_int, i27, "i27_v", 0)
-		, (T_int, i28, "i28_v", 0)
-		, (T_int, i29, "i29_v", 0)
-		, (T_int, i30, "i30_v", 0)
-		, (T_int, i31, "i31_v", 0)
-		, (T_int, i32, "i32_v", 0)
-		, (T_int, i33, "i33_v", 0)
-		, (T_int, i34, "i34_v", 0)
-		, (T_int, i35, "i35_v", 0)
-		, (T_int, i36, "i36_v", 0)
-		, (T_int, i37, "i37_v", 0)
-		, (T_int, i38, "i38_v", 0)
-		, (T_int, i39, "i39_v", 0)
-		, (T_int, i40, "i40_v", 0)
-		, (T_int, i41, "i41_v", 0)
-		, (T_int, i42, "i42_v", 0)
-		, (T_int, i43, "i43_v", 0)
-		, (T_int, i44, "i44_v", 0)
-		, (T_int, i45, "i45_v", 0)
-		, (T_int, i46, "i46_v", 0)
-		, (T_int, i47, "i47_v", 0)
-		, (T_int, i48, "i48_v", 0)
-		, (T_int, i49, "i49_v", 0)
-		, (T_int, i50, "i50_v", 0)
-		, (T_int, i51, "i51_v", 0)
-		, (T_int, i52, "i52_v", 0)
-		, (T_int, i53, "i53_v", 0)
-		, (T_int, i54, "i54_v", 0)
-		, (T_int, i55, "i55_v", 0)
-		, (T_int, i56, "i56_v", 0)
-		, (T_int, i57, "i57_v", 0)
-		, (T_int, i58, "i58_v", 0)
-		, (T_int, i59, "i59_v", 0)
-		, (T_int, i60, "i60_v", 0)
-		, (T_int, i61, "i61_v", 0)
-		, (T_int, i62, "i62_v", 0)
-		, (T_int, i63, "i63_v", 0)
-		, (T_int, i64, "i64_v", 0)
+		, (T_string, i1, "i1_k", 0)
+		, (T_string, i2, "i2_k", 0)
+		, (T_string, i3, "i3_k", 0)
+		, (T_string, i4, "i4_k", 0)
+		, (T_string, i5, "i5_k", 0)
+		, (T_string, i6, "i6_k", 0)
+		, (T_string, i7, "i7_k", 0)
+		, (T_string, i8, "i8_k", 0)
+		, (T_string, i9, "i9_k", 0)
+		, (T_string, i10, "i10_k", 0)
+		, (T_string, i11, "i11_k", 0)
+		, (T_string, i12, "i12_k", 0)
+		, (T_string, i13, "i13_k", 0)
+		, (T_string, i14, "i14_k", 0)
+		, (T_string, i15, "i15_k", 0)
+		, (T_string, i16, "i16_k", 0)
+		, (T_string, i17, "i17_k", 0)
+		, (T_string, i18, "i18_k", 0)
+		, (T_string, i19, "i19_k", 0)
+		, (T_string, i20, "i20_k", 0)
+		, (T_string, i21, "i21_k", 0)
+		, (T_string, i22, "i22_k", 0)
+		, (T_string, i23, "i23_k", 0)
+		, (T_string, i24, "i24_k", 0)
+		, (T_string, i25, "i25_k", 0)
+		, (T_string, i26, "i26_k", 0)
+		, (T_string, i27, "i27_k", 0)
+		, (T_string, i28, "i28_k", 0)
+		, (T_string, i29, "i29_k", 0)
+		, (T_string, i30, "i30_k", 0)
+		, (T_string, i31, "i31_k", 0)
+		, (T_string, i32, "i32_k", 0)
+		, (T_string, i33, "i33_k", 0)
+		, (T_string, i34, "i34_k", 0)
+		, (T_string, i35, "i35_k", 0)
+		, (T_string, i36, "i36_k", 0)
+		, (T_string, i37, "i37_k", 0)
+		, (T_string, i38, "i38_k", 0)
+		, (T_string, i39, "i39_k", 0)
+		, (T_string, i40, "i40_k", 0)
+		, (T_string, i41, "i41_k", 0)
+		, (T_string, i42, "i42_k", 0)
+		, (T_string, i43, "i43_k", 0)
+		, (T_string, i44, "i44_k", 0)
+		, (T_string, i45, "i45_k", 0)
+		, (T_string, i46, "i46_k", 0)
+		, (T_string, i47, "i47_k", 0)
+		, (T_string, i48, "i48_k", 0)
+		, (T_string, i49, "i49_k", 0)
+		, (T_string, i50, "i50_k", 0)
+		, (T_string, i51, "i51_k", 0)
+		, (T_string, i52, "i52_k", 0)
+		, (T_string, i53, "i53_k", 0)
+		, (T_string, i54, "i54_k", 0)
+		, (T_string, i55, "i55_k", 0)
+		, (T_string, i56, "i56_k", 0)
+		, (T_string, i57, "i57_k", 0)
+		, (T_string, i58, "i58_k", 0)
+		, (T_string, i59, "i59_k", 0)
+		, (T_string, i60, "i60_k", 0)
+		, (T_string, i61, "i61_k", 0)
+		, (T_string, i62, "i62_k", 0)
+		, (T_string, i63, "i63_k", 0)
+		, (T_string, i64, "i64_k", 0)
 )
 
 void InitComplicate3(Complicate3& st)
@@ -376,25 +376,38 @@ void InitComplicate3(Complicate3& st)
 	const MetaClassInfo &metaInfo = st._.GetMetaInfo();
 	for (int i = 1; i <= 64; ++i)
 	{
-		std::stringstream ss;
-		ss << "i" << i << "_v";
-		string fieldName = ss.str();
+		// Init key and value
+		std::stringstream ssFieldName;
+		ssFieldName << "i" << i << "_k";
+		const string fieldName = ssFieldName.str();
+		std::stringstream ssFieldValue;
+		ssFieldValue << "v_" << i;
+		const string fieldValue = ssFieldValue.str();
+
+		// Set
 		const MetaFieldInfo *fieldInfo = metaInfo.FindFieldByJsonName(fieldName);
 		ASSERT_TRUE(fieldInfo != NULL);
-		int* v = (int*)(void*)((char*)&st + fieldInfo->offset);
-		st._.Set(*v, i);
+		string* v = (string*)(void*)((char*)&st + fieldInfo->offset);
+		st._.SetStrict(*v, fieldValue);
 	}
 }
 
-void CheckComplicate3Serialized(const rapidjson::Document& doc)
+template <typename Encoding>
+void CheckComplicate3Serialized(const rapidjson::GenericDocument<Encoding>& doc)
 {
 	ASSERT_FALSE(doc.HasParseError());
 	for (int i = 1; i <= 64; ++i)
 	{
-		std::stringstream ss;
-		ss << "i" << i << "_v";
-		string fieldName = ss.str();
-		ASSERT_EQ(doc[fieldName.c_str()].GetInt(), i);
+		// Init key and value
+		std::basic_stringstream<typename Encoding::Ch> ssFieldName;
+		ssFieldName << "i" << i << "_k";
+		const std::basic_string<typename Encoding::Ch> fieldName = ssFieldName.str();
+		std::basic_stringstream<typename Encoding::Ch> ssFieldValue;
+		ssFieldValue << "v_" << i;
+		const std::basic_string<typename Encoding::Ch> fieldValue = ssFieldValue.str();
+
+		// Check
+		ASSERT_STREQ(doc[fieldName.c_str()].GetString(), fieldValue.c_str());
 	}
 }
 
@@ -417,6 +430,24 @@ TEST(Serialize, SerializeHandler)
 	st._.Serialize(writerWrapper);
 	rapidjson::Document doc;
 	doc.Parse(buf.GetString(), buf.GetSize() / sizeof(rapidjson::StringBuffer::Ch));
+	CheckComplicate3Serialized(doc);
+}
+
+TEST(Serialize, WriteUTF16)
+{
+	Complicate3 st;
+	InitComplicate3(st);
+
+	// Write
+	typedef rapidjson::GenericStringBuffer<rapidjson::UTF16LE<> > SBuffer;
+	SBuffer buf;
+	rapidjson::Writer<SBuffer> writer(buf);
+	HandlerWrapper<rapidjson::Writer<SBuffer> > writerWrapper(writer);
+	st._.Serialize(writerWrapper);
+
+	// Check
+	rapidjson::GenericDocument<rapidjson::UTF16LE<> > doc;
+	doc.Parse(buf.GetString());
 	CheckComplicate3Serialized(doc);
 }
 
