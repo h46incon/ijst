@@ -36,15 +36,11 @@ namespace detail{
 #define IJSTI_EXPAND(...)			__VA_ARGS__
 
 // forward declaration
-class SerializerInterface;
-class MetaClassInfoSetter;
-template<typename T>
-class MetaClassInfoTyped;
+template<typename Encoding> class SerializerInterface;
+template<typename Encoding> class MetaClassInfoSetter;
+template<typename T> class MetaClassInfoTyped;
 
-typedef rapidjson::Value JsonValue;
 typedef rapidjson::MemoryPoolAllocator<> JsonAllocator;
-typedef rapidjson::Document JsonDocument;
-
 /**
  * Singleton interface
  * @tparam T type
@@ -153,10 +149,14 @@ private:
 
 typedef GenericHeadWriter<HeadOStream, rapidjson::Writer<HeadOStream> > HeadWriter;
 
+template<typename Encoding>
 struct ErrorDocSetter {
+	typedef rapidjson::GenericDocument<Encoding> TDocument;
+	typedef rapidjson::GenericValue<Encoding> TValue;
+	typedef typename Encoding::Ch Ch;
 	//! Constructor
 	//! @param _pErrDoc		Error message output. set to nullptr if do not need to enable error message
-	explicit ErrorDocSetter(JsonDocument* _pErrDoc):
+	explicit ErrorDocSetter(TDocument* _pErrDoc):
 			pAllocator(_pErrDoc == IJSTI_NULL ? IJSTI_NULL : &_pErrDoc->GetAllocator()),
 			pErrMsg(_pErrDoc) {}
 
@@ -166,70 +166,70 @@ struct ErrorDocSetter {
 		pErrMsg->SetObject();
 
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("ParseError", *pAllocator),
+				TValue().SetString("type", *pAllocator),
+				TValue().SetString("ParseError", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("errCode", *pAllocator),
-				JsonValue().SetInt(static_cast<int>(errCode)),
+				TValue().SetString("errCode", *pAllocator),
+				TValue().SetInt(static_cast<int>(errCode)),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("err", *pAllocator),
-				JsonValue().SetString(rapidjson::GetParseError_En(errCode), *pAllocator),
+				TValue().SetString("err", *pAllocator),
+				TValue().SetString(rapidjson::GetParseError_En(errCode), *pAllocator),
 				*pAllocator);
 	}
 
 	//! Set error message about error of member in object
-	void ErrorInObject(const std::string& memberName, const std::string& jsonKey)
+	void ErrorInObject(const std::string& memberName, const std::basic_string<Ch>& jsonKey)
 	{
 		if (pAllocator == IJSTI_NULL) { return; }
 
 		// backup errMsg
-		JsonValue errDetail;
+		TValue errDetail;
 		errDetail = *pErrMsg;	// move
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("ErrInObject", *pAllocator),
+				TValue().SetString("type", *pAllocator),
+				TValue().SetString("ErrInObject", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("member", *pAllocator),
-				JsonValue().SetString(memberName.data(), static_cast<rapidjson::SizeType>(memberName.size()), *pAllocator),
+				TValue().SetString("member", *pAllocator),
+				TValue().SetString(memberName.data(), static_cast<rapidjson::SizeType>(memberName.size()), *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("jsonKey", *pAllocator),
-				JsonValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
+				TValue().SetString("jsonKey", *pAllocator),
+				TValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
 				*pAllocator);
 		if (!errDetail.IsNull()) {
 			pErrMsg->AddMember(
-					JsonValue().SetString("err", *pAllocator),
+					TValue().SetString("err", *pAllocator),
 					errDetail,
 					*pAllocator);
 		}
 	}
 
 	//! Set error message about error of member in object
-	void ErrorInMap(const std::string& jsonKey)
+	void ErrorInMap(const std::basic_string<Ch>& jsonKey)
 	{
 		if (pAllocator == IJSTI_NULL) { return; }
 
 		// backup errMsg
-		JsonValue errDetail;
+		TValue errDetail;
 		errDetail = *pErrMsg;	// move
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("ErrInMap", *pAllocator),
+				TValue().SetString("type", *pAllocator),
+				TValue().SetString("ErrInMap", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("member", *pAllocator),
-				JsonValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
+				TValue().SetString("member", *pAllocator),
+				TValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
 				*pAllocator);
 		if (!errDetail.IsNull()) {
 			pErrMsg->AddMember(
-					JsonValue().SetString("err", *pAllocator),
+					TValue().SetString("err", *pAllocator),
 					errDetail,
 					*pAllocator);
 		}
@@ -241,21 +241,21 @@ struct ErrorDocSetter {
 		if (pAllocator == IJSTI_NULL) { return; }
 
 		// backup errMsg
-		JsonValue errDetail;
+		TValue errDetail;
 		errDetail = *pErrMsg;	// move
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("ErrInArray", *pAllocator),
+				TValue().SetString("type", *pAllocator),
+				TValue().SetString("ErrInArray", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("index", *pAllocator),
-				JsonValue().SetUint(index),
+				TValue().SetString("index", *pAllocator),
+				TValue().SetUint(index),
 				*pAllocator);
 		if (!errDetail.IsNull()) {
 			pErrMsg->AddMember(
-					JsonValue().SetString("err", *pAllocator),
+					TValue().SetString("err", *pAllocator),
 					errDetail,
 					*pAllocator);
 		}
@@ -267,55 +267,55 @@ struct ErrorDocSetter {
 		assert(pErrMsg->IsArray());
 
 		// backup errMsg
-		JsonValue errDetail;
+		TValue errDetail;
 		errDetail = *pErrMsg;	// move
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("MissingMember", *pAllocator),
+				TValue().SetString("type", *pAllocator),
+				TValue().SetString("MissingMember", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("members", *pAllocator),
+				TValue().SetString("members", *pAllocator),
 				errDetail,
 				*pAllocator);
 	}
 
-	void UnknownMember(const std::string& jsonKey)
+	void UnknownMember(const std::basic_string<Ch>& jsonKey)
 	{
 		if (pAllocator == IJSTI_NULL) { return; }
 
 		// backup errMsg
-		JsonValue errDetail;
+		TValue errDetail;
 		errDetail = *pErrMsg;	// move
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("UnknownMember", *pAllocator),
+				TValue().SetString("type", *pAllocator),
+				TValue().SetString("UnknownMember", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("jsonKey", *pAllocator),
-				JsonValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
+				TValue().SetString("jsonKey", *pAllocator),
+				TValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
 				*pAllocator);
 	}
 
-	void ElementMapKeyDuplicated(const std::string& keyName)
+	void ElementMapKeyDuplicated(const std::basic_string<Ch>& keyName)
 	{
 		if (pAllocator == IJSTI_NULL) { return; }
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("MapKeyDuplicated", *pAllocator),
+				TValue().SetString("type", *pAllocator),
+				TValue().SetString("MapKeyDuplicated", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("key", *pAllocator),
-				JsonValue().SetString(keyName.data(), static_cast<rapidjson::SizeType>(keyName.size()), *pAllocator),
+				TValue().SetString("key", *pAllocator),
+				TValue().SetString(keyName.data(), static_cast<rapidjson::SizeType>(keyName.size()), *pAllocator),
 				*pAllocator);
 	}
 
-	void ElementTypeMismatch(const char *expectedType, const JsonValue &errVal)
+	void ElementTypeMismatch(const char *expectedType, const TValue &errVal)
 	{
 		if (pAllocator == IJSTI_NULL) { return; }
 
@@ -325,16 +325,16 @@ struct ErrorDocSetter {
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("TypeMismatch", *pAllocator),
+				TValue().SetString("type", *pAllocator),
+				TValue().SetString("TypeMismatch", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("expectedType", *pAllocator),
-				JsonValue().SetString(expectedType, *pAllocator),
+				TValue().SetString("expectedType", *pAllocator),
+				TValue().SetString(expectedType, *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("json", *pAllocator),
-				JsonValue().SetString(ostream.str.data(), static_cast<rapidjson::SizeType>(ostream.str.size()), *pAllocator),
+				TValue().SetString("json", *pAllocator),
+				TValue().SetString(ostream.str.data(), static_cast<rapidjson::SizeType>(ostream.str.size()), *pAllocator),
 				*pAllocator);
 	}
 
@@ -344,12 +344,12 @@ struct ErrorDocSetter {
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("ValueIsDefault", *pAllocator),
+				TValue().SetString("type", *pAllocator),
+				TValue().SetString("ValueIsDefault", *pAllocator),
 				*pAllocator);
 	}
 
-	void ElementAddMemberName(const std::string &memberName)
+	void ElementAddMemberName(const std::basic_string<Ch>& memberName)
 	{
 		if (pAllocator == IJSTI_NULL) { return; }
 		if (pErrMsg->IsNull()) {
@@ -358,7 +358,7 @@ struct ErrorDocSetter {
 		assert(pErrMsg->IsArray());
 
 		pErrMsg->PushBack(
-				JsonValue().SetString(memberName.data(), static_cast<rapidjson::SizeType>(memberName.size()), *pAllocator),
+				TValue().SetString(memberName.data(), static_cast<rapidjson::SizeType>(memberName.size()), *pAllocator),
 				*pAllocator
 		);
 	}
@@ -366,7 +366,7 @@ struct ErrorDocSetter {
 	// Pointer to allocator that used to setting error message
 	// Use nullptr if do not need error message
 	JsonAllocator* const pAllocator;
-	JsonValue* const pErrMsg;
+	TValue* const pErrMsg;
 };
 
 struct Util {
@@ -406,7 +406,8 @@ struct Util {
 		return end;
 	};
 
-	static void ShrinkAllocatorWithOwnDoc(JsonDocument& ownDoc, JsonValue& val, JsonAllocator*& pAllocatorOut)
+	template<typename Encoding>
+	static void ShrinkAllocatorWithOwnDoc(rapidjson::GenericDocument<Encoding>& ownDoc, rapidjson::GenericValue<Encoding>& val, JsonAllocator*& pAllocatorOut)
 	{
 		if (pAllocatorOut == &ownDoc.GetAllocator()) {
 			if (pAllocatorOut->Capacity() == pAllocatorOut->Size()) {
@@ -414,10 +415,10 @@ struct Util {
 				return;
 			}
 		}
-		JsonDocument newDoc;
+		rapidjson::GenericDocument<Encoding> newDoc;
 		newDoc.CopyFrom(val, newDoc.GetAllocator());
 		ownDoc.Swap(newDoc);
-		val = (JsonValue&) ownDoc;
+		val = static_cast<rapidjson::GenericValue<Encoding>&>(ownDoc);
 		pAllocatorOut = &ownDoc.GetAllocator();
 	}
 

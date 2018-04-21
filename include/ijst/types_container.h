@@ -150,7 +150,7 @@ namespace ijst {
 namespace detail {
 
 template<typename ElemType, typename VarType>
-class ContainerSerializer : public SerializerInterface {
+class ContainerSerializer : public SerializerInterface<rapidjson::UTF8<> > {
 public:
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
@@ -180,7 +180,7 @@ public:
 		field.clear();
 		// Alloc buffer
 		field.resize(req.stream.Size());
-		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(ElemType);
+		SerializerInterface<rapidjson::UTF8<> >& intf = IJSTI_FSERIALIZER_INS(ElemType);
 
 		size_t i = 0;
 		typename VarType::iterator itField = field.begin();
@@ -210,7 +210,7 @@ public:
 	virtual void ShrinkAllocator(void* pField) IJSTI_OVERRIDE
 	{
 		VarType& field = *static_cast<VarType *>(pField);
-		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(ElemType);
+		SerializerInterface<rapidjson::UTF8<> >& intf = IJSTI_FSERIALIZER_INS(ElemType);
 		for (typename VarType::iterator itField = field.begin(); itField != field.end(); ++itField)
 		{
 			intf.ShrinkAllocator(&*itField);
@@ -231,7 +231,7 @@ public:
  * @tparam T class
  */
 template<class T>
-class FSerializer<std::vector<T> > : public SerializerInterface {
+class FSerializer<std::vector<T> > : public SerializerInterface<rapidjson::UTF8<> > {
 	typedef std::vector<T> VarType;
 	typedef Singleton<ContainerSerializer<T, VarType> > ContainerSerializerSingleton;
 public:
@@ -243,7 +243,7 @@ public:
  * @tparam T class
  */
 template<class T>
-class FSerializer<std::deque<T> > : public SerializerInterface {
+class FSerializer<std::deque<T> > : public SerializerInterface<rapidjson::UTF8<> > {
 	typedef std::deque<T> VarType;
 	typedef Singleton<ContainerSerializer<T, VarType> > ContainerSerializerSingleton;
 
@@ -256,7 +256,7 @@ public:
  * @tparam T class
  */
 template<class T>
-class FSerializer<std::list<T> > : public SerializerInterface {
+class FSerializer<std::list<T> > : public SerializerInterface<rapidjson::UTF8<> > {
 	typedef std::list<T> VarType;
 	typedef Singleton<ContainerSerializer<T, VarType> > ContainerSerializerSingleton;
 public:
@@ -268,7 +268,7 @@ public:
  * @tparam T class
  */
 template<class T>
-class FSerializer<std::map<std::string, T> > : public SerializerInterface {
+class FSerializer<std::map<std::string, T> > : public SerializerInterface<rapidjson::UTF8<> > {
 	typedef std::map<std::string, T> VarType;
 public:
 
@@ -276,7 +276,7 @@ public:
 	{
 		assert(req.pField != IJST_NULL);
 		const VarType& field = *static_cast<const VarType *>(req.pField);
-		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(T);
+		SerializerInterface<rapidjson::UTF8<> >& intf = IJSTI_FSERIALIZER_INS(T);
 
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartObject());
 
@@ -301,7 +301,7 @@ public:
 		assert(req.pFieldBuffer != IJST_NULL);
 		VarType& field = *static_cast<VarType *>(req.pFieldBuffer);
 		field.clear();
-		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(T);
+		SerializerInterface<rapidjson::UTF8<> >& intf = IJSTI_FSERIALIZER_INS(T);
 
 		for (rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
 			 itMember != req.stream.MemberEnd(); ++itMember)
@@ -336,7 +336,7 @@ public:
 	virtual void ShrinkAllocator(void* pField) IJSTI_OVERRIDE
 	{
 		VarType& field = *static_cast<VarType *>(pField);
-		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(T);
+		SerializerInterface<rapidjson::UTF8<> >& intf = IJSTI_FSERIALIZER_INS(T);
 		for (typename VarType::iterator itField = field.begin(); itField != field.end(); ++itField)
 		{
 			intf.ShrinkAllocator(&itField->second);
@@ -349,7 +349,7 @@ public:
  * @tparam T class
  */
 template<class T>
-class FSerializer<std::vector<T_Member<T> > > : public SerializerInterface {
+class FSerializer<std::vector<T_Member<T> > > : public SerializerInterface<rapidjson::UTF8<> > {
 	typedef T_Member<T> MemberType;
 	typedef typename MemberType::ValType ValType;
 	typedef std::vector<MemberType> VarType;
@@ -358,7 +358,7 @@ public:
 	{
 		assert(req.pField != IJST_NULL);
 		const VarType& field = *static_cast<const VarType *>(req.pField);
-		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(ValType);
+		SerializerInterface<rapidjson::UTF8<> >& intf = IJSTI_FSERIALIZER_INS(ValType);
 
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartObject());
 
@@ -384,7 +384,7 @@ public:
 		VarType& field = *static_cast<VarType *>(req.pFieldBuffer);
 		field.clear();
 		// pField->shrink_to_fit();
-		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(ValType);
+		SerializerInterface<rapidjson::UTF8<> >& intf = IJSTI_FSERIALIZER_INS(ValType);
 
 		// Alloc buffer
 		field.resize(req.stream.MemberCount());
@@ -416,7 +416,7 @@ public:
 	virtual void ShrinkAllocator(void* pField) IJSTI_OVERRIDE
 	{
 		VarType& field = *static_cast<VarType*>(pField);
-		SerializerInterface& intf = IJSTI_FSERIALIZER_INS(ValType);
+		SerializerInterface<rapidjson::UTF8<> >& intf = IJSTI_FSERIALIZER_INS(ValType);
 		for (typename VarType::iterator itField = field.begin(); itField != field.end(); ++itField)
 		{
 			intf.ShrinkAllocator(&itField->value);

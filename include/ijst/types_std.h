@@ -126,12 +126,12 @@ private:
 namespace ijst {
 namespace detail {
 
-#define IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T)							\
-	template<> class FSerializer< T > : public SerializerInterface {		\
-		typedef T VarType;													\
+#define IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T)										\
+	template<> class FSerializer< T > : public SerializerInterface<rapidjson::UTF8<> > {		\
+		typedef T VarType;																\
 	public:
 
-#define IJSTI_DEFINE_SERIALIZE_INTERFACE_END()								\
+#define IJSTI_DEFINE_SERIALIZE_INTERFACE_END()											\
 	};
 
 IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_ubool)

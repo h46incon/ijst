@@ -373,7 +373,7 @@ IJST_DEFINE_STRUCT(
 
 void InitComplicate3(Complicate3& st)
 {
-	const MetaClassInfo &metaInfo = st._.GetMetaInfo();
+	const MetaClassInfo<> &metaInfo = st._.GetMetaInfo();
 	for (int i = 1; i <= 64; ++i)
 	{
 		// Init key and value
@@ -385,7 +385,7 @@ void InitComplicate3(Complicate3& st)
 		const string fieldValue = ssFieldValue.str();
 
 		// Set
-		const MetaFieldInfo *fieldInfo = metaInfo.FindFieldByJsonName(fieldName);
+		const MetaFieldInfo<> *fieldInfo = metaInfo.FindFieldByJsonName(fieldName);
 		ASSERT_TRUE(fieldInfo != NULL);
 		string* v = (string*)(void*)((char*)&st + fieldInfo->offset);
 		st._.SetStrict(*v, fieldValue);
