@@ -372,13 +372,13 @@ public:
 /**
  * @brief Meta information of field.
  *
- * @tparam Encoding 	encoding of json struct
+ * @tparam CharType		character type of string
  *
  * @see MetaClassInfo
  */
- template<typename Encoding = rapidjson::UTF8<> >
+ template<typename CharType = char>
 struct MetaFieldInfo { // NOLINT
- 	typedef typename Encoding::Ch Ch;
+ 	typedef CharType Ch;
 	//! The index of this fields in the meta information in the class. (Fields are sorted by offset inside class)
 	int index;
 	//! Field description.
@@ -390,19 +390,20 @@ struct MetaFieldInfo { // NOLINT
 	//! field name.
 	std::string fieldName;
 	//! @private private serializer interface.
-	detail::SerializerInterface<Encoding> *serializerInterface;
+	void* serializerInterface;		// type: detail::SerializerInterface<Encoding>*
 };
 
 /**
  * @brief Meta information of class.
  *
- * @tparam Encoding		encoding of json struct
+ * @tparam CharType		character type of string
+ *
  * @see MetaFieldInfo
  */
- template <typename Encoding = rapidjson::UTF8<> >
+ template <typename CharType = char>
 class MetaClassInfo {
 public:
-	typedef typename Encoding::Ch Ch;
+	typedef CharType Ch;
 	/**
 	 * @brief Get meta information for ijst struct T.
 	 *
@@ -440,7 +441,7 @@ public:
 	 *
 	 * @note log(FieldSize) complexity.
 	 */
-	const MetaFieldInfo<Encoding>* FindFieldByJsonName(const std::basic_string<Ch>& name) const
+	const MetaFieldInfo<Ch>* FindFieldByJsonName(const std::basic_string<Ch>& name) const
 	{
 		typename std::vector<NameMap>::const_iterator it =
 				detail::Util::BinarySearch(m_nameMap.begin(), m_nameMap.end(), name, NameMapComp);
@@ -453,14 +454,14 @@ public:
 	}
 
 	//! Get meta information of all fields in class. The returned vector is sorted by offset.
-	const std::vector<MetaFieldInfo<Encoding> >& GetFieldsInfo() const { return fieldsInfo; }
+	const std::vector<MetaFieldInfo<Ch> >& GetFieldsInfo() const { return fieldsInfo; }
 	//! Get name of class.
 	const std::string& GetClassName() const { return structName; }
 	//! Get the offset of Accessor object.
 	std::size_t GetAccessorOffset() const { return accessorOffset; }
 
 private:
-	friend class detail::MetaClassInfoSetter<Encoding>;
+	friend class detail::MetaClassInfoSetter<CharType>;		// use CharType instead of Ch to make IDE happy
 	template<typename T> friend class detail::MetaClassInfoTyped;
 	MetaClassInfo() : accessorOffset(0), mapInited(false) { }
 
@@ -468,14 +469,14 @@ private:
 	MetaClassInfo& operator=(MetaClassInfo) IJSTI_DELETED;
 
 	struct NameMap {
-		NameMap(const std::basic_string<Ch>* _pName, const MetaFieldInfo<Encoding>* _metaField)
+		NameMap(const std::basic_string<Ch>* _pName, const MetaFieldInfo<Ch>* _metaField)
 				: pName(_pName), metaField(_metaField) {}
 
 		bool operator<(const NameMap &r) const
 		{ return (*pName) < (*r.pName); }
 
 		const std::basic_string<Ch>* pName;
-		const MetaFieldInfo<Encoding>* metaField;
+		const MetaFieldInfo<Ch>* metaField;
 	};
 
 	static int NameMapComp(const NameMap &l, const std::basic_string<Ch> &name)
@@ -488,7 +489,7 @@ private:
 		return (int)((long)l - (long)r);
 	}
 
-	std::vector<MetaFieldInfo<Encoding> > fieldsInfo;
+	std::vector<MetaFieldInfo<Ch> > fieldsInfo;
 	std::string structName;
 	std::size_t accessorOffset;
 
@@ -642,6 +643,20 @@ namespace detail {
 
 	#define IJSTI_FSERIALIZER_INS(T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< T > >::GetInstance()
 
+	/**
+	 * Get and cast serializerInterface in metaFieldInfo to specify type
+	 *
+	 * @tparam Encoding 		encoding of output
+	 *
+	 * @param metaFieldInfo 	metaFieldInfo
+	 * @return 					typed SerializerInterface
+	 */
+	template<typename Encoding>
+	SerializerInterface<Encoding>* GetSerializerInterface(const MetaFieldInfo<typename Encoding::Ch>& metaFieldInfo)
+	{
+		return reinterpret_cast<SerializerInterface<Encoding>*>(metaFieldInfo.serializerInterface);
+	}
+
 	/**	========================================================================================
 	 *				Private
 	 */
@@ -657,7 +672,7 @@ namespace detail {
 	class MetaClassInfoTyped {
 	public:
 		typedef typename T::_ijst_Encoding Encoding;
-		MetaClassInfo<Encoding > metaClass;
+		MetaClassInfo<typename Encoding::Ch> metaClass;
 
 	private:
 		friend class Singleton<MetaClassInfoTyped<T> >;
@@ -668,11 +683,11 @@ namespace detail {
 		}
 	};
 
-	template<typename Encoding>
+	template<typename CharType>
 	class MetaClassInfoSetter {
 	public:
-		typedef typename Encoding::Ch Ch;
-		explicit MetaClassInfoSetter(MetaClassInfo<Encoding>& _d) : d(_d) { }
+		typedef CharType Ch;
+		explicit MetaClassInfoSetter(MetaClassInfo<Ch>& _d) : d(_d) { }
 
 		void InitBegin(const std::string& _tag, std::size_t _fieldCount, std::size_t _accessorOffset)
 		{
@@ -682,14 +697,14 @@ namespace detail {
 		}
 
 		void PushMetaField(const std::string &fieldName, const std::basic_string<Ch>& jsonName,
-						   std::size_t offset, FDesc::Mode desc, SerializerInterface<Encoding>& intf)
+						   std::size_t offset, FDesc::Mode desc, void* pSerializeInterface)
 		{
-			MetaFieldInfo<Encoding> metaField;
+			MetaFieldInfo<Ch> metaField;
 			metaField.jsonName = jsonName;
 			metaField.fieldName = fieldName;
 			metaField.offset = offset;
 			metaField.desc = desc;
-			metaField.serializerInterface = &intf;
+			metaField.serializerInterface = pSerializeInterface;
 			d.fieldsInfo.push_back(IJSTI_MOVE(metaField));
 		}
 
@@ -700,10 +715,10 @@ namespace detail {
 			SortMetaFieldsByOffset();
 
 			d.m_offsets.reserve(d.fieldsInfo.size());
-			d.m_nameMap.resize(d.fieldsInfo.size(), typename MetaClassInfo<Encoding>::NameMap(IJSTI_NULL, IJSTI_NULL));
+			d.m_nameMap.resize(d.fieldsInfo.size(), typename MetaClassInfo<Ch>::NameMap(IJSTI_NULL, IJSTI_NULL));
 
 			for (size_t i = 0; i < d.fieldsInfo.size(); ++i) {
-				MetaFieldInfo<Encoding>* ptrMetaField = &(d.fieldsInfo[i]);
+				MetaFieldInfo<Ch>* ptrMetaField = &(d.fieldsInfo[i]);
 				ptrMetaField->index = static_cast<int>(i);
 
 				d.m_offsets.push_back(ptrMetaField->offset);
@@ -711,7 +726,7 @@ namespace detail {
 				assert(i == 0 || d.m_offsets[i]  > d.m_offsets[i-1]);
 
 				// Insert name Map
-				InsertNameMap(i, typename MetaClassInfo<Encoding>::NameMap(&(ptrMetaField->jsonName), ptrMetaField));
+				InsertNameMap(i, typename MetaClassInfo<Ch>::NameMap(&(ptrMetaField->jsonName), ptrMetaField));
 			}
 
 			d.mapInited = true;
@@ -729,10 +744,10 @@ namespace detail {
 			}
 		}
 
-		void InsertNameMap(size_t len, const typename MetaClassInfo<Encoding>::NameMap& v)
+		void InsertNameMap(size_t len, const typename MetaClassInfo<Ch>::NameMap& v)
 		{
-			typename std::vector<typename MetaClassInfo<Encoding>::NameMap>::iterator it =
-					Util::BinarySearch(d.m_nameMap.begin(), d.m_nameMap.begin() + len, *v.pName, MetaClassInfo<Encoding>::NameMapComp);
+			typename std::vector<typename MetaClassInfo<Ch>::NameMap>::iterator it =
+					Util::BinarySearch(d.m_nameMap.begin(), d.m_nameMap.begin() + len, *v.pName, MetaClassInfo<Ch>::NameMapComp);
 			size_t i = static_cast<size_t>(it - d.m_nameMap.begin());
 			// assert name is unique
 			assert(i == len || (*v.pName) != (*it->pName));
@@ -743,7 +758,7 @@ namespace detail {
 			d.m_nameMap[i] = v;
 		}
 
-		MetaClassInfo<Encoding>& d;
+		MetaClassInfo<Ch>& d;
 	};
 
 	/**
@@ -784,15 +799,10 @@ namespace detail {
  */
 template<typename Encoding = rapidjson::UTF8<> >
 class Accessor {
-	typedef rapidjson::GenericDocument<Encoding> TDocument;
-	typedef rapidjson::GenericValue<Encoding> TValue;
-	typedef rapidjson::GenericStringBuffer<Encoding> TStringBuffer;
-	typedef MetaFieldInfo<Encoding> TMetaFieldInfo;
-	typedef MetaClassInfo<Encoding> TMetaClassInfo;
 public:
 	typedef typename Encoding::Ch Ch;
 	//! Constructor
-	explicit Accessor(const MetaClassInfo<Encoding> *pMetaClass, bool isParentVal, bool isValid) :
+	explicit Accessor(const MetaClassInfo<Ch>* pMetaClass, bool isParentVal, bool isValid) :
 			m_pMetaClass(pMetaClass), m_isValid(isValid), m_isParentVal(isParentVal)
 	{
 		IJST_ASSERT(!m_isParentVal || m_pMetaClass->GetFieldsInfo().size() == 1);
@@ -873,7 +883,7 @@ public:
 
 	inline bool IsValid() const { return m_isValid; }
 	inline bool IsParentVal() const { return m_isParentVal; }
-	const MetaClassInfo<Encoding>& GetMetaInfo() const { return *m_pMetaClass; }
+	const MetaClassInfo<Ch>& GetMetaInfo() const { return *m_pMetaClass; }
 
 	/*
 	 * Field accessor.
@@ -1158,6 +1168,12 @@ public:
 	}
 
 private:
+	typedef rapidjson::GenericDocument<Encoding> TDocument;
+	typedef rapidjson::GenericValue<Encoding> TValue;
+	typedef rapidjson::GenericStringBuffer<Encoding> TStringBuffer;
+	typedef MetaFieldInfo<Ch> TMetaFieldInfo;
+	typedef MetaClassInfo<Ch> TMetaClassInfo;
+
 	// #region Implement SerializeInterface
 	template <typename, typename> friend class detail::FSerializer;
 	typedef typename detail::SerializerInterface<Encoding>::SerializeReq SerializeReq;
@@ -1264,7 +1280,7 @@ private:
 					// write value
 					SerializeReq req(writer, pFieldValue, serFlag);
 					IJSTI_RET_WHEN_NOT_ZERO(
-							itMetaField->serializerInterface->Serialize(req));
+							detail::GetSerializerInterface<Encoding>(*itMetaField)->Serialize(req));
 					++fieldCountOut;
 				}
 					break;
@@ -1446,7 +1462,7 @@ private:
 			void *pField = GetFieldByOffset(metaField->offset);
 			FromJsonReq elemReq(stream, *m_pAllocator, p.deserFlag, canMoveSrc, pField, metaField->desc);
 			FromJsonResp elemResp(p.errDoc);
-			int ret = metaField->serializerInterface->FromJson(elemReq, elemResp);
+			int ret = detail::GetSerializerInterface<Encoding>(*metaField)->FromJson(elemReq, elemResp);
 			// Check return
 			if (ret != 0) {
 				m_r->fieldStatus[metaField->index] = FStatus::kMissing;
@@ -1466,7 +1482,7 @@ private:
 			 itFieldInfo != m_pMetaClass->GetFieldsInfo().end(); ++itFieldInfo)
 		{
 			void *pField = GetFieldByOffset(itFieldInfo->offset);
-			itFieldInfo->serializerInterface->ShrinkAllocator(pField);
+			detail::GetSerializerInterface<Encoding>(*itFieldInfo)->ShrinkAllocator(pField);
 		}
 
 		// Shrink self allocator
@@ -1522,7 +1538,7 @@ private:
 
 	inline std::size_t GetFieldOffset(const void *ptr) const
 	{
-		const unsigned char *filed_ptr = static_cast<const unsigned char *>(ptr);
+		const unsigned char *filed_ptr = reinterpret_cast<const unsigned char *>(ptr);
 		return filed_ptr - m_pOuter;
 	}
 
@@ -1698,7 +1714,8 @@ inline const MetaClassInfo<Encoding> &MetaClassInfo<Encoding>::GetMetaInfo()
 				/* Do not call MetaInfoS::GetInstance() int this function */			 		\
 				char dummyBuffer[sizeof(stName)];												\
 				const stName* stPtr = reinterpret_cast< stName*>(dummyBuffer);					\
-				::ijst::detail::MetaClassInfoSetter<_ijst_Encoding> mSetter(metaInfo->metaClass);		\
+				::ijst::detail::MetaClassInfoSetter<typename _ijst_Encoding::Ch> 				\
+							mSetter(metaInfo->metaClass);										\
 				mSetter.InitBegin(#stName, N, IJSTI_OFFSETOF(stPtr, _));
 
 	#define IJSTI_METAINFO_ADD(stName, fDef)  													\
@@ -1707,7 +1724,7 @@ inline const MetaClassInfo<Encoding> &MetaClassInfo<Encoding>::GetMetaInfo()
 				IJSTI_IDL_SNAME fDef, 															\
 				IJSTI_OFFSETOF(stPtr, IJSTI_IDL_FNAME fDef),									\
 				IJSTI_IDL_DESC fDef, 															\
-				IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef)										\
+				&(IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef))									\
 			);
 
 	#define IJSTI_METAINFO_DEFINE_END()															\

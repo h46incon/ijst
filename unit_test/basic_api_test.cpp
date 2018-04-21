@@ -77,11 +77,11 @@ IJST_DEFINE_STRUCT(
 		, (T_string, str_2, "str_val_2", FDesc::Optional | FDesc::Nullable)
 )
 
-template<typename Encoding>
-void CheckFieldInfo(const MetaClassInfo<Encoding>& metaInfo,
-					const std::basic_string<typename Encoding::Ch>& fieldName, const std::basic_string<typename Encoding::Ch>& jsonName, size_t offset, FDesc::Mode desc)
+template<typename Ch>
+void CheckFieldInfo(const MetaClassInfo<Ch>& metaInfo,
+					const std::basic_string<Ch>& fieldName, const std::basic_string<Ch>& jsonName, size_t offset, FDesc::Mode desc)
 {
-	const MetaFieldInfo<Encoding> *fieldInfo = metaInfo.FindFieldByJsonName(jsonName);
+	const MetaFieldInfo<Ch> *fieldInfo = metaInfo.FindFieldByJsonName(jsonName);
 	ASSERT_FALSE(fieldInfo == NULL);
 	ASSERT_EQ(fieldInfo->fieldName, fieldName);
 	ASSERT_EQ(fieldInfo->jsonName, jsonName);
@@ -97,10 +97,10 @@ TEST(BasicAPI, MetaInfo)
 	ASSERT_EQ(metaInfo.GetClassName(), "SimpleSt");
 	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 4u);
 	ASSERT_EQ((ptrdiff_t)metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
-	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_1", "int_val_1", (char*)&st.int_1 - (char*)&st, 0);
-	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_2", "int_val_2", (char*)&st.int_2 - (char*)&st, FDesc::Optional);
-	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "str_1", "str_val_1", (char*)&st.str_1 - (char*)&st, FDesc::Nullable);
-	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "str_2", "str_val_2", (char*)&st.str_2 - (char*)&st, FDesc::Optional | FDesc::Nullable);
+	CheckFieldInfo<char>(metaInfo, "int_1", "int_val_1", (char*)&st.int_1 - (char*)&st, 0);
+	CheckFieldInfo<char>(metaInfo, "int_2", "int_val_2", (char*)&st.int_2 - (char*)&st, FDesc::Optional);
+	CheckFieldInfo<char>(metaInfo, "str_1", "str_val_1", (char*)&st.str_1 - (char*)&st, FDesc::Nullable);
+	CheckFieldInfo<char>(metaInfo, "str_2", "str_val_2", (char*)&st.str_2 - (char*)&st, FDesc::Optional | FDesc::Nullable);
 }
 
 TEST(BasicAPI, FieldStatus)
