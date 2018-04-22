@@ -105,22 +105,43 @@
 	#define IJST_EXPLICIT_TEMPLATE	0
 #endif
 
+//! @brief Declare a ijst struct with specify encoding
+//! @param ...			encoding, struct_name [,(field_type, field_name, json_key, field_desc)]*
+//! @ingroup IJST_MACRO_API
+#define IJST_DEFINE_GENERIC_STRUCT(...) \
+    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), false, F, __VA_ARGS__)
+//! @brief Declare a ijst struct with specify encoding with getter
+//! @param ...			encoding, struct_name [,(field_type, field_name, json_key, field_desc)]*
+//! @ingroup IJST_MACRO_API
+#define IJST_DEFINE_GENERIC_STRUCT_WITH_GETTER(...) \
+    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), false, T, __VA_ARGS__)
+//! @brief Declare a ijst struct with specify encoding which represent a value instead of members insides a object
+//! @ingroup IJST_MACRO_API
+#define IJST_DEFINE_GENERIC_VALUE(encoding, stName, type, fName, desc)	\
+    IJSTI_DEFINE_STRUCT_IMPL(1, true, F, encoding, stName, (type, fName, "", desc))
+//! @brief Declare a ijst struct with specify encoding which represent a value instead of members insides a object with getter
+//! @ingroup IJST_MACRO_API
+#define IJST_DEFINE_GENERIC_VALUE_WITH_GETTER(encoding, stName, type, fName, desc)	\
+    IJSTI_DEFINE_STRUCT_IMPL(1, true, T, encoding, stName, (type, fName, "", desc))
+
 //! @brief Declare a ijst struct.
+//! @param ...			struct_name [,(field_type, field_name, json_key, field_desc)]*
 //! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_STRUCT(...) \
-    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), false, F, __VA_ARGS__)
+	IJST_DEFINE_GENERIC_STRUCT(::rapidjson::UTF8<>, __VA_ARGS__)
 //! @brief Declare a ijst struct with getter.
+//! @param ...			struct_name [,(field_type, field_name, json_key, field_desc)]*
 //! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_STRUCT_WITH_GETTER(...) \
-    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), false, T, __VA_ARGS__)
+    IJST_DEFINE_GENERIC_STRUCT_WITH_GETTER(::rapidjson::UTF8<>, __VA_ARGS__)
 //! @brief Declare a ijst struct which represent a value instead of members insides a object
 //! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_VALUE(stName, type, fName, desc)	\
-    IJSTI_DEFINE_STRUCT_IMPL(1, true, F, stName, (type, fName, "", desc))
+    IJST_DEFINE_GENERIC_VALUE(::rapidjson::UTF8<>, stName, type, fName, desc)
 //! @brief Declare a ijst struct which represent a value instead of members insides a object with getter
 //! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_VALUE_WITH_GETTER(stName, type, fName, desc)	\
-    IJSTI_DEFINE_STRUCT_IMPL(1, true, T, stName, (type, fName, "", desc))
+    IJST_DEFINE_GENERIC_VALUE_WITH_GETTER(::rapidjson::UTF8<>, stName, type, fName, desc)
 
 //! @brief Get status of field in obj.
 //! @ingroup IJST_MACRO_API
@@ -1657,10 +1678,11 @@ inline const MetaClassInfo<Encoding> &MetaClassInfo<Encoding>::GetMetaInfo()
 //! @param N			fields size
 //! @param isRawVal		is struct a raw value: true/false
 //! @param needGetter	need get_* function: T/F
+//! @param encoding		encoding of json struct
 //! @param stName		struct name
 //! @param ...			fields define: [(fType, fName, sName, desc)]*
 #ifdef _MSC_VER
-	//! @params	N, isRawVal, needGetter, stName, ...
+	//! @params	N, isRawVal, needGetter, encoding, stName, ...
 	#define IJSTI_DEFINE_STRUCT_IMPL(N, ...) \
 		IJSTI_EXPAND(IJSTI_PP_CONCAT(IJSTI_DEFINE_STRUCT_IMPL_, N)(__VA_ARGS__))
 #else
@@ -1689,9 +1711,9 @@ inline const MetaClassInfo<Encoding> &MetaClassInfo<Encoding>::GetMetaInfo()
 
 	#define IJSTI_OFFSETOF(base, member)	(size_t(&base->member) - size_t(base))
 
-	#define IJSTI_STRUCT_PUBLIC_DEFINE()														\
-		typedef ::rapidjson::UTF8<> _ijst_Encoding;												\
-		typedef ::ijst::Accessor<> _ijst_AccessorType;											\
+	#define IJSTI_STRUCT_PUBLIC_DEFINE(encoding)												\
+		typedef encoding _ijst_Encoding;														\
+		typedef ::ijst::Accessor<_ijst_Encoding> _ijst_AccessorType;							\
 		_ijst_AccessorType _;
 
 	#define IJSTI_DEFINE_FIELD(fType, fName, ... )												\
