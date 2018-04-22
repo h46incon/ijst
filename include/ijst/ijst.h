@@ -641,28 +641,37 @@ namespace detail {
 		{ (void)pField; }
 	};
 
+	//! Propagate structs' define in SerializeInterface<Encoding>
+	#define IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding)										\
+		typedef typename SerializerInterface<Encoding>::SerializeReq SerializeReq;			\
+		typedef typename SerializerInterface<Encoding>::FromJsonReq FromJsonReq;			\
+		typedef typename SerializerInterface<Encoding>::FromJsonResp FromJsonResp;
+
 	/**
 	 * Template interface of serialization class
 	 * This template is unimplemented, and will throw a compile error when use it.
 	 *
 	 * @tparam T 		class
+	 * @tparam Encoding	encoding of json struct
 	 * @tparam Enable	type for SFINAE
 	 */
-	template<typename T, typename Enable = void>
-	class FSerializer : public SerializerInterface<rapidjson::UTF8<> > {
+	template<typename T, typename Encoding, typename Enable = void>
+	class FSerializer : public SerializerInterface<Encoding> {
 	public:
-		#if __cplusplus >= 201103L
+#if __cplusplus >= 201103L
 		static_assert(!std::is_same<T, T>::value,
 					  "This base template should not be instantiated. (Maybe use wrong param when define ijst struct)");
-		#endif
-
+#endif
 		typedef void VarType;
+		IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
+
 		virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE = 0;
 		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE = 0;
 		virtual void ShrinkAllocator(void * pField) IJSTI_OVERRIDE { (void)pField; }
 	};
 
-	#define IJSTI_FSERIALIZER_INS(T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< T > >::GetInstance()
+	#define IJSTI_FSERIALIZER_INS(T, Encoding) 		\
+		::ijst::detail::Singleton< ::ijst::detail::FSerializer< T, Encoding > >::GetInstance()
 
 	/**
 	 * Get and cast serializerInterface in metaFieldInfo to specify type
@@ -685,15 +694,14 @@ namespace detail {
 	 * MetaClassInfo of T
 	 * Push meta class info of T in specialized constructor MetaInfo<T>().
 	 *
-	 * @tparam T 	class. Concept require T::_ijst_InitMetaInfo<bool>(MetaInfo*), typedef T::_ijst_Encoding
+	 * @tparam T 	class. Concept require T::_ijst_InitMetaInfo<bool>(MetaInfo*), typedef T::_ijst_Ch
 	 *
 	 * @note		Use Singleton<MetaClassInfoTyped<T> > to get the instance
 	 */
 	template<typename T>
 	class MetaClassInfoTyped {
 	public:
-		typedef typename T::_ijst_Encoding Encoding;
-		MetaClassInfo<typename Encoding::Ch> metaClass;
+		MetaClassInfo<typename T::_ijst_Ch> metaClass;
 
 	private:
 		friend class Singleton<MetaClassInfoTyped<T> >;
@@ -784,12 +792,16 @@ namespace detail {
 
 	/**
 	 * Serialization of ijst struct types
-	 * @tparam T class
+	 * @tparam T 			class
+	 * @tparam Encoding		encoding of json struct
 	 */
-	template<class T>
-	class FSerializer<T, /*EnableIf*/ typename HasType<typename T::_ijst_AccessorType>::Void>: public SerializerInterface<rapidjson::UTF8<> > {
+	template<class T, typename Encoding>
+	class FSerializer<T, Encoding, /*EnableIf*/ typename HasType<typename T::_ijst_AccessorType>::Void>
+	        : public SerializerInterface<Encoding>
+	{
 	public:
 		typedef T VarType;
+		IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
 
 		virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 		{
@@ -1713,6 +1725,7 @@ inline const MetaClassInfo<Encoding> &MetaClassInfo<Encoding>::GetMetaInfo()
 
 	#define IJSTI_STRUCT_PUBLIC_DEFINE(encoding)												\
 		typedef encoding _ijst_Encoding;														\
+		typedef typename encoding::Ch _ijst_Ch;													\
 		typedef ::ijst::Accessor<_ijst_Encoding> _ijst_AccessorType;							\
 		_ijst_AccessorType _;
 
@@ -1736,7 +1749,7 @@ inline const MetaClassInfo<Encoding> &MetaClassInfo<Encoding>::GetMetaInfo()
 				/* Do not call MetaInfoS::GetInstance() int this function */			 		\
 				char dummyBuffer[sizeof(stName)];												\
 				const stName* stPtr = reinterpret_cast< stName*>(dummyBuffer);					\
-				::ijst::detail::MetaClassInfoSetter<typename _ijst_Encoding::Ch> 				\
+				::ijst::detail::MetaClassInfoSetter<_ijst_Ch>					 				\
 							mSetter(metaInfo->metaClass);										\
 				mSetter.InitBegin(#stName, N, IJSTI_OFFSETOF(stPtr, _));
 
@@ -1746,7 +1759,7 @@ inline const MetaClassInfo<Encoding> &MetaClassInfo<Encoding>::GetMetaInfo()
 				IJSTI_IDL_SNAME fDef, 															\
 				IJSTI_OFFSETOF(stPtr, IJSTI_IDL_FNAME fDef),									\
 				IJSTI_IDL_DESC fDef, 															\
-				&(IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef))									\
+				&(IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef, _ijst_Encoding))					\
 			);
 
 	#define IJSTI_METAINFO_DEFINE_END()															\

@@ -29,10 +29,16 @@ typedef unsigned int 	T_uint;
 typedef uint64_t 		T_uint64;
 //! string -> std::string
 typedef double 			T_double;
-//! string -> std::string
+//! string -> std::basic_string<Encoding::Ch>
+#define IJST_TSTR		::std::basic_string<_ijst_Ch>
+//! string -> std::string, for backward compatibility
 typedef std::string 	T_string;
-//! anything -> a wrapper of rapidjson::Value
-class 					T_raw;
+//! anything -> a wrapper of rapidjson::GenericValue<Encoding>
+#define IJST_TRAW		::ijst::T_generic_raw<_ijst_Encoding>
+//! anything -> a wrapper of rapidjson::Value, for backward compatibility
+template<typename Encoding> class T_GenericRaw;
+typedef
+T_GenericRaw<rapidjson::UTF8<> > T_raw;
 
 /**
  * @brief Wrapper of bool to support normal vector<bool>.
@@ -52,24 +58,27 @@ private:
 
 /**
  * @brief Object that contain raw rapidjson::Value and Allocator.
+ *
+ * @tparam Encoding		encoding of json struct
  */
-class T_raw {
+template<typename Encoding>
+class T_GenericRaw {
 public:
-	T_raw()
+	T_GenericRaw()
 	{
-		m_pOwnDoc = new rapidjson::Document();
+		m_pOwnDoc = new TDocument();
 		m_pAllocator = &m_pOwnDoc->GetAllocator();
 	}
 
-	T_raw(const T_raw &rhs)
+	T_GenericRaw(const T_GenericRaw &rhs)
 	{
-		m_pOwnDoc = new rapidjson::Document();
+		m_pOwnDoc = new TDocument();
 		m_pAllocator = &m_pOwnDoc->GetAllocator();
 		v.CopyFrom(rhs.v, *m_pAllocator);
 	}
 
 #if __cplusplus >= 201103L
-	T_raw(T_raw &&rhs) IJSTI_NOEXCEPT
+	T_GenericRaw(T_GenericRaw &&rhs) IJSTI_NOEXCEPT
 	{
 		m_pOwnDoc = IJST_NULL;
 		m_pAllocator = IJST_NULL;
@@ -77,13 +86,13 @@ public:
 	}
 #endif
 
-	T_raw &operator=(T_raw rhs)
+	T_GenericRaw &operator=(T_GenericRaw rhs)
 	{
 		Steal(rhs);
 		return *this;
 	}
 
-	void Steal(T_raw& rhs) IJSTI_NOEXCEPT
+	void Steal(T_GenericRaw& rhs) IJSTI_NOEXCEPT
 	{
 		if (this == &rhs) {
 			return;
@@ -98,15 +107,15 @@ public:
 		v = rhs.v;
 	}
 
-	~T_raw()
+	~T_GenericRaw()
 	{
 		delete m_pOwnDoc;
 		m_pOwnDoc = IJST_NULL;
 	}
 
 	//! Get actually value in object
-	rapidjson::Value& V() {return v;}
-	const rapidjson::Value& V() const {return v;}
+	rapidjson::GenericValue<Encoding>& V() {return v;}
+	const rapidjson::GenericValue<Encoding>& V() const {return v;}
 	//! See ijst::Accessor::GetAllocator
 	rapidjson::MemoryPoolAllocator<>& GetAllocator() {return *m_pAllocator;}
 	const rapidjson::MemoryPoolAllocator<>& GetAllocator() const {return *m_pAllocator;}
@@ -115,10 +124,13 @@ public:
 	const rapidjson::MemoryPoolAllocator<>& GetOwnAllocator() const {return m_pOwnDoc->GetAllocator();}
 
 private:
-	friend class detail::FSerializer<T_raw>;
-	rapidjson::Value v;
+	typedef rapidjson::GenericDocument<Encoding> TDocument;
+	typedef rapidjson::GenericValue<Encoding> TValue;
+
+	friend class detail::FSerializer<T_GenericRaw, Encoding>;
+	TValue v;
 	rapidjson::MemoryPoolAllocator<>* m_pAllocator;
-	rapidjson::Document* m_pOwnDoc;		// use pointer to make T_raw be a standard-layout type
+	TDocument* m_pOwnDoc;		//TODO: use pointer to make T_raw be a standard-layout type
 };
 
 }	// namespace ijst
@@ -127,8 +139,10 @@ namespace ijst {
 namespace detail {
 
 #define IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T)										\
-	template<> class FSerializer< T > : public SerializerInterface<rapidjson::UTF8<> > {		\
+	template<typename Encoding> 														\
+	class FSerializer< T, Encoding> : public SerializerInterface<Encoding> {			\
 		typedef T VarType;																\
+		IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);										\
 	public:
 
 #define IJSTI_DEFINE_SERIALIZE_INTERFACE_END()											\
@@ -275,7 +289,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_double)
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
 
-IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_string)
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(std::basic_string<typename Encoding::Ch>)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType& field = *static_cast<const VarType *>(req.pField);
@@ -286,7 +300,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_string)
 	{
 		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsString()), "string");
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
-		*pField = std::string(req.stream.GetString(), req.stream.GetStringLength());
+		*pField = std::basic_string<typename Encoding::Ch>(req.stream.GetString(), req.stream.GetStringLength());
 		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((pField->empty()));
 		return 0;
 	}
