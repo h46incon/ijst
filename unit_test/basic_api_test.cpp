@@ -77,6 +77,14 @@ IJST_DEFINE_STRUCT(
 		, (T_string, str_2, "str_val_2", FDesc::Optional | FDesc::Nullable)
 )
 
+IJST_DEFINE_GENERIC_STRUCT(
+		rapidjson::UTF16LE<>, U16SimpleSt
+		, (T_int, int_1, L"int_val_1", 0)
+		, (T_int, int_2, L"int_val_2", FDesc::Optional)
+		, (IJST_TSTR, str_1, L"str_val_1", FDesc::Nullable)
+		, (IJST_TSTR, str_2, L"str_val_2", FDesc::Optional | FDesc::Nullable)
+)
+
 template<typename Ch>
 void CheckFieldInfo(const MetaClassInfo<Ch>& metaInfo,
 					const std::basic_string<Ch>& fieldName, const std::basic_string<Ch>& jsonName, size_t offset, FDesc::Mode desc)

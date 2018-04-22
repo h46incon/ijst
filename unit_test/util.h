@@ -44,7 +44,7 @@ inline void CheckTypeMismatch(const rapidjson::Value& errDoc, const char* expect
 
 	// The test of HeadOStream is in detail_test.cpp
 	// The capacity of ostream must be same as ijst/detail/detail.h
-	ijst::detail::HeadOStream ostream(16);
+	ijst::detail::HeadOStream<rapidjson::UTF8<> > ostream(16);
 	const char* pc = value;
 	while (*pc != '\0')
 	{
