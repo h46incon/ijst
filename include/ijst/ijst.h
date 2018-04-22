@@ -659,7 +659,7 @@ namespace detail {
 	class FSerializer : public SerializerInterface<Encoding> {
 	public:
 #if __cplusplus >= 201103L
-		static_assert(!std::is_same<T, T>::value,
+		static_assert(!std::is_same<T, T>::value,	// always failed
 					  "This base template should not be instantiated. (Maybe use wrong param when define ijst struct)");
 #endif
 		typedef void VarType;

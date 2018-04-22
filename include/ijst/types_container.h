@@ -22,7 +22,7 @@
 #define IJST_TLIST(T)	::std::list< T >
 //! @brief Declare a map<string, T> field of json object
 //! @ingroup IJST_MACRO_API
-#define IJST_TMAP(T)	IJST_TYPE(::std::map< ::std::string, T >)
+#define IJST_TMAP(T)	IJST_TYPE(::std::map< ::std::basic_string<_ijst_Ch>, T >)
 //! @brief Declare a vector of members of json object
 //! @ingroup IJST_MACRO_API
 #define IJST_TOBJ(T)	IJST_TYPE(::std::vector< ::ijst::T_Member< T, _ijst_Ch> >)
@@ -56,11 +56,12 @@ struct T_Member {
  * Specialization for map type of Optional template.
  * This specialization add operator[] (string key) for getter chaining.
  *
- * @tparam TElem
+ * @tparam TElem		map value type
+ * @tparam CharType		character type of map key
  */
-template <typename TElem>
-class Optional <std::map<std::string, TElem> > {
-	typedef std::map<std::string, TElem> ValType;
+template <typename TElem, typename CharType>
+class Optional <std::map<std::basic_string<CharType>, TElem> > {
+	typedef std::map<std::basic_string<CharType>, TElem> ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 public:
 	/**
@@ -69,12 +70,12 @@ public:
 	 * @param key 	key
 	 * @return 		Optional(elemInstance) if key is found, Optional(null) else
 	 */
-	Optional<TElem> operator[](const std::string& key) const
+	Optional<TElem> operator[](const std::basic_string<CharType>& key) const
 	{
 		if (m_pVal == IJST_NULL) {
 			return Optional<TElem>(IJST_NULL);
 		}
-		typename std::map<std::string, TElem>::iterator it = m_pVal->find(key);
+		typename ValType::iterator it = m_pVal->find(key);
 		if (it == m_pVal->end()){
 			return Optional<TElem>(IJST_NULL);
 		}
@@ -88,12 +89,13 @@ public:
  * const version Specialization for map type of Optional template.
  * This specialization add operator[] (string key) for getter chaining.
  *
- * @tparam TElem	Element type
+ * @tparam TElem		map value type
+ * @tparam CharType		character type of map key
  */
-template <typename TElem>
-class Optional <const std::map<std::string, TElem> >
+template <typename TElem, typename CharType>
+class Optional <const std::map<std::basic_string<CharType>, TElem> >
 {
-	typedef const std::map<std::string, TElem> ValType;
+	typedef const std::map<std::basic_string<CharType>, TElem> ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 public:
 	/**
@@ -102,12 +104,12 @@ public:
 	 * @param key 	key
 	 * @return 		Optional(const elemInstance) if key is found, Optional(null) else
 	 */
-	Optional<const TElem> operator[](const std::string& key) const
+	Optional<const TElem> operator[](const std::basic_string<CharType>& key) const
 	{
 		if (m_pVal == IJST_NULL) {
 			return Optional<const TElem>(IJST_NULL);
 		}
-		typename std::map<std::string, TElem>::const_iterator it = m_pVal->find(key);
+		typename ValType::const_iterator it = m_pVal->find(key);
 		if (it == m_pVal->end()){
 			return Optional<const TElem>(IJST_NULL);
 		}
@@ -273,8 +275,9 @@ public:
  * @tparam T class
  */
 template<class T, typename Encoding>
-class FSerializer<std::map<std::string, T>, Encoding> : public SerializerInterface<Encoding> {
-	typedef std::map<std::string, T> VarType;
+class FSerializer<std::map<std::basic_string<typename Encoding::Ch>, T>, Encoding> : public SerializerInterface<Encoding> {
+	typedef typename Encoding::Ch Ch;
+	typedef std::map<std::basic_string<Ch>, T> VarType;
 public:
 	IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
 
@@ -287,7 +290,7 @@ public:
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartObject());
 
 		for (typename VarType::const_iterator itFieldMember = field.begin(); itFieldMember != field.end(); ++itFieldMember) {
-			const std::string& key = itFieldMember->first;
+			const std::basic_string<Ch>& key = itFieldMember->first;
 			IJSTI_RET_WHEN_WRITE_FAILD(
 					req.writer.Key(key.data(), static_cast<rapidjson::SizeType>(key.size())) );
 
@@ -312,7 +315,7 @@ public:
 		for (rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
 			 itMember != req.stream.MemberEnd(); ++itMember)
 		{
-			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
+			const std::basic_string<Ch> fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
 			// New a elem buffer in container first to avoid copy
 			typename VarType::value_type buf(fieldName, T());
 			std::pair<typename VarType::iterator, bool> insertRet = field.insert(IJSTI_MOVE(buf));
@@ -355,7 +358,8 @@ public:
  */
 template<class T, typename Encoding>
 class FSerializer<std::vector<T_Member<T, typename Encoding::Ch> >, Encoding> : public SerializerInterface<Encoding> {
-	typedef T_Member<T, typename Encoding::Ch> MemberType;
+	typedef typename Encoding::Ch Ch;
+	typedef T_Member<T, Ch> MemberType;
 	typedef typename MemberType::ValType ValType;
 	typedef std::vector<MemberType> VarType;
 public:
@@ -370,7 +374,7 @@ public:
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartObject());
 
 		for (typename VarType::const_iterator itMember = field.begin(); itMember != field.end(); ++itMember) {
-			const std::string& key = itMember->name;
+			const std::basic_string<Ch>& key = itMember->name;
 			IJSTI_RET_WHEN_WRITE_FAILD(
 					req.writer.Key(key.data(), static_cast<rapidjson::SizeType>(key.size())) );
 
@@ -401,7 +405,7 @@ public:
 		{
 			assert(i < field.size());
 			MemberType& memberBuf = field[i];
-			memberBuf.name = std::string(itMember->name.GetString(), itMember->name.GetStringLength());
+			memberBuf.name = std::basic_string<Ch>(itMember->name.GetString(), itMember->name.GetStringLength());
 			ValType &elemBuffer = memberBuf.value;
 			FromJsonReq elemReq(itMember->value, req.allocator,
 								req.deserFlag, req.canMoveSrc, &elemBuffer, 0);
