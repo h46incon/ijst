@@ -190,7 +190,7 @@ public:
 
 		size_t i = 0;
 		typename VarType::iterator itField = field.begin();
-		rapidjson::Value::ValueIterator  itVal = req.stream.Begin();
+		typename rapidjson::GenericValue<Encoding>::ValueIterator itVal = req.stream.Begin();
 		for (; itVal != req.stream.End(); ++itVal, ++itField, ++i)
 		{
 			assert(i < field.size());
@@ -312,7 +312,7 @@ public:
 		field.clear();
 		SerializerInterface<Encoding>& intf = IJSTI_FSERIALIZER_INS(T, Encoding);
 
-		for (rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
+		for (typename rapidjson::GenericValue<Encoding>::MemberIterator itMember = req.stream.MemberBegin();
 			 itMember != req.stream.MemberEnd(); ++itMember)
 		{
 			const std::basic_string<Ch> fieldName(itMember->name.GetString(), itMember->name.GetStringLength());

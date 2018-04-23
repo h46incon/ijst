@@ -531,16 +531,6 @@ namespace detail {
 	//! return if action return non-0
 	#define IJSTI_RET_WHEN_NOT_ZERO(action) 						\
 		do { int ret = (action); if(ret != 0) return (ret); } while (false)
-	//! helper in Accessor::Deserialize()
-	#define IJSTI_PARSE_AND_RET_WHEN_ERROR									\
-		do {																\
-			doc.template Parse<parseFlags>(cstrInput, length);				\
-			if (doc.HasParseError()) {										\
-				detail::ErrorDocSetter<Encoding> errDocSetter(pErrDocOut);	\
-				errDocSetter.ParseFailed(doc.GetParseError());				\
-				return ErrorCode::kDeserializeParseFailed;					\
-			}																\
-		} while (false)
 	//! return error and set error doc when type mismatch
 	#define IJSTI_RET_WHEN_TYPE_MISMATCH(checkCode, expType)			\
 		if (!(checkCode)) {												\
@@ -1052,6 +1042,7 @@ public:
 	 * @brief Deserialize from C-style string.
 	 *
 	 * @tparam parseFlags		parseFlags of rapidjson parse method
+	 * @tparam SourceEncoding	encoding of source
 	 *
 	 * @param cstrInput			Input C string
 	 * @param length			Length of string
@@ -1061,11 +1052,23 @@ public:
 	 *
 	 * @note The input string can contain '\0'
 	 */
-	template <unsigned parseFlags>
-	int Deserialize(const char *cstrInput, std::size_t length,
+	template <unsigned parseFlags, typename SourceEncoding>
+	int Deserialize(const typename SourceEncoding::Ch *cstrInput, std::size_t length,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
+		//! helper
+#define IJSTI_PARSE_AND_RET_WHEN_ERROR									\
+	do {																\
+		doc.template Parse<parseFlags, SourceEncoding>(					\
+				cstrInput, length);										\
+		if (doc.HasParseError()) {										\
+			detail::ErrorDocSetter<Encoding> errDocSetter(pErrDocOut);	\
+			errDocSetter.ParseFailed(doc.GetParseError());				\
+			return ErrorCode::kDeserializeParseFailed;					\
+		}																\
+	} while (false)
+
 		// The new object will call FromJson() interfaces soon in most situation
 		// So clear own allocator will not bring much benefit
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
@@ -1080,6 +1083,30 @@ public:
 			IJSTI_PARSE_AND_RET_WHEN_ERROR;
 			return DoFromJsonWrap<const TValue >(&Accessor::DoFromJson, doc, deserFlag, pErrDocOut);
 		}
+
+#undef IJSTI_PARSE_AND_RET_WHEN_ERROR
+	}
+
+	/**
+	 * @brief Deserialize from C-style string.
+	 *
+	 * @tparam parseFlags		parseFlags of rapidjson parse method
+	 *
+	 * @param cstrInput			Input C string
+	 * @param length			Length of string
+	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
+	 * @param pErrDocOut		Error message output. Null if do not need error message
+	 * @return					Error code
+	 *
+	 * @note The input string can contain '\0'
+	 */
+	template <unsigned parseFlags>
+	int Deserialize(const Ch *cstrInput, std::size_t length,
+					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
+	{
+		return this->template Deserialize<parseFlags, Encoding>(
+				cstrInput, length, deserFlag, pErrDocOut);
 	}
 
 	/**
@@ -1093,7 +1120,7 @@ public:
 	 *
 	 * @note The input string can contain '\0'
 	 */
-	int Deserialize(const char *cstrInput, std::size_t length,
+	int Deserialize(const Ch *cstrInput, std::size_t length,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
