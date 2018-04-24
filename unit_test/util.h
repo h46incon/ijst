@@ -36,6 +36,40 @@ do {																		\
 	jsonOutput.Parse(str.c_str(), str.length());							\
 	ASSERT_FALSE(jsonOutput.HasParseError());
 
+template<typename CharType>
+void AssertStrEq(const CharType* s1, const CharType* s2)
+{
+	while (*s1 && (*s1 == *s2)) {
+		s1++, s2++;
+	}
+
+	ASSERT_EQ(*s1, *s2);
+}
+
+template<>
+inline void AssertStrEq<char>(const char* s1, const char* s2)
+{
+	ASSERT_STREQ(s1, s2);
+}
+
+template<>
+inline void AssertStrEq<wchar_t>(const wchar_t* s1, const wchar_t* s2)
+{
+	ASSERT_STREQ(s1, s2);
+}
+
+template<typename SourceEncoding, typename TargetEncoding>
+std::basic_string<typename TargetEncoding::Ch>Transcode(const typename SourceEncoding::Ch* src)
+{
+	rapidjson::GenericStringStream<SourceEncoding> source(src);
+	rapidjson::GenericStringBuffer<TargetEncoding> target;
+	while (source.Peek() != '\0') {
+		rapidjson::Transcoder<SourceEncoding, TargetEncoding>::Transcode(source, target);
+	}
+
+	return std::basic_string<typename TargetEncoding::Ch>(target.GetString());
+};
+
 inline void CheckTypeMismatch(const rapidjson::Value& errDoc, const char* expectedType, const char* value)
 {
 	ASSERT_TRUE(errDoc.IsObject());

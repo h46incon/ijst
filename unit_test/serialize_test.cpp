@@ -399,15 +399,18 @@ void CheckComplicate3Serialized(const rapidjson::GenericDocument<Encoding>& doc)
 	for (int i = 1; i <= 64; ++i)
 	{
 		// Init key and value
-		std::basic_stringstream<typename Encoding::Ch> ssFieldName;
+		std::stringstream ssFieldName;
 		ssFieldName << "i" << i << "_k";
-		const std::basic_string<typename Encoding::Ch> fieldName = ssFieldName.str();
-		std::basic_stringstream<typename Encoding::Ch> ssFieldValue;
+		const std::basic_string<typename Encoding::Ch> fieldName =
+				Transcode<rapidjson::UTF8<>, Encoding>(ssFieldName.str().c_str());
+
+		std::stringstream ssFieldValue;
 		ssFieldValue << "v_" << i;
-		const std::basic_string<typename Encoding::Ch> fieldValue = ssFieldValue.str();
+		const std::basic_string<typename Encoding::Ch> fieldValue =
+				Transcode<rapidjson::UTF8<>, Encoding>(ssFieldValue.str().c_str());
 
 		// Check
-		ASSERT_STREQ(doc[fieldName.c_str()].GetString(), fieldValue.c_str());
+		AssertStrEq(doc[fieldName.c_str()].GetString(), fieldValue.c_str());
 	}
 }
 
@@ -433,22 +436,33 @@ TEST(Serialize, SerializeHandler)
 	CheckComplicate3Serialized(doc);
 }
 
-TEST(Serialize, WriteUTF16)
+template<typename Encoding>
+void TestWriteWithEncoding()
 {
 	Complicate3 st;
 	InitComplicate3(st);
 
 	// Write
-	typedef rapidjson::GenericStringBuffer<rapidjson::UTF16LE<> > SBuffer;
-	SBuffer buf;
-	rapidjson::Writer<SBuffer> writer(buf);
-	HandlerWrapper<rapidjson::Writer<SBuffer> > writerWrapper(writer);
+	typedef rapidjson::GenericStringBuffer<Encoding> TBuffer;
+	typedef rapidjson::Writer<TBuffer, rapidjson::UTF8<>, Encoding> TWriter;
+	TBuffer buf;
+	TWriter writer(buf);
+	HandlerWrapper<TWriter> writerWrapper(writer);
 	st._.Serialize(writerWrapper);
 
 	// Check
-	rapidjson::GenericDocument<rapidjson::UTF16LE<> > doc;
+	rapidjson::GenericDocument<Encoding> doc;
 	doc.Parse(buf.GetString());
 	CheckComplicate3Serialized(doc);
+};
+
+TEST(Serialize, WriteWithEncoding)
+{
+	TestWriteWithEncoding<rapidjson::UTF8<> >();
+	TestWriteWithEncoding<rapidjson::UTF16BE<> >();
+	TestWriteWithEncoding<rapidjson::UTF16LE<> >();
+	TestWriteWithEncoding<rapidjson::UTF32BE<> >();
+	TestWriteWithEncoding<rapidjson::UTF32LE<> >();
 }
 
 TEST(Serialize, GeneratorWrapper)
