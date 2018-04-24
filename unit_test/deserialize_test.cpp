@@ -130,6 +130,73 @@ TEST(Deserialize, AdditionalFields)
 	}
 }
 
+const string jsonSimpleTest = "{\"int_val_1\": 1, \"int_val_2\": 2, "
+	"\"str_val_1\":\"s1\", \"str_val_2\":\"s2\", \"addi_field\": \"a_field\"}";
+void CheckStruct(int deserRet, const SimpleSt& st)
+{
+	ASSERT_EQ(deserRet, 0);
+	ASSERT_EQ(st.int_1, 1);
+	ASSERT_EQ(st.int_2, 2);
+	ASSERT_STREQ(st.str_1.c_str(), "s1");
+	ASSERT_STREQ(st.str_2.c_str(), "s2");
+	ASSERT_EQ(st._.GetUnknown().MemberCount(), 1u);
+	ASSERT_STREQ(st._.GetUnknown()["addi_field"].GetString(), "a_field");
+}
+
+TEST(Deserialize, DeserializeAPI)
+{
+	SimpleSt st;
+	int ret;
+
+	//--- Deserialize with cstr
+	ret = st._.Deserialize(jsonSimpleTest.c_str());
+	CheckStruct(ret, st);
+
+	ret = st._.Deserialize<rapidjson::kParseDefaultFlags>(jsonSimpleTest.c_str());
+	CheckStruct(ret, st);
+
+	ret = st._.Deserialize<rapidjson::kParseDefaultFlags, rapidjson::UTF8<> >(jsonSimpleTest.c_str());
+	CheckStruct(ret, st);
+
+	//--- Deserialize with cstr and length
+	ret = st._.Deserialize(jsonSimpleTest.data(), jsonSimpleTest.length());
+	CheckStruct(ret, st);
+
+	ret = st._.Deserialize<rapidjson::kParseDefaultFlags>(jsonSimpleTest.data(), jsonSimpleTest.length());
+	CheckStruct(ret, st);
+
+	ret = st._.Deserialize<rapidjson::kParseDefaultFlags, rapidjson::UTF8<> >(jsonSimpleTest.data(), jsonSimpleTest.length());
+	CheckStruct(ret, st);
+
+	//--- Deserialize with std::string
+	ret = st._.Deserialize(jsonSimpleTest);
+	CheckStruct(ret, st);
+
+	string errMsg;
+	ret = st._.Deserialize(jsonSimpleTest, errMsg);
+	CheckStruct(ret, st);
+}
+
+template<typename Encoding>
+void TestDeserializeEncoding()
+{
+	// encoding string
+	std::basic_string<typename Encoding::Ch> source = Transcode<rapidjson::UTF8<>, Encoding>(jsonSimpleTest.c_str());
+
+	SimpleSt st;
+	int ret = st._.Deserialize<rapidjson::kParseDefaultFlags, Encoding>(source.c_str());
+	CheckStruct(ret, st);
+};
+
+TEST(Deserialize, Encoding)
+{
+	TestDeserializeEncoding<rapidjson::UTF8<> >();
+	TestDeserializeEncoding<rapidjson::UTF16LE<> >();
+	TestDeserializeEncoding<rapidjson::UTF16BE<> >();
+	TestDeserializeEncoding<rapidjson::UTF32LE<> >();
+	TestDeserializeEncoding<rapidjson::UTF32BE<> >();
+}
+
 TEST(Deserialize, FromJson)
 {
 	SimpleSt st;
