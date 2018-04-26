@@ -191,8 +191,10 @@ void TestDeserializeEncoding()
 TEST(Deserialize, Encoding)
 {
 	TestDeserializeEncoding<rapidjson::UTF8<> >();
+	TestDeserializeEncoding<rapidjson::UTF16<> >();
 	TestDeserializeEncoding<rapidjson::UTF16LE<> >();
 	TestDeserializeEncoding<rapidjson::UTF16BE<> >();
+	TestDeserializeEncoding<rapidjson::UTF32<> >();
 	TestDeserializeEncoding<rapidjson::UTF32LE<> >();
 	TestDeserializeEncoding<rapidjson::UTF32BE<> >();
 }

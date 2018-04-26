@@ -34,11 +34,10 @@ typedef double 			T_double;
 //! string -> std::string, for backward compatibility
 typedef std::string 	T_string;
 //! anything -> a wrapper of rapidjson::GenericValue<Encoding>
-#define IJST_TRAW		::ijst::T_generic_raw<_ijst_Encoding>
+#define IJST_TRAW		::ijst::T_GenericRaw<_ijst_Encoding>
 //! anything -> a wrapper of rapidjson::Value, for backward compatibility
 template<typename Encoding> class T_GenericRaw;
-typedef
-T_GenericRaw<rapidjson::UTF8<> > T_raw;
+typedef T_GenericRaw<rapidjson::UTF8<> > T_raw;
 
 /**
  * @brief Wrapper of bool to support normal vector<bool>.
@@ -307,7 +306,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(std::basic_string<typename Encoding::Ch>)
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
 
-IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_raw)
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_GenericRaw<Encoding>)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);

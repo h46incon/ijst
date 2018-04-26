@@ -400,7 +400,7 @@ public:
 		// Alloc buffer
 		field.resize(req.stream.MemberCount());
 		size_t i = 0;
-		rapidjson::Value::MemberIterator itMember = req.stream.MemberBegin();
+		typename rapidjson::GenericValue<Encoding>::MemberIterator itMember = req.stream.MemberBegin();
 		for (; itMember != req.stream.MemberEnd(); ++itMember, ++i)
 		{
 			assert(i < field.size());

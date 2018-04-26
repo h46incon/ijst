@@ -437,32 +437,49 @@ TEST(Serialize, SerializeHandler)
 }
 
 template<typename Encoding>
-void TestWriteWithEncoding()
+void TestSerializeWithEncoding()
 {
 	Complicate3 st;
 	InitComplicate3(st);
 
-	// Write
-	typedef rapidjson::GenericStringBuffer<Encoding> TBuffer;
-	typedef rapidjson::Writer<TBuffer, rapidjson::UTF8<>, Encoding> TWriter;
-	TBuffer buf;
-	TWriter writer(buf);
-	HandlerWrapper<TWriter> writerWrapper(writer);
-	st._.Serialize(writerWrapper);
+	//--- Serialize with handler
+	{
+		// Write
+		typedef rapidjson::GenericStringBuffer<Encoding> TBuffer;
+		typedef rapidjson::Writer<TBuffer, rapidjson::UTF8<>, Encoding> TWriter;
+		TBuffer buf;
+		TWriter writer(buf);
+		HandlerWrapper<TWriter> writerWrapper(writer);
+		st._.Serialize(writerWrapper);
 
-	// Check
-	rapidjson::GenericDocument<Encoding> doc;
-	doc.Parse(buf.GetString());
-	CheckComplicate3Serialized(doc);
+		// Check
+		rapidjson::GenericDocument<Encoding> doc;
+		doc.Parse(buf.GetString());
+		CheckComplicate3Serialized(doc);
+	}
+
+	//--- Serialize to string
+	{
+		// Write
+		std::basic_string<typename Encoding::Ch> strOut;
+		st._.template Serialize<Encoding>(strOut);
+
+		// Check
+		rapidjson::GenericDocument<Encoding> doc;
+		doc.Parse(strOut.c_str());
+		CheckComplicate3Serialized(doc);
+	}
 };
 
 TEST(Serialize, WriteWithEncoding)
 {
-	TestWriteWithEncoding<rapidjson::UTF8<> >();
-	TestWriteWithEncoding<rapidjson::UTF16BE<> >();
-	TestWriteWithEncoding<rapidjson::UTF16LE<> >();
-	TestWriteWithEncoding<rapidjson::UTF32BE<> >();
-	TestWriteWithEncoding<rapidjson::UTF32LE<> >();
+	TestSerializeWithEncoding<rapidjson::UTF8<> >();
+	TestSerializeWithEncoding<rapidjson::UTF16<> >();
+	TestSerializeWithEncoding<rapidjson::UTF16BE<> >();
+	TestSerializeWithEncoding<rapidjson::UTF16LE<> >();
+	TestSerializeWithEncoding<rapidjson::UTF32<> >();
+	TestSerializeWithEncoding<rapidjson::UTF32BE<> >();
+	TestSerializeWithEncoding<rapidjson::UTF32LE<> >();
 }
 
 TEST(Serialize, GeneratorWrapper)
