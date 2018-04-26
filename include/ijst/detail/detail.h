@@ -15,17 +15,19 @@
 namespace ijst{
 namespace detail{
 #if __cplusplus >= 201103L
-	#define IJSTI_NULL 			nullptr
-	#define IJSTI_MOVE(val) 	std::move((val))
-	#define IJSTI_OVERRIDE		override
-	#define IJSTI_NOEXCEPT		noexcept
-	#define IJSTI_DELETED		= delete
+	#define IJSTI_NULL 							nullptr
+	#define IJSTI_MOVE(val) 					std::move((val))
+	#define IJSTI_OVERRIDE						override
+	#define IJSTI_NOEXCEPT						noexcept
+	#define IJSTI_DELETED						= delete
+	#define IJSTI_STATIC_ASSERT(cond, msg) 		static_assert((cond), msg)
 #else
-	#define IJSTI_NULL 			NULL
-	#define IJSTI_MOVE(val) 	(val)
+	#define IJSTI_NULL 							NULL
+	#define IJSTI_MOVE(val) 					(val)
 	#define IJSTI_OVERRIDE
 	#define IJSTI_NOEXCEPT
 	#define IJSTI_DELETED
+	#define IJSTI_STATIC_ASSERT(cond, msg)
 #endif
 
 // Expands to the concatenation of its two arguments.

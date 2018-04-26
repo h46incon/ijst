@@ -657,10 +657,8 @@ namespace detail {
 	template<typename T, typename Encoding, typename Enable = void>
 	class FSerializer : public SerializerInterface<Encoding> {
 	public:
-#if __cplusplus >= 201103L
-		static_assert(!std::is_same<T, T>::value,	// always failed
+		IJSTI_STATIC_ASSERT(!(std::is_same<T, T>::value),	// always failed
 					  "This base template should not be instantiated. (Maybe use wrong param when define ijst struct)");
-#endif
 		typedef void VarType;
 		IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
 
@@ -799,6 +797,9 @@ namespace detail {
 	        : public SerializerInterface<Encoding>
 	{
 	public:
+		IJSTI_STATIC_ASSERT((std::is_same<Encoding, typename T::_ijst_Encoding>::value),
+							"Inner ijst struct's encoding must be same as outer class's encoding");
+
 		typedef T VarType;
 		IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
 
@@ -1719,10 +1720,8 @@ template<typename Handler, typename Encoding = rapidjson::UTF8<> >
 class SAXGeneratorWrapper : public HandlerBase<typename Handler::Ch>
 {
 public:
-#if __cplusplus >= 201103L
-	static_assert(std::is_same<typename Handler::Ch, typename Encoding::Ch>::value,
+	IJSTI_STATIC_ASSERT((std::is_same<typename Handler::Ch, typename Encoding::Ch>::value),
 				  "Handler::Ch and Encoding::Ch must be same");
-#endif
 	typedef typename Handler::Ch Ch;
 	explicit SAXGeneratorWrapper(const Accessor<Encoding>& accessor, SerFlag::Flag serFlag = SerFlag::kNoneFlag) :
 			m_accessor(accessor), m_serFlag (serFlag), m_h(IJST_NULL) {}
