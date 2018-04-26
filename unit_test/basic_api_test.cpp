@@ -77,38 +77,77 @@ IJST_DEFINE_STRUCT(
 		, (T_string, str_2, "str_val_2", FDesc::Optional | FDesc::Nullable)
 )
 
-IJST_DEFINE_GENERIC_STRUCT(
-		rapidjson::UTF16LE<>, U16SimpleSt
-		, (T_int, int_1, L"int_val_1", 0)
-		, (T_int, int_2, L"int_val_2", FDesc::Optional)
-		, (IJST_TSTR, str_1, L"str_val_1", FDesc::Nullable)
-		, (IJST_TSTR, str_2, L"str_val_2", FDesc::Optional | FDesc::Nullable)
-)
+#define DEFINE_TEST_STRUCT(encoding, stName, PF) \
+	IJST_DEFINE_GENERIC_STRUCT_WITH_GETTER( \
+		encoding, stName ## Inner \
+		, (T_int, int_v, PF ## "int_val", 0) \
+	) \
+	IJST_DEFINE_GENERIC_STRUCT_WITH_GETTER( \
+		encoding, stName \
+		, (T_int, int_v, PF ## "int_val", 0) \
+		, (IJST_TST(stName ## Inner), st_v, PF ## "st_val", 0) \
+		, (IJST_TSTR, str_v, PF ## "str_val", 0) \
+		, (IJST_TRAW, raw_v, PF ## "raw_val", 0) \
+		, (IJST_TMAP(T_int), map_v, PF ## "map_val", 0) \
+		, (IJST_TOBJ(T_int), obj_v, PF ## "obj_val", 0) \
+	)
 
-template<typename Ch>
-void CheckFieldInfo(const MetaClassInfo<Ch>& metaInfo,
-					const std::basic_string<Ch>& fieldName, const std::basic_string<Ch>& jsonName, size_t offset, FDesc::Mode desc)
+DEFINE_TEST_STRUCT(rapidjson::UTF8<>, U8TestSt, )
+DEFINE_TEST_STRUCT(rapidjson::UTF16<>, U16TestSt, L)
+#if __cplusplus >= 201103L
+DEFINE_TEST_STRUCT(rapidjson::UTF32<char32_t>, U32TestSt, U)
+#endif
+
+template<typename Encoding>
+void CheckFieldInfo(const MetaClassInfo<typename Encoding::Ch>& metaInfo,
+					const std::string& fieldName, const std::string& jsonName, size_t offset, FDesc::Mode desc)
 {
-	const MetaFieldInfo<Ch> *fieldInfo = metaInfo.FindFieldByJsonName(jsonName);
+	std::basic_string<typename Encoding::Ch> encodedJsonName = Transcode<rapidjson::UTF8<>, Encoding>(jsonName.c_str());
+	const MetaFieldInfo<typename Encoding::Ch> *fieldInfo = metaInfo.FindFieldByJsonName(encodedJsonName);
 	ASSERT_FALSE(fieldInfo == NULL);
 	ASSERT_EQ(fieldInfo->fieldName, fieldName);
-	ASSERT_EQ(fieldInfo->jsonName, jsonName);
 	ASSERT_EQ(fieldInfo->offset, offset);
 	ASSERT_EQ(fieldInfo->desc, desc);
+	ASSERT_EQ(fieldInfo->jsonName, encodedJsonName);
 }
+
+template<typename Struct>
+void TestStructAPI(const char *className)
+{
+	typedef typename Struct::_ijst_Encoding Encoding;
+	typedef typename Encoding::Ch Ch;
+	Struct st;
+	ASSERT_FALSE(st._.IsParentVal());
+
+	//--- MetaInfo
+	const MetaClassInfo<Ch>& metaInfo = MetaClassInfo<Ch>::template GetMetaInfo<Struct>();
+	ASSERT_EQ(&st._.GetMetaInfo(), &metaInfo);
+	ASSERT_STREQ(metaInfo.GetClassName().c_str(), className);
+	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 6u);
+	ASSERT_EQ((ptrdiff_t)metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
+	CheckFieldInfo<Encoding>(metaInfo, "int_v", "int_val", (char*)&st.int_v - (char*)&st, 0);
+	CheckFieldInfo<Encoding>(metaInfo, "st_v", "st_val", (char*)&st.st_v - (char*)&st, 0);
+	CheckFieldInfo<Encoding>(metaInfo, "str_v", "str_val", (char*)&st.str_v - (char*)&st, 0);
+	CheckFieldInfo<Encoding>(metaInfo, "raw_v", "raw_val", (char*)&st.raw_v - (char*)&st, 0);
+	CheckFieldInfo<Encoding>(metaInfo, "map_v", "map_val", (char*)&st.map_v - (char*)&st, 0);
+	CheckFieldInfo<Encoding>(metaInfo, "obj_v", "obj_val", (char*)&st.obj_v - (char*)&st, 0);
+
+	//--- Optional
+	ASSERT_EQ(IJST_NULL, st.get_st_v()->get_int_v().Ptr());
+	ASSERT_EQ(IJST_NULL, st.get_int_v().Ptr());
+	ASSERT_EQ(IJST_NULL, st.get_str_v().Ptr());
+	ASSERT_EQ(IJST_NULL, st.get_raw_v().Ptr());
+	ASSERT_EQ(IJST_NULL, st.get_map_v()[std::basic_string<Ch>()].Ptr());
+	ASSERT_EQ(IJST_NULL, st.get_obj_v()[0].Ptr());
+}
+
 TEST(BasicAPI, MetaInfo)
 {
-	SimpleSt st;
-	ASSERT_FALSE(st._.IsParentVal());
-	const MetaClassInfo<>& metaInfo = MetaClassInfo<>::GetMetaInfo<SimpleSt>();
-	ASSERT_EQ(&st._.GetMetaInfo(), &metaInfo);
-	ASSERT_EQ(metaInfo.GetClassName(), "SimpleSt");
-	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 4u);
-	ASSERT_EQ((ptrdiff_t)metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
-	CheckFieldInfo<char>(metaInfo, "int_1", "int_val_1", (char*)&st.int_1 - (char*)&st, 0);
-	CheckFieldInfo<char>(metaInfo, "int_2", "int_val_2", (char*)&st.int_2 - (char*)&st, FDesc::Optional);
-	CheckFieldInfo<char>(metaInfo, "str_1", "str_val_1", (char*)&st.str_1 - (char*)&st, FDesc::Nullable);
-	CheckFieldInfo<char>(metaInfo, "str_2", "str_val_2", (char*)&st.str_2 - (char*)&st, FDesc::Optional | FDesc::Nullable);
+	TestStructAPI<U8TestSt>("U8TestSt");
+	TestStructAPI<U16TestSt>("U16TestSt");
+#if __cplusplus >= 201103L
+	TestStructAPI<U32TestSt>("U32TestSt");
+#endif
 }
 
 TEST(BasicAPI, FieldStatus)
