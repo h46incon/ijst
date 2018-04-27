@@ -291,6 +291,79 @@ TEST(Serialize, Container)
 	ASSERT_EQ(doc["list"][1].GetInt(), -1);
 }
 
+template<typename Encoding>
+void CheckEncodingTestDoc(const rapidjson::GenericDocument<Encoding>& doc)
+{
+	typedef typename Encoding::Ch Ch;
+	std::basic_string<Ch> (*FuncTrans)(const char*) = Transcode<rapidjson::UTF8<>, Encoding>;
+
+	ASSERT_FALSE(doc.HasParseError());
+	ASSERT_EQ(doc[FuncTrans("int_val").c_str()].GetInt(), 1);
+	AssertStrEq(doc[FuncTrans("str_val").c_str()].GetString(), FuncTrans("sv").c_str());
+	ASSERT_EQ(doc[FuncTrans("map_val").c_str()][FuncTrans("k").c_str()].GetInt(), 2);
+}
+
+template<typename TestStruct, typename TargetEncoding>
+void DoTestSerializeWithEncoding()
+{
+	TestStruct st;
+	typedef typename TestStruct::_ijst_Encoding SEncoding;
+	std::basic_string<typename SEncoding::Ch> (*FuncTrans)(const char*) = Transcode<rapidjson::UTF8<>, SEncoding>;
+	//--- Init
+	st.int_v = 1;
+	st.str_v = FuncTrans("sv");
+	st.map_v[FuncTrans("k")] = 2;
+
+	//--- Serialize with handler
+	{
+		// Write Handler
+		typedef rapidjson::GenericStringBuffer<TargetEncoding> TBuffer;
+		typedef rapidjson::Writer<TBuffer, SEncoding, TargetEncoding> TWriter;
+		TBuffer buf;
+		TWriter writer(buf);
+		HandlerWrapper<TWriter> writerWrapper(writer);
+		st._.Serialize(writerWrapper);
+
+		// Check
+		rapidjson::GenericDocument<TargetEncoding> doc;
+		doc.Parse(buf.GetString());
+		CheckEncodingTestDoc(doc);
+	}
+
+	//--- Serialize to string
+	{
+		// Write
+		std::basic_string<typename TargetEncoding::Ch> strOut;
+		st._.template Serialize<TargetEncoding>(strOut);
+
+		// Check
+		rapidjson::GenericDocument<TargetEncoding> doc;
+		doc.Parse(strOut.c_str());
+		CheckEncodingTestDoc(doc);
+	}
+};
+
+template<typename TestStruct>
+void TestSerializeWithEncoding()
+{
+	DoTestSerializeWithEncoding<TestStruct, rapidjson::UTF8<> >();
+	DoTestSerializeWithEncoding<TestStruct, rapidjson::UTF16<> >();
+	DoTestSerializeWithEncoding<TestStruct, rapidjson::UTF16BE<> >();
+	DoTestSerializeWithEncoding<TestStruct, rapidjson::UTF16LE<> >();
+	DoTestSerializeWithEncoding<TestStruct, rapidjson::UTF32<> >();
+	DoTestSerializeWithEncoding<TestStruct, rapidjson::UTF32BE<> >();
+	DoTestSerializeWithEncoding<TestStruct, rapidjson::UTF32LE<> >();
+};
+
+TEST(Serialize, WriteWithEncoding)
+{
+	TestSerializeWithEncoding<U8TestEncoding>();
+	TestSerializeWithEncoding<U16TestEncoding>();
+#if __cplusplus >= 201103L
+	TestSerializeWithEncoding<U32TestEncoding>();
+#endif
+}
+
 IJST_DEFINE_STRUCT(
 	EmptySt
 );
@@ -373,7 +446,7 @@ IJST_DEFINE_STRUCT(
 
 void InitComplicate3(Complicate3& st)
 {
-	const MetaClassInfo &metaInfo = st._.GetMetaInfo();
+	const MetaClassInfo<> &metaInfo = st._.GetMetaInfo();
 	for (int i = 1; i <= 64; ++i)
 	{
 		// Init key and value
@@ -385,7 +458,7 @@ void InitComplicate3(Complicate3& st)
 		const string fieldValue = ssFieldValue.str();
 
 		// Set
-		const MetaFieldInfo *fieldInfo = metaInfo.FindFieldByJsonName(fieldName);
+		const MetaFieldInfo<> *fieldInfo = metaInfo.FindFieldByJsonName(fieldName);
 		ASSERT_TRUE(fieldInfo != NULL);
 		string* v = (string*)(void*)((char*)&st + fieldInfo->offset);
 		st._.SetStrict(*v, fieldValue);
@@ -421,48 +494,6 @@ TEST(Serialize, BigStruct)
 	rapidjson::Document doc;
 	UTEST_SERIALIZE_AND_CHECK(st, doc, SerFlag::kNoneFlag);
 	CheckComplicate3Serialized(doc);
-}
-
-TEST(Serialize, SerializeHandler)
-{
-	Complicate3 st;
-	InitComplicate3(st);
-	rapidjson::StringBuffer buf;
-	rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buf);
-	HandlerWrapper<rapidjson::PrettyWriter<rapidjson::StringBuffer> > writerWrapper(writer);
-	st._.Serialize(writerWrapper);
-	rapidjson::Document doc;
-	doc.Parse(buf.GetString(), buf.GetSize() / sizeof(rapidjson::StringBuffer::Ch));
-	CheckComplicate3Serialized(doc);
-}
-
-template<typename Encoding>
-void TestWriteWithEncoding()
-{
-	Complicate3 st;
-	InitComplicate3(st);
-
-	// Write
-	typedef rapidjson::GenericStringBuffer<Encoding> TBuffer;
-	typedef rapidjson::Writer<TBuffer, rapidjson::UTF8<>, Encoding> TWriter;
-	TBuffer buf;
-	TWriter writer(buf);
-	HandlerWrapper<TWriter> writerWrapper(writer);
-	st._.Serialize(writerWrapper);
-
-	// Check
-	rapidjson::GenericDocument<Encoding> doc;
-	doc.Parse(buf.GetString());
-	CheckComplicate3Serialized(doc);
-};
-
-TEST(Serialize, WriteWithEncoding)
-{
-	TestWriteWithEncoding<rapidjson::UTF8<> >();
-	TestWriteWithEncoding<rapidjson::UTF16BE<> >();
-	TestWriteWithEncoding<rapidjson::UTF16LE<> >();
-	TestWriteWithEncoding<rapidjson::UTF32BE<> >();
-	TestWriteWithEncoding<rapidjson::UTF32LE<> >();
 }
 
 TEST(Serialize, GeneratorWrapper)

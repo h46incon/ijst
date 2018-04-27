@@ -105,22 +105,43 @@
 	#define IJST_EXPLICIT_TEMPLATE	0
 #endif
 
+//! @brief Declare a ijst struct with specify encoding
+//! @param ...			encoding, struct_name [,(field_type, field_name, json_key, field_desc)]*
+//! @ingroup IJST_MACRO_API
+#define IJST_DEFINE_GENERIC_STRUCT(...) \
+    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), false, F, __VA_ARGS__)
+//! @brief Declare a ijst struct with specify encoding with getter
+//! @param ...			encoding, struct_name [,(field_type, field_name, json_key, field_desc)]*
+//! @ingroup IJST_MACRO_API
+#define IJST_DEFINE_GENERIC_STRUCT_WITH_GETTER(...) \
+    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), false, T, __VA_ARGS__)
+//! @brief Declare a ijst struct with specify encoding which represent a value instead of members insides a object
+//! @ingroup IJST_MACRO_API
+#define IJST_DEFINE_GENERIC_VALUE(encoding, stName, type, fName, desc)	\
+    IJSTI_DEFINE_STRUCT_IMPL(1, true, F, encoding, stName, (type, fName, "", desc))
+//! @brief Declare a ijst struct with specify encoding which represent a value instead of members insides a object with getter
+//! @ingroup IJST_MACRO_API
+#define IJST_DEFINE_GENERIC_VALUE_WITH_GETTER(encoding, stName, type, fName, desc)	\
+    IJSTI_DEFINE_STRUCT_IMPL(1, true, T, encoding, stName, (type, fName, "", desc))
+
 //! @brief Declare a ijst struct.
+//! @param ...			struct_name [,(field_type, field_name, json_key, field_desc)]*
 //! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_STRUCT(...) \
-    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), false, F, __VA_ARGS__)
+	IJST_DEFINE_GENERIC_STRUCT(::rapidjson::UTF8<>, __VA_ARGS__)
 //! @brief Declare a ijst struct with getter.
+//! @param ...			struct_name [,(field_type, field_name, json_key, field_desc)]*
 //! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_STRUCT_WITH_GETTER(...) \
-    IJSTI_DEFINE_STRUCT_IMPL(IJSTI_PP_NFIELD(__VA_ARGS__), false, T, __VA_ARGS__)
+    IJST_DEFINE_GENERIC_STRUCT_WITH_GETTER(::rapidjson::UTF8<>, __VA_ARGS__)
 //! @brief Declare a ijst struct which represent a value instead of members insides a object
 //! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_VALUE(stName, type, fName, desc)	\
-    IJSTI_DEFINE_STRUCT_IMPL(1, true, F, stName, (type, fName, "", desc))
+    IJST_DEFINE_GENERIC_VALUE(::rapidjson::UTF8<>, stName, type, fName, desc)
 //! @brief Declare a ijst struct which represent a value instead of members insides a object with getter
 //! @ingroup IJST_MACRO_API
 #define IJST_DEFINE_VALUE_WITH_GETTER(stName, type, fName, desc)	\
-    IJSTI_DEFINE_STRUCT_IMPL(1, true, T, stName, (type, fName, "", desc))
+    IJST_DEFINE_GENERIC_VALUE_WITH_GETTER(::rapidjson::UTF8<>, stName, type, fName, desc)
 
 //! @brief Get status of field in obj.
 //! @ingroup IJST_MACRO_API
@@ -230,14 +251,14 @@ struct DeserFlag {
  *
  * Using raw rapidjson::Handler concept have to make function as a template, which is not convince is some situations.
  *
- * @tparam Ch_	character type of string
+ * @tparam CharType	character type of string
  *
  * @see HandlerWrapper
  */
-template<typename Ch_>
-class GenericHandlerBase {
+template<typename CharType = char>
+class HandlerBase {
 public:
-	typedef Ch_ Ch;
+	typedef CharType Ch;
 
 	virtual bool Null()= 0;
 	virtual bool Bool(bool b)= 0;
@@ -255,7 +276,6 @@ public:
 	virtual bool StartArray()= 0;
 	virtual bool EndArray(rapidjson::SizeType elementCount = 0)= 0;
 };
-typedef GenericHandlerBase<char> HandlerBase;
 
 /**
  * @brief A wrapper that convert raw rapidjson::Handler instance to derived class of GenericHandlerBase.
@@ -263,7 +283,7 @@ typedef GenericHandlerBase<char> HandlerBase;
  * @tparam Handler		rapidjson::Handler
  */
 template<typename Handler>
-class HandlerWrapper : public GenericHandlerBase<typename Handler::Ch>
+class HandlerWrapper : public HandlerBase<typename Handler::Ch>
 {
 public:
 	typedef typename Handler::Ch Ch;
@@ -348,7 +368,7 @@ class Optional
  * @tparam T	ijst struct type
  */
 template <typename T>
-class Optional<T, /*EnableIf*/ typename detail::HasType<typename T::_ijst_AccessorType>::Void >
+class Optional<T, /*EnableIf*/ typename detail::HasType<typename T::_ijst_AccessorType>::Void>
 {
 	typedef T ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
@@ -373,9 +393,13 @@ public:
 /**
  * @brief Meta information of field.
  *
+ * @tparam CharType		character type of string
+ *
  * @see MetaClassInfo
  */
+template<typename CharType = char>
 struct MetaFieldInfo { // NOLINT
+ 	typedef CharType Ch;
 	//! The index of this fields in the meta information in the class. (Fields are sorted by offset inside class)
 	int index;
 	//! Field description.
@@ -383,20 +407,24 @@ struct MetaFieldInfo { // NOLINT
 	//! Field's offset inside class.
 	std::size_t offset;
 	//! Json name when (de)serialization.
-	std::string jsonName;
+	std::basic_string<Ch> jsonName;
 	//! field name.
 	std::string fieldName;
 	//! @private private serializer interface.
-	detail::SerializerInterface *serializerInterface;
+	void* serializerInterface;		// type: detail::SerializerInterface<Encoding>*
 };
 
 /**
  * @brief Meta information of class.
  *
+ * @tparam CharType		character type of string
+ *
  * @see MetaFieldInfo
  */
+template <typename CharType = char>
 class MetaClassInfo {
 public:
+	typedef CharType Ch;
 	/**
 	 * @brief Get meta information for ijst struct T.
 	 *
@@ -434,9 +462,9 @@ public:
 	 *
 	 * @note log(FieldSize) complexity.
 	 */
-	const MetaFieldInfo* FindFieldByJsonName(const std::string &name) const
+	const MetaFieldInfo<Ch>* FindFieldByJsonName(const std::basic_string<Ch>& name) const
 	{
-		std::vector<NameMap>::const_iterator it =
+		typename std::vector<NameMap>::const_iterator it =
 				detail::Util::BinarySearch(m_nameMap.begin(), m_nameMap.end(), name, NameMapComp);
 		if (it != m_nameMap.end() && (*it->pName) == name) {
 			return it->metaField;
@@ -447,14 +475,14 @@ public:
 	}
 
 	//! Get meta information of all fields in class. The returned vector is sorted by offset.
-	const std::vector<MetaFieldInfo>& GetFieldsInfo() const { return fieldsInfo; }
+	const std::vector<MetaFieldInfo<Ch> >& GetFieldsInfo() const { return fieldsInfo; }
 	//! Get name of class.
 	const std::string& GetClassName() const { return structName; }
 	//! Get the offset of Accessor object.
 	std::size_t GetAccessorOffset() const { return accessorOffset; }
 
 private:
-	friend class detail::MetaClassInfoSetter;
+	friend class detail::MetaClassInfoSetter<CharType>;		// use CharType instead of Ch to make IDE happy
 	template<typename T> friend class detail::MetaClassInfoTyped;
 	MetaClassInfo() : accessorOffset(0), mapInited(false) { }
 
@@ -462,17 +490,17 @@ private:
 	MetaClassInfo& operator=(MetaClassInfo) IJSTI_DELETED;
 
 	struct NameMap {
-		NameMap(const std::string* _pName, const MetaFieldInfo* _metaField)
+		NameMap(const std::basic_string<Ch>* _pName, const MetaFieldInfo<Ch>* _metaField)
 				: pName(_pName), metaField(_metaField) {}
 
 		bool operator<(const NameMap &r) const
 		{ return (*pName) < (*r.pName); }
 
-		const std::string* pName;
-		const MetaFieldInfo* metaField;
+		const std::basic_string<Ch>* pName;
+		const MetaFieldInfo<Ch>* metaField;
 	};
 
-	static int NameMapComp(const NameMap &l, const std::string &name)
+	static int NameMapComp(const NameMap &l, const std::basic_string<Ch> &name)
 	{
 		return l.pName->compare(name);
 	}
@@ -482,7 +510,7 @@ private:
 		return (int)((long)l - (long)r);
 	}
 
-	std::vector<MetaFieldInfo> fieldsInfo;
+	std::vector<MetaFieldInfo<Ch> > fieldsInfo;
 	std::string structName;
 	std::size_t accessorOffset;
 
@@ -504,13 +532,13 @@ namespace detail {
 	#define IJSTI_RET_WHEN_NOT_ZERO(action) 						\
 		do { int ret = (action); if(ret != 0) return (ret); } while (false)
 	//! helper in Accessor::Deserialize()
-	#define IJSTI_RET_WHEN_PARSE_ERROR(doc)							\
-		do {														\
-			if (doc.HasParseError()) {								\
-				detail::ErrorDocSetter errDocSetter(pErrDocOut);	\
-				errDocSetter.ParseFailed(doc.GetParseError());		\
-				return ErrorCode::kDeserializeParseFailed;			\
-			}														\
+	#define IJSTI_RET_WHEN_PARSE_ERROR(doc, encoding)							\
+		do {																	\
+			if (doc.HasParseError()) {											\
+				detail::ErrorDocSetter<encoding> errDocSetter(pErrDocOut);		\
+				errDocSetter.ParseFailed(doc.GetParseError());					\
+				return ErrorCode::kDeserializeParseFailed;						\
+			}																	\
 		} while (false)
 	//! return error and set error doc when type mismatch
 	#define IJSTI_RET_WHEN_TYPE_MISMATCH(checkCode, expType)			\
@@ -543,8 +571,10 @@ namespace detail {
 	template<typename T, typename U>
 	struct ArgumentType<U(T)> {typedef T type;};
 
+	template<typename Encoding>
 	class SerializerInterface {
 	public:
+		typedef typename Encoding::Ch Ch;
 		virtual ~SerializerInterface() { }
 
 		struct SerializeReq {
@@ -555,9 +585,9 @@ namespace detail {
 			// The actual type of field should be decide in the derived class
 			const void* pField;
 
-			HandlerBase& writer;
+			HandlerBase<Ch>& writer;
 
-			SerializeReq(HandlerBase& _writer, const void *_pField, SerFlag::Flag _serFlag)
+			SerializeReq(HandlerBase<Ch>& _writer, const void *_pField, SerFlag::Flag _serFlag)
 					: serFlag(_serFlag)
 					, pField(_pField)
 					, writer(_writer)
@@ -574,7 +604,7 @@ namespace detail {
 
 			// The input stream and allocator
 			// The stream maybe cast from const value if canMoveSrc is false
-			JsonValue& stream;
+			rapidjson::GenericValue<Encoding>& stream;
 			JsonAllocator& allocator;
 
 			// true if move context in stream to avoid copy when possible
@@ -583,9 +613,9 @@ namespace detail {
 			DeserFlag::Flag deserFlag;
 			FDesc::Mode fDesc;
 
-			FromJsonReq(JsonValue &_stream, JsonAllocator &_allocator,
+			FromJsonReq(rapidjson::GenericValue<Encoding>& _stream, JsonAllocator& _allocator,
 						DeserFlag::Flag _deserFlag, bool _canMoveSrc,
-						void *_pField, FDesc::Mode _fDesc)
+						void* _pField, FDesc::Mode _fDesc)
 					: pFieldBuffer(_pField)
 					, stream(_stream)
 					, allocator(_allocator)
@@ -596,42 +626,63 @@ namespace detail {
 		};
 
 		struct FromJsonResp {
-			ErrorDocSetter& errDoc;
+			ErrorDocSetter<Encoding>& errDoc;
 
-			explicit FromJsonResp(ErrorDocSetter& _errDoc) :
+			explicit FromJsonResp(ErrorDocSetter<Encoding>& _errDoc) :
 					errDoc(_errDoc)
 			{ }
 
 		};
 
-		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp)= 0;
+		virtual int FromJson(const FromJsonReq& req, IJST_OUT FromJsonResp& resp)= 0;
 
 		virtual void ShrinkAllocator(void * pField)
 		{ (void)pField; }
 	};
+
+	//! Propagate structs' define in SerializeInterface<Encoding>
+	#define IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding)										\
+		typedef typename SerializerInterface<Encoding>::SerializeReq SerializeReq;			\
+		typedef typename SerializerInterface<Encoding>::FromJsonReq FromJsonReq;			\
+		typedef typename SerializerInterface<Encoding>::FromJsonResp FromJsonResp;
 
 	/**
 	 * Template interface of serialization class
 	 * This template is unimplemented, and will throw a compile error when use it.
 	 *
 	 * @tparam T 		class
+	 * @tparam Encoding	encoding of json struct
 	 * @tparam Enable	type for SFINAE
 	 */
-	template<typename T, typename Enable = void>
-	class FSerializer : public SerializerInterface {
+	template<typename T, typename Encoding, typename Enable = void>
+	class FSerializer : public SerializerInterface<Encoding> {
 	public:
-		#if __cplusplus >= 201103L
-		static_assert(!std::is_same<T, T>::value,
+		IJSTI_STATIC_ASSERT(!(std::is_same<T, T>::value),	// always failed
 					  "This base template should not be instantiated. (Maybe use wrong param when define ijst struct)");
-		#endif
-
 		typedef void VarType;
+		IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
+
 		virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE = 0;
 		virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE = 0;
 		virtual void ShrinkAllocator(void * pField) IJSTI_OVERRIDE { (void)pField; }
 	};
 
-	#define IJSTI_FSERIALIZER_INS(T) ::ijst::detail::Singleton< ::ijst::detail::FSerializer< T > >::GetInstance()
+	#define IJSTI_FSERIALIZER_INS(T, Encoding) 		\
+		::ijst::detail::Singleton< ::ijst::detail::FSerializer< T, Encoding > >::GetInstance()
+
+	/**
+	 * Get and cast serializerInterface in metaFieldInfo to specify type
+	 *
+	 * @tparam Encoding 		encoding of output
+	 *
+	 * @param metaFieldInfo 	metaFieldInfo
+	 * @return 					typed SerializerInterface
+	 */
+	template<typename Encoding>
+	SerializerInterface<Encoding>* GetSerializerInterface(const MetaFieldInfo<typename Encoding::Ch>& metaFieldInfo)
+	{
+		return reinterpret_cast<SerializerInterface<Encoding>*>(metaFieldInfo.serializerInterface);
+	}
 
 	/**	========================================================================================
 	 *				Private
@@ -640,14 +691,14 @@ namespace detail {
 	 * MetaClassInfo of T
 	 * Push meta class info of T in specialized constructor MetaInfo<T>().
 	 *
-	 * @tparam T 	class. Concept require T::_ijst_InitMetaInfo<bool>(MetaInfo*)
+	 * @tparam T 	class. Concept require T::_ijst_InitMetaInfo<bool>(MetaInfo*), typedef T::_ijst_Ch
 	 *
 	 * @note		Use Singleton<MetaClassInfoTyped<T> > to get the instance
 	 */
 	template<typename T>
 	class MetaClassInfoTyped {
 	public:
-		MetaClassInfo metaClass;
+		MetaClassInfo<typename T::_ijst_Ch> metaClass;
 
 	private:
 		friend class Singleton<MetaClassInfoTyped<T> >;
@@ -658,9 +709,11 @@ namespace detail {
 		}
 	};
 
+	template<typename CharType>
 	class MetaClassInfoSetter {
 	public:
-		explicit MetaClassInfoSetter(MetaClassInfo& _d) : d(_d) { }
+		typedef CharType Ch;
+		explicit MetaClassInfoSetter(MetaClassInfo<Ch>& _d) : d(_d) { }
 
 		void InitBegin(const std::string& _tag, std::size_t _fieldCount, std::size_t _accessorOffset)
 		{
@@ -669,15 +722,15 @@ namespace detail {
 			d.fieldsInfo.reserve(_fieldCount);
 		}
 
-		void PushMetaField(const std::string &fieldName, const std::string& jsonName,
-						   std::size_t offset, FDesc::Mode desc, SerializerInterface& intf)
+		void PushMetaField(const std::string &fieldName, const std::basic_string<Ch>& jsonName,
+						   std::size_t offset, FDesc::Mode desc, void* pSerializeInterface)
 		{
-			MetaFieldInfo metaField;
+			MetaFieldInfo<Ch> metaField;
 			metaField.jsonName = jsonName;
 			metaField.fieldName = fieldName;
 			metaField.offset = offset;
 			metaField.desc = desc;
-			metaField.serializerInterface = &intf;
+			metaField.serializerInterface = pSerializeInterface;
 			d.fieldsInfo.push_back(IJSTI_MOVE(metaField));
 		}
 
@@ -688,10 +741,10 @@ namespace detail {
 			SortMetaFieldsByOffset();
 
 			d.m_offsets.reserve(d.fieldsInfo.size());
-			d.m_nameMap.resize(d.fieldsInfo.size(), MetaClassInfo::NameMap(IJSTI_NULL, IJSTI_NULL));
+			d.m_nameMap.resize(d.fieldsInfo.size(), typename MetaClassInfo<Ch>::NameMap(IJSTI_NULL, IJSTI_NULL));
 
 			for (size_t i = 0; i < d.fieldsInfo.size(); ++i) {
-				MetaFieldInfo *ptrMetaField = &(d.fieldsInfo[i]);
+				MetaFieldInfo<Ch>* ptrMetaField = &(d.fieldsInfo[i]);
 				ptrMetaField->index = static_cast<int>(i);
 
 				d.m_offsets.push_back(ptrMetaField->offset);
@@ -699,7 +752,7 @@ namespace detail {
 				assert(i == 0 || d.m_offsets[i]  > d.m_offsets[i-1]);
 
 				// Insert name Map
-				InsertNameMap(i, MetaClassInfo::NameMap(&(ptrMetaField->jsonName), ptrMetaField));
+				InsertNameMap(i, typename MetaClassInfo<Ch>::NameMap(&(ptrMetaField->jsonName), ptrMetaField));
 			}
 
 			d.mapInited = true;
@@ -717,10 +770,10 @@ namespace detail {
 			}
 		}
 
-		void InsertNameMap(size_t len, const MetaClassInfo::NameMap& v)
+		void InsertNameMap(size_t len, const typename MetaClassInfo<Ch>::NameMap& v)
 		{
-			std::vector<MetaClassInfo::NameMap>::iterator it =
-					Util::BinarySearch(d.m_nameMap.begin(), d.m_nameMap.begin() + len, *v.pName, MetaClassInfo::NameMapComp);
+			typename std::vector<typename MetaClassInfo<Ch>::NameMap>::iterator it =
+					Util::BinarySearch(d.m_nameMap.begin(), d.m_nameMap.begin() + len, *v.pName, MetaClassInfo<Ch>::NameMapComp);
 			size_t i = static_cast<size_t>(it - d.m_nameMap.begin());
 			// assert name is unique
 			assert(i == len || (*v.pName) != (*it->pName));
@@ -731,17 +784,24 @@ namespace detail {
 			d.m_nameMap[i] = v;
 		}
 
-		MetaClassInfo& d;
+		MetaClassInfo<Ch>& d;
 	};
 
 	/**
 	 * Serialization of ijst struct types
-	 * @tparam T class
+	 * @tparam T 			class
+	 * @tparam Encoding		encoding of json struct
 	 */
-	template<class T>
-	class FSerializer<T, /*EnableIf*/ typename HasType<typename T::_ijst_AccessorType>::Void>: public SerializerInterface {
+	template<class T, typename Encoding>
+	class FSerializer<T, Encoding, /*EnableIf*/ typename HasType<typename T::_ijst_AccessorType>::Void>
+	        : public SerializerInterface<Encoding>
+	{
 	public:
+		IJSTI_STATIC_ASSERT((std::is_same<Encoding, typename T::_ijst_Encoding>::value),
+							"Inner ijst struct's encoding must be same as outer class's encoding");
+
 		typedef T VarType;
+		IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
 
 		virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 		{
@@ -766,22 +826,23 @@ namespace detail {
 /**
  * @brief Accessor of ijst struct
  *
- * @tparam DummyVoid		Dummy parameter to make class become template
+ * @tparam Encoding		Encoding for json struct
  *
  * User can access and modify fields, serialize and deserialize of a structure via it.
  */
-template<typename DummyVoid = void>
+template<typename Encoding = rapidjson::UTF8<> >
 class Accessor {
 public:
+	typedef typename Encoding::Ch Ch;
 	//! Constructor
-	explicit Accessor(const MetaClassInfo *pMetaClass, bool isParentVal, bool isValid) :
+	explicit Accessor(const MetaClassInfo<Ch>* pMetaClass, bool isParentVal, bool isValid) :
 			m_pMetaClass(pMetaClass), m_isValid(isValid), m_isParentVal(isParentVal)
 	{
 		IJST_ASSERT(!m_isParentVal || m_pMetaClass->GetFieldsInfo().size() == 1);
 		m_r = static_cast<Resource *>(operator new(sizeof(Resource)));
 		new(&m_r->fieldStatus) FieldStatusType(m_pMetaClass->GetFieldsInfo().size(), FStatus::kMissing);
-		new(&m_r->unknown)rapidjson::Value(rapidjson::kObjectType);
-		new(&m_r->ownDoc) rapidjson::Document();
+		new(&m_r->unknown)TValue(rapidjson::kObjectType);
+		new(&m_r->ownDoc) TDocument();
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
 		InitOuterPtr();
 	}
@@ -796,8 +857,8 @@ public:
 
 		m_r = static_cast<Resource *>(operator new(sizeof(Resource)));
 		new(&m_r->fieldStatus)FieldStatusType(rhs.m_r->fieldStatus);
-		new(&m_r->unknown)rapidjson::Value(rapidjson::kObjectType);
-		new(&m_r->ownDoc) rapidjson::Document();
+		new(&m_r->unknown)TValue(rapidjson::kObjectType);
+		new(&m_r->ownDoc) TDocument();
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
 
 		m_pMetaClass = rhs.m_pMetaClass;
@@ -853,16 +914,16 @@ public:
 		InitOuterPtr();
 	}
 
-	inline bool IsValid() const { return m_isValid; }
-	inline bool IsParentVal() const { return m_isParentVal; }
-	const MetaClassInfo& GetMetaInfo() const { return *m_pMetaClass; }
+	bool IsValid() const { return m_isValid; }
+	bool IsParentVal() const { return m_isParentVal; }
+	const MetaClassInfo<Ch>& GetMetaInfo() const { return *m_pMetaClass; }
 
 	/*
 	 * Field accessor.
 	 */
 
 	//! Check if pField is a filed in this object.
-	inline bool HasField(const void *pField) const
+	bool HasField(const void *pField) const
 	{
 		size_t offset = GetFieldOffset(pField);
 		return (m_pMetaClass->FindIndex(offset) != -1);
@@ -870,7 +931,7 @@ public:
 
 	//! Set field to val and mark it valid.
 	template<typename T1, typename T2>
-	inline void Set(T1 &field, const T2 &value)
+	void Set(T1 &field, const T2 &value)
 	{
 		MarkValid(&field);
 		field = value;
@@ -878,20 +939,20 @@ public:
 
 	//! Set field to val and mark it valid. The type of field and value must be same.
 	template<typename T>
-	inline void SetStrict(T &field, const T &value)
+	void SetStrict(T &field, const T &value)
 	{
 		Set(field, value);
 	}
 
 	//! Mark status of field to FStatus::kValid.
-	inline void MarkValid(const void* pField) { MarkFieldStatus(pField, FStatus::kValid); }
+	void MarkValid(const void* pField) { MarkFieldStatus(pField, FStatus::kValid); }
 	//! Mark status of field to FStatus::kNull.
-	inline void MarkNull(const void* pField) { MarkFieldStatus(pField, FStatus::kNull); }
+	void MarkNull(const void* pField) { MarkFieldStatus(pField, FStatus::kNull); }
 	//! Mark status of field to FStatus::kMissing.
-	inline void MarkMissing(const void* pField) { MarkFieldStatus(pField, FStatus::kMissing); }
+	void MarkMissing(const void* pField) { MarkFieldStatus(pField, FStatus::kMissing); }
 
 	//! Get status of field.
-	inline EFStatus GetStatus(const void *pField) const
+	EFStatus GetStatus(const void *pField) const
 	{
 		const size_t offset = GetFieldOffset(pField);
 		const int index = m_pMetaClass->FindIndex(offset);
@@ -899,8 +960,8 @@ public:
 	}
 
 	//! Get unknwon fields
-	inline rapidjson::Value &GetUnknown() { return m_r->unknown; }
-	inline const rapidjson::Value &GetUnknown() const { return m_r->unknown; }
+	rapidjson::GenericValue<Encoding> &GetUnknown() { return m_r->unknown; }
+	const rapidjson::GenericValue<Encoding> &GetUnknown() const { return m_r->unknown; }
 
 	/**
 	 * @brief Get allocator used in object.
@@ -908,16 +969,16 @@ public:
 	 * The inner allocator is own allocator when init,
 	 * but may change to other allocator when calling SetMembersAllocator() or Deserialize().
 	 */
-	inline rapidjson::MemoryPoolAllocator<> &GetAllocator() { return *m_pAllocator; }
-	inline const rapidjson::MemoryPoolAllocator<> &GetAllocator() const { return *m_pAllocator; }
+	rapidjson::MemoryPoolAllocator<> &GetAllocator() { return *m_pAllocator; }
+	const rapidjson::MemoryPoolAllocator<> &GetAllocator() const { return *m_pAllocator; }
 
 	/**
 	 * @brief Get own allocator that used to manager resource.
 	 *
 	 * User could use the returned value to check if this object use outer allocator.
 	 */
-	inline rapidjson::MemoryPoolAllocator<> &GetOwnAllocator() { return m_r->ownDoc.GetAllocator(); }
-	inline const rapidjson::MemoryPoolAllocator<> &GetOwnAllocator() const { return m_r->ownDoc.GetAllocator(); }
+	rapidjson::MemoryPoolAllocator<> &GetOwnAllocator() { return m_r->ownDoc.GetAllocator(); }
+	const rapidjson::MemoryPoolAllocator<> &GetOwnAllocator() const { return m_r->ownDoc.GetAllocator(); }
 
 	/**
 	 * @brief Get Optional wrapper of field
@@ -964,9 +1025,33 @@ public:
 	 * @param serFlag	 	Serialization options about fields, options can be combined by bitwise OR operator (|)
 	 * @return				Error code
 	 */
-	int Serialize(HandlerBase& writer, SerFlag::Flag serFlag = SerFlag::kNoneFlag)  const
+	int Serialize(HandlerBase<Ch>& writer, SerFlag::Flag serFlag = SerFlag::kNoneFlag)  const
 	{
 		return DoSerialize(writer, serFlag);
+	}
+
+	/**
+	 * @brief Serialize the structure to string.
+	 *
+	 * @tparam TargetEncoding	encoding of output
+	 *
+	 * @param strOutput 		The output of result
+	 * @param serFlag 			Serialization options about fields, options can be combined by bitwise OR operator (|)
+	 * @return					Error code
+	 */
+	template<typename TargetEncoding>
+	int Serialize(IJST_OUT std::basic_string<typename TargetEncoding::Ch> &strOutput, SerFlag::Flag serFlag = SerFlag::kNoneFlag) const
+	{
+		typedef rapidjson::GenericStringBuffer<TargetEncoding> TStringBuffer;
+		typedef rapidjson::Writer<TStringBuffer, Encoding, TargetEncoding> TWriter;
+
+		TStringBuffer buffer;
+		TWriter writer(buffer);
+		HandlerWrapper<TWriter> writerWrapper(writer);
+		IJSTI_RET_WHEN_NOT_ZERO(DoSerialize(writerWrapper, serFlag));
+
+		strOutput = std::basic_string<typename TargetEncoding::Ch>(buffer.GetString(), buffer.GetSize() / sizeof(typename TStringBuffer::Ch));
+		return 0;
 	}
 
 	/**
@@ -976,22 +1061,16 @@ public:
 	 * @param serFlag 		Serialization options about fields, options can be combined by bitwise OR operator (|)
 	 * @return				Error code
 	 */
-	int Serialize(IJST_OUT std::string &strOutput, SerFlag::Flag serFlag = SerFlag::kNoneFlag)  const
+	int Serialize(IJST_OUT std::basic_string<Ch> &strOutput, SerFlag::Flag serFlag = SerFlag::kNoneFlag) const
 	{
-		rapidjson::StringBuffer buffer;
-		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-		HandlerWrapper<rapidjson::Writer<rapidjson::StringBuffer> > writerWrapper(writer);
-		IJSTI_RET_WHEN_NOT_ZERO(DoSerialize(writerWrapper, serFlag));
-
-		strOutput = std::string(buffer.GetString(), buffer.GetSize() / sizeof(rapidjson::StringBuffer::Ch));
-		return 0;
+		return this->template Serialize<Encoding>(strOutput, serFlag);
 	}
 
 	/**
 	 * @brief Deserialize from C-style string with encoding
 	 *
 	 * @tparam parseFlags		parseFlags of rapidjson parse method
-	 * @tparam Encoding			encoding of source string
+	 * @tparam SourceEncoding	encoding of source string
 	 *
 	 * @param cstrInput			Input C string
 	 * @param length			Length of string
@@ -999,30 +1078,29 @@ public:
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
-	 * @note It may cause compile error when Encoding is not rapidjson::UTF8<> with rapidJSON v1.1.0.
+	 * @note It may cause compile error when SourceEncoding::Ch is not char with rapidJSON v1.1.0.
 	 * 		The bug is fixed in HEAD version of rapidJSON.
 	 */
-	template <unsigned parseFlags, typename Encoding>
-	int Deserialize(const typename Encoding::Ch* cstrInput, std::size_t length,
+	template <unsigned parseFlags, typename SourceEncoding>
+	int Deserialize(const typename SourceEncoding::Ch* cstrInput, std::size_t length,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::Document *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
-
 		// The new object will call FromJson() interfaces soon in most situation
 		// So clear own allocator will not bring much benefit
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
 
 		if (detail::Util::IsBitSet(deserFlag, DeserFlag::kMoveFromIntermediateDoc)) {
-			rapidjson::Document doc(m_pAllocator);
-			doc.Parse<parseFlags, Encoding>(cstrInput, length);
-			IJSTI_RET_WHEN_PARSE_ERROR(doc);
-			return DoFromJsonWrap<rapidjson::Value>(&Accessor::DoMoveFromJson, doc, deserFlag, pErrDocOut);
+			TDocument doc(m_pAllocator);
+			doc.template Parse<parseFlags, SourceEncoding>(cstrInput, length);
+			IJSTI_RET_WHEN_PARSE_ERROR(doc, Encoding);
+			return DoFromJsonWrap<TValue>(&Accessor::DoMoveFromJson, doc, deserFlag, pErrDocOut);
 		}
 		else {
-			rapidjson::Document doc;
-			doc.Parse<parseFlags, Encoding>(cstrInput, length);
-			IJSTI_RET_WHEN_PARSE_ERROR(doc);
-			return DoFromJsonWrap<const rapidjson::Value>(&Accessor::DoFromJson, doc, deserFlag, pErrDocOut);
+			TDocument doc;
+			doc.template Parse<parseFlags, SourceEncoding>(cstrInput, length);
+			IJSTI_RET_WHEN_PARSE_ERROR(doc, Encoding);
+			return DoFromJsonWrap<const TValue>(&Accessor::DoFromJson, doc, deserFlag, pErrDocOut);
 		}
 	}
 
@@ -1030,6 +1108,7 @@ public:
 	 * @brief Deserialize from C-style string.
 	 *
 	 * @tparam parseFlags		parseFlags of rapidjson parse method
+	 * @tparam SourceEncoding	encoding of source
 	 *
 	 * @param cstrInput			Input C string
 	 * @param length			Length of string
@@ -1038,11 +1117,11 @@ public:
 	 * @return					Error code
 	 */
 	template <unsigned parseFlags>
-	int Deserialize(const char *cstrInput, std::size_t length,
+	int Deserialize(const Ch* cstrInput, std::size_t length,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::Document *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
-		return this->template Deserialize<parseFlags, rapidjson::UTF8<> > (
+		return this->template Deserialize<parseFlags, Encoding> (
 				cstrInput, length, deserFlag, pErrDocOut);
 	}
 
@@ -1055,9 +1134,9 @@ public:
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 */
-	int Deserialize(const char *cstrInput, std::size_t length,
+	int Deserialize(const Ch* cstrInput, std::size_t length,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::Document *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
 		return this->template Deserialize<rapidjson::kParseDefaultFlags>(
 				cstrInput, length, deserFlag, pErrDocOut);
@@ -1067,33 +1146,33 @@ public:
 	 * @brief Deserialize from C-style string with encoding
 	 *
 	 * @tparam parseFlags		parseFlags of rapidjson parse method
-	 * @tparam Encoding			encoding of source string
+	 * @tparam SourceEncoding	encoding of source string
 	 *
 	 * @param cstrInput			Input C string
 	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 */
-	template <unsigned parseFlags, typename Encoding>
-	int Deserialize(const typename Encoding::Ch* cstrInput,
+	template <unsigned parseFlags, typename SourceEncoding>
+	int Deserialize(const typename SourceEncoding::Ch* cstrInput,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::Document *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
 		// The new object will call FromJson() interfaces soon in most situation
 		// So clear own allocator will not bring much benefit
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
 
 		if (detail::Util::IsBitSet(deserFlag, DeserFlag::kMoveFromIntermediateDoc)) {
-			rapidjson::Document doc(m_pAllocator);
-			doc.Parse<parseFlags, Encoding>(cstrInput);
-			IJSTI_RET_WHEN_PARSE_ERROR(doc);
-			return DoFromJsonWrap<rapidjson::Value>(&Accessor::DoMoveFromJson, doc, deserFlag, pErrDocOut);
+			TDocument doc(m_pAllocator);
+			doc.template Parse<parseFlags, SourceEncoding>(cstrInput);
+			IJSTI_RET_WHEN_PARSE_ERROR(doc, Encoding);
+			return DoFromJsonWrap<TValue>(&Accessor::DoMoveFromJson, doc, deserFlag, pErrDocOut);
 		}
 		else {
-			rapidjson::Document doc;
-			doc.Parse<parseFlags, Encoding>(cstrInput);
-			IJSTI_RET_WHEN_PARSE_ERROR(doc);
-			return DoFromJsonWrap<const rapidjson::Value>(&Accessor::DoFromJson, doc, deserFlag, pErrDocOut);
+			TDocument doc;
+			doc.template Parse<parseFlags, SourceEncoding>(cstrInput);
+			IJSTI_RET_WHEN_PARSE_ERROR(doc, Encoding);
+			return DoFromJsonWrap<const TValue>(&Accessor::DoFromJson, doc, deserFlag, pErrDocOut);
 		}
 	}
 
@@ -1108,11 +1187,11 @@ public:
 	 * @return					Error code
 	 */
 	template <unsigned parseFlags>
-	int Deserialize(const char *cstrInput,
+	int Deserialize(const Ch *cstrInput,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::Document *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
-		return this->template Deserialize<parseFlags, rapidjson::UTF8<> > (
+		return this->template Deserialize<parseFlags, Encoding> (
 				cstrInput, deserFlag, pErrDocOut);
 	}
 
@@ -1125,47 +1204,48 @@ public:
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 */
-	int Deserialize(const char *cstrInput,
+	int Deserialize(const Ch *cstrInput,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::Document *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
 		return this->template Deserialize<rapidjson::kParseDefaultFlags>(
 				cstrInput, deserFlag, pErrDocOut);
 	}
 
 	/**
-	 * @brief Deserialize from std::string.
+	 * @brief Deserialize from std::basic_string.
 	 *
 	 * @param strInput			Input string
 	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 */
-	inline int Deserialize(const std::string &strInput,
+	int Deserialize(const std::basic_string<Ch> &strInput,
 						   DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-						   rapidjson::Document *pErrDocOut = IJST_NULL)
+						   rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
 		return Deserialize(strInput.data(), strInput.size(), deserFlag, pErrDocOut);
 	}
 
 	/**
-	 * @brief Deserialize from std::string.
+	 * @brief Deserialize from std::basic_string.
 	 *
 	 * @param strInput			Input string
 	 * @param errMsgOut			Error message output
 	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @return					Error code
 	 */
-	inline int Deserialize(const std::string &strInput, IJST_OUT std::string& errMsgOut,
+	int Deserialize(const std::basic_string<Ch> &strInput, IJST_OUT std::basic_string<Ch>& errMsgOut,
 						   DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag)
 	{
-		rapidjson::Document errDoc;
+		typedef rapidjson::GenericStringBuffer<Encoding> TStringBuffer;
+		TDocument errDoc;
 		int ret = Deserialize(strInput.data(), strInput.size(), deserFlag, &errDoc);
 		if (ret != 0) {
-			rapidjson::StringBuffer sb;
-			rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+			TStringBuffer sb;
+			rapidjson::Writer<TStringBuffer> writer(sb);
 			errDoc.Accept(writer);
-			errMsgOut = std::string(sb.GetString(), sb.GetSize() / sizeof(rapidjson::StringBuffer::Ch));
+			errMsgOut = std::basic_string<Ch>(sb.GetString(), sb.GetSize() / sizeof(typename TStringBuffer::Ch));
 		}
 		return ret;
 	}
@@ -1181,12 +1261,12 @@ public:
 	 * @note 	It will not copy const string reference in source json. Be careful if handler such situation,
 	 * 			e.g, json object is generated by ParseInsitu().
 	 */
-	inline int FromJson(const rapidjson::Value &srcJson,
+	int FromJson(const rapidjson::GenericValue<Encoding> &srcJson,
 						DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-						rapidjson::Document *pErrDocOut = IJST_NULL)
+						rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
-		return DoFromJsonWrap<const rapidjson::Value>(&Accessor::DoFromJson, srcJson, deserFlag, pErrDocOut);
+		return DoFromJsonWrap<const TValue>(&Accessor::DoFromJson, srcJson, deserFlag, pErrDocOut);
 	}
 
 	/**
@@ -1209,14 +1289,14 @@ public:
 	 *
 	 * @see DeserFlag::kMoveFromIntermediateDoc
 	 */
-	inline int MoveFromJson(rapidjson::Document &srcDocStolen,
+	int MoveFromJson(rapidjson::GenericDocument<Encoding> &srcDocStolen,
 							DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-							rapidjson::Document *pErrDocOut = IJST_NULL)
+							rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
 		// Store document to manager allocator
 		m_r->ownDoc.Swap(srcDocStolen);
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
-		return DoFromJsonWrap<rapidjson::Value>(&Accessor::DoMoveFromJson, m_r->ownDoc, deserFlag, pErrDocOut);
+		return DoFromJsonWrap<TValue>(&Accessor::DoMoveFromJson, m_r->ownDoc, deserFlag, pErrDocOut);
 	}
 
 	/**
@@ -1227,33 +1307,38 @@ public:
 	 *
 	 * @see DeserFlag::kMoveFromIntermediateDoc, MoveFromJson
 	 */
-	inline void ShrinkAllocator()
+	void ShrinkAllocator()
 	{
 		DoShrinkAllocator();
 	}
 
 private:
+	typedef rapidjson::GenericDocument<Encoding> TDocument;
+	typedef rapidjson::GenericValue<Encoding> TValue;
+	typedef MetaFieldInfo<Ch> TMetaFieldInfo;
+	typedef MetaClassInfo<Ch> TMetaClassInfo;
+
 	// #region Implement SerializeInterface
-	template <typename, typename> friend class detail::FSerializer;
-	typedef detail::SerializerInterface::SerializeReq SerializeReq;
-	inline int ISerialize(const SerializeReq &req) const
+	template <typename, typename, typename> friend class detail::FSerializer;
+	typedef typename detail::SerializerInterface<Encoding>::SerializeReq SerializeReq;
+	int ISerialize(const SerializeReq &req) const
 	{
 		assert(req.pField == this);
 		return DoSerialize(req.writer, req.serFlag);
 	}
 
-	typedef detail::SerializerInterface::FromJsonReq FromJsonReq;
-	typedef detail::SerializerInterface::FromJsonResp FromJsonResp;
+	typedef typename detail::SerializerInterface<Encoding>::FromJsonReq FromJsonReq;
+	typedef typename detail::SerializerInterface<Encoding>::FromJsonResp FromJsonResp;
 	struct FromJsonParam{
 		DeserFlag::Flag deserFlag;
-		detail::ErrorDocSetter& errDoc;
+		detail::ErrorDocSetter<Encoding>& errDoc;
 
-		FromJsonParam(DeserFlag::Flag _deserFlag, detail::ErrorDocSetter& _errDoc)
+		FromJsonParam(DeserFlag::Flag _deserFlag, detail::ErrorDocSetter<Encoding>& _errDoc)
 				: deserFlag(_deserFlag), errDoc(_errDoc)
 		{}
 	};
 
-	inline int IFromJson(const FromJsonReq &req, IJST_OUT FromJsonResp& resp)
+	int IFromJson(const FromJsonReq &req, IJST_OUT FromJsonResp& resp)
 	{
 		assert(req.pFieldBuffer == this);
 
@@ -1268,7 +1353,7 @@ private:
 		}
 	}
 
-	inline void IShrinkAllocator(void* pField)
+	void IShrinkAllocator(void* pField)
 	{
 		(void)pField;
 		assert(pField == this);
@@ -1278,7 +1363,7 @@ private:
 	// #endregion
 
 	//! Serialize to string using SAX API
-	int DoSerialize(HandlerBase &writer, SerFlag::Flag serFlag) const
+	int DoSerialize(HandlerBase<Ch> &writer, SerFlag::Flag serFlag) const
 	{
 		rapidjson::SizeType fieldCount = 0;
 		if (m_isParentVal) {
@@ -1295,11 +1380,11 @@ private:
 		if (!detail::Util::IsBitSet(serFlag, SerFlag::kIgnoreUnknown))
 		{
 			assert(m_r->unknown.IsObject());
-			for (rapidjson::Value::ConstMemberIterator itMember = m_r->unknown.MemberBegin();
+			for (typename TValue::ConstMemberIterator itMember = m_r->unknown.MemberBegin();
 				 itMember != m_r->unknown.MemberEnd(); ++itMember)
 			{
 				// Write key
-				const rapidjson::Value& key = itMember->name;
+				const TValue& key = itMember->name;
 				IJSTI_RET_WHEN_WRITE_FAILD(
 						writer.Key(key.GetString(), key.GetStringLength()) );
 				// Write value
@@ -1314,10 +1399,10 @@ private:
 		return 0;
 	}
 
-	int DoSerializeFields(HandlerBase &writer, SerFlag::Flag serFlag, IJST_OUT rapidjson::SizeType& fieldCountOut) const
+	int DoSerializeFields(HandlerBase<Ch> &writer, SerFlag::Flag serFlag, IJST_OUT rapidjson::SizeType& fieldCountOut) const
 	{
 		IJST_ASSERT(!m_isParentVal || m_pMetaClass->GetFieldsInfo().size() == 1);
-		for (std::vector<MetaFieldInfo>::const_iterator itMetaField = m_pMetaClass->GetFieldsInfo().begin();
+		for (typename std::vector<TMetaFieldInfo>::const_iterator itMetaField = m_pMetaClass->GetFieldsInfo().begin();
 			 itMetaField != m_pMetaClass->GetFieldsInfo().end(); ++itMetaField)
 		{
 			// Check field state
@@ -1339,7 +1424,7 @@ private:
 					// write value
 					SerializeReq req(writer, pFieldValue, serFlag);
 					IJSTI_RET_WHEN_NOT_ZERO(
-							itMetaField->serializerInterface->Serialize(req));
+							detail::GetSerializerInterface<Encoding>(*itMetaField)->Serialize(req));
 					++fieldCountOut;
 				}
 					break;
@@ -1372,9 +1457,9 @@ private:
 	}
 
 	template<typename TJsonValue, typename Func>
-	int DoFromJsonWrap(Func func, TJsonValue &stream, DeserFlag::Flag deserFlag, rapidjson::Document* pErrDocOut)
+	int DoFromJsonWrap(Func func, TJsonValue &stream, DeserFlag::Flag deserFlag, TDocument* pErrDocOut)
 	{
-		detail::ErrorDocSetter errDoc(pErrDocOut);
+		detail::ErrorDocSetter<Encoding> errDoc(pErrDocOut);
 		FromJsonParam param(deserFlag, errDoc);
 		return (this->*func)(stream, param);
 	}
@@ -1383,7 +1468,7 @@ private:
 	 * Deserialize move from json object
 	 * @note Make sure the lifecycle of allocator of the stream is longer than this object
 	 */
-	int DoMoveFromJson(rapidjson::Value &stream, FromJsonParam& p)
+	int DoMoveFromJson(TValue &stream, FromJsonParam& p)
 	{
 		if (m_isParentVal) {
 			// Set field by stream itself
@@ -1399,19 +1484,19 @@ private:
 		}
 
 		// For each member
-		rapidjson::Value::MemberIterator itNextRemain = stream.MemberBegin();
-		for (rapidjson::Value::MemberIterator itMember = stream.MemberBegin();
+		typename TValue::MemberIterator itNextRemain = stream.MemberBegin();
+		for (typename TValue::MemberIterator itMember = stream.MemberBegin();
 			 itMember != stream.MemberEnd(); ++itMember)
 		{
 
 			// Get related field info
-			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-			const MetaFieldInfo *pMetaField = m_pMetaClass->FindFieldByJsonName(fieldName);
+			const std::basic_string<Ch> jsonKeyName(itMember->name.GetString(), itMember->name.GetStringLength());
+			const TMetaFieldInfo *pMetaField = m_pMetaClass->FindFieldByJsonName(jsonKeyName);
 
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
 				if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
-					p.errDoc.UnknownMember(fieldName);
+					p.errDoc.UnknownMember(jsonKeyName);
 					return ErrorCode::kDeserializeSomeUnknownMember;
 				}
 				if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
@@ -1427,7 +1512,7 @@ private:
 			}
 
 			// Move member out of object
-			rapidjson::Value memberStream(rapidjson::kNullType);
+			TValue memberStream(rapidjson::kNullType);
 			memberStream.Swap(itMember->value);
 
 			IJSTI_RET_WHEN_NOT_ZERO(
@@ -1454,13 +1539,13 @@ private:
 	}
 
 	//! Deserialize from stream
-	int DoFromJson(const rapidjson::Value &stream, FromJsonParam& p)
+	int DoFromJson(const TValue &stream, FromJsonParam& p)
 	{
 		if (m_isParentVal) {
 			// Serialize field by stream itself
 			assert(m_pMetaClass->GetFieldsInfo().size() == 1);
 			return DoFieldFromJson(
-					&m_pMetaClass->GetFieldsInfo()[0], const_cast<rapidjson::Value &>(stream), /*canMoveSrc=*/true, p);
+					&m_pMetaClass->GetFieldsInfo()[0], const_cast<TValue &>(stream), /*canMoveSrc=*/true, p);
 		}
 
 		// Serialize fields by members of stream
@@ -1471,30 +1556,30 @@ private:
 
 		m_r->unknown.SetObject();
 		// For each member
-		for (rapidjson::Value::ConstMemberIterator itMember = stream.MemberBegin();
+		for (typename TValue::ConstMemberIterator itMember = stream.MemberBegin();
 			 itMember != stream.MemberEnd(); ++itMember)
 		{
 			// Get related field info
-			const std::string fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
-			const MetaFieldInfo *pMetaField = m_pMetaClass->FindFieldByJsonName(fieldName);
+			const std::basic_string<Ch> jsonKeyName(itMember->name.GetString(), itMember->name.GetStringLength());
+			const TMetaFieldInfo *pMetaField = m_pMetaClass->FindFieldByJsonName(jsonKeyName);
 
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
 				if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
-					p.errDoc.UnknownMember(fieldName);
+					p.errDoc.UnknownMember(jsonKeyName);
 					return ErrorCode::kDeserializeSomeUnknownMember;
 				}
 				if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
 					m_r->unknown.AddMember(
-							rapidjson::Value().SetString(fieldName.data(), (rapidjson::SizeType)fieldName.size(), *m_pAllocator),
-							rapidjson::Value().CopyFrom(itMember->value, *m_pAllocator),
+							TValue().SetString(jsonKeyName.data(), (rapidjson::SizeType)jsonKeyName.size(), *m_pAllocator),
+							TValue().CopyFrom(itMember->value, *m_pAllocator),
 							*m_pAllocator
 					);
 				}
 				continue;
 			}
 
-			rapidjson::Value& memberStream = const_cast<rapidjson::Value&>(itMember->value);
+			TValue& memberStream = const_cast<TValue&>(itMember->value);
 			IJSTI_RET_WHEN_NOT_ZERO(
 					DoFieldFromJson(pMetaField, memberStream, /*canMoveSrc=*/false, p) );
 		}
@@ -1508,7 +1593,7 @@ private:
 	}
 
 
-	int DoFieldFromJson(const MetaFieldInfo *metaField, rapidjson::Value &stream, bool canMoveSrc, FromJsonParam& p)
+	int DoFieldFromJson(const TMetaFieldInfo* metaField, TValue &stream, bool canMoveSrc, FromJsonParam& p)
 	{
 		// Check nullable
 		if (detail::Util::IsBitSet(metaField->desc, FDesc::Nullable)
@@ -1521,7 +1606,7 @@ private:
 			void *pField = GetFieldByOffset(metaField->offset);
 			FromJsonReq elemReq(stream, *m_pAllocator, p.deserFlag, canMoveSrc, pField, metaField->desc);
 			FromJsonResp elemResp(p.errDoc);
-			int ret = metaField->serializerInterface->FromJson(elemReq, elemResp);
+			int ret = detail::GetSerializerInterface<Encoding>(*metaField)->FromJson(elemReq, elemResp);
 			// Check return
 			if (ret != 0) {
 				m_r->fieldStatus[metaField->index] = FStatus::kMissing;
@@ -1537,18 +1622,18 @@ private:
 	void DoShrinkAllocator()
 	{
 		// Shrink allocator of each field
-		for (std::vector<MetaFieldInfo>::const_iterator itFieldInfo = m_pMetaClass->GetFieldsInfo().begin();
+		for (typename std::vector<TMetaFieldInfo>::const_iterator itFieldInfo = m_pMetaClass->GetFieldsInfo().begin();
 			 itFieldInfo != m_pMetaClass->GetFieldsInfo().end(); ++itFieldInfo)
 		{
 			void *pField = GetFieldByOffset(itFieldInfo->offset);
-			itFieldInfo->serializerInterface->ShrinkAllocator(pField);
+			detail::GetSerializerInterface<Encoding>(*itFieldInfo)->ShrinkAllocator(pField);
 		}
 
 		// Shrink self allocator
 		detail::Util::ShrinkAllocatorWithOwnDoc(m_r->ownDoc, m_r->unknown, m_pAllocator);
 	}
 
-	inline void InitOuterPtr()
+	void InitOuterPtr()
 	{
 		m_pOuter = reinterpret_cast<const unsigned char *>(this - m_pMetaClass->GetAccessorOffset());
 	}
@@ -1561,12 +1646,12 @@ private:
 		m_r->fieldStatus[index] = fStatus;
 	}
 
-	int CheckFieldState(detail::ErrorDocSetter& errDoc) const
+	int CheckFieldState(detail::ErrorDocSetter<Encoding>& errDoc) const
 	{
 		// Check all required field status
 		bool hasErr = false;
 
-		for (std::vector<MetaFieldInfo>::const_iterator itFieldInfo = m_pMetaClass->GetFieldsInfo().begin();
+		for (typename std::vector<TMetaFieldInfo>::const_iterator itFieldInfo = m_pMetaClass->GetFieldsInfo().begin();
 			 itFieldInfo != m_pMetaClass->GetFieldsInfo().end(); ++itFieldInfo)
 		{
 			if (detail::Util::IsBitSet(itFieldInfo->desc, FDesc::Optional))
@@ -1595,13 +1680,13 @@ private:
 		return 0;
 	}
 
-	inline std::size_t GetFieldOffset(const void *ptr) const
+	std::size_t GetFieldOffset(const void *ptr) const
 	{
-		const unsigned char *filed_ptr = static_cast<const unsigned char *>(ptr);
+		const unsigned char *filed_ptr = reinterpret_cast<const unsigned char *>(ptr);
 		return filed_ptr - m_pOuter;
 	}
 
-	inline void *GetFieldByOffset(std::size_t offset) const
+	void *GetFieldByOffset(std::size_t offset) const
 	{
 		return (void *) (m_pOuter + offset);
 	}
@@ -1609,14 +1694,14 @@ private:
 	typedef std::vector<EFStatus> FieldStatusType;
 	// Note: Use pointers to make class Accessor be a standard-layout type struct
 	struct Resource {
-		rapidjson::Value unknown;
+		TValue unknown;
 		// Should use document instead of Allocator because document can swap allocator
-		rapidjson::Document ownDoc;
+		TDocument ownDoc;
 		FieldStatusType fieldStatus;
 	};
 	Resource* m_r;
 
-	const MetaClassInfo* m_pMetaClass;
+	const TMetaClassInfo* m_pMetaClass;
 	detail::JsonAllocator* m_pAllocator;
 	const unsigned char *m_pOuter;
 
@@ -1629,13 +1714,16 @@ private:
  * @brief Provide `bool f(Handler)` functor used by rapidjson::Document.Populate()
  *
  * @tparam Handler		rapidjson::Handler
+ * @tparam Encoding		Encoding of Accessor
  */
-template<typename Handler>
-class SAXGeneratorWrapper : public HandlerBase
+template<typename Handler, typename Encoding = rapidjson::UTF8<> >
+class SAXGeneratorWrapper : public HandlerBase<typename Handler::Ch>
 {
 public:
+	IJSTI_STATIC_ASSERT((std::is_same<typename Handler::Ch, typename Encoding::Ch>::value),
+				  "Handler::Ch and Encoding::Ch must be same");
 	typedef typename Handler::Ch Ch;
-	explicit SAXGeneratorWrapper(const Accessor<>& accessor, SerFlag::Flag serFlag = SerFlag::kNoneFlag) :
+	explicit SAXGeneratorWrapper(const Accessor<Encoding>& accessor, SerFlag::Flag serFlag = SerFlag::kNoneFlag) :
 			m_accessor(accessor), m_serFlag (serFlag), m_h(IJST_NULL) {}
 
 	bool operator() (Handler& h)
@@ -1674,13 +1762,14 @@ public:
 	bool EndArray(rapidjson::SizeType elementCount = 0) IJSTI_OVERRIDE
 	{ return m_h->EndArray(elementCount); }
 private:
-	const Accessor<>& m_accessor;
+	const Accessor<Encoding>& m_accessor;
 	SerFlag::Flag m_serFlag;
 	Handler* m_h;
 };
 
+template<typename Encoding>
 template<typename T>
-inline const MetaClassInfo& MetaClassInfo::GetMetaInfo()
+inline const MetaClassInfo<Encoding> &MetaClassInfo<Encoding>::GetMetaInfo()
 {
 	IJSTI_TRY_INIT_META_BEFORE_MAIN(detail::MetaClassInfoTyped<T>);
 	return detail::Singleton<detail::MetaClassInfoTyped<T> >::GetInstance().metaClass;
@@ -1710,10 +1799,11 @@ inline const MetaClassInfo& MetaClassInfo::GetMetaInfo()
 //! @param N			fields size
 //! @param isRawVal		is struct a raw value: true/false
 //! @param needGetter	need get_* function: T/F
+//! @param encoding		encoding of json struct
 //! @param stName		struct name
 //! @param ...			fields define: [(fType, fName, sName, desc)]*
 #ifdef _MSC_VER
-	//! @params	N, isRawVal, needGetter, stName, ...
+	//! @params	N, isRawVal, needGetter, encoding, stName, ...
 	#define IJSTI_DEFINE_STRUCT_IMPL(N, ...) \
 		IJSTI_EXPAND(IJSTI_PP_CONCAT(IJSTI_DEFINE_STRUCT_IMPL_, N)(__VA_ARGS__))
 #else
@@ -1742,8 +1832,10 @@ inline const MetaClassInfo& MetaClassInfo::GetMetaInfo()
 
 	#define IJSTI_OFFSETOF(base, member)	(size_t(&base->member) - size_t(base))
 
-	#define IJSTI_STRUCT_PUBLIC_DEFINE()														\
-		typedef ::ijst::Accessor<> _ijst_AccessorType;											\
+	#define IJSTI_STRUCT_PUBLIC_DEFINE(encoding)												\
+		typedef encoding _ijst_Encoding;														\
+		typedef typename encoding::Ch _ijst_Ch;													\
+		typedef ::ijst::Accessor<_ijst_Encoding> _ijst_AccessorType;							\
 		_ijst_AccessorType _;
 
 	#define IJSTI_DEFINE_FIELD(fType, fName, ... )												\
@@ -1759,14 +1851,15 @@ inline const MetaClassInfo& MetaClassInfo::GetMetaInfo()
 			typedef ::ijst::detail::MetaClassInfoTyped< stName > _ijst_MetaInfoT;				\
 			typedef ::ijst::detail::Singleton<_ijst_MetaInfoT> _ijst_MetaInfoS;					\
 			friend class ::ijst::detail::MetaClassInfoTyped< stName >;							\
-			template<bool DummyTrue	>															\
+			template<bool DummyTrue>															\
 			static void _ijst_InitMetaInfo(_ijst_MetaInfoT* metaInfo)							\
 			{																					\
 				IJSTI_TRY_INIT_META_BEFORE_MAIN(_ijst_MetaInfoT);								\
 				/* Do not call MetaInfoS::GetInstance() int this function */			 		\
 				char dummyBuffer[sizeof(stName)];												\
 				const stName* stPtr = reinterpret_cast< stName*>(dummyBuffer);					\
-				::ijst::detail::MetaClassInfoSetter mSetter(metaInfo->metaClass);				\
+				::ijst::detail::MetaClassInfoSetter<_ijst_Ch>					 				\
+							mSetter(metaInfo->metaClass);										\
 				mSetter.InitBegin(#stName, N, IJSTI_OFFSETOF(stPtr, _));
 
 	#define IJSTI_METAINFO_ADD(stName, fDef)  													\
@@ -1775,7 +1868,7 @@ inline const MetaClassInfo& MetaClassInfo::GetMetaInfo()
 				IJSTI_IDL_SNAME fDef, 															\
 				IJSTI_OFFSETOF(stPtr, IJSTI_IDL_FNAME fDef),									\
 				IJSTI_IDL_DESC fDef, 															\
-				IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef)										\
+				&(IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef, _ijst_Encoding))					\
 			);
 
 	#define IJSTI_METAINFO_DEFINE_END()															\
@@ -1792,8 +1885,8 @@ inline const MetaClassInfo& MetaClassInfo::GetMetaInfo()
 
 //! list of templates could been declared extern
 #define IJSTI_EXTERNAL_TEMPLATE_XLIST											\
-		IJSTX(class ijst::Accessor<>)											\
 		IJSTX(struct rapidjson::UTF8<>)											\
+		IJSTX(class ijst::Accessor<>)											\
 		IJSTX(class rapidjson::GenericDocument<rapidjson::UTF8<> >)				\
 		IJSTX(class rapidjson::GenericValue<rapidjson::UTF8<> >)				\
 		IJSTX(class rapidjson::MemoryPoolAllocator<>)							\

@@ -175,26 +175,87 @@ TEST(Deserialize, DeserializeAPI)
 	string errMsg;
 	ret = st._.Deserialize(jsonSimpleTest, errMsg);
 	CheckStruct(ret, st);
+
+	//--- Some test of other encoding in done in test Deserialize::Encoding
 }
 
-template<typename Encoding>
-void TestDeserializeEncoding()
+const string encodingTestJson = "{\"int_val\": 1, \"str_val\": \"sv\", \"map_val\": {\"k\": 2} }";
+template<typename TestStruct>
+void CheckEncodingTestResult(int retCode, TestStruct& st)
+{
+	typedef typename TestStruct::_ijst_Encoding Encoding;
+	std::basic_string<typename Encoding::Ch> (*FuncTrans)(const char*) = Transcode<rapidjson::UTF8<>, Encoding>;
+	ASSERT_EQ(retCode, 0);
+	ASSERT_EQ(st.int_v, 1);
+	AssertStrEq(st.str_v.c_str(), FuncTrans("sv").c_str());
+	ASSERT_EQ(st.map_v.size(), 1u);
+	ASSERT_EQ(st.map_v[FuncTrans("k")], 2);
+}
+
+template<typename TestStruct, typename SourceEncoding>
+void DoTestEncodingDeserialize()
 {
 	// encoding string
-	std::basic_string<typename Encoding::Ch> source = Transcode<rapidjson::UTF8<>, Encoding>(jsonSimpleTest.c_str());
+	std::basic_string<typename SourceEncoding::Ch> source = Transcode<rapidjson::UTF8<>, SourceEncoding>(encodingTestJson.c_str());
 
-	SimpleSt st;
-	int ret = st._.Deserialize<rapidjson::kParseDefaultFlags, Encoding>(source.c_str());
-	CheckStruct(ret, st);
+	TestStruct st;
+	int ret = st._.template Deserialize<rapidjson::kParseDefaultFlags, SourceEncoding>(source.c_str());
+	CheckEncodingTestResult(ret, st);
+};
+
+template<typename TestStruct>
+void DoTestEncodingDeserializeWithSameEncoding()
+{
+	// encoding string
+	typedef typename TestStruct::_ijst_Encoding Encoding;
+	std::basic_string<typename Encoding::Ch> source = Transcode<rapidjson::UTF8<>, Encoding>(encodingTestJson.c_str());
+
+	TestStruct st;
+	int ret = st._.Deserialize(source.c_str());
+	CheckEncodingTestResult(ret, st);
+};
+
+template<typename TestStruct>
+void TestDeserializeEncoding()
+{
+	DoTestEncodingDeserializeWithSameEncoding<TestStruct>();
+
+	DoTestEncodingDeserialize<TestStruct, rapidjson::UTF8<> >();
+	DoTestEncodingDeserialize<TestStruct, rapidjson::UTF16<> >();
+	DoTestEncodingDeserialize<TestStruct, rapidjson::UTF16LE<> >();
+	DoTestEncodingDeserialize<TestStruct, rapidjson::UTF16BE<> >();
+	DoTestEncodingDeserialize<TestStruct, rapidjson::UTF32<> >();
+	DoTestEncodingDeserialize<TestStruct, rapidjson::UTF32LE<> >();
+	DoTestEncodingDeserialize<TestStruct, rapidjson::UTF32BE<> >();
 };
 
 TEST(Deserialize, Encoding)
 {
-	TestDeserializeEncoding<rapidjson::UTF8<> >();
-	TestDeserializeEncoding<rapidjson::UTF16LE<> >();
-	TestDeserializeEncoding<rapidjson::UTF16BE<> >();
-	TestDeserializeEncoding<rapidjson::UTF32LE<> >();
-	TestDeserializeEncoding<rapidjson::UTF32BE<> >();
+	TestDeserializeEncoding<U8TestEncoding>();
+	TestDeserializeEncoding<U16TestEncoding>();
+#if __cplusplus >= 201103L
+	TestDeserializeEncoding<U32TestEncoding>();
+#endif
+
+	// special test of Deserialize with string length
+	// this test is only valuable if source encoding is UTF8<> due to the bug of rapidJSON
+	{
+		U8TestEncoding st;
+		int ret = st._.template Deserialize<rapidjson::kParseDefaultFlags>(encodingTestJson.c_str(), encodingTestJson.length());
+		CheckEncodingTestResult(ret, st);
+	}
+	{
+		U16TestEncoding st;
+		int ret = st._.template Deserialize<rapidjson::kParseDefaultFlags, rapidjson::UTF8<> >(encodingTestJson.c_str(), encodingTestJson.length());
+		CheckEncodingTestResult(ret, st);
+	}
+#if __cplusplus >= 201103L
+	{
+		U32TestEncoding st;
+		int ret = st._.template Deserialize<rapidjson::kParseDefaultFlags, rapidjson::UTF8<> >(encodingTestJson.c_str(), encodingTestJson.length());
+		CheckEncodingTestResult(ret, st);
+	}
+#endif
 }
 
 TEST(Deserialize, FromJson)

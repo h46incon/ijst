@@ -10,7 +10,7 @@ using namespace ijst;
 
 TEST(Detail, CancelableOStream)
 {
-	detail::HeadOStream ostream(8);
+	detail::HeadOStream<rapidjson::UTF8<> > ostream(8);
 	ASSERT_TRUE(ostream.str.empty());
 	ASSERT_TRUE(ostream.HeadOnly());
 	const unsigned long oldCapacity = ostream.str.capacity();
@@ -44,8 +44,10 @@ TEST(Detail, CancelableOStream)
 
 TEST(Detail, CancelableWriter)
 {
-	detail::HeadOStream ostream(4096);
-	detail::HeadWriter writer(ostream);
+	typedef detail::HeadOStream<rapidjson::UTF8<> > THeadOStream;
+	typedef detail::HeadWriter<THeadOStream, rapidjson::Writer<THeadOStream> > THeadWriter;
+	THeadOStream ostream(4096);
+	THeadWriter writer(ostream);
 
 	writer.StartObject();
 	writer.Key("k1", 2);
@@ -71,8 +73,8 @@ TEST(Detail, CancelableWriter)
 
 	// Accept
 	{
-		detail::HeadOStream ostream2(4096);
-		detail::HeadWriter writer2(ostream2);
+		THeadOStream ostream2(4096);
+		THeadWriter writer2(ostream2);
 		doc.Accept(writer2);
 		rapidjson::Document doc2;
 		doc2.Parse(ostream2.str.c_str(), ostream2.str.length());
