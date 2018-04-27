@@ -36,6 +36,21 @@ do {																		\
 	jsonOutput.Parse(str.c_str(), str.length());							\
 	ASSERT_FALSE(jsonOutput.HasParseError());
 
+// Test for encoding
+#define DEFINE_ENCODING_TEST_STRUCT(encoding, stName, PF) \
+	IJST_DEFINE_GENERIC_STRUCT( \
+		encoding, stName \
+		, (ijst::T_int, int_v, PF ## "int_val", 0) \
+		, (IJST_TSTR, str_v, PF ## "str_val", 0) \
+		, (IJST_TMAP(ijst::T_int), map_v, PF ## "map_val", 0) \
+	)
+
+DEFINE_ENCODING_TEST_STRUCT(rapidjson::UTF8<>, U8TestEncoding, )
+DEFINE_ENCODING_TEST_STRUCT(rapidjson::UTF16<>, U16TestEncoding, L)
+#if __cplusplus >= 201103L
+DEFINE_ENCODING_TEST_STRUCT(rapidjson::UTF32<char32_t>, U32TestEncoding, U)
+#endif
+
 template<typename CharType>
 void AssertStrEq(const CharType* s1, const CharType* s2)
 {

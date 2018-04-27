@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 2.8.8)
 
-
-
 enable_testing()
 
 include_directories(${gtest_SOURCE_DIR})
@@ -17,8 +15,7 @@ set(TEST_SRC
         extern_template_extern_test.cpp
         extern_template_explicit_test.cpp
         )
-# NOTE: Please check output target here
-# if target is executable:
+
 add_executable(${TEST_OUTPUT} ${TEST_SRC})
 
 target_link_libraries(${TEST_OUTPUT} gtest gtest_main)

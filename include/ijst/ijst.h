@@ -1078,29 +1078,29 @@ public:
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
-	 * @note It may cause compile error when Encoding is not rapidjson::UTF8<> with rapidJSON v1.1.0.
+	 * @note It may cause compile error when SourceEncoding::Ch is not char with rapidJSON v1.1.0.
 	 * 		The bug is fixed in HEAD version of rapidJSON.
 	 */
 	template <unsigned parseFlags, typename SourceEncoding>
 	int Deserialize(const typename SourceEncoding::Ch* cstrInput, std::size_t length,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::Document *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
 		// The new object will call FromJson() interfaces soon in most situation
 		// So clear own allocator will not bring much benefit
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
 
 		if (detail::Util::IsBitSet(deserFlag, DeserFlag::kMoveFromIntermediateDoc)) {
-			rapidjson::Document doc(m_pAllocator);
-			doc.Parse<parseFlags, SourceEncoding>(cstrInput, length);
+			TDocument doc(m_pAllocator);
+			doc.template Parse<parseFlags, SourceEncoding>(cstrInput, length);
 			IJSTI_RET_WHEN_PARSE_ERROR(doc, Encoding);
-			return DoFromJsonWrap<rapidjson::Value>(&Accessor::DoMoveFromJson, doc, deserFlag, pErrDocOut);
+			return DoFromJsonWrap<TValue>(&Accessor::DoMoveFromJson, doc, deserFlag, pErrDocOut);
 		}
 		else {
-			rapidjson::Document doc;
-			doc.Parse<parseFlags, SourceEncoding>(cstrInput, length);
+			TDocument doc;
+			doc.template Parse<parseFlags, SourceEncoding>(cstrInput, length);
 			IJSTI_RET_WHEN_PARSE_ERROR(doc, Encoding);
-			return DoFromJsonWrap<const rapidjson::Value>(&Accessor::DoFromJson, doc, deserFlag, pErrDocOut);
+			return DoFromJsonWrap<const TValue>(&Accessor::DoFromJson, doc, deserFlag, pErrDocOut);
 		}
 	}
 
@@ -1121,7 +1121,7 @@ public:
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
-		return this->template Deserialize<parseFlags, rapidjson::UTF8<> > (
+		return this->template Deserialize<parseFlags, Encoding> (
 				cstrInput, length, deserFlag, pErrDocOut);
 	}
 
@@ -1136,7 +1136,7 @@ public:
 	 */
 	int Deserialize(const Ch* cstrInput, std::size_t length,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::Document *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
 		return this->template Deserialize<rapidjson::kParseDefaultFlags>(
 				cstrInput, length, deserFlag, pErrDocOut);
@@ -1156,23 +1156,23 @@ public:
 	template <unsigned parseFlags, typename SourceEncoding>
 	int Deserialize(const typename SourceEncoding::Ch* cstrInput,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::Document *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
 		// The new object will call FromJson() interfaces soon in most situation
 		// So clear own allocator will not bring much benefit
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
 
 		if (detail::Util::IsBitSet(deserFlag, DeserFlag::kMoveFromIntermediateDoc)) {
-			rapidjson::Document doc(m_pAllocator);
-			doc.Parse<parseFlags, SourceEncoding>(cstrInput);
+			TDocument doc(m_pAllocator);
+			doc.template Parse<parseFlags, SourceEncoding>(cstrInput);
 			IJSTI_RET_WHEN_PARSE_ERROR(doc, Encoding);
-			return DoFromJsonWrap<rapidjson::Value>(&Accessor::DoMoveFromJson, doc, deserFlag, pErrDocOut);
+			return DoFromJsonWrap<TValue>(&Accessor::DoMoveFromJson, doc, deserFlag, pErrDocOut);
 		}
 		else {
-			rapidjson::Document doc;
-			doc.Parse<parseFlags, SourceEncoding>(cstrInput);
+			TDocument doc;
+			doc.template Parse<parseFlags, SourceEncoding>(cstrInput);
 			IJSTI_RET_WHEN_PARSE_ERROR(doc, Encoding);
-			return DoFromJsonWrap<const rapidjson::Value>(&Accessor::DoFromJson, doc, deserFlag, pErrDocOut);
+			return DoFromJsonWrap<const TValue>(&Accessor::DoFromJson, doc, deserFlag, pErrDocOut);
 		}
 	}
 
@@ -1189,9 +1189,9 @@ public:
 	template <unsigned parseFlags>
 	int Deserialize(const Ch *cstrInput,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::Document *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
-		return this->template Deserialize<parseFlags, rapidjson::UTF8<> > (
+		return this->template Deserialize<parseFlags, Encoding> (
 				cstrInput, deserFlag, pErrDocOut);
 	}
 
@@ -1206,7 +1206,7 @@ public:
 	 */
 	int Deserialize(const Ch *cstrInput,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::Document *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
 		return this->template Deserialize<rapidjson::kParseDefaultFlags>(
 				cstrInput, deserFlag, pErrDocOut);
