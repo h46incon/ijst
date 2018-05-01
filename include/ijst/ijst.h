@@ -444,10 +444,10 @@ public:
 	 */
 	int FindIndex(size_t offset) const
 	{
-		std::vector<size_t>::const_iterator it =
-				detail::Util::BinarySearch(m_offsets.begin(), m_offsets.end(), offset, IntComp);
-		if (it != m_offsets.end() && *it == offset) {
-			return static_cast<int>(it - m_offsets.begin());
+		const detail::Util::VectorBinarySearchResult searchRet =
+				detail::Util::VectorBinarySearch(m_offsets, offset, MetaClassInfo::template IntComp<size_t>);
+		if (searchRet.isFind) {
+			return static_cast<int>(searchRet.index);
 		}
 		else {
 			return -1;
@@ -464,18 +464,30 @@ public:
 	 */
 	const MetaFieldInfo<Ch>* FindFieldByJsonName(const std::basic_string<Ch>& name) const
 	{
-		typename std::vector<NameMap>::const_iterator it =
-				detail::Util::BinarySearch(m_nameMap.begin(), m_nameMap.end(), name, NameMapComp);
-		if (it != m_nameMap.end() && (*it->pName) == name) {
-			return it->metaField;
-		}
-		else {
+		const unsigned hash = StringHash(name);
+		const detail::Util::VectorBinarySearchResult searchRet =
+				detail::Util::VectorBinarySearch(m_nameHashVal, hash, MetaClassInfo::template IntComp<unsigned>);
+
+		if (!searchRet.isFind) {
+			// not find
 			return IJST_NULL;
 		}
+
+		// search in bucket
+		assert(searchRet.index < m_hashedFieldIndexes.size());
+		const std::vector<unsigned> &fieldIndexes = m_hashedFieldIndexes[searchRet.index];
+		for (size_t i = 0; i < fieldIndexes.size(); ++i) {
+			const MetaFieldInfo<Ch>& fieldInfo = m_fieldsInfo[fieldIndexes[i]];
+			if (fieldInfo.jsonName == name) {
+				return &fieldInfo;
+			}
+		}
+
+		return IJST_NULL;
 	}
 
 	//! Get meta information of all fields in class. The returned vector is sorted by offset.
-	const std::vector<MetaFieldInfo<Ch> >& GetFieldsInfo() const { return fieldsInfo; }
+	const std::vector<MetaFieldInfo<Ch> >& GetFieldsInfo() const { return m_fieldsInfo; }
 	//! Get name of class.
 	const std::string& GetClassName() const { return structName; }
 	//! Get the offset of Accessor object.
@@ -484,40 +496,70 @@ public:
 private:
 	friend class detail::MetaClassInfoSetter<CharType>;		// use CharType instead of Ch to make IDE happy
 	template<typename T> friend class detail::MetaClassInfoTyped;
-	MetaClassInfo() : accessorOffset(0), mapInited(false) { }
+	MetaClassInfo() : accessorOffset(0), m_mapInited(false) { }
 
 	MetaClassInfo(const MetaClassInfo&) IJSTI_DELETED;
 	MetaClassInfo& operator=(MetaClassInfo) IJSTI_DELETED;
 
-	struct NameMap {
-		NameMap(const std::basic_string<Ch>* _pName, const MetaFieldInfo<Ch>* _metaField)
-				: pName(_pName), metaField(_metaField) {}
-
-		bool operator<(const NameMap &r) const
-		{ return (*pName) < (*r.pName); }
-
-		const std::basic_string<Ch>* pName;
-		const MetaFieldInfo<Ch>* metaField;
+	struct FNVParam {
+		unsigned prime;
+		unsigned basis;
 	};
 
-	static int NameMapComp(const NameMap &l, const std::basic_string<Ch> &name)
+	static FNVParam GetFNVParam()	// NOLINT
 	{
-		return l.pName->compare(name);
+		FNVParam ret;
+		if(sizeof(unsigned) == 4) {
+			ret.prime = (1 << 24) + (1 << 8) + 0x93;
+			ret.basis = static_cast<unsigned>(0x811c9dc5);
+		}
+		else if(sizeof(unsigned) == 8) {
+			ret.prime = (1 << 40) + (1 << 8) + 0xb3;
+			ret.basis = static_cast<unsigned>(0xcbf29ce484222325);
+		}
+		else {
+			// default value from 128 bit
+			// ret.prime = (1 << 88) + (1 << 8) + 0x3b;
+			// ret.basis = static_cast<unsigned>(0x6c62272e07bb014262b821756295c58d);
+		}
+		return ret;
 	}
 
-	static int IntComp(size_t l, size_t r)
+	static unsigned StringHash(const std::basic_string<Ch>& str)
 	{
-		return (int)((long)l - (long)r);
+		const static FNVParam p = GetFNVParam();
+		const size_t strSize = str.size();
+		unsigned hash = p.basis;
+		for (size_t i = 0; i < strSize; ++i) {
+			hash ^= str[i];
+			hash *= p.prime;
+		}
+		return hash;
 	}
 
-	std::vector<MetaFieldInfo<Ch> > fieldsInfo;
+	template<typename IntType>
+	static detail::Util::ECompResult IntComp(const IntType& l, const IntType& r)
+	{
+		if (l > r) {
+			return detail::Util::ECompResult::GT;
+		}
+		else if (l < r) {
+			return detail::Util::ECompResult::LE;
+		}
+		else {
+			return detail::Util::ECompResult::EQ;
+		}
+	}
+
+	std::vector<MetaFieldInfo<Ch> > m_fieldsInfo;
 	std::string structName;
 	std::size_t accessorOffset;
 
-	std::vector<NameMap> m_nameMap;
+	std::vector<unsigned> m_nameHashVal;
+	std::vector<std::vector<unsigned> > m_hashedFieldIndexes;			//
 	std::vector<size_t> m_offsets;
 
-	bool mapInited;
+	bool m_mapInited;
 };
 
 /**	========================================================================================
@@ -719,7 +761,7 @@ namespace detail {
 		{
 			d.structName = _tag;
 			d.accessorOffset = _accessorOffset;
-			d.fieldsInfo.reserve(_fieldCount);
+			d.m_fieldsInfo.reserve(_fieldCount);
 		}
 
 		void PushMetaField(const std::string &fieldName, const std::basic_string<Ch>& jsonName,
@@ -731,20 +773,21 @@ namespace detail {
 			metaField.offset = offset;
 			metaField.desc = desc;
 			metaField.serializerInterface = pSerializeInterface;
-			d.fieldsInfo.push_back(IJSTI_MOVE(metaField));
+			d.m_fieldsInfo.push_back(IJSTI_MOVE(metaField));
 		}
 
 		void InitEnd()
 		{
 			// assert MetaClassInfo's map has not inited before
-			assert(!d.mapInited);
+			assert(!d.m_mapInited);
 			SortMetaFieldsByOffset();
 
-			d.m_offsets.reserve(d.fieldsInfo.size());
-			d.m_nameMap.resize(d.fieldsInfo.size(), typename MetaClassInfo<Ch>::NameMap(IJSTI_NULL, IJSTI_NULL));
+			d.m_offsets.reserve(d.m_fieldsInfo.size());
+			d.m_hashedFieldIndexes.reserve(d.m_fieldsInfo.size());
+			d.m_nameHashVal.reserve(d.m_fieldsInfo.size());
 
-			for (size_t i = 0; i < d.fieldsInfo.size(); ++i) {
-				MetaFieldInfo<Ch>* ptrMetaField = &(d.fieldsInfo[i]);
+			for (size_t i = 0; i < d.m_fieldsInfo.size(); ++i) {
+				MetaFieldInfo<Ch>* ptrMetaField = &(d.m_fieldsInfo[i]);
 				ptrMetaField->index = static_cast<int>(i);
 
 				d.m_offsets.push_back(ptrMetaField->offset);
@@ -752,36 +795,46 @@ namespace detail {
 				assert(i == 0 || d.m_offsets[i]  > d.m_offsets[i-1]);
 
 				// Insert name Map
-				InsertNameMap(i, typename MetaClassInfo<Ch>::NameMap(&(ptrMetaField->jsonName), ptrMetaField));
+				InsertNameToHash(ptrMetaField->jsonName, static_cast<unsigned>(i));
 			}
 
-			d.mapInited = true;
+			d.m_mapInited = true;
 		}
 
 	private:
 		void SortMetaFieldsByOffset()
 		{
-			// fieldsInfo is already sorted in most case, use insertion sort
-			const size_t n = d.fieldsInfo.size();
+			// m_fieldsInfo is already sorted in most case, use insertion sort
+			const size_t n = d.m_fieldsInfo.size();
 			for (size_t i = 1; i < n; i++) {
-				for (size_t j = i; j > 0 && d.fieldsInfo[j - 1].offset > d.fieldsInfo[j].offset; j--) {
-					detail::Util::Swap(d.fieldsInfo[j], d.fieldsInfo[j - 1]);
+				for (size_t j = i; j > 0 && d.m_fieldsInfo[j - 1].offset > d.m_fieldsInfo[j].offset; j--) {
+					detail::Util::Swap(d.m_fieldsInfo[j], d.m_fieldsInfo[j - 1]);
 				}
 			}
 		}
 
-		void InsertNameMap(size_t len, const typename MetaClassInfo<Ch>::NameMap& v)
+		void InsertNameToHash(const std::basic_string<Ch>& jsonName, unsigned index)
 		{
-			typename std::vector<typename MetaClassInfo<Ch>::NameMap>::iterator it =
-					Util::BinarySearch(d.m_nameMap.begin(), d.m_nameMap.begin() + len, *v.pName, MetaClassInfo<Ch>::NameMapComp);
-			size_t i = static_cast<size_t>(it - d.m_nameMap.begin());
-			// assert name is unique
-			assert(i == len || (*v.pName) != (*it->pName));
+			const unsigned hash = MetaClassInfo<Ch>::StringHash(jsonName);
 
-			for (size_t j = len; j > i; --j) {
-				d.m_nameMap[j] = IJSTI_MOVE(d.m_nameMap[j - 1]);
+			const detail::Util::VectorBinarySearchResult searchRet =
+					detail::Util::VectorBinarySearch(d.m_nameHashVal, hash, MetaClassInfo<Ch>::template IntComp<unsigned>);
+
+			if (!searchRet.isFind) {
+				// push back empty node
+				d.m_hashedFieldIndexes.resize(d.m_hashedFieldIndexes.size() + 1);
+				d.m_nameHashVal.resize(d.m_nameHashVal.size() + 1);
+				// move back
+				for (size_t i = d.m_nameHashVal.size() - 1; i > searchRet.index; --i) {
+					d.m_nameHashVal[i] = d.m_nameHashVal[i - 1];
+					d.m_hashedFieldIndexes[i] = IJSTI_MOVE(d.m_hashedFieldIndexes[i - 1]);
+				}
+				// init new node
+				d.m_hashedFieldIndexes[searchRet.index].clear();
+				d.m_nameHashVal[searchRet.index] = hash;
 			}
-			d.m_nameMap[i] = v;
+
+			d.m_hashedFieldIndexes[searchRet.index].push_back(index);
 		}
 
 		MetaClassInfo<Ch>& d;

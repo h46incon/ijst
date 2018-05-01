@@ -10,6 +10,7 @@
 #include <rapidjson/writer.h>
 #include <rapidjson/error/en.h>
 
+#include <vector>
 #include <string>
 
 namespace ijst{
@@ -400,28 +401,42 @@ struct Util {
 		b = IJSTI_MOVE(tmp);
 	}
 
-	template<typename Itera, typename Target, typename Comp>
-	static Itera BinarySearch(Itera begin, Itera end, const Target& target, Comp comp)
-	{
-		assert(begin <= end);
+	struct VectorBinarySearchResult {
+		bool isFind;
+		size_t index;
+	};
 
-		while (begin < end) {
-			Itera mid = begin + (end - begin) / 2;
-			int c = comp(*mid, target);
-			if (c > 0) {
-				// target < mid
-				end = mid;
-			}
-			else if (c < 0) {
-				// target > mid
-				begin = mid + 1;
-			}
-			else {
-				// target == mid
-				return mid;
+	struct CompResult {
+		enum E_ {
+			GT,
+			EQ,
+			LE
+		};
+	};
+	typedef CompResult::E_ ECompResult;
+
+	template<typename VType>
+	static VectorBinarySearchResult VectorBinarySearch(const std::vector<VType>& vec, const VType& target, ECompResult (*comp)(const VType&, const VType&))
+	{
+		size_t beg = 0;
+		size_t end = vec.size();
+
+		while (beg < end) {
+			size_t mid = beg + (end - beg) / 2;
+			ECompResult c = comp(vec[mid], target);
+			switch (c)
+			{
+				case CompResult::GT:
+					end = mid;
+					break;
+				case CompResult::LE:
+					beg = mid + 1;
+					break;
+				case CompResult::EQ:
+					return VectorBinarySearchResult{true, mid};
 			}
 		}
-		return end;
+		return VectorBinarySearchResult{false, end};
 	};
 
 	template<typename Encoding>
