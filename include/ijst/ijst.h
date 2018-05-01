@@ -464,7 +464,7 @@ public:
 	 */
 	const MetaFieldInfo<Ch>* FindFieldByJsonName(const std::basic_string<Ch>& name) const
 	{
-		const unsigned hash = StringHash(name);
+		const uint32_t hash = StringHash(name);
 		const detail::Util::VectorBinarySearchResult searchRet =
 				detail::Util::VectorBinarySearch(m_nameHashVal, hash, MetaClassInfo::template IntComp<unsigned>);
 
@@ -501,38 +501,16 @@ private:
 	MetaClassInfo(const MetaClassInfo&) IJSTI_DELETED;
 	MetaClassInfo& operator=(MetaClassInfo) IJSTI_DELETED;
 
-	struct FNVParam {
-		unsigned prime;
-		unsigned basis;
-	};
-
-	static FNVParam GetFNVParam()	// NOLINT
+	static uint32_t StringHash(const std::basic_string<Ch>& str)
 	{
-		FNVParam ret;
-		if(sizeof(unsigned) == 4) {
-			ret.prime = (1 << 24) + (1 << 8) + 0x93;
-			ret.basis = static_cast<unsigned>(0x811c9dc5);
-		}
-		else if(sizeof(unsigned) == 8) {
-			ret.prime = (1 << 40) + (1 << 8) + 0xb3;
-			ret.basis = static_cast<unsigned>(0xcbf29ce484222325);
-		}
-		else {
-			// default value from 128 bit
-			// ret.prime = (1 << 88) + (1 << 8) + 0x3b;
-			// ret.basis = static_cast<unsigned>(0x6c62272e07bb014262b821756295c58d);
-		}
-		return ret;
-	}
-
-	static unsigned StringHash(const std::basic_string<Ch>& str)
-	{
-		const static FNVParam p = GetFNVParam();
+		// Use 32-bit FNV-1a hash
+		const uint32_t kPrime = (1 << 24) + (1 << 8) + 0x93;
+		const uint32_t kBasis = 0x811c9dc5;
 		const size_t strSize = str.size();
-		unsigned hash = p.basis;
+		uint32_t hash = kBasis;
 		for (size_t i = 0; i < strSize; ++i) {
 			hash ^= str[i];
-			hash *= p.prime;
+			hash *= kPrime;
 		}
 		return hash;
 	}
@@ -555,7 +533,7 @@ private:
 	std::string structName;
 	std::size_t accessorOffset;
 
-	std::vector<unsigned> m_nameHashVal;
+	std::vector<uint32_t> m_nameHashVal;
 	std::vector<std::vector<unsigned> > m_hashedFieldIndexes;			//
 	std::vector<size_t> m_offsets;
 
@@ -815,7 +793,7 @@ namespace detail {
 
 		void InsertNameToHash(const std::basic_string<Ch>& jsonName, unsigned index)
 		{
-			const unsigned hash = MetaClassInfo<Ch>::StringHash(jsonName);
+			const uint32_t hash = MetaClassInfo<Ch>::StringHash(jsonName);
 
 			const detail::Util::VectorBinarySearchResult searchRet =
 					detail::Util::VectorBinarySearch(d.m_nameHashVal, hash, MetaClassInfo<Ch>::template IntComp<unsigned>);
