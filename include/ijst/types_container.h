@@ -166,7 +166,8 @@ public:
 
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartArray());
 
-		for (typename VarType::const_iterator itera = field.begin(); itera != field.end(); ++itera) {
+		for (typename VarType::const_iterator itera = field.begin(), itEnd = field.end(); itera != itEnd; ++itera)
+		{
 			SerializeReq elemReq(req.writer, &(*itera), req.serFlag);
 			IJSTI_RET_WHEN_NOT_ZERO(intf.Serialize(elemReq));
 		}
@@ -190,8 +191,9 @@ public:
 
 		size_t i = 0;
 		typename VarType::iterator itField = field.begin();
-		typename rapidjson::GenericValue<Encoding>::ValueIterator itVal = req.stream.Begin();
-		for (; itVal != req.stream.End(); ++itVal, ++itField, ++i)
+		for (typename rapidjson::GenericValue<Encoding>::ValueIterator itVal = req.stream.Begin(), itEnd = req.stream.End();
+				itVal != itEnd;
+				++itVal, ++itField, ++i)
 		{
 			assert(i < field.size());
 			assert(itField != field.end());
@@ -217,7 +219,7 @@ public:
 	{
 		VarType& field = *static_cast<VarType *>(pField);
 		SerializerInterface<Encoding>& intf = IJSTI_FSERIALIZER_INS(ElemType, Encoding);
-		for (typename VarType::iterator itField = field.begin(); itField != field.end(); ++itField)
+		for (typename VarType::iterator itField = field.begin(), itEnd = field.end(); itField != itEnd; ++itField)
 		{
 			intf.ShrinkAllocator(&*itField);
 		}
@@ -289,7 +291,8 @@ public:
 
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartObject());
 
-		for (typename VarType::const_iterator itFieldMember = field.begin(); itFieldMember != field.end(); ++itFieldMember) {
+		for (typename VarType::const_iterator itFieldMember = field.begin(), itEnd = field.end(); itFieldMember != itEnd; ++itFieldMember)
+		{
 			const std::basic_string<Ch>& key = itFieldMember->first;
 			IJSTI_RET_WHEN_WRITE_FAILD(
 					req.writer.Key(key.data(), static_cast<rapidjson::SizeType>(key.size())) );
@@ -312,8 +315,8 @@ public:
 		field.clear();
 		SerializerInterface<Encoding>& intf = IJSTI_FSERIALIZER_INS(T, Encoding);
 
-		for (typename rapidjson::GenericValue<Encoding>::MemberIterator itMember = req.stream.MemberBegin();
-			 itMember != req.stream.MemberEnd(); ++itMember)
+		for (typename rapidjson::GenericValue<Encoding>::MemberIterator itMember = req.stream.MemberBegin(), itEnd = req.stream.MemberEnd();
+			 itMember != itEnd; ++itMember)
 		{
 			const std::basic_string<Ch> fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
 			// New a elem buffer in container first to avoid copy
@@ -346,7 +349,7 @@ public:
 	{
 		VarType& field = *static_cast<VarType *>(pField);
 		SerializerInterface<Encoding>& intf = IJSTI_FSERIALIZER_INS(T, Encoding);
-		for (typename VarType::iterator itField = field.begin(); itField != field.end(); ++itField)
+		for (typename VarType::iterator itField = field.begin(), itEnd = field.end(); itField != itEnd; ++itField)
 		{
 			intf.ShrinkAllocator(&itField->second);
 		}
@@ -373,7 +376,8 @@ public:
 
 		IJSTI_RET_WHEN_WRITE_FAILD(req.writer.StartObject());
 
-		for (typename VarType::const_iterator itMember = field.begin(); itMember != field.end(); ++itMember) {
+		for (typename VarType::const_iterator itMember = field.begin(), itEnd = field.end(); itMember != itEnd; ++itMember)
+		{
 			const std::basic_string<Ch>& key = itMember->name;
 			IJSTI_RET_WHEN_WRITE_FAILD(
 					req.writer.Key(key.data(), static_cast<rapidjson::SizeType>(key.size())) );
@@ -400,8 +404,9 @@ public:
 		// Alloc buffer
 		field.resize(req.stream.MemberCount());
 		size_t i = 0;
-		typename rapidjson::GenericValue<Encoding>::MemberIterator itMember = req.stream.MemberBegin();
-		for (; itMember != req.stream.MemberEnd(); ++itMember, ++i)
+		for (typename rapidjson::GenericValue<Encoding>::MemberIterator itMember = req.stream.MemberBegin(), itMemberEnd = req.stream.MemberEnd();
+			 itMember != itMemberEnd;
+			 ++itMember, ++i)
 		{
 			assert(i < field.size());
 			MemberType& memberBuf = field[i];
@@ -428,7 +433,7 @@ public:
 	{
 		VarType& field = *static_cast<VarType*>(pField);
 		SerializerInterface<Encoding>& intf = IJSTI_FSERIALIZER_INS(ValType, Encoding);
-		for (typename VarType::iterator itField = field.begin(); itField != field.end(); ++itField)
+		for (typename VarType::iterator itField = field.begin(), itEnd = field.end(); itField != itEnd; ++itField)
 		{
 			intf.ShrinkAllocator(&itField->value);
 		}

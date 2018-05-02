@@ -12,7 +12,7 @@
 #include <rapidjson/writer.h>
 
 #include <cassert>		// assert
-#include <cstddef>		// NULL, size_t, offsetof
+#include <cstddef>		// NULL, size_t
 #include <vector>
 #include <string>
 
@@ -477,7 +477,8 @@ public:
 		// search in bucket
 		assert(searchRet.index < m_hashedFieldIndexes.size());
 		const std::vector<unsigned> &fieldIndexes = m_hashedFieldIndexes[searchRet.index];
-		for (size_t i = 0; i < fieldIndexes.size(); ++i) {
+		for (size_t i = 0, iSize = fieldIndexes.size(); i < iSize; ++i)
+		{
 			const MetaFieldInfo<Ch>& fieldInfo = m_fieldsInfo[fieldIndexes[i]];
 			const std::basic_string<Ch>& fieldJsonName = fieldInfo.jsonName;
 			if ( (fieldJsonName.length() == length) && (fieldJsonName.compare(0, fieldJsonName.length(), name, length) == 0) ) {
@@ -520,7 +521,9 @@ private:
 		const uint32_t kPrime = (1 << 24) + (1 << 8) + 0x93;
 		const uint32_t kBasis = 0x811c9dc5;
 		uint32_t hash = kBasis;
-		for (size_t i = 0; i < length; ++i, ++str) {
+		for (size_t i = 0; i < length;
+				++i, ++str)
+		{
 			hash ^= *str;
 			hash *= kPrime;
 		}
@@ -776,7 +779,8 @@ namespace detail {
 			d.m_hashedFieldIndexes.reserve(d.m_fieldsInfo.size());
 			d.m_nameHashVal.reserve(d.m_fieldsInfo.size());
 
-			for (size_t i = 0; i < d.m_fieldsInfo.size(); ++i) {
+			for (size_t i = 0; i < d.m_fieldsInfo.size(); ++i)
+			{
 				MetaFieldInfo<Ch>* ptrMetaField = &(d.m_fieldsInfo[i]);
 				ptrMetaField->index = static_cast<int>(i);
 
@@ -1423,8 +1427,8 @@ private:
 		if (!detail::Util::IsBitSet(serFlag, SerFlag::kIgnoreUnknown))
 		{
 			assert(m_r->unknown.IsObject());
-			for (typename TValue::ConstMemberIterator itMember = m_r->unknown.MemberBegin();
-				 itMember != m_r->unknown.MemberEnd(); ++itMember)
+			for (typename TValue::ConstMemberIterator itMember = m_r->unknown.MemberBegin(), itEnd = m_r->unknown.MemberEnd();
+				 itMember != itEnd; ++itMember)
 			{
 				// Write key
 				const TValue& key = itMember->name;
@@ -1445,8 +1449,9 @@ private:
 	int DoSerializeFields(HandlerBase<Ch> &writer, SerFlag::Flag serFlag, IJST_OUT rapidjson::SizeType& fieldCountOut) const
 	{
 		IJST_ASSERT(!m_isParentVal || m_pMetaClass->GetFieldsInfo().size() == 1);
-		for (typename std::vector<TMetaFieldInfo>::const_iterator itMetaField = m_pMetaClass->GetFieldsInfo().begin();
-			 itMetaField != m_pMetaClass->GetFieldsInfo().end(); ++itMetaField)
+		for (typename std::vector<TMetaFieldInfo>::const_iterator
+					 itMetaField = m_pMetaClass->GetFieldsInfo().begin(), itEnd = m_pMetaClass->GetFieldsInfo().end();
+					 itMetaField != itEnd; ++itMetaField)
 		{
 			// Check field state
 			const EFStatus fstatus = m_r->fieldStatus[itMetaField->index];
@@ -1528,8 +1533,8 @@ private:
 
 		// For each member
 		typename TValue::MemberIterator itNextRemain = stream.MemberBegin();
-		for (typename TValue::MemberIterator itMember = stream.MemberBegin();
-			 itMember != stream.MemberEnd(); ++itMember)
+		for (typename TValue::MemberIterator itMember = stream.MemberBegin(), itEnd = stream.MemberEnd();
+			 itMember != itEnd; ++itMember)
 		{
 
 			// Get related field info
@@ -1600,8 +1605,8 @@ private:
 
 		m_r->unknown.SetObject();
 		// For each member
-		for (typename TValue::ConstMemberIterator itMember = stream.MemberBegin();
-			 itMember != stream.MemberEnd(); ++itMember)
+		for (typename TValue::ConstMemberIterator itMember = stream.MemberBegin(), itEnd = stream.MemberEnd();
+			 itMember != itEnd; ++itMember)
 		{
 			// Get related field info
 			const TMetaFieldInfo *pMetaField =
@@ -1641,13 +1646,10 @@ private:
 	int DoFieldFromJson(const TMetaFieldInfo* metaField, TValue &stream, bool canMoveSrc, FromJsonParam& p)
 	{
 		// Check nullable
-		if (detail::Util::IsBitSet(metaField->desc, FDesc::Nullable)
-			&& stream.IsNull())
-		{
+		if (stream.IsNull() && detail::Util::IsBitSet(metaField->desc, FDesc::Nullable)) {
 			m_r->fieldStatus[metaField->index] = FStatus::kNull;
 		}
-		else
-		{
+		else {
 			void *pField = GetFieldByOffset(metaField->offset);
 			FromJsonReq elemReq(stream, *m_pAllocator, p.deserFlag, canMoveSrc, pField, metaField->desc);
 			FromJsonResp elemResp(p.errDoc);
@@ -1667,8 +1669,9 @@ private:
 	void DoShrinkAllocator()
 	{
 		// Shrink allocator of each field
-		for (typename std::vector<TMetaFieldInfo>::const_iterator itFieldInfo = m_pMetaClass->GetFieldsInfo().begin();
-			 itFieldInfo != m_pMetaClass->GetFieldsInfo().end(); ++itFieldInfo)
+		for (typename std::vector<TMetaFieldInfo>::const_iterator
+					 itFieldInfo = m_pMetaClass->GetFieldsInfo().begin(), itEnd = m_pMetaClass->GetFieldsInfo().end();
+					 itFieldInfo != itEnd; ++itFieldInfo)
 		{
 			void *pField = GetFieldByOffset(itFieldInfo->offset);
 			detail::GetSerializerInterface<Encoding>(*itFieldInfo)->ShrinkAllocator(pField);
@@ -1696,8 +1699,9 @@ private:
 		// Check all required field status
 		bool hasErr = false;
 
-		for (typename std::vector<TMetaFieldInfo>::const_iterator itFieldInfo = m_pMetaClass->GetFieldsInfo().begin();
-			 itFieldInfo != m_pMetaClass->GetFieldsInfo().end(); ++itFieldInfo)
+		for (typename std::vector<TMetaFieldInfo>::const_iterator
+					 itFieldInfo = m_pMetaClass->GetFieldsInfo().begin(), itEnd = m_pMetaClass->GetFieldsInfo().end();
+					 itFieldInfo != itEnd; ++itFieldInfo)
 		{
 			if (detail::Util::IsBitSet(itFieldInfo->desc, FDesc::Optional))
 			{
