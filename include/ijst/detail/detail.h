@@ -168,6 +168,12 @@ rapidjson::GenericStringRef<typename Encoding::Ch> EncodeString(const char* pSrc
 }
 
 template<typename Encoding>
+inline std::basic_string<typename Encoding::Ch> GetJsonStr(const rapidjson::GenericValue<Encoding>& jVal)
+{
+	return std::basic_string<typename Encoding::Ch>(jVal.GetString(), jVal.GetStringLength());
+}
+
+template<typename Encoding>
 struct ErrorDocSetter {
 	typedef rapidjson::GenericDocument<Encoding> TDocument;
 	typedef rapidjson::GenericValue<Encoding> TValue;

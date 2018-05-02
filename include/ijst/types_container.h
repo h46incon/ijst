@@ -318,13 +318,12 @@ public:
 		for (typename rapidjson::GenericValue<Encoding>::MemberIterator itMember = req.stream.MemberBegin(), itEnd = req.stream.MemberEnd();
 			 itMember != itEnd; ++itMember)
 		{
-			const std::basic_string<Ch> fieldName(itMember->name.GetString(), itMember->name.GetStringLength());
 			// New a elem buffer in container first to avoid copy
-			typename VarType::value_type buf(fieldName, T());
-			std::pair<typename VarType::iterator, bool> insertRet = field.insert(IJSTI_MOVE(buf));
+			std::pair<typename VarType::iterator, bool> insertRet = field.insert(
+					std::pair<const std::basic_string<Ch>, T>(GetJsonStr(itMember->name), T()));
 			// Check duplicate
 			if (!insertRet.second) {
-				resp.errDoc.ElementMapKeyDuplicated(fieldName);
+				resp.errDoc.ElementMapKeyDuplicated(GetJsonStr(itMember->name));
 				return ErrorCode::kDeserializeMapKeyDuplicated;
 			}
 
@@ -336,6 +335,7 @@ public:
 			int ret = intf.FromJson(elemReq, elemResp);
 			if (ret != 0)
 			{
+				const std::basic_string<Ch> fieldName = GetJsonStr(itMember->name);
 				field.erase(fieldName);
 				resp.errDoc.ErrorInMap(fieldName);
 				return ret;
@@ -410,7 +410,7 @@ public:
 		{
 			assert(i < field.size());
 			MemberType& memberBuf = field[i];
-			memberBuf.name = std::basic_string<Ch>(itMember->name.GetString(), itMember->name.GetStringLength());
+			memberBuf.name = GetJsonStr(itMember->name);
 			ValType &elemBuffer = memberBuf.value;
 			FromJsonReq elemReq(itMember->value, req.allocator,
 								req.deserFlag, req.canMoveSrc, &elemBuffer, 0);

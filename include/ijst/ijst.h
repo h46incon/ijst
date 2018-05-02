@@ -1544,8 +1544,7 @@ private:
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
 				if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
-					const std::basic_string<Ch> jsonKeyName(itMember->name.GetString(), itMember->name.GetStringLength());
-					p.errDoc.UnknownMember(jsonKeyName);
+					p.errDoc.UnknownMember(detail::GetJsonStr(itMember->name));
 					return ErrorCode::kDeserializeSomeUnknownMember;
 				}
 				if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
@@ -1615,8 +1614,7 @@ private:
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
 				if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
-					const std::basic_string<Ch> jsonKeyName(itMember->name.GetString(), itMember->name.GetStringLength());
-					p.errDoc.UnknownMember(jsonKeyName);
+					p.errDoc.UnknownMember(detail::GetJsonStr(itMember->name));
 					return ErrorCode::kDeserializeSomeUnknownMember;
 				}
 				if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
