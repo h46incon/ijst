@@ -458,13 +458,14 @@ public:
 	 * @brief Find meta information of filed by json name.
 	 *
 	 * @param name		field's json name
+	 * @param length	field's json name length
 	 * @return			pointer of info if found, null else
 	 *
 	 * @note log(FieldSize) complexity.
 	 */
-	const MetaFieldInfo<Ch>* FindFieldByJsonName(const std::basic_string<Ch>& name) const
+	const MetaFieldInfo<Ch>* FindFieldByJsonName(const Ch* name, size_t length) const
 	{
-		const uint32_t hash = StringHash(name);
+		const uint32_t hash = StringHash(name, length);
 		const detail::Util::VectorBinarySearchResult searchRet =
 				detail::Util::VectorBinarySearch(m_nameHashVal, hash, MetaClassInfo::template IntComp<unsigned>);
 
@@ -478,13 +479,25 @@ public:
 		const std::vector<unsigned> &fieldIndexes = m_hashedFieldIndexes[searchRet.index];
 		for (size_t i = 0; i < fieldIndexes.size(); ++i) {
 			const MetaFieldInfo<Ch>& fieldInfo = m_fieldsInfo[fieldIndexes[i]];
-			if (fieldInfo.jsonName == name) {
+			const std::basic_string<Ch>& fieldJsonName = fieldInfo.jsonName;
+			if ( (fieldJsonName.length() == length) && (fieldJsonName.compare(0, fieldJsonName.length(), name, length) == 0) ) {
 				return &fieldInfo;
 			}
 		}
 
 		return IJST_NULL;
 	}
+
+	/**
+	 * @brief Find meta information of filed by json name.
+	 *
+	 * @param name		field's json name
+	 * @return			pointer of info if found, null else
+	 *
+	 * @note log(FieldSize) complexity.
+	 */
+	const MetaFieldInfo<Ch>* FindFieldByJsonName(const std::basic_string<Ch>& name) const
+	{ return FindFieldByJsonName(name.data(), name.length()); }
 
 	//! Get meta information of all fields in class. The returned vector is sorted by offset.
 	const std::vector<MetaFieldInfo<Ch> >& GetFieldsInfo() const { return m_fieldsInfo; }
@@ -501,15 +514,14 @@ private:
 	MetaClassInfo(const MetaClassInfo&) IJSTI_DELETED;
 	MetaClassInfo& operator=(MetaClassInfo) IJSTI_DELETED;
 
-	static uint32_t StringHash(const std::basic_string<Ch>& str)
+	static uint32_t StringHash(const Ch* str, size_t length)
 	{
 		// Use 32-bit FNV-1a hash
 		const uint32_t kPrime = (1 << 24) + (1 << 8) + 0x93;
 		const uint32_t kBasis = 0x811c9dc5;
-		const size_t strSize = str.size();
 		uint32_t hash = kBasis;
-		for (size_t i = 0; i < strSize; ++i) {
-			hash ^= str[i];
+		for (size_t i = 0; i < length; ++i, ++str) {
+			hash ^= *str;
 			hash *= kPrime;
 		}
 		return hash;
@@ -793,7 +805,7 @@ namespace detail {
 
 		void InsertNameToHash(const std::basic_string<Ch>& jsonName, unsigned index)
 		{
-			const uint32_t hash = MetaClassInfo<Ch>::StringHash(jsonName);
+			const uint32_t hash = MetaClassInfo<Ch>::StringHash(jsonName.data(), jsonName.length());
 
 			const detail::Util::VectorBinarySearchResult searchRet =
 					detail::Util::VectorBinarySearch(d.m_nameHashVal, hash, MetaClassInfo<Ch>::template IntComp<unsigned>);
@@ -1521,12 +1533,13 @@ private:
 		{
 
 			// Get related field info
-			const std::basic_string<Ch> jsonKeyName(itMember->name.GetString(), itMember->name.GetStringLength());
-			const TMetaFieldInfo *pMetaField = m_pMetaClass->FindFieldByJsonName(jsonKeyName);
+			const TMetaFieldInfo *pMetaField =
+					m_pMetaClass->FindFieldByJsonName(itMember->name.GetString(), itMember->name.GetStringLength());
 
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
 				if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
+					const std::basic_string<Ch> jsonKeyName(itMember->name.GetString(), itMember->name.GetStringLength());
 					p.errDoc.UnknownMember(jsonKeyName);
 					return ErrorCode::kDeserializeSomeUnknownMember;
 				}
@@ -1591,18 +1604,19 @@ private:
 			 itMember != stream.MemberEnd(); ++itMember)
 		{
 			// Get related field info
-			const std::basic_string<Ch> jsonKeyName(itMember->name.GetString(), itMember->name.GetStringLength());
-			const TMetaFieldInfo *pMetaField = m_pMetaClass->FindFieldByJsonName(jsonKeyName);
+			const TMetaFieldInfo *pMetaField =
+					m_pMetaClass->FindFieldByJsonName(itMember->name.GetString(), itMember->name.GetStringLength());
 
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
 				if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
+					const std::basic_string<Ch> jsonKeyName(itMember->name.GetString(), itMember->name.GetStringLength());
 					p.errDoc.UnknownMember(jsonKeyName);
 					return ErrorCode::kDeserializeSomeUnknownMember;
 				}
 				if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
 					m_r->unknown.AddMember(
-							TValue().SetString(jsonKeyName.data(), (rapidjson::SizeType)jsonKeyName.size(), *m_pAllocator),
+							TValue().SetString(itMember->name.GetString(), itMember->name.GetStringLength(), *m_pAllocator),
 							TValue().CopyFrom(itMember->value, *m_pAllocator),
 							*m_pAllocator
 					);
