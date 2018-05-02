@@ -534,13 +534,13 @@ private:
 	static detail::Util::ECompResult IntComp(const IntType& l, const IntType& r)
 	{
 		if (l > r) {
-			return detail::Util::ECompResult::GT;
+			return detail::Util::CompResult::GT;
 		}
 		else if (l < r) {
-			return detail::Util::ECompResult::LE;
+			return detail::Util::CompResult::LE;
 		}
 		else {
-			return detail::Util::ECompResult::EQ;
+			return detail::Util::CompResult::EQ;
 		}
 	}
 

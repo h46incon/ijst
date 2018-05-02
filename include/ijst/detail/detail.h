@@ -410,6 +410,9 @@ struct Util {
 	struct VectorBinarySearchResult {
 		bool isFind;
 		size_t index;
+
+		VectorBinarySearchResult(bool _isFind = false, size_t _index = 0)
+				: isFind(_isFind), index(_index) {}
 	};
 
 	struct CompResult {
@@ -439,10 +442,10 @@ struct Util {
 					beg = mid + 1;
 					break;
 				case CompResult::EQ:
-					return VectorBinarySearchResult{true, mid};
+					return VectorBinarySearchResult(true, mid);
 			}
 		}
-		return VectorBinarySearchResult{false, end};
+		return VectorBinarySearchResult(false, end);
 	};
 
 	template<typename Encoding>
