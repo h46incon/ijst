@@ -445,7 +445,7 @@ public:
 	int FindIndex(size_t offset) const
 	{
 		const detail::Util::VectorBinarySearchResult searchRet =
-				detail::Util::VectorBinarySearch(m_offsets, offset, MetaClassInfo::template IntComp<size_t>);
+				detail::Util::VectorBinarySearch(m_offsets, offset);
 		if (searchRet.isFind) {
 			return static_cast<int>(searchRet.index);
 		}
@@ -467,7 +467,7 @@ public:
 	{
 		const uint32_t hash = StringHash(name, length);
 		const detail::Util::VectorBinarySearchResult searchRet =
-				detail::Util::VectorBinarySearch(m_nameHashVal, hash, MetaClassInfo::template IntComp<unsigned>);
+				detail::Util::VectorBinarySearch(m_nameHashVal, hash);
 
 		if (!searchRet.isFind) {
 			// not find
@@ -528,20 +528,6 @@ private:
 			hash *= kPrime;
 		}
 		return hash;
-	}
-
-	template<typename IntType>
-	static detail::Util::ECompResult IntComp(const IntType& l, const IntType& r)
-	{
-		if (l > r) {
-			return detail::Util::CompResult::GT;
-		}
-		else if (l < r) {
-			return detail::Util::CompResult::LE;
-		}
-		else {
-			return detail::Util::CompResult::EQ;
-		}
 	}
 
 	std::vector<MetaFieldInfo<Ch> > m_fieldsInfo;
@@ -812,7 +798,7 @@ namespace detail {
 			const uint32_t hash = MetaClassInfo<Ch>::StringHash(jsonName.data(), jsonName.length());
 
 			const detail::Util::VectorBinarySearchResult searchRet =
-					detail::Util::VectorBinarySearch(d.m_nameHashVal, hash, MetaClassInfo<Ch>::template IntComp<unsigned>);
+					detail::Util::VectorBinarySearch(d.m_nameHashVal, hash);
 
 			if (!searchRet.isFind) {
 				// push back empty node

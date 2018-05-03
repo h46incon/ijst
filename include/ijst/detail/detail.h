@@ -415,34 +415,25 @@ struct Util {
 				: isFind(_isFind), index(_index) {}
 	};
 
-	struct CompResult {
-		enum E_ {
-			GT,
-			EQ,
-			LE
-		};
-	};
-	typedef CompResult::E_ ECompResult;
-
 	template<typename VType>
-	static VectorBinarySearchResult VectorBinarySearch(const std::vector<VType>& vec, const VType& target, ECompResult (*comp)(const VType&, const VType&))
+	static VectorBinarySearchResult VectorBinarySearch(const std::vector<VType>& vec, const VType& target)
 	{
 		size_t beg = 0;
 		size_t end = vec.size();
 
 		while (beg < end) {
-			size_t mid = beg + (end - beg) / 2;
-			ECompResult c = comp(vec[mid], target);
-			switch (c)
-			{
-				case CompResult::GT:
-					end = mid;
-					break;
-				case CompResult::LE:
-					beg = mid + 1;
-					break;
-				case CompResult::EQ:
-					return VectorBinarySearchResult(true, mid);
+			const size_t mid = beg + (end - beg) / 2;
+			const VType& vMid = vec[mid];
+			if (target < vMid) {
+				// target is in left half
+				end = mid;
+			}
+			else if (vMid < target) {
+				// target is in right half
+				beg = mid + 1;
+			}
+			else {
+				return VectorBinarySearchResult(true, mid);
 			}
 		}
 		return VectorBinarySearchResult(false, end);

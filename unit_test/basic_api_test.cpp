@@ -131,6 +131,8 @@ void TestStructAPI(const char *className)
 	CheckFieldInfo<Encoding>(metaInfo, "raw_v", "raw_val", (char*)&st.raw_v - (char*)&st, 0);
 	CheckFieldInfo<Encoding>(metaInfo, "map_v", "map_val", (char*)&st.map_v - (char*)&st, 0);
 	CheckFieldInfo<Encoding>(metaInfo, "obj_v", "obj_val", (char*)&st.obj_v - (char*)&st, 0);
+	// invalid json name search
+	ASSERT_EQ(NULL, metaInfo.FindFieldByJsonName(Transcode<rapidjson::UTF8<>, Encoding >("NotAField")));
 
 	//--- Optional
 	ASSERT_EQ(IJST_NULL, st.get_st_v()->get_int_v().Ptr());
