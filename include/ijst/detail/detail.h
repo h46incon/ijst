@@ -10,6 +10,7 @@
 #include <rapidjson/writer.h>
 #include <rapidjson/error/en.h>
 
+#include <vector>
 #include <string>
 
 namespace ijst{
@@ -164,6 +165,12 @@ rapidjson::GenericStringRef<typename Encoding::Ch> EncodeString(const char* pSrc
 
 	return rapidjson::GenericStringRef<typename Encoding::Ch>
 	        (sb.GetString(), static_cast<rapidjson::SizeType>(sb.GetSize() / sizeof(typename Encoding::Ch)));
+}
+
+template<typename Encoding>
+inline std::basic_string<typename Encoding::Ch> GetJsonStr(const rapidjson::GenericValue<Encoding>& jVal)
+{
+	return std::basic_string<typename Encoding::Ch>(jVal.GetString(), jVal.GetStringLength());
 }
 
 template<typename Encoding>
@@ -400,28 +407,36 @@ struct Util {
 		b = IJSTI_MOVE(tmp);
 	}
 
-	template<typename Itera, typename Target, typename Comp>
-	static Itera BinarySearch(Itera begin, Itera end, const Target& target, Comp comp)
-	{
-		assert(begin <= end);
+	struct VectorBinarySearchResult {
+		bool isFind;
+		size_t index;
 
-		while (begin < end) {
-			Itera mid = begin + (end - begin) / 2;
-			int c = comp(*mid, target);
-			if (c > 0) {
-				// target < mid
+		VectorBinarySearchResult(bool _isFind = false, size_t _index = 0)
+				: isFind(_isFind), index(_index) {}
+	};
+
+	template<typename VType>
+	static VectorBinarySearchResult VectorBinarySearch(const std::vector<VType>& vec, const VType& target)
+	{
+		size_t beg = 0;
+		size_t end = vec.size();
+
+		while (beg < end) {
+			const size_t mid = beg + (end - beg) / 2;
+			const VType& vMid = vec[mid];
+			if (target < vMid) {
+				// target is in left half
 				end = mid;
 			}
-			else if (c < 0) {
-				// target > mid
-				begin = mid + 1;
+			else if (vMid < target) {
+				// target is in right half
+				beg = mid + 1;
 			}
 			else {
-				// target == mid
-				return mid;
+				return VectorBinarySearchResult(true, mid);
 			}
 		}
-		return end;
+		return VectorBinarySearchResult(false, end);
 	};
 
 	template<typename Encoding>

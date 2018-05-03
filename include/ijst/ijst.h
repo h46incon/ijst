@@ -12,7 +12,7 @@
 #include <rapidjson/writer.h>
 
 #include <cassert>		// assert
-#include <cstddef>		// NULL, size_t, offsetof
+#include <cstddef>		// NULL, size_t
 #include <vector>
 #include <string>
 
@@ -444,14 +444,49 @@ public:
 	 */
 	int FindIndex(size_t offset) const
 	{
-		std::vector<size_t>::const_iterator it =
-				detail::Util::BinarySearch(m_offsets.begin(), m_offsets.end(), offset, IntComp);
-		if (it != m_offsets.end() && *it == offset) {
-			return static_cast<int>(it - m_offsets.begin());
+		const detail::Util::VectorBinarySearchResult searchRet =
+				detail::Util::VectorBinarySearch(m_offsets, offset);
+		if (searchRet.isFind) {
+			return static_cast<int>(searchRet.index);
 		}
 		else {
 			return -1;
 		}
+	}
+
+	/**
+	 * @brief Find meta information of filed by json name.
+	 *
+	 * @param name		field's json name
+	 * @param length	field's json name length
+	 * @return			pointer of info if found, null else
+	 *
+	 * @note log(FieldSize) complexity.
+	 */
+	const MetaFieldInfo<Ch>* FindFieldByJsonName(const Ch* name, size_t length) const
+	{
+		const uint32_t hash = StringHash(name, length);
+		const detail::Util::VectorBinarySearchResult searchRet =
+				detail::Util::VectorBinarySearch(m_nameHashVal, hash);
+
+		if (!searchRet.isFind) {
+			// not find
+			return IJST_NULL;
+		}
+
+		// search in bucket
+		assert(searchRet.index < m_hashedFieldIndexes.size());
+		const std::vector<unsigned> &fieldIndexes = m_hashedFieldIndexes[searchRet.index];
+		for (size_t i = 0, iSize = fieldIndexes.size(); i < iSize; ++i)
+		{
+			const MetaFieldInfo<Ch>& fieldInfo = m_fieldsInfo[fieldIndexes[i]];
+			const std::basic_string<Ch>& fieldJsonName = fieldInfo.jsonName;
+			if ( (fieldJsonName.length() == length) && (fieldJsonName.compare(0, fieldJsonName.length(), name, length) == 0) ) {
+				return &fieldInfo;
+			}
+		}
+
+		return IJST_NULL;
 	}
 
 	/**
@@ -463,19 +498,10 @@ public:
 	 * @note log(FieldSize) complexity.
 	 */
 	const MetaFieldInfo<Ch>* FindFieldByJsonName(const std::basic_string<Ch>& name) const
-	{
-		typename std::vector<NameMap>::const_iterator it =
-				detail::Util::BinarySearch(m_nameMap.begin(), m_nameMap.end(), name, NameMapComp);
-		if (it != m_nameMap.end() && (*it->pName) == name) {
-			return it->metaField;
-		}
-		else {
-			return IJST_NULL;
-		}
-	}
+	{ return FindFieldByJsonName(name.data(), name.length()); }
 
 	//! Get meta information of all fields in class. The returned vector is sorted by offset.
-	const std::vector<MetaFieldInfo<Ch> >& GetFieldsInfo() const { return fieldsInfo; }
+	const std::vector<MetaFieldInfo<Ch> >& GetFieldsInfo() const { return m_fieldsInfo; }
 	//! Get name of class.
 	const std::string& GetClassName() const { return structName; }
 	//! Get the offset of Accessor object.
@@ -484,40 +510,35 @@ public:
 private:
 	friend class detail::MetaClassInfoSetter<CharType>;		// use CharType instead of Ch to make IDE happy
 	template<typename T> friend class detail::MetaClassInfoTyped;
-	MetaClassInfo() : accessorOffset(0), mapInited(false) { }
+	MetaClassInfo() : accessorOffset(0), m_mapInited(false) { }
 
 	MetaClassInfo(const MetaClassInfo&) IJSTI_DELETED;
 	MetaClassInfo& operator=(MetaClassInfo) IJSTI_DELETED;
 
-	struct NameMap {
-		NameMap(const std::basic_string<Ch>* _pName, const MetaFieldInfo<Ch>* _metaField)
-				: pName(_pName), metaField(_metaField) {}
-
-		bool operator<(const NameMap &r) const
-		{ return (*pName) < (*r.pName); }
-
-		const std::basic_string<Ch>* pName;
-		const MetaFieldInfo<Ch>* metaField;
-	};
-
-	static int NameMapComp(const NameMap &l, const std::basic_string<Ch> &name)
+	static uint32_t StringHash(const Ch* str, size_t length)
 	{
-		return l.pName->compare(name);
+		// Use 32-bit FNV-1a hash
+		const uint32_t kPrime = (1 << 24) + (1 << 8) + 0x93;
+		const uint32_t kBasis = 0x811c9dc5;
+		uint32_t hash = kBasis;
+		for (size_t i = 0; i < length;
+				++i, ++str)
+		{
+			hash ^= *str;
+			hash *= kPrime;
+		}
+		return hash;
 	}
 
-	static int IntComp(size_t l, size_t r)
-	{
-		return (int)((long)l - (long)r);
-	}
-
-	std::vector<MetaFieldInfo<Ch> > fieldsInfo;
+	std::vector<MetaFieldInfo<Ch> > m_fieldsInfo;
 	std::string structName;
 	std::size_t accessorOffset;
 
-	std::vector<NameMap> m_nameMap;
+	std::vector<uint32_t> m_nameHashVal;
+	std::vector<std::vector<unsigned> > m_hashedFieldIndexes;			//
 	std::vector<size_t> m_offsets;
 
-	bool mapInited;
+	bool m_mapInited;
 };
 
 /**	========================================================================================
@@ -719,7 +740,7 @@ namespace detail {
 		{
 			d.structName = _tag;
 			d.accessorOffset = _accessorOffset;
-			d.fieldsInfo.reserve(_fieldCount);
+			d.m_fieldsInfo.reserve(_fieldCount);
 		}
 
 		void PushMetaField(const std::string &fieldName, const std::basic_string<Ch>& jsonName,
@@ -731,20 +752,22 @@ namespace detail {
 			metaField.offset = offset;
 			metaField.desc = desc;
 			metaField.serializerInterface = pSerializeInterface;
-			d.fieldsInfo.push_back(IJSTI_MOVE(metaField));
+			d.m_fieldsInfo.push_back(IJSTI_MOVE(metaField));
 		}
 
 		void InitEnd()
 		{
 			// assert MetaClassInfo's map has not inited before
-			assert(!d.mapInited);
+			assert(!d.m_mapInited);
 			SortMetaFieldsByOffset();
 
-			d.m_offsets.reserve(d.fieldsInfo.size());
-			d.m_nameMap.resize(d.fieldsInfo.size(), typename MetaClassInfo<Ch>::NameMap(IJSTI_NULL, IJSTI_NULL));
+			d.m_offsets.reserve(d.m_fieldsInfo.size());
+			d.m_hashedFieldIndexes.reserve(d.m_fieldsInfo.size());
+			d.m_nameHashVal.reserve(d.m_fieldsInfo.size());
 
-			for (size_t i = 0; i < d.fieldsInfo.size(); ++i) {
-				MetaFieldInfo<Ch>* ptrMetaField = &(d.fieldsInfo[i]);
+			for (size_t i = 0; i < d.m_fieldsInfo.size(); ++i)
+			{
+				MetaFieldInfo<Ch>* ptrMetaField = &(d.m_fieldsInfo[i]);
 				ptrMetaField->index = static_cast<int>(i);
 
 				d.m_offsets.push_back(ptrMetaField->offset);
@@ -752,36 +775,46 @@ namespace detail {
 				assert(i == 0 || d.m_offsets[i]  > d.m_offsets[i-1]);
 
 				// Insert name Map
-				InsertNameMap(i, typename MetaClassInfo<Ch>::NameMap(&(ptrMetaField->jsonName), ptrMetaField));
+				InsertNameToHash(ptrMetaField->jsonName, static_cast<unsigned>(i));
 			}
 
-			d.mapInited = true;
+			d.m_mapInited = true;
 		}
 
 	private:
 		void SortMetaFieldsByOffset()
 		{
-			// fieldsInfo is already sorted in most case, use insertion sort
-			const size_t n = d.fieldsInfo.size();
+			// m_fieldsInfo is already sorted in most case, use insertion sort
+			const size_t n = d.m_fieldsInfo.size();
 			for (size_t i = 1; i < n; i++) {
-				for (size_t j = i; j > 0 && d.fieldsInfo[j - 1].offset > d.fieldsInfo[j].offset; j--) {
-					detail::Util::Swap(d.fieldsInfo[j], d.fieldsInfo[j - 1]);
+				for (size_t j = i; j > 0 && d.m_fieldsInfo[j - 1].offset > d.m_fieldsInfo[j].offset; j--) {
+					detail::Util::Swap(d.m_fieldsInfo[j], d.m_fieldsInfo[j - 1]);
 				}
 			}
 		}
 
-		void InsertNameMap(size_t len, const typename MetaClassInfo<Ch>::NameMap& v)
+		void InsertNameToHash(const std::basic_string<Ch>& jsonName, unsigned index)
 		{
-			typename std::vector<typename MetaClassInfo<Ch>::NameMap>::iterator it =
-					Util::BinarySearch(d.m_nameMap.begin(), d.m_nameMap.begin() + len, *v.pName, MetaClassInfo<Ch>::NameMapComp);
-			size_t i = static_cast<size_t>(it - d.m_nameMap.begin());
-			// assert name is unique
-			assert(i == len || (*v.pName) != (*it->pName));
+			const uint32_t hash = MetaClassInfo<Ch>::StringHash(jsonName.data(), jsonName.length());
 
-			for (size_t j = len; j > i; --j) {
-				d.m_nameMap[j] = IJSTI_MOVE(d.m_nameMap[j - 1]);
+			const detail::Util::VectorBinarySearchResult searchRet =
+					detail::Util::VectorBinarySearch(d.m_nameHashVal, hash);
+
+			if (!searchRet.isFind) {
+				// push back empty node
+				d.m_hashedFieldIndexes.resize(d.m_hashedFieldIndexes.size() + 1);
+				d.m_nameHashVal.resize(d.m_nameHashVal.size() + 1);
+				// move back
+				for (size_t i = d.m_nameHashVal.size() - 1; i > searchRet.index; --i) {
+					d.m_nameHashVal[i] = d.m_nameHashVal[i - 1];
+					d.m_hashedFieldIndexes[i] = IJSTI_MOVE(d.m_hashedFieldIndexes[i - 1]);
+				}
+				// init new node
+				d.m_hashedFieldIndexes[searchRet.index].clear();
+				d.m_nameHashVal[searchRet.index] = hash;
 			}
-			d.m_nameMap[i] = v;
+
+			d.m_hashedFieldIndexes[searchRet.index].push_back(index);
 		}
 
 		MetaClassInfo<Ch>& d;
@@ -1380,8 +1413,8 @@ private:
 		if (!detail::Util::IsBitSet(serFlag, SerFlag::kIgnoreUnknown))
 		{
 			assert(m_r->unknown.IsObject());
-			for (typename TValue::ConstMemberIterator itMember = m_r->unknown.MemberBegin();
-				 itMember != m_r->unknown.MemberEnd(); ++itMember)
+			for (typename TValue::ConstMemberIterator itMember = m_r->unknown.MemberBegin(), itEnd = m_r->unknown.MemberEnd();
+				 itMember != itEnd; ++itMember)
 			{
 				// Write key
 				const TValue& key = itMember->name;
@@ -1402,8 +1435,9 @@ private:
 	int DoSerializeFields(HandlerBase<Ch> &writer, SerFlag::Flag serFlag, IJST_OUT rapidjson::SizeType& fieldCountOut) const
 	{
 		IJST_ASSERT(!m_isParentVal || m_pMetaClass->GetFieldsInfo().size() == 1);
-		for (typename std::vector<TMetaFieldInfo>::const_iterator itMetaField = m_pMetaClass->GetFieldsInfo().begin();
-			 itMetaField != m_pMetaClass->GetFieldsInfo().end(); ++itMetaField)
+		for (typename std::vector<TMetaFieldInfo>::const_iterator
+					 itMetaField = m_pMetaClass->GetFieldsInfo().begin(), itEnd = m_pMetaClass->GetFieldsInfo().end();
+					 itMetaField != itEnd; ++itMetaField)
 		{
 			// Check field state
 			const EFStatus fstatus = m_r->fieldStatus[itMetaField->index];
@@ -1485,18 +1519,18 @@ private:
 
 		// For each member
 		typename TValue::MemberIterator itNextRemain = stream.MemberBegin();
-		for (typename TValue::MemberIterator itMember = stream.MemberBegin();
-			 itMember != stream.MemberEnd(); ++itMember)
+		for (typename TValue::MemberIterator itMember = stream.MemberBegin(), itEnd = stream.MemberEnd();
+			 itMember != itEnd; ++itMember)
 		{
 
 			// Get related field info
-			const std::basic_string<Ch> jsonKeyName(itMember->name.GetString(), itMember->name.GetStringLength());
-			const TMetaFieldInfo *pMetaField = m_pMetaClass->FindFieldByJsonName(jsonKeyName);
+			const TMetaFieldInfo *pMetaField =
+					m_pMetaClass->FindFieldByJsonName(itMember->name.GetString(), itMember->name.GetStringLength());
 
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
 				if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
-					p.errDoc.UnknownMember(jsonKeyName);
+					p.errDoc.UnknownMember(detail::GetJsonStr(itMember->name));
 					return ErrorCode::kDeserializeSomeUnknownMember;
 				}
 				if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
@@ -1556,22 +1590,22 @@ private:
 
 		m_r->unknown.SetObject();
 		// For each member
-		for (typename TValue::ConstMemberIterator itMember = stream.MemberBegin();
-			 itMember != stream.MemberEnd(); ++itMember)
+		for (typename TValue::ConstMemberIterator itMember = stream.MemberBegin(), itEnd = stream.MemberEnd();
+			 itMember != itEnd; ++itMember)
 		{
 			// Get related field info
-			const std::basic_string<Ch> jsonKeyName(itMember->name.GetString(), itMember->name.GetStringLength());
-			const TMetaFieldInfo *pMetaField = m_pMetaClass->FindFieldByJsonName(jsonKeyName);
+			const TMetaFieldInfo *pMetaField =
+					m_pMetaClass->FindFieldByJsonName(itMember->name.GetString(), itMember->name.GetStringLength());
 
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
 				if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
-					p.errDoc.UnknownMember(jsonKeyName);
+					p.errDoc.UnknownMember(detail::GetJsonStr(itMember->name));
 					return ErrorCode::kDeserializeSomeUnknownMember;
 				}
 				if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
 					m_r->unknown.AddMember(
-							TValue().SetString(jsonKeyName.data(), (rapidjson::SizeType)jsonKeyName.size(), *m_pAllocator),
+							TValue().SetString(itMember->name.GetString(), itMember->name.GetStringLength(), *m_pAllocator),
 							TValue().CopyFrom(itMember->value, *m_pAllocator),
 							*m_pAllocator
 					);
@@ -1596,13 +1630,10 @@ private:
 	int DoFieldFromJson(const TMetaFieldInfo* metaField, TValue &stream, bool canMoveSrc, FromJsonParam& p)
 	{
 		// Check nullable
-		if (detail::Util::IsBitSet(metaField->desc, FDesc::Nullable)
-			&& stream.IsNull())
-		{
+		if (stream.IsNull() && detail::Util::IsBitSet(metaField->desc, FDesc::Nullable)) {
 			m_r->fieldStatus[metaField->index] = FStatus::kNull;
 		}
-		else
-		{
+		else {
 			void *pField = GetFieldByOffset(metaField->offset);
 			FromJsonReq elemReq(stream, *m_pAllocator, p.deserFlag, canMoveSrc, pField, metaField->desc);
 			FromJsonResp elemResp(p.errDoc);
@@ -1622,8 +1653,9 @@ private:
 	void DoShrinkAllocator()
 	{
 		// Shrink allocator of each field
-		for (typename std::vector<TMetaFieldInfo>::const_iterator itFieldInfo = m_pMetaClass->GetFieldsInfo().begin();
-			 itFieldInfo != m_pMetaClass->GetFieldsInfo().end(); ++itFieldInfo)
+		for (typename std::vector<TMetaFieldInfo>::const_iterator
+					 itFieldInfo = m_pMetaClass->GetFieldsInfo().begin(), itEnd = m_pMetaClass->GetFieldsInfo().end();
+					 itFieldInfo != itEnd; ++itFieldInfo)
 		{
 			void *pField = GetFieldByOffset(itFieldInfo->offset);
 			detail::GetSerializerInterface<Encoding>(*itFieldInfo)->ShrinkAllocator(pField);
@@ -1651,8 +1683,9 @@ private:
 		// Check all required field status
 		bool hasErr = false;
 
-		for (typename std::vector<TMetaFieldInfo>::const_iterator itFieldInfo = m_pMetaClass->GetFieldsInfo().begin();
-			 itFieldInfo != m_pMetaClass->GetFieldsInfo().end(); ++itFieldInfo)
+		for (typename std::vector<TMetaFieldInfo>::const_iterator
+					 itFieldInfo = m_pMetaClass->GetFieldsInfo().begin(), itEnd = m_pMetaClass->GetFieldsInfo().end();
+					 itFieldInfo != itEnd; ++itFieldInfo)
 		{
 			if (detail::Util::IsBitSet(itFieldInfo->desc, FDesc::Optional))
 			{
