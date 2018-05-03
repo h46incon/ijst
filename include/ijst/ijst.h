@@ -679,7 +679,7 @@ namespace detail {
 	 * @return 					typed SerializerInterface
 	 */
 	template<typename Encoding>
-	SerializerInterface<Encoding>* GetSerializerInterface(const MetaFieldInfo<typename Encoding::Ch>& metaFieldInfo)
+	inline SerializerInterface<Encoding>* GetSerializerInterface(const MetaFieldInfo<typename Encoding::Ch>& metaFieldInfo)
 	{
 		return reinterpret_cast<SerializerInterface<Encoding>*>(metaFieldInfo.serializerInterface);
 	}
@@ -1856,7 +1856,7 @@ inline const MetaClassInfo<Encoding> &MetaClassInfo<Encoding>::GetMetaInfo()
 			{																					\
 				IJSTI_TRY_INIT_META_BEFORE_MAIN(_ijst_MetaInfoT);								\
 				/* Do not call MetaInfoS::GetInstance() int this function */			 		\
-				char dummyBuffer[sizeof(stName)];												\
+				char* dummyBuffer = new char[sizeof(stName)];									\
 				const stName* stPtr = reinterpret_cast< stName*>(dummyBuffer);					\
 				::ijst::detail::MetaClassInfoSetter<_ijst_Ch>					 				\
 							mSetter(metaInfo->metaClass);										\
@@ -1873,6 +1873,7 @@ inline const MetaClassInfo<Encoding> &MetaClassInfo<Encoding>::GetMetaInfo()
 
 	#define IJSTI_METAINFO_DEFINE_END()															\
 				mSetter.InitEnd();																\
+				delete[] dummyBuffer;															\
 			}
 
 	#define IJSTI_DEFINE_CLASS_END(stName)														\
