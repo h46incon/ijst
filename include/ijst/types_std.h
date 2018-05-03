@@ -65,27 +65,26 @@ class T_GenericRaw {
 public:
 	T_GenericRaw()
 	{
-		m_pOwnDoc = new TDocument();
-		m_pAllocator = &m_pOwnDoc->GetAllocator();
+		m_pOwnAllocator = new detail::JsonAllocator();
+		m_pAllocator = m_pOwnAllocator;
 	}
 
 	T_GenericRaw(const T_GenericRaw &rhs)
 	{
-		m_pOwnDoc = new TDocument();
-		m_pAllocator = &m_pOwnDoc->GetAllocator();
+		m_pOwnAllocator = new detail::JsonAllocator();
+		m_pAllocator = m_pOwnAllocator;
 		v.CopyFrom(rhs.v, *m_pAllocator);
 	}
 
 #if __cplusplus >= 201103L
 	T_GenericRaw(T_GenericRaw &&rhs) IJSTI_NOEXCEPT
+		: m_pOwnAllocator(IJST_NULL), m_pAllocator(IJST_NULL)
 	{
-		m_pOwnDoc = IJST_NULL;
-		m_pAllocator = IJST_NULL;
 		Steal(rhs);
 	}
 #endif
 
-	T_GenericRaw &operator=(T_GenericRaw rhs)
+	T_GenericRaw& operator=(T_GenericRaw rhs)
 	{
 		Steal(rhs);
 		return *this;
@@ -97,19 +96,19 @@ public:
 			return;
 		}
 
-		delete m_pOwnDoc;
-		m_pOwnDoc = rhs.m_pOwnDoc;
-		rhs.m_pOwnDoc = IJST_NULL;
+		delete m_pOwnAllocator;
+		m_pOwnAllocator = rhs.m_pOwnAllocator;
+		rhs.m_pOwnAllocator = IJST_NULL;
 
 		m_pAllocator = rhs.m_pAllocator;
 		rhs.m_pAllocator = IJST_NULL;
-		v = rhs.v;
+		v = rhs.v;		// move
 	}
 
 	~T_GenericRaw()
 	{
-		delete m_pOwnDoc;
-		m_pOwnDoc = IJST_NULL;
+		delete m_pOwnAllocator;
+		m_pOwnAllocator = IJST_NULL;
 	}
 
 	//! Get actually value in object
@@ -119,17 +118,16 @@ public:
 	rapidjson::MemoryPoolAllocator<>& GetAllocator() {return *m_pAllocator;}
 	const rapidjson::MemoryPoolAllocator<>& GetAllocator() const {return *m_pAllocator;}
 	//! See ijst::Accessor::GetOwnAllocator
-	rapidjson::MemoryPoolAllocator<>& GetOwnAllocator() {return m_pOwnDoc->GetAllocator();}
-	const rapidjson::MemoryPoolAllocator<>& GetOwnAllocator() const {return m_pOwnDoc->GetAllocator();}
+	rapidjson::MemoryPoolAllocator<>& GetOwnAllocator() {return *m_pOwnAllocator;}
+	const rapidjson::MemoryPoolAllocator<>& GetOwnAllocator() const {return *m_pOwnAllocator;}
 
 private:
-	typedef rapidjson::GenericDocument<Encoding> TDocument;
 	typedef rapidjson::GenericValue<Encoding> TValue;
 
 	friend class detail::FSerializer<T_GenericRaw, Encoding>;
+	detail::JsonAllocator* m_pOwnAllocator;
+	detail::JsonAllocator* m_pAllocator;
 	TValue v;
-	rapidjson::MemoryPoolAllocator<>* m_pAllocator;
-	TDocument* m_pOwnDoc;		//TODO: use pointer to make T_raw be a standard-layout type
 };
 
 }	// namespace ijst
@@ -323,7 +321,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_GenericRaw<Encoding>)
 			pField->v.Swap(req.stream);
 		}
 		else {
-			pField->m_pAllocator = &pField->m_pOwnDoc->GetAllocator();
+			pField->m_pAllocator = pField->m_pOwnAllocator;
 			pField->v.CopyFrom(req.stream, *pField->m_pAllocator);
 		}
 		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((pField->v.IsNull()));
@@ -333,7 +331,22 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_GenericRaw<Encoding>)
 	virtual void ShrinkAllocator(void *pField) IJSTI_OVERRIDE
 	{
 		VarType& field = *static_cast<VarType*>(pField);
-		detail::Util::ShrinkAllocatorWithOwnDoc(*field.m_pOwnDoc, field.v, field.m_pAllocator);
+		if ((field.m_pOwnAllocator == field.m_pAllocator)
+				&& (field.m_pAllocator->Capacity() == field.m_pAllocator->Size()))
+		{
+			// use own allocator, and not need shrink
+			return;
+		}
+
+		// new allocator and value
+		detail::JsonAllocator* newAllocaltor = new detail::JsonAllocator();
+		typename VarType::TValue newVal(field.v, *newAllocaltor);
+
+		// swap back
+		field.v.Swap(newVal);
+		delete field.m_pOwnAllocator;
+		field.m_pOwnAllocator = newAllocaltor;
+		field.m_pAllocator = newAllocaltor;
 	}
 
 
