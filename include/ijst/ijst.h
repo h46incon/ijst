@@ -73,6 +73,30 @@
 	#define IJST_ASSERT(x) assert(x)
 #endif
 
+/**
+ * @ingroup IJST_CONFIG
+ *
+ *	By default, ijst allocator a buffer in heap to calculate fields' offset of ijst struct.
+ *	User can override it by defining IJST_OFFSET_BUFFER_NEW, IJST_OFFSET_BUFFER_DELETE macro.
+ *	E.g, allocator in stack, or use nullptr.
+ */
+// alter 1: use nullptr
+// #define IJST_OFFSET_BUFFER_NEW(ptrId, size)	char* ptrId = NULL
+// #define IJST_OFFSET_BUFFER_DELETE(ptrId)		// empty
+
+// alter 2: use buffer in stack
+// #define IJST_OFFSET_BUFFER_NEW(ptrId, size)	char ptrId[size]
+// #define IJST_OFFSET_BUFFER_DELETE(ptrId)		// empty
+
+#ifndef IJST_OFFSET_BUFFER_NEW
+	//! customization point for new buffer to calculate ijst struct offset
+	#define IJST_OFFSET_BUFFER_NEW(ptrId, size)		char* ptrId = new char[size]
+#endif
+#ifndef IJST_OFFSET_BUFFER_DELETE
+	//! customization point for delete buffer allocated by IJST_OFFSET_BUFFER_NEW
+	#define IJST_OFFSET_BUFFER_DELETE(ptrId)		delete[] ptrId
+#endif
+
 /** @defgroup IJST_MACRO_API ijst macro API
  *  @brief macro API
  *
@@ -1889,8 +1913,8 @@ inline const MetaClassInfo<Encoding> &MetaClassInfo<Encoding>::GetMetaInfo()
 			{																					\
 				IJSTI_TRY_INIT_META_BEFORE_MAIN(_ijst_MetaInfoT);								\
 				/* Do not call MetaInfoS::GetInstance() int this function */			 		\
-				char* dummyBuffer = new char[sizeof(stName)];									\
-				const stName* stPtr = reinterpret_cast< stName*>(dummyBuffer);					\
+				IJST_OFFSET_BUFFER_NEW(dummyBuffer, sizeof(stName));							\
+				const stName* stPtr = reinterpret_cast<const stName*>(dummyBuffer);				\
 				::ijst::detail::MetaClassInfoSetter<_ijst_Ch>					 				\
 							mSetter(metaInfo->metaClass);										\
 				mSetter.InitBegin(#stName, N, IJSTI_OFFSETOF(stPtr, _));
@@ -1906,7 +1930,7 @@ inline const MetaClassInfo<Encoding> &MetaClassInfo<Encoding>::GetMetaInfo()
 
 	#define IJSTI_METAINFO_DEFINE_END()															\
 				mSetter.InitEnd();																\
-				delete[] dummyBuffer;															\
+				IJST_OFFSET_BUFFER_DELETE(dummyBuffer);											\
 			}
 
 	#define IJSTI_DEFINE_CLASS_END(stName)														\
