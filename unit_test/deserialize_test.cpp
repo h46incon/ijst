@@ -241,12 +241,12 @@ TEST(Deserialize, Encoding)
 	// this test is only valuable if source encoding is UTF8<> due to the bug of rapidJSON
 	{
 		U8TestEncoding st;
-		int ret = st._.template Deserialize<rapidjson::kParseDefaultFlags>(encodingTestJson.c_str(), encodingTestJson.length());
+		int ret = st._.Deserialize<rapidjson::kParseDefaultFlags>(encodingTestJson.c_str(), encodingTestJson.length());
 		CheckEncodingTestResult(ret, st);
 	}
 	{
 		U16TestEncoding st;
-		int ret = st._.template Deserialize<rapidjson::kParseDefaultFlags, rapidjson::UTF8<> >(encodingTestJson.c_str(), encodingTestJson.length());
+		int ret = st._.Deserialize<rapidjson::kParseDefaultFlags, rapidjson::UTF8<> >(encodingTestJson.c_str(), encodingTestJson.length());
 		CheckEncodingTestResult(ret, st);
 	}
 #if __cplusplus >= 201103L

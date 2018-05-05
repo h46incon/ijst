@@ -567,7 +567,7 @@ private:
 	std::size_t accessorOffset;
 
 	std::vector<uint32_t> m_nameHashVal;
-	std::vector<std::vector<unsigned> > m_hashedFieldIndexes;			//
+	std::vector<std::vector<unsigned> > m_hashedFieldIndexes;
 	std::vector<size_t> m_offsets;
 
 	bool m_mapInited;
@@ -1935,7 +1935,7 @@ inline const MetaClassInfo<Encoding> &MetaClassInfo<Encoding>::GetMetaInfo()
 
 	#define IJSTI_STRUCT_PUBLIC_DEFINE(encoding)												\
 		typedef encoding _ijst_Encoding;														\
-		typedef typename encoding::Ch _ijst_Ch;													\
+		typedef encoding::Ch _ijst_Ch;															\
 		typedef ::ijst::Accessor<_ijst_Encoding> _ijst_AccessorType;							\
 		_ijst_AccessorType _;
 
