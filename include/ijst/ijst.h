@@ -900,43 +900,47 @@ class Accessor {
 public:
 	typedef typename Encoding::Ch Ch;
 	//! Constructor
-	explicit Accessor(const MetaClassInfo<Ch>* pMetaClass, bool isParentVal, bool isValid) :
-			m_pMetaClass(pMetaClass), m_isValid(isValid), m_isParentVal(isParentVal)
+	explicit Accessor(const MetaClassInfo<Ch>* pMetaClass, bool isParentVal, bool isValid)
+			: m_r(IJSTI_NULL)
 	{
-		IJST_ASSERT(!m_isParentVal || m_pMetaClass->GetFieldsInfo().size() == 1);
+		IJST_ASSERT(!isParentVal || pMetaClass->GetFieldsInfo().size() == 1);
 		m_r = static_cast<Resource *>(operator new(sizeof(Resource)));
-		new(&m_r->fieldStatus) FieldStatusType(m_pMetaClass->GetFieldsInfo().size(), static_cast<EFStatus>(FStatus::kMissing));
+		m_r->pMetaClass = pMetaClass;
+		m_r->isValid = isValid;
+		m_r->isParentVal = isParentVal;
+		InitOuterPtr();
+
+		new(&m_r->fieldStatus) FieldStatusType(m_r->pMetaClass->GetFieldsInfo().size(), static_cast<EFStatus>(FStatus::kMissing));
 		new(&m_r->unknown)TValue(rapidjson::kObjectType);
 		new(&m_r->ownDoc) TDocument();
-		m_pAllocator = &m_r->ownDoc.GetAllocator();
-		InitOuterPtr();
+		m_r->pAllocator = &m_r->ownDoc.GetAllocator();
 	}
 
 	//! Copy constructor
 	Accessor(const Accessor &rhs)
+			: m_r(IJST_NULL)
 	{
 		assert(this != &rhs);
 
-		m_isValid = rhs.m_isValid;
-		m_isParentVal = rhs.m_isParentVal;
-
 		m_r = static_cast<Resource *>(operator new(sizeof(Resource)));
+		m_r->pMetaClass = rhs.m_r->pMetaClass;
+		m_r->isValid = rhs.m_r->isValid;
+		m_r->isParentVal = rhs.m_r->isParentVal;
+		InitOuterPtr();
+
 		new(&m_r->fieldStatus)FieldStatusType(rhs.m_r->fieldStatus);
 		new(&m_r->unknown)TValue(rapidjson::kObjectType);
 		new(&m_r->ownDoc) TDocument();
-		m_pAllocator = &m_r->ownDoc.GetAllocator();
+		m_r->pAllocator = &m_r->ownDoc.GetAllocator();
 
-		m_pMetaClass = rhs.m_pMetaClass;
-		InitOuterPtr();
-
-		m_r->unknown.CopyFrom(rhs.m_r->unknown, *m_pAllocator);
+		m_r->unknown.CopyFrom(rhs.m_r->unknown, *(m_r->pAllocator));
 	}
 
 	#if __cplusplus >= 201103L
 	//! Move copy constructor
 	Accessor(Accessor &&rhs) IJSTI_NOEXCEPT
+		: m_r(IJSTI_NULL)
 	{
-		m_r = IJSTI_NULL;
 		Steal(rhs);
 	}
 	#endif
@@ -967,21 +971,12 @@ public:
 		m_r = rhs.m_r;
 		rhs.m_r = IJSTI_NULL;
 
-		// other simple field
-		m_pMetaClass = rhs.m_pMetaClass;
-		rhs.m_pMetaClass = IJST_NULL;
-		m_pAllocator = rhs.m_pAllocator;
-		rhs.m_pAllocator = IJST_NULL;
-
-		m_isValid = rhs.m_isValid;
-		m_isParentVal = rhs.m_isParentVal;
-
 		InitOuterPtr();
 	}
 
-	bool IsValid() const { return m_isValid; }
-	bool IsParentVal() const { return m_isParentVal; }
-	const MetaClassInfo<Ch>& GetMetaInfo() const { return *m_pMetaClass; }
+	bool IsValid() const { return m_r->isValid; }
+	bool IsParentVal() const { return m_r->isParentVal; }
+	const MetaClassInfo<Ch>& GetMetaInfo() const { return *(m_r->pMetaClass); }
 
 	/*
 	 * Field accessor.
@@ -991,7 +986,7 @@ public:
 	bool HasField(const void *pField) const
 	{
 		size_t offset = GetFieldOffset(pField);
-		return (m_pMetaClass->FindIndex(offset) != -1);
+		return (m_r->pMetaClass->FindIndex(offset) != -1);
 	}
 
 	//! Set field to val and mark it valid.
@@ -1020,7 +1015,7 @@ public:
 	EFStatus GetStatus(const void *pField) const
 	{
 		const size_t offset = GetFieldOffset(pField);
-		const int index = m_pMetaClass->FindIndex(offset);
+		const int index = m_r->pMetaClass->FindIndex(offset);
 		return index == -1 ? FStatus::kNotAField : m_r->fieldStatus[index];
 	}
 
@@ -1034,8 +1029,8 @@ public:
 	 * The inner allocator is own allocator when init,
 	 * but may change to other allocator when calling SetMembersAllocator() or Deserialize().
 	 */
-	rapidjson::MemoryPoolAllocator<> &GetAllocator() { return *m_pAllocator; }
-	const rapidjson::MemoryPoolAllocator<> &GetAllocator() const { return *m_pAllocator; }
+	rapidjson::MemoryPoolAllocator<> &GetAllocator() { return *(m_r->pAllocator); }
+	const rapidjson::MemoryPoolAllocator<> &GetAllocator() const { return *(m_r->pAllocator); }
 
 	/**
 	 * @brief Get own allocator that used to manager resource.
@@ -1056,7 +1051,7 @@ public:
 	Optional<const T> GetOptional(const T& field) const
 	{
 		IJST_ASSERT(HasField(&field));
-		if (m_isValid && GetStatus(&field) == ijst::FStatus::kValid) {
+		if (m_r->isValid && GetStatus(&field) == ijst::FStatus::kValid) {
 			return ::ijst::Optional<const T>(&field);
 		}
 		else {
@@ -1075,7 +1070,7 @@ public:
 	Optional<T> GetOptional(T& field)
 	{
 		IJST_ASSERT(HasField(&field));
-		if (m_isValid && GetStatus(&field) == ijst::FStatus::kValid) {
+		if (m_r->isValid && GetStatus(&field) == ijst::FStatus::kValid) {
 			return ::ijst::Optional<T>(&field);
 		}
 		else {
@@ -1155,7 +1150,7 @@ public:
 		ResetAllocator();
 
 		if (detail::Util::IsBitSet(deserFlag, DeserFlag::kMoveFromIntermediateDoc)) {
-			TDocument doc(m_pAllocator);
+			TDocument doc(m_r->pAllocator);
 			doc.template Parse<parseFlags, SourceEncoding>(cstrInput, length);
 			IJSTI_RET_WHEN_PARSE_ERROR(doc, Encoding);
 			return DoFromJsonWrap<TValue>(&Accessor::DoMoveFromJson, doc, deserFlag, pErrDocOut);
@@ -1231,7 +1226,7 @@ public:
 		ResetAllocator();
 
 		if (detail::Util::IsBitSet(deserFlag, DeserFlag::kMoveFromIntermediateDoc)) {
-			TDocument doc(m_pAllocator);
+			TDocument doc(m_r->pAllocator);
 			doc.template Parse<parseFlags, SourceEncoding>(cstrInput);
 			IJSTI_RET_WHEN_PARSE_ERROR(doc, Encoding);
 			return DoFromJsonWrap<TValue>(&Accessor::DoMoveFromJson, doc, deserFlag, pErrDocOut);
@@ -1374,7 +1369,7 @@ public:
 		// Store document to manager allocator
 		m_r->ownDoc.GetAllocator().Clear();
 		m_r->ownDoc.Swap(srcDocStolen);
-		m_pAllocator = &m_r->ownDoc.GetAllocator();
+		m_r->pAllocator = &m_r->ownDoc.GetAllocator();
 		return DoFromJsonWrap<TValue>(&Accessor::DoMoveFromJson, m_r->ownDoc, deserFlag, pErrDocOut);
 	}
 
@@ -1420,7 +1415,7 @@ private:
 
 		FromJsonParam param(req.deserFlag, resp.errDoc);
 		if (req.canMoveSrc) {
-			m_pAllocator = &req.allocator;
+			m_r->pAllocator = &req.allocator;
 			return DoMoveFromJson(req.stream, param);
 		}
 		else {
@@ -1442,7 +1437,7 @@ private:
 	int DoSerialize(HandlerBase<Ch> &writer, SerFlag::Flag serFlag) const
 	{
 		rapidjson::SizeType fieldCount = 0;
-		if (m_isParentVal) {
+		if (m_r->isParentVal) {
 			return DoSerializeFields(writer, serFlag, fieldCount);
 			// Unknown will be ignored
 		}
@@ -1477,9 +1472,9 @@ private:
 
 	int DoSerializeFields(HandlerBase<Ch> &writer, SerFlag::Flag serFlag, IJST_OUT rapidjson::SizeType& fieldCountOut) const
 	{
-		IJST_ASSERT(!m_isParentVal || m_pMetaClass->GetFieldsInfo().size() == 1);
+		IJST_ASSERT(!m_r->isParentVal || m_r->pMetaClass->GetFieldsInfo().size() == 1);
 		for (typename std::vector<TMetaFieldInfo>::const_iterator
-					 itMetaField = m_pMetaClass->GetFieldsInfo().begin(), itEnd = m_pMetaClass->GetFieldsInfo().end();
+					 itMetaField = m_r->pMetaClass->GetFieldsInfo().begin(), itEnd = m_r->pMetaClass->GetFieldsInfo().end();
 					 itMetaField != itEnd; ++itMetaField)
 		{
 			// Check field state
@@ -1493,7 +1488,7 @@ private:
 				case FStatus::kValid:
 				{
 					const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
-					if (!m_isParentVal) {
+					if (!m_r->isParentVal) {
 						// write key
 						IJSTI_RET_WHEN_WRITE_FAILD(
 								writer.Key(itMetaField->jsonName.data(), (rapidjson::SizeType)itMetaField->jsonName.size()) );
@@ -1512,7 +1507,7 @@ private:
 						continue;
 					}
 
-					if (!m_isParentVal) {
+					if (!m_r->isParentVal) {
 						// write key
 						IJSTI_RET_WHEN_WRITE_FAILD(
 								writer.Key(itMetaField->jsonName.data(), (rapidjson::SizeType)itMetaField->jsonName.size()) );
@@ -1547,11 +1542,11 @@ private:
 	 */
 	int DoMoveFromJson(TValue &stream, FromJsonParam& p)
 	{
-		if (m_isParentVal) {
+		if (m_r->isParentVal) {
 			// Set field by stream itself
-			assert(m_pMetaClass->GetFieldsInfo().size() == 1);
+			assert(m_r->pMetaClass->GetFieldsInfo().size() == 1);
 			return DoFieldFromJson(
-					&m_pMetaClass->GetFieldsInfo()[0], stream, /*canMoveSrc=*/true, p);
+					&m_r->pMetaClass->GetFieldsInfo()[0], stream, /*canMoveSrc=*/true, p);
 		}
 
 		// Set fields by members of stream
@@ -1568,7 +1563,7 @@ private:
 
 			// Get related field info
 			const TMetaFieldInfo *pMetaField =
-					m_pMetaClass->FindFieldByJsonName(itMember->name.GetString(), itMember->name.GetStringLength());
+					m_r->pMetaClass->FindFieldByJsonName(itMember->name.GetString(), itMember->name.GetStringLength());
 
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
@@ -1618,11 +1613,11 @@ private:
 	//! Deserialize from stream
 	int DoFromJson(const TValue &stream, FromJsonParam& p)
 	{
-		if (m_isParentVal) {
+		if (m_r->isParentVal) {
 			// Serialize field by stream itself
-			assert(m_pMetaClass->GetFieldsInfo().size() == 1);
+			assert(m_r->pMetaClass->GetFieldsInfo().size() == 1);
 			return DoFieldFromJson(
-					&m_pMetaClass->GetFieldsInfo()[0], const_cast<TValue &>(stream), /*canMoveSrc=*/true, p);
+					&m_r->pMetaClass->GetFieldsInfo()[0], const_cast<TValue &>(stream), /*canMoveSrc=*/true, p);
 		}
 
 		// Serialize fields by members of stream
@@ -1638,7 +1633,7 @@ private:
 		{
 			// Get related field info
 			const TMetaFieldInfo *pMetaField =
-					m_pMetaClass->FindFieldByJsonName(itMember->name.GetString(), itMember->name.GetStringLength());
+					m_r->pMetaClass->FindFieldByJsonName(itMember->name.GetString(), itMember->name.GetStringLength());
 
 			if (pMetaField == IJST_NULL) {
 				// Not a field in struct
@@ -1648,9 +1643,9 @@ private:
 				}
 				if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
 					m_r->unknown.AddMember(
-							TValue().SetString(itMember->name.GetString(), itMember->name.GetStringLength(), *m_pAllocator),
-							TValue().CopyFrom(itMember->value, *m_pAllocator),
-							*m_pAllocator
+							TValue().SetString(itMember->name.GetString(), itMember->name.GetStringLength(), *(m_r->pAllocator)),
+							TValue().CopyFrom(itMember->value, *(m_r->pAllocator)),
+							*(m_r->pAllocator)
 					);
 				}
 				continue;
@@ -1678,7 +1673,7 @@ private:
 		}
 		else {
 			void *pField = GetFieldByOffset(metaField->offset);
-			FromJsonReq elemReq(stream, *m_pAllocator, p.deserFlag, canMoveSrc, pField, metaField->desc);
+			FromJsonReq elemReq(stream, *(m_r->pAllocator), p.deserFlag, canMoveSrc, pField, metaField->desc);
 			FromJsonResp elemResp(p.errDoc);
 			int ret = detail::GetSerializerInterface<Encoding>(*metaField)->FromJson(elemReq, elemResp);
 			// Check return
@@ -1697,7 +1692,7 @@ private:
 	{
 		// Shrink allocator of each field
 		for (typename std::vector<TMetaFieldInfo>::const_iterator
-					 itFieldInfo = m_pMetaClass->GetFieldsInfo().begin(), itEnd = m_pMetaClass->GetFieldsInfo().end();
+					 itFieldInfo = m_r->pMetaClass->GetFieldsInfo().begin(), itEnd = m_r->pMetaClass->GetFieldsInfo().end();
 					 itFieldInfo != itEnd; ++itFieldInfo)
 		{
 			void *pField = GetFieldByOffset(itFieldInfo->offset);
@@ -1705,24 +1700,24 @@ private:
 		}
 
 		// Shrink self allocator
-		detail::Util::ShrinkAllocatorWithOwnDoc(m_r->ownDoc, m_r->unknown, m_pAllocator);
+		detail::Util::ShrinkAllocatorWithOwnDoc(m_r->ownDoc, m_r->unknown, m_r->pAllocator);
 	}
 
 	void ResetAllocator()
 	{
 		m_r->ownDoc.GetAllocator().Clear();
-		m_pAllocator = &m_r->ownDoc.GetAllocator();
+		m_r->pAllocator = &m_r->ownDoc.GetAllocator();
 	}
 
 	void InitOuterPtr()
 	{
-		m_pOuter = reinterpret_cast<const unsigned char *>(this - m_pMetaClass->GetAccessorOffset());
+		m_r->pOuter = reinterpret_cast<const unsigned char *>(this - m_r->pMetaClass->GetAccessorOffset());
 	}
 
 	void MarkFieldStatus(const void* field, EFStatus fStatus)
 	{
 		const std::size_t offset = GetFieldOffset(field);
-		const int index = m_pMetaClass->FindIndex(offset);
+		const int index = m_r->pMetaClass->FindIndex(offset);
 		IJST_ASSERT(index >= 0 && (unsigned int)index < m_r->fieldStatus.size());
 		m_r->fieldStatus[index] = fStatus;
 	}
@@ -1733,7 +1728,7 @@ private:
 		bool hasErr = false;
 
 		for (typename std::vector<TMetaFieldInfo>::const_iterator
-					 itFieldInfo = m_pMetaClass->GetFieldsInfo().begin(), itEnd = m_pMetaClass->GetFieldsInfo().end();
+					 itFieldInfo = m_r->pMetaClass->GetFieldsInfo().begin(), itEnd = m_r->pMetaClass->GetFieldsInfo().end();
 					 itFieldInfo != itEnd; ++itFieldInfo)
 		{
 			if (detail::Util::IsBitSet(itFieldInfo->desc, FDesc::Optional))
@@ -1765,30 +1760,33 @@ private:
 	std::size_t GetFieldOffset(const void *ptr) const
 	{
 		const unsigned char *filed_ptr = reinterpret_cast<const unsigned char *>(ptr);
-		return filed_ptr - m_pOuter;
+		return filed_ptr - m_r->pOuter;
 	}
 
 	void *GetFieldByOffset(std::size_t offset) const
 	{
-		return (void *) (m_pOuter + offset);
+		return (void *) (m_r->pOuter + offset);
 	}
 
 	typedef std::vector<EFStatus> FieldStatusType;
-	// Note: Use pointers to make class Accessor be a standard-layout type struct
+
+	// It need at least one new operation in Accessor, e.g, fieldStatus
+	// So allocate all resource in heap to reduce the size of Accessor.
 	struct Resource {
 		TValue unknown;
 		// Should use document instead of Allocator because document can swap allocator
 		TDocument ownDoc;
 		FieldStatusType fieldStatus;
+
+		const TMetaClassInfo* pMetaClass;
+		detail::JsonAllocator* pAllocator;
+		const unsigned char *pOuter;
+
+		bool isValid;
+		bool isParentVal;
 	};
 	Resource* m_r;
 
-	const TMetaClassInfo* m_pMetaClass;
-	detail::JsonAllocator* m_pAllocator;
-	const unsigned char *m_pOuter;
-
-	bool m_isValid;
-	bool m_isParentVal;
 	//</editor-fold>
 };	// class Accessor
 
