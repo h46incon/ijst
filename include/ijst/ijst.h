@@ -258,14 +258,21 @@ struct DeserFlag {
 	//! Set if ignore field status, otherwise will check if field status is matched requirement
 	static const Flag kNotCheckFieldStatus				= 0x00000004;
 	/**
-	 * @brief  Set if move resource (to unknown or T_raw fields, copy by default) from intermediate document when deserialize.
+	 * @brief  Set if move resource (to unknown or T_raw fields) from intermediate document when deserialize.
 	 *
-	 * This option will speed up deserialization. But the allocator document will not free
-	 * before the deserialized object destroyed. And the nested object will use parent's allocator.
-	 * Be careful when moving the nested object to another object (e.g, calling
-	 * RValue copy constructor), because the parent will free allocator when destroy.
+	 * This option will speed up deserialization. But the nested object will use parent's allocator.
+	 * And the the parent will free allocator only when:
+	 * 1. Destroy
+	 * 2. Assigned from other object (operator =)
+	 * 3. Call Deserialize() or FromJson() methods
 	 *
-	 * @note	Using this option carefully
+	 * otherwise the parent will not free allocator, this may waste memory in some case.
+	 * Be careful when moving the nested object to another object (e.g, calling RValue copy constructor or assignment),
+	 *
+	 * User could call Accessor::ShrinkAllocator() to recopy unknown and T_raw fields with own allocator in nested object.
+	 *
+	 * @note	Using this option VERY CAREFULLY.
+	 * @see		Accessor::ShrinkAllocator()
 	 */
 	static const Flag kMoveFromIntermediateDoc			= 0x00000008;
 };
@@ -1135,6 +1142,7 @@ public:
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
+	 * @note It will free own allocator
 	 * @note It may cause compile error when SourceEncoding::Ch is not char with rapidJSON v1.1.0.
 	 * 		The bug is fixed in HEAD version of rapidJSON.
 	 */
@@ -1143,9 +1151,7 @@ public:
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
-		// The new object will call FromJson() interfaces soon in most situation
-		// So clear own allocator will not bring much benefit
-		m_pAllocator = &m_r->ownDoc.GetAllocator();
+		ResetAllocator();
 
 		if (detail::Util::IsBitSet(deserFlag, DeserFlag::kMoveFromIntermediateDoc)) {
 			TDocument doc(m_pAllocator);
@@ -1172,6 +1178,8 @@ public:
 	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
+	 *
+	 * @note It will free own allocator
 	 */
 	template <unsigned parseFlags>
 	int Deserialize(const Ch* cstrInput, std::size_t length,
@@ -1190,6 +1198,8 @@ public:
 	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
+	 *
+	 * @note It will free own allocator
 	 */
 	int Deserialize(const Ch* cstrInput, std::size_t length,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
@@ -1209,15 +1219,15 @@ public:
 	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
+	 *
+	 * @note It will free own allocator
 	 */
 	template <unsigned parseFlags, typename SourceEncoding>
 	int Deserialize(const typename SourceEncoding::Ch* cstrInput,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
-		// The new object will call FromJson() interfaces soon in most situation
-		// So clear own allocator will not bring much benefit
-		m_pAllocator = &m_r->ownDoc.GetAllocator();
+		ResetAllocator();
 
 		if (detail::Util::IsBitSet(deserFlag, DeserFlag::kMoveFromIntermediateDoc)) {
 			TDocument doc(m_pAllocator);
@@ -1242,6 +1252,8 @@ public:
 	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
+	 *
+	 * @note It will free own allocator
 	 */
 	template <unsigned parseFlags>
 	int Deserialize(const Ch *cstrInput,
@@ -1260,6 +1272,8 @@ public:
 	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
+	 *
+	 * @note It will free own allocator
 	 */
 	int Deserialize(const Ch *cstrInput,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
@@ -1276,6 +1290,8 @@ public:
 	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
+	 *
+	 * @note It will free own allocator
 	 */
 	int Deserialize(const std::basic_string<Ch> &strInput,
 						   DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
@@ -1291,6 +1307,8 @@ public:
 	 * @param errMsgOut			Error message output
 	 * @param deserFlag	 		Deserialization options, options can be combined by bitwise OR operator (|)
 	 * @return					Error code
+	 *
+	 * @note It will free own allocator
 	 */
 	int Deserialize(const std::basic_string<Ch> &strInput, IJST_OUT std::basic_string<Ch>& errMsgOut,
 						   DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag)
@@ -1315,14 +1333,15 @@ public:
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
-	 * @note 	It will not copy const string reference in source json. Be careful if handler such situation,
+	 * @note It will free own allocator
+	 * @note It will not copy const string reference in source json. Be careful if handler such situation,
 	 * 			e.g, json object is generated by ParseInsitu().
 	 */
 	int FromJson(const rapidjson::GenericValue<Encoding> &srcJson,
 						DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 						rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
-		m_pAllocator = &m_r->ownDoc.GetAllocator();
+		ResetAllocator();
 		return DoFromJsonWrap<const TValue>(&Accessor::DoFromJson, srcJson, deserFlag, pErrDocOut);
 	}
 
@@ -1338,9 +1357,10 @@ public:
 	 * @param pErrDocOut		Error message output. Null if do not need error message
 	 * @return					Error code
 	 *
+	 * @note	Handler allocator VERY CAREFULLY. see DeserFlag::kMoveFromIntermediateDoc.
+	 * @note 	It will free own allocator
 	 * @note 	The source document may be changed after deserialize
 	 * @note 	Make sure srcDocStolen use own allocator, or use allocator in this object
-	 * @note	Handler allocator of nested object carefully. see DeserFlag::kMoveFromIntermediateDoc.
 	 * @note 	It will not copy const string reference in source json. Be careful if handler such situation,
 	 * 			e.g, json object is generated by ParseInsitu().
 	 *
@@ -1351,6 +1371,7 @@ public:
 							rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
 	{
 		// Store document to manager allocator
+		m_r->ownDoc.GetAllocator().Clear();
 		m_r->ownDoc.Swap(srcDocStolen);
 		m_pAllocator = &m_r->ownDoc.GetAllocator();
 		return DoFromJsonWrap<TValue>(&Accessor::DoMoveFromJson, m_r->ownDoc, deserFlag, pErrDocOut);
@@ -1358,9 +1379,6 @@ public:
 
 	/**
 	 * @brief Shrink allocator of each member by recopy unknown fields using own allocator
-	 *
-	 * The allocator of source json after move deserialize. The memory is wasted if the
-	 * deserialized object exists in long time.
 	 *
 	 * @see DeserFlag::kMoveFromIntermediateDoc, MoveFromJson
 	 */
@@ -1405,7 +1423,7 @@ private:
 			return DoMoveFromJson(req.stream, param);
 		}
 		else {
-			m_pAllocator = &m_r->ownDoc.GetAllocator();
+			ResetAllocator();
 			return DoFromJson(req.stream, param);
 		}
 	}
@@ -1687,6 +1705,12 @@ private:
 
 		// Shrink self allocator
 		detail::Util::ShrinkAllocatorWithOwnDoc(m_r->ownDoc, m_r->unknown, m_pAllocator);
+	}
+
+	void ResetAllocator()
+	{
+		m_r->ownDoc.GetAllocator().Clear();
+		m_pAllocator = &m_r->ownDoc.GetAllocator();
 	}
 
 	void InitOuterPtr()
