@@ -439,22 +439,6 @@ struct Util {
 		return VectorBinarySearchResult(false, end);
 	};
 
-	template<typename Encoding>
-	static void ShrinkAllocatorWithOwnDoc(rapidjson::GenericDocument<Encoding>& ownDoc, rapidjson::GenericValue<Encoding>& val, JsonAllocator*& pAllocatorOut)
-	{
-		if (pAllocatorOut == &ownDoc.GetAllocator()) {
-			if (pAllocatorOut->Capacity() == pAllocatorOut->Size()) {
-				// The capacity will not shrink
-				return;
-			}
-		}
-		rapidjson::GenericDocument<Encoding> newDoc;
-		newDoc.CopyFrom(val, newDoc.GetAllocator());
-		ownDoc.Swap(newDoc);
-		val = static_cast<rapidjson::GenericValue<Encoding>&>(ownDoc);
-		pAllocatorOut = &ownDoc.GetAllocator();
-	}
-
 	static bool IsBitSet(unsigned int val, unsigned int bit)
 	{
 		return (val & bit) != 0;

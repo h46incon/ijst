@@ -1700,7 +1700,12 @@ private:
 		}
 
 		// Shrink self allocator
-		detail::Util::ShrinkAllocatorWithOwnDoc(m_r->ownDoc, m_r->unknown, m_r->pAllocator);
+		// Some context in own allocator may be free after shrinking children's allocator, so shrink allocator always
+		rapidjson::GenericDocument<Encoding> newDoc;
+		newDoc.CopyFrom(m_r->unknown, newDoc.GetAllocator());
+		m_r->ownDoc.Swap(newDoc);
+		m_r->unknown = static_cast<rapidjson::GenericValue<Encoding>&>(m_r->ownDoc); // move
+		m_r->pAllocator = &m_r->ownDoc.GetAllocator();
 	}
 
 	void ResetAllocator()
