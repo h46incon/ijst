@@ -904,13 +904,22 @@ public:
 			: m_r(IJSTI_NULL)
 	{
 		IJST_ASSERT(!isParentVal || pMetaClass->GetFieldsInfo().size() == 1);
-		m_r = static_cast<Resource *>(operator new(sizeof(Resource)));
+
+		// Allocate fieldStatus followed by m_r
+		const size_t sizeFieldStatus = pMetaClass->GetFieldsInfo().size();
+		m_r = static_cast<Resource *>(operator new(
+				sizeof(Resource) + sizeFieldStatus * sizeof(EFStatus)));
+		m_r->fieldStatus = reinterpret_cast<EFStatus*>(m_r + 1);
+
 		m_r->pMetaClass = pMetaClass;
+		InitOuterPtr();
 		m_r->isValid = isValid;
 		m_r->isParentVal = isParentVal;
-		InitOuterPtr();
 
-		new(&m_r->fieldStatus) FieldStatusType(m_r->pMetaClass->GetFieldsInfo().size(), static_cast<EFStatus>(FStatus::kMissing));
+		// Init fieldStatus with kMissing
+		for (size_t i = 0; i < sizeFieldStatus; ++i) {
+			m_r->fieldStatus[i] = FStatus::kMissing;
+		}
 		new(&m_r->unknown)TValue(rapidjson::kObjectType);
 		new(&m_r->ownDoc) TDocument();
 		m_r->pAllocator = &m_r->ownDoc.GetAllocator();
@@ -922,13 +931,21 @@ public:
 	{
 		assert(this != &rhs);
 
-		m_r = static_cast<Resource *>(operator new(sizeof(Resource)));
+		// Allocate fieldStatus followed by m_r
+		const size_t sizeFieldStatus = rhs.m_r->pMetaClass->GetFieldsInfo().size();
+		m_r = static_cast<Resource *>(operator new(
+				sizeof(Resource) + sizeFieldStatus * sizeof(EFStatus)));
+		m_r->fieldStatus = reinterpret_cast<EFStatus*>(m_r + 1);
+
 		m_r->pMetaClass = rhs.m_r->pMetaClass;
+		InitOuterPtr();
 		m_r->isValid = rhs.m_r->isValid;
 		m_r->isParentVal = rhs.m_r->isParentVal;
-		InitOuterPtr();
 
-		new(&m_r->fieldStatus)FieldStatusType(rhs.m_r->fieldStatus);
+		// Init fieldStatus from rhs
+		for (size_t i = 0; i < sizeFieldStatus; ++i) {
+			m_r->fieldStatus[i] = rhs.m_r->fieldStatus[i];
+		}
 		new(&m_r->unknown)TValue(rapidjson::kObjectType);
 		new(&m_r->ownDoc) TDocument();
 		m_r->pAllocator = &m_r->ownDoc.GetAllocator();
@@ -1723,7 +1740,7 @@ private:
 	{
 		const std::size_t offset = GetFieldOffset(field);
 		const int index = m_r->pMetaClass->FindIndex(offset);
-		IJST_ASSERT(index >= 0 && (unsigned int)index < m_r->fieldStatus.size());
+		IJST_ASSERT(index >= 0 && (unsigned int)index < m_r->pMetaClass->GetFieldsInfo().size());
 		m_r->fieldStatus[index] = fStatus;
 	}
 
@@ -1773,7 +1790,6 @@ private:
 		return (void *) (m_r->pOuter + offset);
 	}
 
-	typedef std::vector<EFStatus> FieldStatusType;
 
 	// It need at least one new operation in Accessor, e.g, fieldStatus
 	// So allocate all resource in heap to reduce the size of Accessor.
@@ -1781,8 +1797,8 @@ private:
 		TValue unknown;
 		// Should use document instead of Allocator because document can swap allocator
 		TDocument ownDoc;
-		FieldStatusType fieldStatus;
 
+		EFStatus* fieldStatus;
 		const TMetaClassInfo* pMetaClass;
 		detail::JsonAllocator* pAllocator;
 		const unsigned char *pOuter;
