@@ -215,15 +215,16 @@ struct FDesc {
 
 //! Field status.
 struct FStatus {
-public:
-	enum E_ {
-		kNotAField,
-		kMissing,
-		kNull,
-		kValid,
-	};
+	//! @private use EFStatus instead
+	typedef unsigned char Enum;
+
+	static const Enum kNotAField 		= (Enum)0;
+	static const Enum kMissing 			= (Enum)1;
+	static const Enum kNull 			= (Enum)2;
+	static const Enum kValid 			= (Enum)3;
 };
-typedef FStatus::E_ EFStatus;
+//typedef FStatus::Enum EFStatus;
+typedef FStatus::Enum EFStatus;
 
 /**
  * @brief Serialization options about fields.
@@ -904,7 +905,7 @@ public:
 	{
 		IJST_ASSERT(!m_isParentVal || m_pMetaClass->GetFieldsInfo().size() == 1);
 		m_r = static_cast<Resource *>(operator new(sizeof(Resource)));
-		new(&m_r->fieldStatus) FieldStatusType(m_pMetaClass->GetFieldsInfo().size(), FStatus::kMissing);
+		new(&m_r->fieldStatus) FieldStatusType(m_pMetaClass->GetFieldsInfo().size(), static_cast<EFStatus>(FStatus::kMissing));
 		new(&m_r->unknown)TValue(rapidjson::kObjectType);
 		new(&m_r->ownDoc) TDocument();
 		m_pAllocator = &m_r->ownDoc.GetAllocator();

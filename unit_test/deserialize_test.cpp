@@ -33,7 +33,7 @@ TEST(Deserialize, IgnoreFieldStatus)
 		SimpleSt st;
 		int ret = st._.Deserialize(emptyJson, DeserFlag::kNotCheckFieldStatus);
 		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_2), (EFStatus)FStatus::kMissing);
 	}
 
 	// From Json
@@ -42,7 +42,7 @@ TEST(Deserialize, IgnoreFieldStatus)
 		SimpleSt st;
 		int ret = st._.FromJson(doc, DeserFlag::kNotCheckFieldStatus);
 		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_2), (EFStatus)FStatus::kMissing);
 	}
 	// Move From Json
 	{
@@ -50,7 +50,7 @@ TEST(Deserialize, IgnoreFieldStatus)
 		SimpleSt st;
 		int ret = st._.MoveFromJson(doc, DeserFlag::kNotCheckFieldStatus);
 		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_2), (EFStatus)FStatus::kMissing);
 	}
 }
 
@@ -80,8 +80,8 @@ TEST(Deserialize, RequiredFields)
 	int ret = st._.Deserialize(validJson);
 	ASSERT_EQ(ret, 0);
 
-	ASSERT_EQ(IJST_GET_STATUS(st, int_1), FStatus::kMissing);
-	ASSERT_EQ(IJST_GET_STATUS(st, str_1), FStatus::kMissing);
+	ASSERT_EQ(IJST_GET_STATUS(st, int_1), (EFStatus)FStatus::kMissing);
+	ASSERT_EQ(IJST_GET_STATUS(st, str_1), (EFStatus)FStatus::kMissing);
 	ASSERT_EQ(st.int_2, 1);
 	ASSERT_STREQ(st.str_2.c_str(), "str2");
 }
@@ -98,8 +98,8 @@ TEST(Deserialize, AdditionalFields)
 		int ret = st._.Deserialize(validJson);
 		ASSERT_EQ(ret, 0);
 
-		ASSERT_EQ(IJST_GET_STATUS(st, int_1), FStatus::kValid);
-		ASSERT_EQ(IJST_GET_STATUS(st, str_1), FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_1), (EFStatus)FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st, str_1), (EFStatus)FStatus::kMissing);
 		ASSERT_EQ(st.int_1, 1);
 		ASSERT_EQ(st.int_2, 2);
 		ASSERT_STREQ(st.str_2.c_str(), "str2");
@@ -114,8 +114,8 @@ TEST(Deserialize, AdditionalFields)
 		int ret = st._.Deserialize(validJson, DeserFlag::kIgnoreUnknown, 0);
 		ASSERT_EQ(ret, 0);
 
-		ASSERT_EQ(IJST_GET_STATUS(st, int_1), FStatus::kValid);
-		ASSERT_EQ(IJST_GET_STATUS(st, str_1), FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_1), (EFStatus)FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st, str_1), (EFStatus)FStatus::kMissing);
 		ASSERT_EQ(st.int_1, 1);
 		ASSERT_EQ(st.int_2, 2);
 		ASSERT_STREQ(st.str_2.c_str(), "str2");
@@ -326,7 +326,7 @@ TEST(Deserialize, NullValue)
 		string json = "{\"int_val_2\": null}";
 		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
-		ASSERT_EQ(IJST_GET_STATUS(st, int_2), FStatus::kNull);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_2), (EFStatus)FStatus::kNull);
 	}
 
 	// require filed is valid
@@ -351,7 +351,7 @@ TEST(Deserialize, NullValue)
 		ret = st._.Deserialize(json);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(st.int_2, 2);
-		ASSERT_EQ(IJST_GET_STATUS(st, int_3), FStatus::kNull);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_3), (EFStatus)FStatus::kNull);
 	}
 
 	// optional | nullable filed is valid

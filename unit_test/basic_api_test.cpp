@@ -157,22 +157,22 @@ TEST(BasicAPI, FieldStatus)
 	SimpleSt simpleSt;
 
 	// Accessor
-	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), FStatus::kMissing);
+	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), (EFStatus)FStatus::kMissing);
 	simpleSt._.SetStrict(simpleSt.int_1, 0x5A5A);
 	ASSERT_EQ(simpleSt.int_1, 0x5A5A);
-	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), FStatus::kValid);
+	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), (EFStatus)FStatus::kValid);
 
 	// IJST_* macro
-	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), FStatus::kMissing);
+	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), (EFStatus)FStatus::kMissing);
 	IJST_SET_STRICT(simpleSt, str_1, T_string(std::string("str1")));
 	ASSERT_STREQ(simpleSt.str_1.c_str(), "str1");
-	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), FStatus::kValid);
+	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), (EFStatus)FStatus::kValid);
 
 	// Mark valid
 	simpleSt.int_2 = 0xA5A5;
-	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), FStatus::kMissing);
+	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), (EFStatus)FStatus::kMissing);
 	IJST_MARK_VALID(simpleSt, int_2);
-	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), FStatus::kValid);
+	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), (EFStatus)FStatus::kValid);
 
 	// IsField
 	ASSERT_TRUE(simpleSt._.HasField(&simpleSt.int_1));
@@ -207,7 +207,7 @@ TEST(BasicAPI, Constructor4LValue)
 		// copy
 		SimpleSt st1(temp1);
 		// copy value
-		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), (EFStatus)FStatus::kValid);
 		ASSERT_EQ(st1.int_1, 0x5A5A);
 		// copy inner stream
 		ASSERT_EQ(st1._.GetUnknown()["k"].GetInt(), 0xA5A5);
@@ -217,7 +217,7 @@ TEST(BasicAPI, Constructor4LValue)
 		ASSERT_NE(&st1._.GetUnknown(), &temp1._.GetUnknown());
 		// new metaField
 		IJST_SET(temp1, int_2, 0xA5A5);
-		ASSERT_EQ(IJST_GET_STATUS(st1, int_2), FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st1, int_2), (EFStatus)FStatus::kMissing);
 		// Avoid make temp1 become rvalue before
 		temp1._.MarkValid(&temp1.int_1);
 	}
@@ -233,9 +233,9 @@ TEST(BasicAPI, Constructor4LValue)
 		IJST_SET(st2, int_2, 0x5A5A);
 		st2 = temp2;
 		// copy value
-		ASSERT_EQ(IJST_GET_STATUS(st2, int_1), FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st2, int_1), (EFStatus)FStatus::kValid);
 		ASSERT_EQ(st2.int_1, 0x5A5A);
-		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), (EFStatus)FStatus::kMissing);
 		// copy inner stream
 		ASSERT_EQ(st2._.GetUnknown()["k"].GetInt(), 0xA5A5);
 		// new inner stream and allocator
@@ -244,7 +244,7 @@ TEST(BasicAPI, Constructor4LValue)
 		ASSERT_NE(&st2._.GetUnknown(), &temp2._.GetUnknown());
 		// new metaField
 		IJST_SET(temp2, int_2, 0xA5A5);
-		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), (EFStatus)FStatus::kMissing);
 		// Avoid make temp2 become rvalue
 		temp2._.MarkValid(&temp2.int_1);
 	}
@@ -263,7 +263,7 @@ TEST(BasicAPI, Constructor4RValue)
 
 		SimpleSt st1(std::move(temp1));
 		// value
-		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), (EFStatus)FStatus::kValid);
 		ASSERT_EQ(st1.int_1, 0x5A5A);
 		// inner stream
 		ASSERT_EQ(&st1._.GetUnknown(), streamTemp1);
@@ -283,7 +283,7 @@ TEST(BasicAPI, Constructor4RValue)
 		SimpleSt st2;
 		st2 = std::move(temp2);
 		// value
-		ASSERT_EQ(IJST_GET_STATUS(st2, int_1), FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st2, int_1), (EFStatus)FStatus::kValid);
 		ASSERT_EQ(st2.int_1, 0x5A5A);
 		// inner stream
 		ASSERT_EQ(&st2._.GetUnknown(), streamTemp2);

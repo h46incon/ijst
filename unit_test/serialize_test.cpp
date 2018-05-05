@@ -26,17 +26,17 @@ TEST(Serialize, SerFlag)
 	Inner innerSt;
 	// int_1 valid
 	IJST_SET(innerSt, int_1, 1);
-	ASSERT_EQ(IJST_GET_STATUS(innerSt, int_1), FStatus::kValid);
+	ASSERT_EQ(IJST_GET_STATUS(innerSt, int_1), (EFStatus)FStatus::kValid);
 	// int_2 null but with value
 	IJST_SET(innerSt, int_2, 2);
 	IJST_MARK_NULL(innerSt, int_2);
-	ASSERT_EQ(IJST_GET_STATUS(innerSt, int_2), FStatus::kNull);
+	ASSERT_EQ(IJST_GET_STATUS(innerSt, int_2), (EFStatus)FStatus::kNull);
 	// str_1 missing but with value
 	IJST_SET(innerSt, str_1, "str1");
 	IJST_MARK_MISSING(innerSt, str_1);
-	ASSERT_EQ(IJST_GET_STATUS(innerSt, str_1), FStatus::kMissing);
+	ASSERT_EQ(IJST_GET_STATUS(innerSt, str_1), (EFStatus)FStatus::kMissing);
 	// str_2 missing in default
-	ASSERT_EQ(IJST_GET_STATUS(innerSt, str_2), FStatus::kMissing);
+	ASSERT_EQ(IJST_GET_STATUS(innerSt, str_2), (EFStatus)FStatus::kMissing);
 
 
 	//--- kNoneFlag
