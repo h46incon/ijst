@@ -46,8 +46,8 @@ do {																		\
 	)
 
 DEFINE_ENCODING_TEST_STRUCT(rapidjson::UTF8<>, U8TestEncoding, )
-DEFINE_ENCODING_TEST_STRUCT(rapidjson::UTF16<>, U16TestEncoding, L)
 #if __cplusplus >= 201103L
+DEFINE_ENCODING_TEST_STRUCT(rapidjson::UTF16<char16_t>, U16TestEncoding, u)
 DEFINE_ENCODING_TEST_STRUCT(rapidjson::UTF32<char32_t>, U32TestEncoding, U)
 #endif
 

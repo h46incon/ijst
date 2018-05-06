@@ -232,8 +232,8 @@ void TestDeserializeEncoding()
 TEST(Deserialize, Encoding)
 {
 	TestDeserializeEncoding<U8TestEncoding>();
-	TestDeserializeEncoding<U16TestEncoding>();
 #if __cplusplus >= 201103L
+	TestDeserializeEncoding<U16TestEncoding>();
 	TestDeserializeEncoding<U32TestEncoding>();
 #endif
 
@@ -244,12 +244,12 @@ TEST(Deserialize, Encoding)
 		int ret = st._.Deserialize<rapidjson::kParseDefaultFlags>(encodingTestJson.c_str(), encodingTestJson.length());
 		CheckEncodingTestResult(ret, st);
 	}
+#if __cplusplus >= 201103L
 	{
 		U16TestEncoding st;
 		int ret = st._.Deserialize<rapidjson::kParseDefaultFlags, rapidjson::UTF8<> >(encodingTestJson.c_str(), encodingTestJson.length());
 		CheckEncodingTestResult(ret, st);
 	}
-#if __cplusplus >= 201103L
 	{
 		U32TestEncoding st;
 		int ret = st._.template Deserialize<rapidjson::kParseDefaultFlags, rapidjson::UTF8<> >(encodingTestJson.c_str(), encodingTestJson.length());

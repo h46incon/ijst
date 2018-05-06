@@ -358,8 +358,8 @@ void TestSerializeWithEncoding()
 TEST(Serialize, WriteWithEncoding)
 {
 	TestSerializeWithEncoding<U8TestEncoding>();
-	TestSerializeWithEncoding<U16TestEncoding>();
 #if __cplusplus >= 201103L
+	TestSerializeWithEncoding<U16TestEncoding>();
 	TestSerializeWithEncoding<U32TestEncoding>();
 #endif
 }
