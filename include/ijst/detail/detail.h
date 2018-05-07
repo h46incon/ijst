@@ -15,15 +15,18 @@
 
 namespace ijst{
 namespace detail{
+
+#ifndef NULL
+	#define NULL		0
+#endif
+
 #if __cplusplus >= 201103L
-	#define IJSTI_NULL 							nullptr
 	#define IJSTI_MOVE(val) 					std::move((val))
 	#define IJSTI_OVERRIDE						override
 	#define IJSTI_NOEXCEPT						noexcept
 	#define IJSTI_DELETED						= delete
 	#define IJSTI_STATIC_ASSERT(cond, msg) 		static_assert((cond), msg)
 #else
-	#define IJSTI_NULL 							NULL
 	#define IJSTI_MOVE(val) 					(val)
 	#define IJSTI_OVERRIDE
 	#define IJSTI_NOEXCEPT
@@ -181,12 +184,12 @@ struct ErrorDocSetter {
 	//! Constructor
 	//! @param _pErrDoc		Error message output. set to nullptr if do not need to enable error message
 	explicit ErrorDocSetter(TDocument* _pErrDoc):
-			pAllocator(_pErrDoc == IJSTI_NULL ? IJSTI_NULL : &_pErrDoc->GetAllocator()),
+			pAllocator(_pErrDoc == NULL ? NULL : &_pErrDoc->GetAllocator()),
 			pErrMsg(_pErrDoc) {}
 
 	void ParseFailed(rapidjson::ParseErrorCode errCode)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 		pErrMsg->SetObject();
 
 		pErrMsg->AddMember(
@@ -206,7 +209,7 @@ struct ErrorDocSetter {
 	//! Set error message about error of member in object
 	void ErrorInObject(const std::string& memberName, const std::basic_string<Ch>& jsonKey)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 
 		// backup errMsg
 		TValue errDetail;
@@ -236,7 +239,7 @@ struct ErrorDocSetter {
 	//! Set error message about error of member in object
 	void ErrorInMap(const std::basic_string<Ch>& jsonKey)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 
 		// backup errMsg
 		TValue errDetail;
@@ -262,7 +265,7 @@ struct ErrorDocSetter {
 	//! Set error message about error of member in array
 	void ErrorInArray(unsigned index)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 
 		// backup errMsg
 		TValue errDetail;
@@ -287,7 +290,7 @@ struct ErrorDocSetter {
 
 	void MissingMember()
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 		assert(pErrMsg->IsArray());
 
 		// backup errMsg
@@ -307,7 +310,7 @@ struct ErrorDocSetter {
 
 	void UnknownMember(const std::basic_string<Ch>& jsonKey)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 
 		// backup errMsg
 		TValue errDetail;
@@ -326,7 +329,7 @@ struct ErrorDocSetter {
 
 	void ElementMapKeyDuplicated(const std::basic_string<Ch>& keyName)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
@@ -341,7 +344,7 @@ struct ErrorDocSetter {
 
 	void ElementTypeMismatch(const char *expectedType, const TValue &errVal)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 
 		typedef HeadOStream<Encoding> THeadOStream;
 		THeadOStream ostream(16);
@@ -365,7 +368,7 @@ struct ErrorDocSetter {
 
 	void ElementValueIsDefault()
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
@@ -376,7 +379,7 @@ struct ErrorDocSetter {
 
 	void ElementAddMemberName(const std::basic_string<Ch>& memberName)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 		if (pErrMsg->IsNull()) {
 			pErrMsg->SetArray();
 		}

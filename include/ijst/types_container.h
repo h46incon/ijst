@@ -72,12 +72,12 @@ public:
 	 */
 	Optional<TElem> operator[](const std::basic_string<CharType>& key) const
 	{
-		if (m_pVal == IJST_NULL) {
-			return Optional<TElem>(IJST_NULL);
+		if (m_pVal == NULL) {
+			return Optional<TElem>(NULL);
 		}
 		typename ValType::iterator it = m_pVal->find(key);
 		if (it == m_pVal->end()){
-			return Optional<TElem>(IJST_NULL);
+			return Optional<TElem>(NULL);
 		}
 		else {
 			return Optional<TElem>(&it->second);
@@ -106,12 +106,12 @@ public:
 	 */
 	Optional<const TElem> operator[](const std::basic_string<CharType>& key) const
 	{
-		if (m_pVal == IJST_NULL) {
-			return Optional<const TElem>(IJST_NULL);
+		if (m_pVal == NULL) {
+			return Optional<const TElem>(NULL);
 		}
 		typename ValType::const_iterator it = m_pVal->find(key);
 		if (it == m_pVal->end()){
-			return Optional<const TElem>(IJST_NULL);
+			return Optional<const TElem>(NULL);
 		}
 		else {
 			return Optional<const TElem>(&it->second);
@@ -135,10 +135,10 @@ public:
 		/** return Optional(elemeInstance) if i is valid, Optional(null) else. */							\
 		Optional<is_const TElem> operator[](typename Container<TElem>::size_type i) const					\
 		{																									\
-			if (m_pVal == IJST_NULL || m_pVal->size() <= i) {												\
-				return Optional<is_const TElem>(IJST_NULL);												\
+			if (m_pVal == NULL || m_pVal->size() <= i) {													\
+				return Optional<is_const TElem>(NULL);														\
 			}																								\
-			return Optional<is_const TElem>(&(*m_pVal)[i]);												\
+			return Optional<is_const TElem>(&(*m_pVal)[i]);													\
 		}																									\
 	};
 
@@ -160,7 +160,7 @@ public:
 
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
-		assert(req.pField != IJST_NULL);
+		assert(req.pField != NULL);
 		const VarType& field = *static_cast<const VarType*>(req.pField);
 		SerializerInterface<Encoding>& intf = IJSTI_FSERIALIZER_INS(ElemType, Encoding);
 
@@ -182,7 +182,7 @@ public:
 	{
 		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsArray()), "array");
 
-		assert(req.pFieldBuffer != IJST_NULL);
+		assert(req.pFieldBuffer != NULL);
 		VarType& field = *static_cast<VarType *>(req.pFieldBuffer);
 		field.clear();
 		// Alloc buffer
@@ -285,7 +285,7 @@ public:
 
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
-		assert(req.pField != IJST_NULL);
+		assert(req.pField != NULL);
 		const VarType& field = *static_cast<const VarType *>(req.pField);
 		SerializerInterface<Encoding>& intf = IJSTI_FSERIALIZER_INS(T, Encoding);
 
@@ -310,7 +310,7 @@ public:
 	{
 		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsObject()), "object");
 
-		assert(req.pFieldBuffer != IJST_NULL);
+		assert(req.pFieldBuffer != NULL);
 		VarType& field = *static_cast<VarType *>(req.pFieldBuffer);
 		field.clear();
 		SerializerInterface<Encoding>& intf = IJSTI_FSERIALIZER_INS(T, Encoding);
@@ -370,7 +370,7 @@ public:
 
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
-		assert(req.pField != IJST_NULL);
+		assert(req.pField != NULL);
 		const VarType& field = *static_cast<const VarType *>(req.pField);
 		SerializerInterface<Encoding>& intf = IJSTI_FSERIALIZER_INS(ValType, Encoding);
 
@@ -395,7 +395,7 @@ public:
 	{
 		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsObject()), "object");
 
-		assert(req.pFieldBuffer != IJST_NULL);
+		assert(req.pFieldBuffer != NULL);
 		VarType& field = *static_cast<VarType *>(req.pFieldBuffer);
 		field.clear();
 		// pField->shrink_to_fit();

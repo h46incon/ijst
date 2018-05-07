@@ -78,7 +78,7 @@ public:
 
 #if __cplusplus >= 201103L
 	T_GenericRaw(T_GenericRaw &&rhs) IJSTI_NOEXCEPT
-		: m_pOwnAllocator(IJST_NULL), m_pAllocator(IJST_NULL)
+		: m_pOwnAllocator(NULL), m_pAllocator(NULL)
 	{
 		Steal(rhs);
 	}
@@ -98,17 +98,17 @@ public:
 
 		delete m_pOwnAllocator;
 		m_pOwnAllocator = rhs.m_pOwnAllocator;
-		rhs.m_pOwnAllocator = IJST_NULL;
+		rhs.m_pOwnAllocator = NULL;
 
 		m_pAllocator = rhs.m_pAllocator;
-		rhs.m_pAllocator = IJST_NULL;
+		rhs.m_pAllocator = NULL;
 		v = rhs.v;		// move
 	}
 
 	~T_GenericRaw()
 	{
 		delete m_pOwnAllocator;
-		m_pOwnAllocator = IJST_NULL;
+		m_pOwnAllocator = NULL;
 	}
 
 	//! Get actually value in object

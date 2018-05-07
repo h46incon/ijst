@@ -12,7 +12,6 @@
 #include <rapidjson/writer.h>
 
 #include <cassert>		// assert
-#include <cstddef>		// NULL, size_t
 #include <vector>
 #include <string>
 
@@ -186,9 +185,8 @@
 //! @ingroup IJST_MACRO_API
 #define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
 
-//! @brief NULL definition. (NULL before C++11, nullptr else)
-//! @ingroup IJST_MACRO_API
-#define IJST_NULL				IJSTI_NULL
+//! @deprecated
+#define IJST_NULL				NULL
 //! @brief Empty macro to mark a param is a output.
 //! @ingroup IJST_MACRO_API
 #define IJST_OUT
@@ -413,7 +411,7 @@ public:
 	T* operator->() const
 	{
 		static T empty(false);
-		if (m_pVal == IJST_NULL) {
+		if (m_pVal == NULL) {
 			return &empty;
 		}
 		else {
@@ -503,7 +501,7 @@ public:
 
 		if (!searchRet.isFind) {
 			// not find
-			return IJST_NULL;
+			return NULL;
 		}
 
 		// search in bucket
@@ -518,7 +516,7 @@ public:
 			}
 		}
 
-		return IJST_NULL;
+		return NULL;
 	}
 
 	/**
@@ -901,7 +899,7 @@ public:
 	typedef typename Encoding::Ch Ch;
 	//! Constructor
 	explicit Accessor(const MetaClassInfo<Ch>* pMetaClass, bool isParentVal, bool isValid)
-			: m_r(IJSTI_NULL)
+			: m_r(NULL)
 	{
 		IJST_ASSERT(!isParentVal || pMetaClass->GetFieldsInfo().size() == 1);
 
@@ -927,7 +925,7 @@ public:
 
 	//! Copy constructor
 	Accessor(const Accessor &rhs)
-			: m_r(IJST_NULL)
+			: m_r(NULL)
 	{
 		assert(this != &rhs);
 
@@ -956,7 +954,7 @@ public:
 	#if __cplusplus >= 201103L
 	//! Move copy constructor
 	Accessor(Accessor &&rhs) IJSTI_NOEXCEPT
-		: m_r(IJSTI_NULL)
+		: m_r(NULL)
 	{
 		Steal(rhs);
 	}
@@ -973,7 +971,7 @@ public:
 	~Accessor() IJSTI_NOEXCEPT
 	{
 		delete m_r;
-		m_r = IJSTI_NULL;
+		m_r = NULL;
 	}
 
 	//! Stealer
@@ -986,7 +984,7 @@ public:
 		// Handler resource
 		delete m_r;
 		m_r = rhs.m_r;
-		rhs.m_r = IJSTI_NULL;
+		rhs.m_r = NULL;
 
 		InitOuterPtr();
 	}
@@ -1072,7 +1070,7 @@ public:
 			return ::ijst::Optional<const T>(&field);
 		}
 		else {
-			return ::ijst::Optional<const T>(IJSTI_NULL);
+			return ::ijst::Optional<const T>(NULL);
 		}
 	}
 
@@ -1091,7 +1089,7 @@ public:
 			return ::ijst::Optional<T>(&field);
 		}
 		else {
-			return ::ijst::Optional<T>(IJSTI_NULL);
+			return ::ijst::Optional<T>(NULL);
 		}
 	}
 
@@ -1162,7 +1160,7 @@ public:
 	template <unsigned parseFlags, typename SourceEncoding>
 	int Deserialize(const typename SourceEncoding::Ch* cstrInput, std::size_t length,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = NULL)
 	{
 		ResetAllocator();
 
@@ -1197,7 +1195,7 @@ public:
 	template <unsigned parseFlags>
 	int Deserialize(const Ch* cstrInput, std::size_t length,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = NULL)
 	{
 		return this->template Deserialize<parseFlags, Encoding> (
 				cstrInput, length, deserFlag, pErrDocOut);
@@ -1216,7 +1214,7 @@ public:
 	 */
 	int Deserialize(const Ch* cstrInput, std::size_t length,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = NULL)
 	{
 		return this->template Deserialize<rapidjson::kParseDefaultFlags>(
 				cstrInput, length, deserFlag, pErrDocOut);
@@ -1238,7 +1236,7 @@ public:
 	template <unsigned parseFlags, typename SourceEncoding>
 	int Deserialize(const typename SourceEncoding::Ch* cstrInput,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = NULL)
 	{
 		ResetAllocator();
 
@@ -1271,7 +1269,7 @@ public:
 	template <unsigned parseFlags>
 	int Deserialize(const Ch *cstrInput,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = NULL)
 	{
 		return this->template Deserialize<parseFlags, Encoding> (
 				cstrInput, deserFlag, pErrDocOut);
@@ -1290,7 +1288,7 @@ public:
 	 */
 	int Deserialize(const Ch *cstrInput,
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-					rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
+					rapidjson::GenericDocument<Encoding> *pErrDocOut = NULL)
 	{
 		return this->template Deserialize<rapidjson::kParseDefaultFlags>(
 				cstrInput, deserFlag, pErrDocOut);
@@ -1308,7 +1306,7 @@ public:
 	 */
 	int Deserialize(const std::basic_string<Ch> &strInput,
 						   DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-						   rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
+						   rapidjson::GenericDocument<Encoding> *pErrDocOut = NULL)
 	{
 		return Deserialize(strInput.data(), strInput.size(), deserFlag, pErrDocOut);
 	}
@@ -1352,7 +1350,7 @@ public:
 	 */
 	int FromJson(const rapidjson::GenericValue<Encoding> &srcJson,
 						DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-						rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
+						rapidjson::GenericDocument<Encoding> *pErrDocOut = NULL)
 	{
 		ResetAllocator();
 		return DoFromJsonWrap<const TValue>(&Accessor::DoFromJson, srcJson, deserFlag, pErrDocOut);
@@ -1381,7 +1379,7 @@ public:
 	 */
 	int MoveFromJson(rapidjson::GenericDocument<Encoding> &srcDocStolen,
 							DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
-							rapidjson::GenericDocument<Encoding> *pErrDocOut = IJST_NULL)
+							rapidjson::GenericDocument<Encoding> *pErrDocOut = NULL)
 	{
 		// Store document to manager allocator
 		m_r->ownDoc.GetAllocator().Clear();
@@ -1582,7 +1580,7 @@ private:
 			const TMetaFieldInfo *pMetaField =
 					m_r->pMetaClass->FindFieldByJsonName(itMember->name.GetString(), itMember->name.GetStringLength());
 
-			if (pMetaField == IJST_NULL) {
+			if (pMetaField == NULL) {
 				// Not a field in struct
 				if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
 					p.errDoc.UnknownMember(detail::GetJsonStr(itMember->name));
@@ -1652,7 +1650,7 @@ private:
 			const TMetaFieldInfo *pMetaField =
 					m_r->pMetaClass->FindFieldByJsonName(itMember->name.GetString(), itMember->name.GetStringLength());
 
-			if (pMetaField == IJST_NULL) {
+			if (pMetaField == NULL) {
 				// Not a field in struct
 				if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kErrorWhenUnknown)) {
 					p.errDoc.UnknownMember(detail::GetJsonStr(itMember->name));
@@ -1825,7 +1823,7 @@ public:
 				  "Handler::Ch and Encoding::Ch must be same");
 	typedef typename Handler::Ch Ch;
 	explicit SAXGeneratorWrapper(const Accessor<Encoding>& accessor, SerFlag::Flag serFlag = SerFlag::kNoneFlag) :
-			m_accessor(accessor), m_serFlag (serFlag), m_h(IJST_NULL) {}
+			m_accessor(accessor), m_serFlag (serFlag), m_h(NULL) {}
 
 	bool operator() (Handler& h)
 	{
