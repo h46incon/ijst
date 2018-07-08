@@ -180,13 +180,9 @@
 #define IJST_MARK_MISSING(obj, field)			obj._.MarkMissing(& ((obj).field))
 //! @brief Set field in obj to val and mark it valid.
 //! @ingroup IJST_MACRO_API
-#define IJST_SET(obj, field, val)				obj._.Set((obj).field, (val))
-//! @brief Set field in obj to val and mark it valid. Type of field and val must be same.
-//! @ingroup IJST_MACRO_API
-#define IJST_SET_STRICT(obj, field, val)		obj._.SetStrict((obj).field, (val))
+#define IJST_SET(obj, field, val)				\
+		do { (obj)._.MarkValid(&((obj).field) ); (obj).field = (val); } while (false)
 
-//! @deprecated
-#define IJST_NULL				NULL
 //! @brief Empty macro to mark a param is a output.
 //! @ingroup IJST_MACRO_API
 #define IJST_OUT
@@ -951,14 +947,15 @@ public:
 		m_r->unknown.CopyFrom(rhs.m_r->unknown, *(m_r->pAllocator));
 	}
 
-	#if __cplusplus >= 201103L
+#if __cplusplus >= 201103L
 	//! Move copy constructor
+	//! @note Do not use source object after move
 	Accessor(Accessor &&rhs) IJSTI_NOEXCEPT
 		: m_r(NULL)
 	{
 		Steal(rhs);
 	}
-	#endif
+#endif
 
 	//! Assigment
 	Accessor &operator=(Accessor rhs)
@@ -1002,21 +999,6 @@ public:
 	{
 		size_t offset = GetFieldOffset(pField);
 		return (m_r->pMetaClass->FindIndex(offset) != -1);
-	}
-
-	//! Set field to val and mark it valid.
-	template<typename T1, typename T2>
-	void Set(T1 &field, const T2 &value)
-	{
-		MarkValid(&field);
-		field = value;
-	}
-
-	//! Set field to val and mark it valid. The type of field and value must be same.
-	template<typename T>
-	void SetStrict(T &field, const T &value)
-	{
-		Set(field, value);
 	}
 
 	//! Mark status of field to FStatus::kValid.

@@ -135,12 +135,12 @@ void TestStructAPI(const char *className)
 	ASSERT_EQ(NULL, metaInfo.FindFieldByJsonName(Transcode<rapidjson::UTF8<>, Encoding >("NotAField")));
 
 	//--- Optional
-	ASSERT_EQ(IJST_NULL, st.get_st_v()->get_int_v().Ptr());
-	ASSERT_EQ(IJST_NULL, st.get_int_v().Ptr());
-	ASSERT_EQ(IJST_NULL, st.get_str_v().Ptr());
-	ASSERT_EQ(IJST_NULL, st.get_raw_v().Ptr());
-	ASSERT_EQ(IJST_NULL, st.get_map_v()[std::basic_string<Ch>()].Ptr());
-	ASSERT_EQ(IJST_NULL, st.get_obj_v()[0].Ptr());
+	ASSERT_EQ(NULL, st.get_st_v()->get_int_v().Ptr());
+	ASSERT_EQ(NULL, st.get_int_v().Ptr());
+	ASSERT_EQ(NULL, st.get_str_v().Ptr());
+	ASSERT_EQ(NULL, st.get_raw_v().Ptr());
+	ASSERT_EQ(NULL, st.get_map_v()[std::basic_string<Ch>()].Ptr());
+	ASSERT_EQ(NULL, st.get_obj_v()[0].Ptr());
 }
 
 TEST(BasicAPI, MetaInfo)
@@ -152,19 +152,49 @@ TEST(BasicAPI, MetaInfo)
 #endif
 }
 
+TEST(BaseicAPI, Setter)
+{
+	SimpleSt simpleSt;
+	// Field status is tested in BasicAPI.FieldStatus
+
+	//--- lvalue setter
+	// Set with different type
+	char c1 = 'c';
+	IJST_SET(simpleSt, int_1, c1);
+	ASSERT_EQ(simpleSt.int_1, static_cast<int>(c1));
+
+	// Set with same type
+	int i1 = 42;
+	IJST_SET(simpleSt, int_1, i1);
+	ASSERT_EQ(simpleSt.int_1, i1);
+
+	// Set with expression
+	IJST_SET(simpleSt, int_1, (2 + 4) * 3 + 2);
+	ASSERT_EQ(simpleSt.int_1, 20);
+
+#if __cplusplus >= 201103L
+	//--- rvalue setter
+	std::string str1 = "Source";
+	simpleSt.str_1.clear();
+	IJST_SET(simpleSt, str_1, std::move(str1));
+	ASSERT_STREQ(simpleSt.str_1.c_str(), "Source");
+	ASSERT_TRUE(str1.empty());		// Note: this depend on the implementation of std
+#endif
+}
+
 TEST(BasicAPI, FieldStatus)
 {
 	SimpleSt simpleSt;
 
 	// Accessor
 	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), (EFStatus)FStatus::kMissing);
-	simpleSt._.SetStrict(simpleSt.int_1, 0x5A5A);
+	IJST_SET(simpleSt,int_1, 0x5A5A);
 	ASSERT_EQ(simpleSt.int_1, 0x5A5A);
 	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), (EFStatus)FStatus::kValid);
 
 	// IJST_* macro
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), (EFStatus)FStatus::kMissing);
-	IJST_SET_STRICT(simpleSt, str_1, T_string(std::string("str1")));
+	IJST_SET(simpleSt, str_1, T_string(std::string("str1")));
 	ASSERT_STREQ(simpleSt.str_1.c_str(), "str1");
 	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), (EFStatus)FStatus::kValid);
 
@@ -184,10 +214,10 @@ TEST(BasicAPI, FieldValue)
 	SimpleSt simpleSt;
 
 	// Init
-	simpleSt._.SetStrict(simpleSt.int_1, 0x5A5A);
+	IJST_SET(simpleSt, int_1, 0x5A5A);
 	IJST_SET(simpleSt, int_2, 0xA5A5);
-	simpleSt._.Set(simpleSt.str_1, "str1");
-	IJST_SET_STRICT(simpleSt, str_2, T_string(std::string("str2")));
+	IJST_SET(simpleSt, str_1, "str1");
+	IJST_SET(simpleSt, str_2, T_string(std::string("str2")));
 
 	// Check
 	ASSERT_EQ(simpleSt.int_1, 0x5A5A);
@@ -351,14 +381,14 @@ TEST(BasicAPI, ChainedOptional)
 	// fields are missing:
 
 	// get_* null
-	ASSERT_EQ(IJST_NULL, st.get_v().Ptr());
+	ASSERT_EQ(NULL, st.get_v().Ptr());
 	// get_* null chained
-	ASSERT_EQ(IJST_NULL, st.get_v()->get_vec().Ptr());
+	ASSERT_EQ(NULL, st.get_v()->get_vec().Ptr());
 	// Long null chained
-	ASSERT_EQ(IJST_NULL, st.get_v()->get_sim().Ptr());
-	ASSERT_EQ(IJST_NULL, st.get_v()->get_vec()[0]->get_int_1().Ptr());
-	ASSERT_EQ(IJST_NULL, st.get_v()->get_deq()[0]->get_int_1().Ptr());
-	ASSERT_EQ(IJST_NULL, st.get_v()->get_map()[""]->get_int_1().Ptr());
+	ASSERT_EQ(NULL, st.get_v()->get_sim().Ptr());
+	ASSERT_EQ(NULL, st.get_v()->get_vec()[0]->get_int_1().Ptr());
+	ASSERT_EQ(NULL, st.get_v()->get_deq()[0]->get_int_1().Ptr());
+	ASSERT_EQ(NULL, st.get_v()->get_map()[""]->get_int_1().Ptr());
 
 	// get_ valid
 	IJST_MARK_VALID(st, v);
@@ -367,37 +397,37 @@ TEST(BasicAPI, ChainedOptional)
 	ASSERT_EQ(st.get_v()->get_sim().Ptr(), &(st.v.sim));
 
 	// vector null
-	ASSERT_EQ(IJST_NULL, st.v.get_vec()[0].Ptr());
+	ASSERT_EQ(NULL, st.v.get_vec()[0].Ptr());
 	// vector elem out of range
 	IJST_MARK_VALID(st.v, vec);
 	ASSERT_EQ(st.v.get_vec().Ptr(), &(st.v.vec));
-	ASSERT_EQ(IJST_NULL, st.v.get_vec()[0].Ptr());
+	ASSERT_EQ(NULL, st.v.get_vec()[0].Ptr());
 	// vector valid
 	st.v.vec.resize(1);
 	ASSERT_EQ(st.v.get_vec()[0].Ptr(), &(st.v.vec[0]));
-	ASSERT_EQ(IJST_NULL, st.v.get_vec()[0]->get_int_1().Ptr());
+	ASSERT_EQ(NULL, st.v.get_vec()[0]->get_int_1().Ptr());
 
 	// deq null
-	ASSERT_EQ(IJST_NULL, st.v.get_deq()[0].Ptr());
+	ASSERT_EQ(NULL, st.v.get_deq()[0].Ptr());
 	// deq elem out of range
 	IJST_MARK_VALID(st.v, deq);
 	ASSERT_EQ(st.v.get_deq().Ptr(), &(st.v.deq));
-	ASSERT_EQ(IJST_NULL, st.v.get_deq()[0].Ptr());
+	ASSERT_EQ(NULL, st.v.get_deq()[0].Ptr());
 	// deq valid
 	st.v.deq.resize(1);
 	ASSERT_EQ(st.v.get_deq()[0].Ptr(), &(st.v.deq[0]));
-	ASSERT_EQ(IJST_NULL, st.v.get_deq()[0]->get_int_1().Ptr());
+	ASSERT_EQ(NULL, st.v.get_deq()[0]->get_int_1().Ptr());
 
 	// map null
-	ASSERT_EQ(IJST_NULL, st.v.get_map()[""].Ptr());
+	ASSERT_EQ(NULL, st.v.get_map()[""].Ptr());
 	// map key not exist
 	IJST_MARK_VALID(st.v, map);
 	ASSERT_EQ(st.v.get_map().Ptr(), &(st.v.map));
-	ASSERT_EQ(IJST_NULL, st.v.get_map()[""].Ptr());
+	ASSERT_EQ(NULL, st.v.get_map()[""].Ptr());
 	// map valid
 	st.v.map[""];
 	ASSERT_EQ(st.v.get_map()[""].Ptr(), &(st.v.map[""]));
-	ASSERT_EQ(IJST_NULL, st.v.get_map()[""]->get_int_1().Ptr());
+	ASSERT_EQ(NULL, st.v.get_map()[""]->get_int_1().Ptr());
 
 	// Long valid chained
 	IJST_MARK_VALID(st.v.vec[0], int_1);

@@ -52,7 +52,7 @@ TEST(Template, UTEST_PP_CONCAT(UT_TEST_NAME, Accessor))
 	ASSERT_EQ(st._.GetUnknown()["unknown"].GetBool(), false);
 
 	// Set
-	IJST_SET_STRICT(st, i, -1);
+	IJST_SET(st, i, -1);
 
 	// Serialize
 	std::string out;

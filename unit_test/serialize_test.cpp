@@ -461,7 +461,8 @@ void InitComplicate3(Complicate3& st)
 		const MetaFieldInfo<> *fieldInfo = metaInfo.FindFieldByJsonName(fieldName);
 		ASSERT_TRUE(fieldInfo != NULL);
 		string* v = (string*)(void*)((char*)&st + fieldInfo->offset);
-		st._.SetStrict(*v, fieldValue);
+		*v = fieldValue;
+		st._.MarkValid(v);
 	}
 }
 
