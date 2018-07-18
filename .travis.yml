@@ -1,0 +1,105 @@
+dist: trusty
+sudo: required
+language: cpp
+
+env:
+  global:
+
+before_install:
+  - sudo apt-add-repository -y ppa:ubuntu-toolchain-r/test
+
+matrix:
+  include:
+    #--- gcc
+    # old gcc
+    - env: ARCH_FLAGS=-m64 CXX_VER=98 CXX_FLAG=g++-4.4 C_FLAG=gcc-4.4
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - g++-4.4
+    - env: ARCH_FLAGS=-m32 CXX_VER=98 CXX_FLAG=g++-4.4 C_FLAG=gcc-4.4
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - g++-4.4-multilib
+            - g++-multilib
+
+    # default gcc version
+    - env: ARCH_FLAGS=-m64 CXX_VER=98
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - g++
+    - env: ARCH_FLAGS=-m32 CXX_VER=98
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - g++-multilib
+
+    - env: ARCH_FLAGS=-m64 CXX_VER=11
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - g++
+    - env: ARCH_FLAGS=-m32 CXX_VER=11
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - g++-multilib
+
+    #--- clang
+    - env: ARCH_FLAGS=-m64 CXX_VER=98
+      compiler: clang
+      addons:
+        apt:
+          packages:
+            - clang
+            - libc++-dev
+    - env: ARCH_FLAGS=-m32 CXX_VER=98
+      compiler: clang
+      addons:
+        apt:
+          packages:
+            - clang
+            - libc++-dev
+            - g++-multilib
+
+    - env: ARCH_FLAGS=-m64 CXX_VER=11
+      compiler: clang
+      addons:
+        apt:
+          packages:
+            - clang
+            - libc++-dev
+    - env: ARCH_FLAGS=-m32 CXX_VER=11
+      compiler: clang
+      addons:
+        apt:
+          packages:
+            - clang
+            - libc++-dev
+            - g++-multilib
+
+script:
+  - if [ "$CXX"x = "clang++"x ]; then export CXXFLAGS="-stdlib=libc++ ${CXXFLAGS}"; fi
+  - if [ ! "$CXX_FLAG"x = ""x ]; then export CXX=${CXX_FLAG}; fi
+  - if [ ! "$C_FLAG"x = ""x ]; then export CC=${C_FLAG}; fi
+  - mkdir build
+  - cd build
+  - >
+      (cmake
+      -DCMAKE_VERBOSE_MAKEFILE=ON
+      -DCMAKE_CXX_STANDARD=$CXX_VER
+      -DCMAKE_CXX_FLAGS=$ARCH_FLAGS
+      -DCMAKE_CXX_COMPILER=$CXX
+      -DCMAKE_C_COMPILER=$CC
+      -DCMAKE_BUILD_TYPE=Release
+      ..)
+  - make -j 2
+  - ./unit_test/unit_test
