@@ -217,7 +217,6 @@ struct FStatus {
 	static const Enum kNull 			= (Enum)2;
 	static const Enum kValid 			= (Enum)3;
 };
-//typedef FStatus::Enum EFStatus;
 typedef FStatus::Enum EFStatus;
 
 /**
@@ -226,16 +225,18 @@ typedef FStatus::Enum EFStatus;
  * Options can be combined by bitwise OR operator (|).
  */
 struct SerFlag {
-	typedef unsigned int Flag;
-	//! does not set any option.
-	static const Flag kNoneFlag							= 0x00000000;
-	//! set if ignore fields with kMissing status.
-	static const Flag kIgnoreMissing					= 0x00000001;
-	//! set if ignore unknown fields, otherwise will serialize all unknown fields.
-	static const Flag kIgnoreUnknown					= 0x00000002;
-	//! set if ignore fields with kNull status.
-	static const Flag kIgnoreNull						= 0x00000004;
+	enum Flag {
+		//! does not set any option.
+		kNoneFlag					= 0x0000
+		//! set if ignore fields with kMissing status.
+		, kIgnoreMissing			= 0x0001
+		//! set if ignore unknown fields, otherwise will serialize all unknown fields.
+		, kIgnoreUnknown			= 0x0002
+		//! set if ignore fields with kNull status.
+		, kIgnoreNull				= 0x0004
+	};
 };
+IJSTI_DECLARE_ENUM_OPERATOR_OR(SerFlag::Flag)
 
 /**
  * @brief Deserialization options about fields.
@@ -243,34 +244,36 @@ struct SerFlag {
  * Options can be combined by bitwise OR operator (|).
  */
 struct DeserFlag {
-	typedef unsigned int Flag;
-	//! Does not set any option.
-	static const Flag kNoneFlag							= 0x00000000;
-	//! Set if return error when meet unknown fields, otherwise will keep all unknown fields.
-	static const Flag kErrorWhenUnknown					= 0x00000001;
-	//! Set if ignore unknown fields, otherwise will keep all unknown fields.
-	static const Flag kIgnoreUnknown					= 0x00000002;
-	//! Set if ignore field status, otherwise will check if field status is matched requirement
-	static const Flag kNotCheckFieldStatus				= 0x00000004;
-	/**
-	 * @brief  Set if move resource (to unknown or T_raw fields) from intermediate document when deserialize.
-	 *
-	 * This option will speed up deserialization. But the nested object will use parent's allocator.
-	 * And the the parent will free allocator only when:
-	 * 1. Destroy
-	 * 2. Assigned from other object (operator =)
-	 * 3. Call Deserialize() or FromJson() methods
-	 *
-	 * otherwise the parent will not free allocator, this may waste memory in some case.
-	 * Be careful when moving the nested object to another object (e.g, calling RValue copy constructor or assignment),
-	 *
-	 * User could call Accessor::ShrinkAllocator() to recopy unknown and T_raw fields with own allocator in nested object.
-	 *
-	 * @note	Using this option VERY CAREFULLY.
-	 * @see		Accessor::ShrinkAllocator()
-	 */
-	static const Flag kMoveFromIntermediateDoc			= 0x00000008;
+	enum Flag{
+		//! Does not set any option.
+		kNoneFlag					= 0x0000
+		//! Set if return error when meet unknown fields, otherwise will keep all unknown fields.
+		, kErrorWhenUnknown			= 0x0001
+		//! Set if ignore unknown fields, otherwise will keep all unknown fields.
+		, kIgnoreUnknown			= 0x0002
+		//! Set if ignore field status, otherwise will check if field status is matched requirement
+		, kNotCheckFieldStatus		= 0x0004
+		/**
+		 * @brief  Set if move resource (to unknown or T_raw fields) from intermediate document when deserialize.
+		 *
+		 * This option will speed up deserialization. But the nested object will use parent's allocator.
+		 * And the the parent will free allocator only when:
+		 * 1. Destroy
+		 * 2. Assigned from other object (operator =)
+		 * 3. Call Deserialize() or FromJson() methods
+		 *
+		 * otherwise the parent will not free allocator, this may waste memory in some case.
+		 * Be careful when moving the nested object to another object (e.g, calling RValue copy constructor or assignment),
+		 *
+		 * User could call Accessor::ShrinkAllocator() to recopy unknown and T_raw fields with own allocator in nested object.
+		 *
+		 * @note	Using this option VERY CAREFULLY.
+		 * @see		Accessor::ShrinkAllocator()
+		 */
+		, kMoveFromIntermediateDoc	= 0x0008
+	};
 };
+IJSTI_DECLARE_ENUM_OPERATOR_OR(DeserFlag::Flag)
 
 /**
  * @brief A virtual based class implement rapidjson::Handler concept.

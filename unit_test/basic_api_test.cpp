@@ -7,6 +7,21 @@ using namespace ijst;
 
 namespace dummy_ns {
 
+TEST(BasicAPI, EnumOr)
+{
+	// SerFlag::Flag
+	SerFlag::Flag serFlag = SerFlag::kNoneFlag;
+	serFlag |= SerFlag::kIgnoreMissing;
+	ASSERT_EQ(serFlag, SerFlag::kIgnoreMissing);
+	ASSERT_EQ(SerFlag::kIgnoreUnknown, SerFlag::kNoneFlag | SerFlag::kIgnoreUnknown);
+
+	// DeserFlag::Flag
+	DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag;
+	deserFlag |= DeserFlag::kMoveFromIntermediateDoc;
+	ASSERT_EQ(deserFlag, DeserFlag::kMoveFromIntermediateDoc);
+	ASSERT_EQ(DeserFlag::kIgnoreUnknown, DeserFlag::kNoneFlag | DeserFlag::kIgnoreUnknown);
+}
+
 IJST_DEFINE_VALUE(
 		ValVec, IJST_TVEC(T_int), v, 0
 )

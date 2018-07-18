@@ -41,6 +41,13 @@ namespace detail{
 // Expand __VA_ARGS__ for msvc preprocessor
 #define IJSTI_EXPAND(...)			__VA_ARGS__
 
+// Declare | and |= operator of enum
+#define IJSTI_DECLARE_ENUM_OPERATOR_OR(Type) \
+inline Type operator | (const Type& v1, const Type& v2) \
+{ return static_cast<Type>(static_cast<unsigned>(v1) | static_cast<unsigned>(v2)); } \
+inline Type& operator |= (Type& src, const Type& v) \
+{ src = static_cast<Type>(static_cast<unsigned>(src) | static_cast<unsigned>(v)); return src;}
+
 // forward declaration
 template<typename Encoding> class SerializerInterface;
 template<typename CharType> class MetaClassInfoSetter;
