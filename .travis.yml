@@ -90,6 +90,7 @@ script:
   - if [ "$CXX"x = "clang++"x ]; then export CXXFLAGS="-stdlib=libc++ ${CXXFLAGS}"; fi
   - if [ ! "$CXX_FLAG"x = ""x ]; then export CXX=${CXX_FLAG}; fi
   - if [ ! "$C_FLAG"x = ""x ]; then export CC=${C_FLAG}; fi
+  - export CXXFLAGS="-Werror ${CXXFLAGS}";
   - mkdir build
   - cd build
   - >
