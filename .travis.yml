@@ -67,7 +67,7 @@ matrix:
         apt:
           packages:
             - clang
-            - libc++-dev
+            - "libc++-dev:i386"
             - g++-multilib
 
     - env: ARCH_FLAGS=-m64 CXX_VER=11
@@ -83,7 +83,7 @@ matrix:
         apt:
           packages:
             - clang
-            - libc++-dev
+            - "libc++-dev:i386"
             - g++-multilib
 
 script:
