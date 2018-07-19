@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 2.8.8)
 
 enable_testing()
 
-include_directories(${gtest_SOURCE_DIR})
-include_directories(${gtest_SOURCE_DIR}/include)
+include_directories(${gtest_INCLUDE_DIRS})
 
 set(TEST_OUTPUT unit_test)
 set(TEST_SRC
