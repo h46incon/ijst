@@ -187,7 +187,7 @@ TEST(BaseicAPI, Setter)
 	IJST_SET(simpleSt, int_1, (2 + 4) * 3 + 2);
 	ASSERT_EQ(simpleSt.int_1, 20);
 
-#if __cplusplus >= 201103L
+#if IJST_HAS_CXX11_RVALUE_REFS
 	//--- rvalue setter
 	std::string str1 = "Source";
 	simpleSt.str_1.clear();
@@ -295,7 +295,7 @@ TEST(BasicAPI, Constructor4LValue)
 	}
 }
 
-#if __cplusplus >= 201103L
+#if IJST_HAS_CXX11_RVALUE_REFS
 TEST(BasicAPI, Constructor4RValue)
 {
 	// copy

@@ -605,7 +605,7 @@ TEST(Primitive, Raw_BasicAPI)
 		ASSERT_NE(&src.GetAllocator(), &dst.GetAllocator());
 	}
 
-#if __cplusplus >= 201103L
+#if IJST_HAS_CXX11_RVALUE_REFS
 	{
 		// Rvalue Copy constructor
 		T_raw src;
@@ -615,7 +615,7 @@ TEST(Primitive, Raw_BasicAPI)
 		T_raw dst(std::move(src));
 		ASSERT_STREQ(dst.V().GetString(), "src_v");
 		ASSERT_EQ(&dst.GetAllocator(), pSrcAlloc);
-		ASSERT_EQ(&src.GetAllocator(), nullptr);
+		ASSERT_EQ(NULL, &src.GetAllocator());
 	}
 
 	{
@@ -628,8 +628,7 @@ TEST(Primitive, Raw_BasicAPI)
 		dst = std::move(src);
 		ASSERT_STREQ(dst.V().GetString(), "src_v");
 		ASSERT_EQ(&dst.GetAllocator(), pSrcAlloc);
-		ASSERT_EQ(&src.GetAllocator(), nullptr);
-
+		ASSERT_EQ(NULL, &src.GetAllocator());
 	}
 #endif
 }

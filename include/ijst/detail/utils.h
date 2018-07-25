@@ -1,28 +1,29 @@
 #ifndef IJST_UTILS_HPP_INCLUDE_
 #define IJST_UTILS_HPP_INCLUDE_
 
+#include "../ijst.h"
 #include <vector>
+#include <cstddef>	// NULL, size_t
 
 namespace ijst {
 namespace detail {
 
-
-#ifndef NULL
-	#define NULL		0
-#endif
-
 #if __cplusplus >= 201103L
-	#define IJSTI_MOVE(val) 					std::move((val))
 	#define IJSTI_OVERRIDE						override
 	#define IJSTI_NOEXCEPT						noexcept
 	#define IJSTI_DELETED						= delete
 	#define IJSTI_STATIC_ASSERT(cond, msg) 		static_assert((cond), msg)
 #else
-	#define IJSTI_MOVE(val) 					(val)
 	#define IJSTI_OVERRIDE
 	#define IJSTI_NOEXCEPT
 	#define IJSTI_DELETED
 	#define IJSTI_STATIC_ASSERT(cond, msg)
+#endif
+
+#if IJST_HAS_CXX11_RVALUE_REFS
+	#define IJSTI_MOVE(val) 					std::move((val))
+#else
+	#define IJSTI_MOVE(val) 					(val)
 #endif
 
 // Expands to the concatenation of its two arguments.

@@ -5,6 +5,7 @@
 #ifndef IJST_IJST_HPP_INCLUDE_
 #define IJST_IJST_HPP_INCLUDE_
 
+#include <rapidjson/rapidjson.h>
 #include <cassert>		// assert
 
 /**	========================================================================================
@@ -52,6 +53,16 @@
 	#else
 		#define IJST_TRY_INIT_META_BEFORE_MAIN		0
 	#endif
+#endif
+
+/**
+ * @ingroup IJST_CONFIG
+ *
+ *  User could config rvalue reference support by setting IJST_HAS_CXX11_RVALUE_REFS.
+ *  Default value is RAPIDJSON_HAS_CXX11_RVALUE_REFS which is depend on compiler version.
+ */
+#ifndef IJST_HAS_CXX11_RVALUE_REFS
+	#define  IJST_HAS_CXX11_RVALUE_REFS RAPIDJSON_HAS_CXX11_RVALUE_REFS
 #endif
 
 /**

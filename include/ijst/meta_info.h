@@ -4,7 +4,6 @@
 #include "ijst.h"
 #include "detail/utils.h"
 //NOTE: do not include detail/detail.h
-#include <rapidjson/rapidjson.h>		// uint32_t
 
 #include <string>
 

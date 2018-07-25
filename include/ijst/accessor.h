@@ -6,6 +6,16 @@
 #include "detail/detail.h"
 
 /**
+ * @ingroup IJST_CONFIG
+ *
+ *  ijst use rapidjson::kParseDefaultFlags when parsing in default.
+ *	User can override it by defining IJST_PARSE_DEFAULT_FLAGS macro.
+ */
+#ifndef IJST_PARSE_DEFAULT_FLAGS
+	#define IJST_PARSE_DEFAULT_FLAGS rapidjson::kParseDefaultFlags
+#endif
+
+/**
  * @ingroup IJST_MACRO_API
  *
  * ijst support extern template to speed up compilation. User should declare
@@ -291,7 +301,7 @@ public:
 		m_r->unknown.CopyFrom(rhs.m_r->unknown, *(m_r->pAllocator));
 	}
 
-#if __cplusplus >= 201103L
+#if IJST_HAS_CXX11_RVALUE_REFS
 	//! Move copy constructor
 	//! @note Do not use source object after move
 	Accessor(Accessor &&rhs) IJSTI_NOEXCEPT
@@ -542,7 +552,7 @@ public:
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 					rapidjson::GenericDocument<Encoding> *pErrDocOut = NULL)
 	{
-		return this->template Deserialize<rapidjson::kParseDefaultFlags>(
+		return this->template Deserialize<IJST_PARSE_DEFAULT_FLAGS>(
 				cstrInput, length, deserFlag, pErrDocOut);
 	}
 
@@ -616,7 +626,7 @@ public:
 					DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag,
 					rapidjson::GenericDocument<Encoding> *pErrDocOut = NULL)
 	{
-		return this->template Deserialize<rapidjson::kParseDefaultFlags>(
+		return this->template Deserialize<IJST_PARSE_DEFAULT_FLAGS>(
 				cstrInput, deserFlag, pErrDocOut);
 	}
 

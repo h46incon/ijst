@@ -47,7 +47,7 @@ struct T_Member {
 
 	T_Member(): name(), value() {}
 	T_Member(const std::basic_string<Ch>& _name, const T& _value): name(_name), value(_value) {}
-#if __cplusplus >= 201103L
+#if IJST_HAS_CXX11_RVALUE_REFS
 	T_Member(std::basic_string<Ch>&& _name, T&& _value): name(_name), value(_value) {}
 #endif
 };

@@ -76,7 +76,7 @@ public:
 		v.CopyFrom(rhs.v, *m_pAllocator);
 	}
 
-#if __cplusplus >= 201103L
+#if IJST_HAS_CXX11_RVALUE_REFS
 	T_GenericRaw(T_GenericRaw &&rhs) IJSTI_NOEXCEPT
 		: m_pOwnAllocator(NULL), m_pAllocator(NULL)
 	{
