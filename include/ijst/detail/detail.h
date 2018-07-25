@@ -5,6 +5,9 @@
 #ifndef IJST_DETAIL_HPP_INCLUDE_
 #define IJST_DETAIL_HPP_INCLUDE_
 
+#include "../ijst.h"
+#include "../meta_info.h"
+
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
@@ -13,78 +16,43 @@
 #include <vector>
 #include <string>
 
+//! return Err::kWriteFailed if action return false
+#define IJSTI_RET_WHEN_WRITE_FAILD(action) 						\
+	do { if(!(action)) return ErrorCode::kWriteFailed; } while (false)
+//! return if action return non-0
+#define IJSTI_RET_WHEN_NOT_ZERO(action) 						\
+	do { int ret = (action); if(ret != 0) return (ret); } while (false)
+//! helper in Accessor::Deserialize()
+#define IJSTI_RET_WHEN_PARSE_ERROR(doc, encoding)							\
+	do {																	\
+		if (doc.HasParseError()) {											\
+			detail::ErrorDocSetter<encoding> errDocSetter(pErrDocOut);		\
+			errDocSetter.ParseFailed(doc.GetParseError());					\
+			return ErrorCode::kDeserializeParseFailed;						\
+		}																	\
+	} while (false)
+//! return error and set error doc when type mismatch
+#define IJSTI_RET_WHEN_TYPE_MISMATCH(checkCode, expType)			\
+	if (!(checkCode)) {												\
+		resp.errDoc.ElementTypeMismatch(expType, req.stream);		\
+		return ErrorCode::kDeserializeValueTypeError;				\
+	}
+//! return error and set error doc when value is default
+#define IJSTI_RET_WHEN_VALUE_IS_DEFAULT(checkCode)					\
+	if (detail::Util::IsBitSet(req.fDesc, FDesc::NotDefault) 		\
+			&& (checkCode)) {										\
+		resp.errDoc.ElementValueIsDefault();						\
+		return ErrorCode::kDeserializeValueIsDefault;				\
+	}
+
 namespace ijst{
-namespace detail{
-
-#ifndef NULL
-	#define NULL		0
-#endif
-
-#if __cplusplus >= 201103L
-	#define IJSTI_MOVE(val) 					std::move((val))
-	#define IJSTI_OVERRIDE						override
-	#define IJSTI_NOEXCEPT						noexcept
-	#define IJSTI_DELETED						= delete
-	#define IJSTI_STATIC_ASSERT(cond, msg) 		static_assert((cond), msg)
-#else
-	#define IJSTI_MOVE(val) 					(val)
-	#define IJSTI_OVERRIDE
-	#define IJSTI_NOEXCEPT
-	#define IJSTI_DELETED
-	#define IJSTI_STATIC_ASSERT(cond, msg)
-#endif
-
-// Expands to the concatenation of its two arguments.
-#define IJSTI_PP_CONCAT(x, y) 		IJSTI_PP_CONCAT_I(x, y)
-#define IJSTI_PP_CONCAT_I(x, y) 	x ## y
-
-// Expand __VA_ARGS__ for msvc preprocessor
-#define IJSTI_EXPAND(...)			__VA_ARGS__
-
-// Declare | and |= operator of enum
-#define IJSTI_DECLARE_ENUM_OPERATOR_OR(Type) \
-inline Type operator | (const Type& v1, const Type& v2) \
-{ return static_cast<Type>(static_cast<unsigned>(v1) | static_cast<unsigned>(v2)); } \
-inline Type& operator |= (Type& src, const Type& v) \
-{ src = static_cast<Type>(static_cast<unsigned>(src) | static_cast<unsigned>(v)); return src;}
 
 // forward declaration
-template<typename Encoding> class SerializerInterface;
-template<typename CharType> class MetaClassInfoSetter;
-template<typename T> class MetaClassInfoTyped;
+template<typename Ch> class HandlerBase;
+
+namespace detail{
 
 typedef rapidjson::MemoryPoolAllocator<> JsonAllocator;
-/**
- * Singleton interface
- * @tparam T type
- */
-template<typename T>
-class Singleton {
-public:
-	inline static T& GetInstance()
-	{
-		static T instance;
-		return instance;
-	}
-
-	inline static void InitInstanceInGlobal()
-	{
-		// When accessing gInstance in code, the GetInstance() function will be called in
-		// global scope (before main in many compilers)
-		volatile T* dummy = gInstance;
-		(void)dummy;
-	}
-
-private:
-	static T* gInstance;
-};
-// static member of template class could declare in header
-template<typename T> T* Singleton<T>::gInstance = &Singleton<T>::GetInstance();
-
-template <typename T>
-struct HasType {
-	typedef void Void;
-};
 
 template<typename Encoding>
 class HeadOStream {
@@ -404,56 +372,267 @@ struct ErrorDocSetter {
 	TValue* const pErrMsg;
 };
 
-struct Util {
-	/**
-	 * Custom swap() to avoid dependency on C++ <algorithm> header
-	 * @tparam T 	Type of the arguments to swap, should be instantiated with primitive C++ types only.
-	 * @note This has the same semantics as std::swap().
-	 */
-	template <typename T>
-	static inline void Swap(T& a, T& b) RAPIDJSON_NOEXCEPT {
-		T tmp = IJSTI_MOVE(a);
-		a = IJSTI_MOVE(b);
-		b = IJSTI_MOVE(tmp);
-	}
 
-	struct VectorBinarySearchResult {
-		bool isFind;
-		size_t index;
+template<typename Encoding>
+class SerializerInterface {
+public:
+	typedef typename Encoding::Ch Ch;
+	virtual ~SerializerInterface() { }
 
-		VectorBinarySearchResult(bool _isFind = false, size_t _index = 0)
-				: isFind(_isFind), index(_index) {}
+	struct SerializeReq {
+		// Serialize option about fields
+		SerFlag::Flag serFlag;
+
+		// Pointer of field to serialize.
+		// The actual type of field should be decide in the derived class
+		const void* pField;
+
+		HandlerBase<Ch>& writer;
+
+		SerializeReq(HandlerBase<Ch>& _writer, const void *_pField, SerFlag::Flag _serFlag)
+				: serFlag(_serFlag)
+				  , pField(_pField)
+				  , writer(_writer)
+		{ }
 	};
 
-	template<typename VType>
-	static VectorBinarySearchResult VectorBinarySearch(const std::vector<VType>& vec, const VType& target)
-	{
-		size_t beg = 0;
-		size_t end = vec.size();
+	virtual int Serialize(const SerializeReq &req) = 0;
 
-		while (beg < end) {
-			const size_t mid = beg + (end - beg) / 2;
-			const VType& vMid = vec[mid];
-			if (target < vMid) {
-				// target is in left half
-				end = mid;
-			}
-			else if (vMid < target) {
-				// target is in right half
-				beg = mid + 1;
-			}
-			else {
-				return VectorBinarySearchResult(true, mid);
+	struct FromJsonReq {
+		// Pointer of deserialize output.
+		// The instance should deserialize in this object
+		// The actual type of field should be decide in the derived class
+		void* pFieldBuffer;
+
+		// The input stream and allocator
+		// The stream maybe cast from const value if canMoveSrc is false
+		rapidjson::GenericValue<Encoding>& stream;
+		JsonAllocator& allocator;
+
+		// true if move context in stream to avoid copy when possible
+		bool canMoveSrc;
+
+		DeserFlag::Flag deserFlag;
+		FDesc::Mode fDesc;
+
+		FromJsonReq(rapidjson::GenericValue<Encoding>& _stream, JsonAllocator& _allocator,
+					DeserFlag::Flag _deserFlag, bool _canMoveSrc,
+					void* _pField, FDesc::Mode _fDesc)
+				: pFieldBuffer(_pField)
+				  , stream(_stream)
+				  , allocator(_allocator)
+				  , canMoveSrc(_canMoveSrc)
+				  , deserFlag(_deserFlag)
+				  , fDesc(_fDesc)
+		{ }
+	};
+
+	struct FromJsonResp {
+		ErrorDocSetter<Encoding>& errDoc;
+
+		explicit FromJsonResp(ErrorDocSetter<Encoding>& _errDoc) :
+				errDoc(_errDoc)
+		{ }
+
+	};
+
+	virtual int FromJson(const FromJsonReq& req, IJST_OUT FromJsonResp& resp)= 0;
+
+	virtual void ShrinkAllocator(void * pField)
+	{ (void)pField; }
+};
+
+//! Propagate structs' define in SerializeInterface<Encoding>
+#define IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding)										\
+	typedef typename SerializerInterface<Encoding>::SerializeReq SerializeReq;			\
+	typedef typename SerializerInterface<Encoding>::FromJsonReq FromJsonReq;			\
+	typedef typename SerializerInterface<Encoding>::FromJsonResp FromJsonResp;
+
+/**
+ * Template interface of serialization class
+ * This template is unimplemented, and will throw a compile error when use it.
+ *
+ * @tparam T 		class
+ * @tparam Encoding	encoding of json struct
+ * @tparam Enable	type for SFINAE
+ */
+template<typename T, typename Encoding, typename Enable = void>
+class FSerializer : public SerializerInterface<Encoding> {
+public:
+	IJSTI_STATIC_ASSERT(!(std::is_same<T, T>::value),	// always failed
+						"This base template should not be instantiated. (Maybe use wrong param when define ijst struct)");
+	typedef void VarType;
+	IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
+
+	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE = 0;
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE = 0;
+	virtual void ShrinkAllocator(void * pField) IJSTI_OVERRIDE { (void)pField; }
+};
+
+#define IJSTI_FSERIALIZER_INS(T, Encoding) 		\
+		::ijst::detail::Singleton< ::ijst::detail::FSerializer< T, Encoding > >::GetInstance()
+
+/**
+ * Get and cast serializerInterface in metaFieldInfo to specify type
+ *
+ * @tparam Encoding 		encoding of output
+ *
+ * @param metaFieldInfo 	metaFieldInfo
+ * @return 					typed SerializerInterface
+ */
+template<typename Encoding>
+inline SerializerInterface<Encoding>* GetSerializerInterface(const MetaFieldInfo<typename Encoding::Ch>& metaFieldInfo)
+{
+	return reinterpret_cast<SerializerInterface<Encoding>*>(metaFieldInfo.serializerInterface);
+}
+
+/**	========================================================================================
+ *				Private
+ */
+/**
+ * MetaClassInfo of T
+ * Push meta class info of T in specialized constructor MetaInfo<T>().
+ *
+ * @tparam T 	class. Concept require T::_ijst_InitMetaInfo<bool>(MetaInfo*), typedef T::_ijst_Ch
+ *
+ * @note		Use Singleton<MetaClassInfoTyped<T> > to get the instance
+ */
+template<typename T>
+class MetaClassInfoTyped {
+public:
+	MetaClassInfo<typename T::_ijst_Ch> metaClass;
+
+private:
+	friend class Singleton<MetaClassInfoTyped<T> >;
+
+	MetaClassInfoTyped()
+	{
+		T::template _ijst_InitMetaInfo<true>(this);
+	}
+};
+
+template<typename CharType>
+class MetaClassInfoSetter {
+public:
+	typedef CharType Ch;
+	explicit MetaClassInfoSetter(MetaClassInfo<Ch>& _d) : d(_d) { }
+
+	void InitBegin(const std::string& _tag, std::size_t _fieldCount, std::size_t _accessorOffset)
+	{
+		d.structName = _tag;
+		d.accessorOffset = _accessorOffset;
+		d.m_fieldsInfo.reserve(_fieldCount);
+	}
+
+	void PushMetaField(const std::string &fieldName, const std::basic_string<Ch>& jsonName,
+					   std::size_t offset, FDesc::Mode desc, void* pSerializeInterface)
+	{
+		MetaFieldInfo<Ch> metaField;
+		metaField.jsonName = jsonName;
+		metaField.fieldName = fieldName;
+		metaField.offset = offset;
+		metaField.desc = desc;
+		metaField.serializerInterface = pSerializeInterface;
+		d.m_fieldsInfo.push_back(IJSTI_MOVE(metaField));
+	}
+
+	void InitEnd()
+	{
+		// assert MetaClassInfo's map has not inited before
+		assert(!d.m_mapInited);
+		SortMetaFieldsByOffset();
+
+		d.m_offsets.reserve(d.m_fieldsInfo.size());
+		d.m_hashedFieldIndexes.reserve(d.m_fieldsInfo.size());
+		d.m_nameHashVal.reserve(d.m_fieldsInfo.size());
+
+		for (size_t i = 0; i < d.m_fieldsInfo.size(); ++i)
+		{
+			MetaFieldInfo<Ch>* ptrMetaField = &(d.m_fieldsInfo[i]);
+			ptrMetaField->index = static_cast<int>(i);
+
+			d.m_offsets.push_back(ptrMetaField->offset);
+			// Assert field offset is sorted and not exist before
+			assert(i == 0 || d.m_offsets[i]  > d.m_offsets[i-1]);
+
+			// Insert name Map
+			InsertNameToHash(ptrMetaField->jsonName, static_cast<unsigned>(i));
+		}
+
+		d.m_mapInited = true;
+	}
+
+private:
+	void SortMetaFieldsByOffset()
+	{
+		// m_fieldsInfo is already sorted in most case, use insertion sort
+		const size_t n = d.m_fieldsInfo.size();
+		for (size_t i = 1; i < n; i++) {
+			for (size_t j = i; j > 0 && d.m_fieldsInfo[j - 1].offset > d.m_fieldsInfo[j].offset; j--) {
+				detail::Util::Swap(d.m_fieldsInfo[j], d.m_fieldsInfo[j - 1]);
 			}
 		}
-		return VectorBinarySearchResult(false, end);
-	};
-
-	static bool IsBitSet(unsigned int val, unsigned int bit)
-	{
-		return (val & bit) != 0;
 	}
 
+	void InsertNameToHash(const std::basic_string<Ch>& jsonName, unsigned index)
+	{
+		const uint32_t hash = MetaClassInfo<Ch>::StringHash(jsonName.data(), jsonName.length());
+
+		const detail::Util::VectorBinarySearchResult searchRet =
+				detail::Util::VectorBinarySearch(d.m_nameHashVal, hash);
+
+		if (!searchRet.isFind) {
+			// push back empty node
+			d.m_hashedFieldIndexes.resize(d.m_hashedFieldIndexes.size() + 1);
+			d.m_nameHashVal.resize(d.m_nameHashVal.size() + 1);
+			// move back
+			for (size_t i = d.m_nameHashVal.size() - 1; i > searchRet.index; --i) {
+				d.m_nameHashVal[i] = d.m_nameHashVal[i - 1];
+				d.m_hashedFieldIndexes[i] = IJSTI_MOVE(d.m_hashedFieldIndexes[i - 1]);
+			}
+			// init new node
+			d.m_hashedFieldIndexes[searchRet.index].clear();
+			d.m_nameHashVal[searchRet.index] = hash;
+		}
+
+		d.m_hashedFieldIndexes[searchRet.index].push_back(index);
+	}
+
+	MetaClassInfo<Ch>& d;
+};
+
+/**
+ * Serialization of ijst struct types
+ * @tparam T 			class
+ * @tparam Encoding		encoding of json struct
+ */
+template<class T, typename Encoding>
+class FSerializer<T, Encoding, /*EnableIf*/ typename HasType<typename T::_ijst_AccessorType>::Void>
+		: public SerializerInterface<Encoding>
+{
+public:
+	IJSTI_STATIC_ASSERT((std::is_same<Encoding, typename T::_ijst_Encoding>::value),
+						"Inner ijst struct's encoding must be same as outer class's encoding");
+
+	typedef T VarType;
+	IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
+
+	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
+	{
+		T *pField = (T *) req.pField;
+		return pField->_.ISerialize(req);
+	}
+
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
+	{
+		T *pField = (T *) req.pFieldBuffer;
+		return pField->_.IFromJson(req, resp);
+	}
+
+	virtual void ShrinkAllocator(void *pField) IJSTI_OVERRIDE
+	{
+		((T*)pField)->_.IShrinkAllocator(pField);
+	}
 };
 
 }	// namespace detail

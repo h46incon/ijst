@@ -135,7 +135,7 @@ void TestStructAPI(const char *className)
 	ASSERT_FALSE(st._.IsParentVal());
 
 	//--- MetaInfo
-	const MetaClassInfo<Ch>& metaInfo = MetaClassInfo<Ch>::template GetMetaInfo<Struct>();
+	const MetaClassInfo<Ch>& metaInfo = ijst::template GetMetaInfo<Struct>();
 	ASSERT_EQ(&st._.GetMetaInfo(), &metaInfo);
 	ASSERT_STREQ(metaInfo.GetClassName().c_str(), className);
 	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 6u);

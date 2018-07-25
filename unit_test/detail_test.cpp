@@ -13,7 +13,7 @@ TEST(Detail, CancelableOStream)
 	detail::HeadOStream<rapidjson::UTF8<> > ostream(8);
 	ASSERT_TRUE(ostream.str.empty());
 	ASSERT_TRUE(ostream.HeadOnly());
-	const unsigned long oldCapacity = ostream.str.capacity();
+	const size_t oldCapacity = ostream.str.capacity();
 
 	ostream.Put('0');
 	ostream.Put('1');

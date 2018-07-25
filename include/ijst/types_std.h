@@ -6,7 +6,7 @@
 #ifndef IJST_TYPES_STD_HPP_INCLUDE_
 #define	IJST_TYPES_STD_HPP_INCLUDE_
 
-#include "ijst.h"
+#include "accessor.h"
 
 // Use int types declared in rapidjson
 #include <rapidjson/rapidjson.h>

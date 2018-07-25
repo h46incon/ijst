@@ -6,7 +6,7 @@
 #ifndef IJST_TYPES_CONTAINER_HPP_INCLUDE_
 #define IJST_TYPES_CONTAINER_HPP_INCLUDE_
 
-#include "ijst.h"
+#include "accessor.h"
 #include <map>
 #include <list>
 #include <deque>
