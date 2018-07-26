@@ -295,7 +295,8 @@ TEST(BasicAPI, Constructor4LValue)
 	}
 }
 
-#if IJST_HAS_CXX11_RVALUE_REFS
+// visual studio before 2015 will not generate move constructor and move assignment implicitly
+#if IJST_HAS_CXX11_RVALUE_REFS && (!defined(_MSC_VER) || _MSC_VER >= 1900)
 TEST(BasicAPI, Constructor4RValue)
 {
 	// copy
@@ -314,7 +315,7 @@ TEST(BasicAPI, Constructor4RValue)
 		ASSERT_EQ(&st1._.GetUnknown(), streamTemp1);
 		ASSERT_EQ(&st1._.GetAllocator(), allocatorTemp1);
 		ASSERT_EQ(&st1._.GetOwnAllocator(), ownAllocatorTemp1);
-		//	ASSERT_ANY_THROW(temp3._.GetUnknown());
+		//	ASSERT_ANY_THROW(temp1._.GetUnknown());
 	}
 
 	// assign
@@ -334,13 +335,12 @@ TEST(BasicAPI, Constructor4RValue)
 		ASSERT_EQ(&st2._.GetUnknown(), streamTemp2);
 		ASSERT_EQ(&st2._.GetAllocator(), allocatorTemp2);
 		ASSERT_EQ(&st2._.GetOwnAllocator(), ownAllocatorTemp2);
-		//	ASSERT_ANY_THROW(temp3._.GetUnknown());
+		//	ASSERT_ANY_THROW(temp2._.GetUnknown());
 	}
 }
+#endif
 
 // TODO: Constructor for out buffer
-
-#endif
 
 TEST(BasicAPI, GetOptional)
 {
