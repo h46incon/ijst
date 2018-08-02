@@ -91,15 +91,17 @@ public:
 			return NULL;
 		}
 
-		// search in bucket
-		assert(searchRet.index < m_hashedFieldIndexes.size());
-		const std::vector<unsigned> &fieldIndexes = m_hashedFieldIndexes[searchRet.index];
-		for (size_t i = 0, iSize = fieldIndexes.size(); i < iSize; ++i)
-		{
-			const MetaFieldInfo<Ch>& fieldInfo = m_fieldsInfo[fieldIndexes[i]];
-			const std::basic_string<Ch>& fieldJsonName = fieldInfo.jsonName;
-			if ( (fieldJsonName.length() == length) && (fieldJsonName.compare(0, fieldJsonName.length(), name, length) == 0) ) {
-				return &fieldInfo;
+		// step back to find the first value with hash
+		size_t i = searchRet.index;
+		for (; i > 0 && m_nameHashVal[i -1] == hash; --i) {
+		}
+
+		// compare each json name with target hash
+		for (const size_t iSize = m_hashedFieldPtr.size(); i < iSize && m_nameHashVal[i] == hash; ++i) {
+			const MetaFieldInfo<Ch>* pField = m_hashedFieldPtr[i];
+			const std::basic_string<Ch>& fieldJsonName = pField->jsonName;
+			if (fieldJsonName.compare(0, fieldJsonName.length(), name, length) == 0) {
+				return pField;
 			}
 		}
 
@@ -152,7 +154,7 @@ private:
 	std::size_t accessorOffset;
 
 	std::vector<uint32_t> m_nameHashVal;
-	std::vector<std::vector<unsigned> > m_hashedFieldIndexes;
+	std::vector<const MetaFieldInfo<Ch>*> m_hashedFieldPtr;
 	std::vector<size_t> m_offsets;
 
 	bool m_mapInited;

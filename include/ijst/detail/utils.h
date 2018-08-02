@@ -1,5 +1,5 @@
-#ifndef IJST_UTILS_HPP_INCLUDE_
-#define IJST_UTILS_HPP_INCLUDE_
+#ifndef IJST_DETAIL_UTILS_HPP_INCLUDE_
+#define IJST_DETAIL_UTILS_HPP_INCLUDE_
 
 #include "../ijst.h"
 #include <vector>
@@ -136,4 +136,4 @@ struct Util {
 
 } // namespace detail
 } // namespace ijst
-#endif //IJST_UTILS_HPP_INCLUDE_
+#endif //IJST_DETAIL_UTILS_HPP_INCLUDE_

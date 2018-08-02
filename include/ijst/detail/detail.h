@@ -2,8 +2,8 @@
 // Created by h46incon on 2017/12/26.
 //
 
-#ifndef IJST_DETAIL_HPP_INCLUDE_
-#define IJST_DETAIL_HPP_INCLUDE_
+#ifndef IJST_DETAIL_DETAIL_HPP_INCLUDE_
+#define IJST_DETAIL_DETAIL_HPP_INCLUDE_
 
 #include "../ijst.h"
 #include "../meta_info.h"
@@ -13,7 +13,6 @@
 #include <rapidjson/writer.h>
 #include <rapidjson/error/en.h>
 
-#include <vector>
 #include <string>
 
 //! return Err::kWriteFailed if action return false
@@ -543,7 +542,7 @@ public:
 		SortMetaFieldsByOffset();
 
 		d.m_offsets.reserve(d.m_fieldsInfo.size());
-		d.m_hashedFieldIndexes.reserve(d.m_fieldsInfo.size());
+		d.m_hashedFieldPtr.reserve(d.m_fieldsInfo.size());
 		d.m_nameHashVal.reserve(d.m_fieldsInfo.size());
 
 		for (size_t i = 0; i < d.m_fieldsInfo.size(); ++i)
@@ -552,13 +551,14 @@ public:
 			ptrMetaField->index = static_cast<int>(i);
 
 			d.m_offsets.push_back(ptrMetaField->offset);
+			InsertMetaFieldToHash(ptrMetaField);
 			// Assert field offset is sorted and not exist before
 			assert(i == 0 || d.m_offsets[i]  > d.m_offsets[i-1]);
-
-			// Insert name Map
-			InsertNameToHash(ptrMetaField->jsonName, static_cast<unsigned>(i));
 		}
 
+		assert(d.m_offsets.size() == d.m_fieldsInfo.size());
+		assert(d.m_hashedFieldPtr.size() == d.m_fieldsInfo.size());
+		assert(d.m_nameHashVal.size() == d.m_fieldsInfo.size());
 		d.m_mapInited = true;
 	}
 
@@ -574,28 +574,22 @@ private:
 		}
 	}
 
-	void InsertNameToHash(const std::basic_string<Ch>& jsonName, unsigned index)
+	void InsertMetaFieldToHash(const MetaFieldInfo<Ch> *ptrMetaField)
 	{
-		const uint32_t hash = MetaClassInfo<Ch>::StringHash(jsonName.data(), jsonName.length());
+		const uint32_t hash = MetaClassInfo<Ch>::StringHash(ptrMetaField->jsonName.data(), ptrMetaField->jsonName.length());
 
 		const detail::Util::VectorBinarySearchResult searchRet =
 				detail::Util::VectorBinarySearch(d.m_nameHashVal, hash);
 
-		if (!searchRet.isFind) {
-			// push back empty node
-			d.m_hashedFieldIndexes.resize(d.m_hashedFieldIndexes.size() + 1);
-			d.m_nameHashVal.resize(d.m_nameHashVal.size() + 1);
-			// move back
-			for (size_t i = d.m_nameHashVal.size() - 1; i > searchRet.index; --i) {
-				d.m_nameHashVal[i] = d.m_nameHashVal[i - 1];
-				d.m_hashedFieldIndexes[i] = IJSTI_MOVE(d.m_hashedFieldIndexes[i - 1]);
-			}
-			// init new node
-			d.m_hashedFieldIndexes[searchRet.index].clear();
-			d.m_nameHashVal[searchRet.index] = hash;
+		// Insert new node
+		d.m_hashedFieldPtr.resize(d.m_hashedFieldPtr.size() + 1);
+		d.m_nameHashVal.resize(d.m_nameHashVal.size() + 1);
+		for (size_t i = d.m_nameHashVal.size() - 1; i > searchRet.index; --i) {
+			d.m_nameHashVal[i] = d.m_nameHashVal[i - 1];
+			d.m_hashedFieldPtr[i] = IJSTI_MOVE(d.m_hashedFieldPtr[i - 1]);
 		}
-
-		d.m_hashedFieldIndexes[searchRet.index].push_back(index);
+		d.m_nameHashVal[searchRet.index] = hash;
+		d.m_hashedFieldPtr[searchRet.index] = ptrMetaField;
 	}
 
 	MetaClassInfo<Ch>& d;
@@ -638,4 +632,4 @@ public:
 }	// namespace detail
 }	// namespace ijst
 
-#endif //IJST_DETAIL_HPP_INCLUDE_
+#endif //IJST_DETAIL_DETAIL_HPP_INCLUDE_
