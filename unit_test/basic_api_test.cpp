@@ -167,7 +167,31 @@ TEST(BasicAPI, MetaInfo)
 #endif
 }
 
-TEST(BaseicAPI, Setter)
+IJST_DEFINE_STRUCT(
+		HashCollision
+		// collision group 1
+		, (T_int, int_1, "costarring", 0)
+		, (T_int, int_2, "liquid", 0)
+		// collision group 2
+		, (T_int, int_3, "zinkes", 0)
+		, (T_int, int_4, "altarages", 0)
+)
+
+TEST(BasicAPI, HashCollision)
+{
+	const MetaClassInfo<char>& metaInfo = ijst::GetMetaInfo<HashCollision>();
+	HashCollision st;
+	ASSERT_EQ(&st._.GetMetaInfo(), &metaInfo);
+	ASSERT_STREQ(metaInfo.GetClassName().c_str(), "HashCollision");
+	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 4u);
+	ASSERT_EQ((ptrdiff_t)metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_1", "costarring", (char*)&st.int_1 - (char*)&st, 0);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_2", "liquid", (char*)&st.int_2 - (char*)&st, 0);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_3", "zinkes", (char*)&st.int_3 - (char*)&st, 0);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_4", "altarages", (char*)&st.int_4 - (char*)&st, 0);
+}
+
+TEST(BasicAPI, Setter)
 {
 	SimpleSt simpleSt;
 	// Field status is tested in BasicAPI.FieldStatus
