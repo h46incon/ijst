@@ -11,24 +11,47 @@
 #include <list>
 #include <deque>
 
-//! @brief Declare a vector<T> field.
+#ifdef _MSC_VER
+	#define IJSTI_IMPL_WRAPPER(Name, ... )	IJSTI_EXPAND(IJSTI_PP_CONCAT(IJSTI_ ## Name ## _IMPL_, IJSTI_PP_NARGS(__VA_ARGS__))(__VA_ARGS__))
+#else
+	#define IJSTI_IMPL_WRAPPER(Name, ... )	IJSTI_PP_CONCAT(IJSTI_ ## Name ## _IMPL_, IJSTI_PP_NARGS(__VA_ARGS__))(__VA_ARGS__)
+#endif
+
+//! @brief IJST_TVEC(T, Alloc=std::allocator<T>), use for declaring a vector<T, Alloc> field in ijst struct.
+//! #define IJST_TVEC(...) 		std::vector< _VA_ARGS__ >
 //! @ingroup IJST_MACRO_API
-#define IJST_TVEC(T)	::std::vector< T >
-//! @brief Declare a deque<T> field.
+#define IJST_TVEC(...) 						IJSTI_IMPL_WRAPPER(TVEC, __VA_ARGS__)
+#define IJSTI_TVEC_IMPL_1(T) 				::std::vector< T >
+#define IJSTI_TVEC_IMPL_2(T, Alloc) 		IJST_TYPE(::std::vector< T , Alloc >)
+
+//! @brief IJST_TDEQUE(T, Alloc=std::allocator<T>), use for declaring a deque<T, Alloc> field in ijst struct.
+//! #define IJST_TDEQUE(...)	std::deque< _VA_ARGS__ >
 //! @ingroup IJST_MACRO_API
-#define IJST_TDEQUE(T)	::std::deque< T >
-//! @brief Declare a vector<T> field.
+#define IJST_TDEQUE(...) 					IJSTI_IMPL_WRAPPER(TDEQUE, __VA_ARGS__)
+#define IJSTI_TDEQUE_IMPL_1(T) 				::std::deque< T >
+#define IJSTI_TDEQUE_IMPL_2(T, Alloc) 		IJST_TYPE(::std::deque< T , Alloc >)
+
+//! @brief IJST_TLIST(T, Alloc=std::allocator<T>), use for declaring a list<T, Alloc> field in ijst struct.
+//!	#define IJST_TLIST(...) 	std::list< _VA_ARGS__ >
 //! @ingroup IJST_MACRO_API
-#define IJST_TLIST(T)	::std::list< T >
-//! @brief Declare a map<string, T> field of json object
+#define IJST_TLIST(...) 					IJSTI_IMPL_WRAPPER(TLIST, __VA_ARGS__)
+#define IJSTI_TLIST_IMPL_1(T) 				::std::list< T >
+#define IJSTI_TLIST_IMPL_2(T, Alloc) 		IJST_TYPE(::std::list< T , Alloc >)
+
+//! @brief IJST_TMAP(T, Comp=std::less, Alloc=std::allocator<T>), use for declaring a map<string, T, Comp, Alloc> field in ijst struct.
 //! @ingroup IJST_MACRO_API
-#define IJST_TMAP(T)	IJST_TYPE(::std::map< ::std::basic_string<_ijst_Ch>, T >)
+#define IJST_TMAP(...)						IJST_TYPE(::std::map< ::std::basic_string<_ijst_Ch>, __VA_ARGS__ >)
+
 //! @brief Declare a vector of members of json object
+//!	#define IJST_TOBJ(T, Alloc=DefaultAlloc) 	std::vector<ijst::T_Member<T>, Alloc>
 //! @ingroup IJST_MACRO_API
-#define IJST_TOBJ(T)	IJST_TYPE(::std::vector< ::ijst::T_Member< T, _ijst_Ch> >)
+#define IJST_TOBJ(...)						IJSTI_IMPL_WRAPPER(TOBJ, __VA_ARGS__)
+#define IJSTI_TOBJ_IMPL_1(T)				IJST_TYPE(::std::vector< ::ijst::T_Member< T, _ijst_Ch> >)
+#define IJSTI_TOBJ_IMPL_2(T, Alloc)			IJST_TYPE(::std::vector< ::ijst::T_Member< T, _ijst_Ch>, Alloc>)
+
 //! @brief Declare a object field which T is a ijst struct type.
 //! @ingroup IJST_MACRO_API
-#define IJST_TST(T)		T
+#define IJST_TST(T)							T
 
 namespace ijst {
 
@@ -59,9 +82,10 @@ struct T_Member {
  * @tparam TElem		map value type
  * @tparam CharType		character type of map key
  */
-template <typename TElem, typename CharType>
-class Optional <std::map<std::basic_string<CharType>, TElem> > {
-	typedef std::map<std::basic_string<CharType>, TElem> ValType;
+template <typename TElem, typename CharType, typename Compare, typename Alloc>
+class Optional <std::map<std::basic_string<CharType>, TElem, Compare, Alloc> >
+{
+	typedef std::map<std::basic_string<CharType>, TElem, Compare, Alloc> ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 public:
 	/**
@@ -92,10 +116,10 @@ public:
  * @tparam TElem		map value type
  * @tparam CharType		character type of map key
  */
-template <typename TElem, typename CharType>
-class Optional <const std::map<std::basic_string<CharType>, TElem> >
+template <typename TElem, typename CharType, typename Compare, typename Alloc>
+class Optional <const std::map<std::basic_string<CharType>, TElem, Compare, Alloc> >
 {
-	typedef const std::map<std::basic_string<CharType>, TElem> ValType;
+	typedef const std::map<std::basic_string<CharType>, TElem, Compare, Alloc> ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
 public:
 	/**
@@ -126,14 +150,14 @@ public:
  * @tparam TElem	Element type
  */
 #define IJSTI_OPTIONAL_ARRAY_DEFINE(is_const, Container)													\
-	template<typename TElem>																				\
-	class Optional<is_const Container<TElem> >																\
+	template<typename TElem, typename Alloc>																\
+	class Optional<is_const Container<TElem, Alloc> >														\
 	{ 																										\
-		typedef is_const Container<TElem> ValType;															\
+		typedef is_const Container<TElem, Alloc> ValType;													\
 		IJSTI_OPTIONAL_BASE_DEFINE(ValType)																	\
 	public:																									\
 		/** return Optional(elemeInstance) if i is valid, Optional(null) else. */							\
-		Optional<is_const TElem> operator[](typename Container<TElem>::size_type i) const					\
+		Optional<is_const TElem> operator[](typename Container<TElem, Alloc>::size_type i) const			\
 		{																									\
 			if (m_pVal == NULL || m_pVal->size() <= i) {													\
 				return Optional<is_const TElem>(NULL);														\
@@ -239,9 +263,9 @@ public:
  * Serialization class of Vector types
  * @tparam T class
  */
-template<class T, typename Encoding>
-class FSerializer<std::vector<T>, Encoding> : public SerializerInterface<Encoding> {
-	typedef std::vector<T> VarType;
+template<class T, typename Alloc, typename Encoding>
+class FSerializer<std::vector<T, Alloc>, Encoding> : public SerializerInterface<Encoding> {
+	typedef std::vector<T, Alloc> VarType;
 	typedef Singleton<ContainerSerializer<T, VarType, Encoding> > ContainerSerializerSingleton;
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
@@ -251,9 +275,9 @@ public:
  * Serialization class of Deque types
  * @tparam T class
  */
-template<class T, typename Encoding>
-class FSerializer<std::deque<T>, Encoding> : public SerializerInterface<Encoding> {
-	typedef std::deque<T> VarType;
+template<class T, typename Alloc, typename Encoding>
+class FSerializer<std::deque<T, Alloc>, Encoding> : public SerializerInterface<Encoding> {
+	typedef std::deque<T, Alloc> VarType;
 	typedef Singleton<ContainerSerializer<T, VarType, Encoding> > ContainerSerializerSingleton;
 
 public:
@@ -264,9 +288,9 @@ public:
  * Serialization class of Deque types
  * @tparam T class
  */
-template<class T, typename Encoding>
-class FSerializer<std::list<T>, Encoding> : public SerializerInterface<Encoding> {
-	typedef std::list<T> VarType;
+template<class T, typename Alloc, typename Encoding>
+class FSerializer<std::list<T, Alloc>, Encoding> : public SerializerInterface<Encoding> {
+	typedef std::list<T, Alloc> VarType;
 	typedef Singleton<ContainerSerializer<T, VarType, Encoding> > ContainerSerializerSingleton;
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
@@ -276,10 +300,10 @@ public:
  * Serialization class of Map types
  * @tparam T class
  */
-template<class T, typename Encoding>
-class FSerializer<std::map<std::basic_string<typename Encoding::Ch>, T>, Encoding> : public SerializerInterface<Encoding> {
+template<class T, typename Compare, typename Alloc, typename Encoding>
+class FSerializer<std::map<std::basic_string<typename Encoding::Ch>, T, Compare, Alloc>, Encoding> : public SerializerInterface<Encoding> {
 	typedef typename Encoding::Ch Ch;
-	typedef std::map<std::basic_string<Ch>, T> VarType;
+	typedef std::map<std::basic_string<Ch>, T, Compare, Alloc> VarType;
 public:
 	IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
 
@@ -359,12 +383,12 @@ public:
 /**
  * Serialization class of Object types
  */
-template<class T, typename Encoding>
-class FSerializer<std::vector<T_Member<T, typename Encoding::Ch> >, Encoding> : public SerializerInterface<Encoding> {
+template<class T, typename Alloc, typename Encoding>
+class FSerializer<std::vector<T_Member<T, typename Encoding::Ch>, Alloc>, Encoding> : public SerializerInterface<Encoding> {
 	typedef typename Encoding::Ch Ch;
 	typedef T_Member<T, Ch> MemberType;
 	typedef typename MemberType::ValType ValType;
-	typedef std::vector<MemberType> VarType;
+	typedef std::vector<MemberType, Alloc> VarType;
 public:
 	IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
 

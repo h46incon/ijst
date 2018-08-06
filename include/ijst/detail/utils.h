@@ -34,6 +34,15 @@ namespace detail {
 #define IJSTI_EXPAND(...)			__VA_ARGS__
 
 
+#ifdef _MSC_VER
+	#define IJSTI_PP_NARGS(...) \
+		IJSTI_EXPAND(IJSTI_PP_NARGS_IMPL(__VA_ARGS__, 8, 7, 6, 5, 4, 3, 2, 1))
+#else
+	#define IJSTI_PP_NARGS(...) \
+		IJSTI_PP_NARGS_IMPL(__VA_ARGS__, 8, 7, 6, 5, 4, 3, 2, 1)
+#endif
+#define IJSTI_PP_NARGS_IMPL(e1, e2, e3, e4, e5, e6, e7, e8, N, ...) N
+
 #if IJST_TRY_INIT_META_BEFORE_MAIN
 	#define IJSTI_TRY_INIT_META_BEFORE_MAIN(T)			::ijst::detail::Singleton< T >::InitInstanceInGlobal();
 #else

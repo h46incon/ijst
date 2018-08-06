@@ -77,6 +77,9 @@ SampleStruct sampleStruct;
         容器的元素类型可以为原子类型和容器（即支持**嵌套**定义）。
         如 `IJST_TVEC(T_int)` 可表达 JSON 值 *[1, 2, 3]*， `IJST_TMAP(IJST_TVEC(T_ubool))` 可表达 JSON 值 *{"key1": [true, true], "key2": [true, false]}*。
 
+        另外，定义容器时，可以指定 allocator 和 comparator。
+        如 `IJST_TVEC(T_int, MyAllocator<T_int>)`， `IJST_TMAP(T_int, MyLess<string>, MyAllocator<pair<string, T_int> >)` 等。
+
     - **ijst 结构体类型**
 
         在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TST(T)`。

@@ -449,6 +449,8 @@ public:
 	 * @param strOutput 		The output of result
 	 * @param serFlag 			Serialization options about fields, options can be combined by bitwise OR operator (|)
 	 * @return					Error code
+	 *
+	 * @note use Serialize(HandlerBase<Ch>, SerFlag::Flag) to serialize to string with specify char_traits and allocator
 	 */
 	template<typename TargetEncoding>
 	int Serialize(IJST_OUT std::basic_string<typename TargetEncoding::Ch> &strOutput, SerFlag::Flag serFlag = SerFlag::kNoneFlag) const

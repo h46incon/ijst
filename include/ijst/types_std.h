@@ -14,30 +14,34 @@
 namespace ijst {
 
 //! bool -> bool. @note: Could not declare std::vector<T_bool>
-typedef bool 			T_bool;
+typedef bool 					T_bool;
 //! bool -> uint8_t
-typedef uint8_t 		T_ubool;
+typedef uint8_t 				T_ubool;
 //! bool -> a wrapper of bool
-class 					T_wbool;
+class 							T_wbool;
 //! number -> int
-typedef int 			T_int;
+typedef int 					T_int;
 //! number -> int64_t
-typedef int64_t 		T_int64;
+typedef int64_t 				T_int64;
 //! number -> unsigned int
-typedef unsigned int 	T_uint;
+typedef unsigned int 			T_uint;
 //! number -> uint64_t
-typedef uint64_t 		T_uint64;
+typedef uint64_t 				T_uint64;
 //! string -> std::string
-typedef double 			T_double;
+typedef double 					T_double;
+//! @brief IJST_TASTR(CharTraits, Alloc=std::allocator), use for declaring a basic_string<_ijst_Ch, CharTraits, Alloc> field in ijst struct.
+//! @ingroup IJST_MACRO_API
+#define IJST_TSTR_X(...)		IJST_TYPE(::std::basic_string<_ijst_Ch, __VA_ARGS__ >)
 //! string -> std::basic_string<Encoding::Ch>
-#define IJST_TSTR		::std::basic_string<_ijst_Ch>
+#define IJST_TSTR				::std::basic_string<_ijst_Ch>
 //! string -> std::string, for backward compatibility
-typedef std::string 	T_string;
+typedef std::string 			T_string;
 //! anything -> a wrapper of rapidjson::GenericValue<Encoding>
-#define IJST_TRAW		::ijst::T_GenericRaw<_ijst_Encoding>
+#define IJST_TRAW				::ijst::T_GenericRaw<_ijst_Encoding>
 //! anything -> a wrapper of rapidjson::Value, for backward compatibility
 template<typename Encoding> class T_GenericRaw;
-typedef T_GenericRaw<rapidjson::UTF8<> > T_raw;
+typedef
+T_GenericRaw<rapidjson::UTF8<> > T_raw;
 
 /**
  * @brief Wrapper of bool to support normal vector<bool>.
@@ -145,6 +149,7 @@ namespace detail {
 #define IJSTI_DEFINE_SERIALIZE_INTERFACE_END()											\
 	};
 
+//--- T_ubool
 IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_ubool)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
@@ -183,18 +188,19 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 	}
 
 
+//--- T_bool
 IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_bool)
 	IJSTI_SERIALIZER_BOOL_DEFINE()
 	IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-
+//--- T_wbool
 IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_wbool)
 	IJSTI_SERIALIZER_BOOL_DEFINE()
 	IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-
+//--- T_int
 IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
@@ -212,7 +218,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int)
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-
+//--- T_int64
 IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int64)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
@@ -230,7 +236,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int64)
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-
+//--- T_uint
 IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
@@ -248,7 +254,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint)
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-
+//--- T_uint64
 IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint64)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
@@ -266,7 +272,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint64)
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-
+//--- T_double
 IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_double)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
@@ -282,11 +288,14 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_double)
 		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((*pField == 0.0));
 		return 0;
 	}
-
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-
-IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(std::basic_string<typename Encoding::Ch>)
+//--- IJST_TSTR
+template<typename Traits, typename Alloc, typename Encoding>
+class FSerializer<::std::basic_string<typename Encoding::Ch, Traits, Alloc>, Encoding> : public SerializerInterface<Encoding> {
+	typedef ::std::basic_string<typename Encoding::Ch, Traits, Alloc> VarType;
+	IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
+public:
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType& field = *static_cast<const VarType *>(req.pField);
@@ -297,13 +306,13 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(std::basic_string<typename Encoding::Ch>)
 	{
 		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsString()), "string");
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
-		*pField = std::basic_string<typename Encoding::Ch>(req.stream.GetString(), req.stream.GetStringLength());
+		*pField = VarType(req.stream.GetString(), req.stream.GetStringLength());
 		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((pField->empty()));
 		return 0;
 	}
-IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
+};
 
-
+//--- IJST_TRAW
 IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_GenericRaw<Encoding>)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
@@ -348,8 +357,6 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_GenericRaw<Encoding>)
 		field.m_pOwnAllocator = newAllocaltor;
 		field.m_pAllocator = newAllocaltor;
 	}
-
-
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
 }	//namespace detail
