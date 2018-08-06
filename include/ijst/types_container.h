@@ -47,7 +47,7 @@
 //! @ingroup IJST_MACRO_API
 #define IJST_TOBJ(...)						IJSTI_IMPL_WRAPPER(TOBJ, __VA_ARGS__)
 #define IJSTI_TOBJ_IMPL_1(T)				IJST_TYPE(::std::vector< ::ijst::T_Member< T, _ijst_Ch> >)
-#define IJSTI_TOBJ_IMPL_2(T, Alloc)			IJST_TYPE(::std::vector< ::ijst::T_Member< T, _ijst_Ch>, Alloc>)
+#define IJSTI_TOBJ_IMPL_2(T, Alloc)			IJST_TYPE(::std::vector< ::ijst::T_Member< T, _ijst_Ch>, Alloc >)
 
 //! @brief Declare a object field which T is a ijst struct type.
 //! @ingroup IJST_MACRO_API

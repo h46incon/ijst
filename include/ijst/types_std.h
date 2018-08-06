@@ -292,8 +292,8 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
 //--- IJST_TSTR
 template<typename Traits, typename Alloc, typename Encoding>
-class FSerializer<::std::basic_string<typename Encoding::Ch, Traits, Alloc>, Encoding> : public SerializerInterface<Encoding> {
-	typedef ::std::basic_string<typename Encoding::Ch, Traits, Alloc> VarType;
+class FSerializer<std::basic_string<typename Encoding::Ch, Traits, Alloc>, Encoding> : public SerializerInterface<Encoding> {
+	typedef std::basic_string<typename Encoding::Ch, Traits, Alloc> VarType;
 	IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
 public:
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE

@@ -636,6 +636,26 @@ TEST(Primitive, Raw_BasicAPI)
 
 template<typename T>
 class Allocator : public std::allocator<T> {
+	typedef std::allocator<T> Base;
+public:
+	typedef typename Base::size_type     	size_type;
+	typedef typename Base::difference_type	difference_type;
+	typedef typename Base::pointer			pointer;
+	typedef typename Base::const_pointer	const_pointer;
+	typedef typename Base::reference		reference;
+	typedef typename Base::const_reference	const_reference;
+	typedef typename Base::value_type		value_type;
+
+	template<class Other>
+	struct rebind {
+		typedef Allocator<Other> other;
+	};
+
+	Allocator() {}
+	Allocator(Allocator<T> const&) {}
+	Allocator<T>& operator=(Allocator<T> const&) { return (*this); }
+	template<class Other> Allocator(Allocator<Other> const&) {}
+	template<class Other> Allocator<T>& operator=(Allocator<Other> const&) { return (*this); }
 };
 
 template<typename T>
