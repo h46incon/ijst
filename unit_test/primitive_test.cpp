@@ -636,16 +636,7 @@ TEST(Primitive, Raw_BasicAPI)
 
 template<typename T>
 class Allocator : public std::allocator<T> {
-	typedef std::allocator<T> Base;
 public:
-	typedef typename Base::size_type     	size_type;
-	typedef typename Base::difference_type	difference_type;
-	typedef typename Base::pointer			pointer;
-	typedef typename Base::const_pointer	const_pointer;
-	typedef typename Base::reference		reference;
-	typedef typename Base::const_reference	const_reference;
-	typedef typename Base::value_type		value_type;
-
 	template<class Other>
 	struct rebind {
 		typedef Allocator<Other> other;
@@ -672,7 +663,7 @@ IJST_DEFINE_STRUCT_WITH_GETTER(
 	, (IJST_TDEQUE(T_int, ::Allocator<T_int>), f_deq, "deq", 0)
 	, (IJST_TLIST(T_int, ::Allocator<T_int>), f_list, "list", 0)
 	, (IJST_TMAP(T_int, ::Less<string>), f_map, "map", 0)
-	, (IJST_TMAP(T_int, ::Less<string>, Allocator<pair<string, T_int> >), f_map2, "map2", 0)
+	, (IJST_TMAP(T_int, ::Less<string>, Allocator<pair<const string, T_int> >), f_map2, "map2", 0)
 	, (IJST_TOBJ(T_int, ::Allocator<T_Member<T_int> >), f_obj, "obj", 0)
 	, (IJST_TSTR_X(CharTraits<char>), f_str, "str", 0)
 	, (IJST_TSTR_X(CharTraits<char>, Allocator<char>), f_str2, "str2", 0)

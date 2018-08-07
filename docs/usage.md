@@ -78,7 +78,7 @@ SampleStruct sampleStruct;
         如 `IJST_TVEC(T_int)` 可表达 JSON 值 *[1, 2, 3]*， `IJST_TMAP(IJST_TVEC(T_ubool))` 可表达 JSON 值 *{"key1": [true, true], "key2": [true, false]}*。
 
         另外，定义容器时，可以指定 allocator 和 comparator。
-        如 `IJST_TVEC(T_int, MyAllocator<T_int>)`， `IJST_TMAP(T_int, MyLess<string>, MyAllocator<pair<string, T_int> >)` 等。
+        如 `IJST_TVEC(T_int, MyAllocator<T_int>)`， `IJST_TMAP(T_int, MyLess<string>, MyAllocator<pair<const string, T_int> >)` 等。
 
     - **ijst 结构体类型**
 
