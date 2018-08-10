@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.14"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>ijst: ijst::SAXGeneratorWrapper&lt; Handler &gt; Class Template Reference</title>
+<title>ijst: ijst::SAXGeneratorWrapper&lt; Handler, Encoding &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -22,7 +22,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">ijst
+   &#160;<span id="projectnumber">0.9.0</span>
    </div>
+   <div id="projectbrief">A reflection-based and header-only JSON (de)serialization library.</div>
   </td>
  </tr>
  </tbody>
@@ -70,98 +72,99 @@ $(function() {
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classijst_1_1_s_a_x_generator_wrapper-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">ijst::SAXGeneratorWrapper&lt; Handler &gt; Class Template Reference</div>  </div>
+<div class="title">ijst::SAXGeneratorWrapper&lt; Handler, Encoding &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
 <p>Provide <code>bool f(Handler)</code> functor used by rapidjson::Document.Populate()  
  <a href="classijst_1_1_s_a_x_generator_wrapper.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="ijst_8h_source.html">ijst.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="accessor_8h_source.html">accessor.h</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for ijst::SAXGeneratorWrapper&lt; Handler &gt;:</div>
+Inheritance diagram for ijst::SAXGeneratorWrapper&lt; Handler, Encoding &gt;:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="classijst_1_1_s_a_x_generator_wrapper.png" usemap="#ijst::SAXGeneratorWrapper_3C_20Handler_20_3E_map" alt=""/>
-  <map id="ijst::SAXGeneratorWrapper_3C_20Handler_20_3E_map" name="ijst::SAXGeneratorWrapper_3C_20Handler_20_3E_map">
-<area href="classijst_1_1_generic_handler_base.html" title="A virtual based class implement rapidjson::Handler concept. " alt="ijst::GenericHandlerBase&lt; Ch_ &gt;" shape="rect" coords="0,0,234,24"/>
+  <img src="classijst_1_1_s_a_x_generator_wrapper.png" usemap="#ijst::SAXGeneratorWrapper_3C_20Handler_2C_20Encoding_20_3E_map" alt=""/>
+  <map id="ijst::SAXGeneratorWrapper_3C_20Handler_2C_20Encoding_20_3E_map" name="ijst::SAXGeneratorWrapper_3C_20Handler_2C_20Encoding_20_3E_map">
+<area href="classijst_1_1_handler_base.html" alt="ijst::HandlerBase&lt; Handler::Ch &gt;" shape="rect" coords="0,0,296,24"/>
 </map>
  </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a4e1a2798bbb60d542db460dff4258cd7"><td class="memItemLeft" align="right" valign="top"><a id="a4e1a2798bbb60d542db460dff4258cd7"></a>
+<tr class="memitem:ad0fcfee04826ec642ce5cd630c3f60ef"><td class="memItemLeft" align="right" valign="top"><a id="ad0fcfee04826ec642ce5cd630c3f60ef"></a>
 typedef Handler::Ch&#160;</td><td class="memItemRight" valign="bottom"><b>Ch</b></td></tr>
-<tr class="separator:a4e1a2798bbb60d542db460dff4258cd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_types_classijst_1_1_generic_handler_base"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classijst_1_1_generic_handler_base')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classijst_1_1_generic_handler_base.html">ijst::GenericHandlerBase&lt; Ch_ &gt;</a></td></tr>
-<tr class="memitem:a754fbbb396579ffc4a919cbab99f0971 inherit pub_types_classijst_1_1_generic_handler_base"><td class="memItemLeft" align="right" valign="top"><a id="a754fbbb396579ffc4a919cbab99f0971"></a>
-typedef Ch_&#160;</td><td class="memItemRight" valign="bottom"><b>Ch</b></td></tr>
-<tr class="separator:a754fbbb396579ffc4a919cbab99f0971 inherit pub_types_classijst_1_1_generic_handler_base"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ad0fcfee04826ec642ce5cd630c3f60ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_types_classijst_1_1_handler_base"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classijst_1_1_handler_base')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classijst_1_1_handler_base.html">ijst::HandlerBase&lt; Handler::Ch &gt;</a></td></tr>
+<tr class="memitem:ae936807139642acdf0fba22b67a7d92b inherit pub_types_classijst_1_1_handler_base"><td class="memItemLeft" align="right" valign="top"><a id="ae936807139642acdf0fba22b67a7d92b"></a>
+typedef Handler::Ch&#160;</td><td class="memItemRight" valign="bottom"><b>Ch</b></td></tr>
+<tr class="separator:ae936807139642acdf0fba22b67a7d92b inherit pub_types_classijst_1_1_handler_base"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1b72c1502f8fe40fc6db517127e740ed"><td class="memItemLeft" align="right" valign="top"><a id="a1b72c1502f8fe40fc6db517127e740ed"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>SAXGeneratorWrapper</b> (const <a class="el" href="classijst_1_1_accessor.html">Accessor</a>&lt;&gt; &amp;accessor, SerFlag::Flag serFlag=<a class="el" href="structijst_1_1_ser_flag.html#a11e7d31ef2ec9f8a7aa41bdeb8b72345">SerFlag::kNoneFlag</a>)</td></tr>
-<tr class="separator:a1b72c1502f8fe40fc6db517127e740ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5cf30872cdfafa1b8473494edfadadd"><td class="memItemLeft" align="right" valign="top"><a id="af5cf30872cdfafa1b8473494edfadadd"></a>
+<tr class="memitem:ad2718525d30582599739fd47c786b3de"><td class="memItemLeft" align="right" valign="top"><a id="ad2718525d30582599739fd47c786b3de"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>SAXGeneratorWrapper</b> (const <a class="el" href="classijst_1_1_accessor.html">Accessor</a>&lt; Encoding &gt; &amp;accessor, <a class="el" href="structijst_1_1_ser_flag.html#ada3a39d81eb55176c5b13bfe0533b4e0">SerFlag::Flag</a> serFlag=<a class="el" href="structijst_1_1_ser_flag.html#ada3a39d81eb55176c5b13bfe0533b4e0a3a5a8f6b8f089d89a7d59f48fb8e80c6">SerFlag::kNoneFlag</a>)</td></tr>
+<tr class="separator:ad2718525d30582599739fd47c786b3de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab5ca1ab730ec76e5b8af06d7bf857e10"><td class="memItemLeft" align="right" valign="top"><a id="ab5ca1ab730ec76e5b8af06d7bf857e10"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (Handler &amp;h)</td></tr>
-<tr class="separator:af5cf30872cdfafa1b8473494edfadadd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3e05b515cd4c42a80e48d7a9e10a6066"><td class="memItemLeft" align="right" valign="top"><a id="a3e05b515cd4c42a80e48d7a9e10a6066"></a>
+<tr class="separator:ab5ca1ab730ec76e5b8af06d7bf857e10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f735d93d699dca45fb35c13abcfeac8"><td class="memItemLeft" align="right" valign="top"><a id="a9f735d93d699dca45fb35c13abcfeac8"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>Null</b> ()</td></tr>
-<tr class="separator:a3e05b515cd4c42a80e48d7a9e10a6066"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44a5acff78d182e490d8f8594625481a"><td class="memItemLeft" align="right" valign="top"><a id="a44a5acff78d182e490d8f8594625481a"></a>
+<tr class="separator:a9f735d93d699dca45fb35c13abcfeac8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86976fae8c725c2164cad7acb825afdd"><td class="memItemLeft" align="right" valign="top"><a id="a86976fae8c725c2164cad7acb825afdd"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>Bool</b> (bool b)</td></tr>
-<tr class="separator:a44a5acff78d182e490d8f8594625481a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeb42181a1cc54f597400f3b17ebadcf2"><td class="memItemLeft" align="right" valign="top"><a id="aeb42181a1cc54f597400f3b17ebadcf2"></a>
+<tr class="separator:a86976fae8c725c2164cad7acb825afdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a423d85b6b6a45c187a8aface3492aa5b"><td class="memItemLeft" align="right" valign="top"><a id="a423d85b6b6a45c187a8aface3492aa5b"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>Int</b> (int i)</td></tr>
-<tr class="separator:aeb42181a1cc54f597400f3b17ebadcf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af32a0a356148895b1e81ebf143da18fc"><td class="memItemLeft" align="right" valign="top"><a id="af32a0a356148895b1e81ebf143da18fc"></a>
+<tr class="separator:a423d85b6b6a45c187a8aface3492aa5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48885a0ca594355457d4c9368a402ffd"><td class="memItemLeft" align="right" valign="top"><a id="a48885a0ca594355457d4c9368a402ffd"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>Uint</b> (unsigned i)</td></tr>
-<tr class="separator:af32a0a356148895b1e81ebf143da18fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aedd1562b915e9a431f1b8e205b4166a2"><td class="memItemLeft" align="right" valign="top"><a id="aedd1562b915e9a431f1b8e205b4166a2"></a>
+<tr class="separator:a48885a0ca594355457d4c9368a402ffd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15978a025ddfa7dec61992e821260aef"><td class="memItemLeft" align="right" valign="top"><a id="a15978a025ddfa7dec61992e821260aef"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>Int64</b> (int64_t i)</td></tr>
-<tr class="separator:aedd1562b915e9a431f1b8e205b4166a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7be54c9da8df32ad035e0ecb753cf522"><td class="memItemLeft" align="right" valign="top"><a id="a7be54c9da8df32ad035e0ecb753cf522"></a>
+<tr class="separator:a15978a025ddfa7dec61992e821260aef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3993519737113d719d44b0159052b4c3"><td class="memItemLeft" align="right" valign="top"><a id="a3993519737113d719d44b0159052b4c3"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>Uint64</b> (uint64_t i)</td></tr>
-<tr class="separator:a7be54c9da8df32ad035e0ecb753cf522"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9404015067611ce1a928b0efda3d7f7b"><td class="memItemLeft" align="right" valign="top"><a id="a9404015067611ce1a928b0efda3d7f7b"></a>
+<tr class="separator:a3993519737113d719d44b0159052b4c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15d8d5c8120cc8a876cdcefe37cad14e"><td class="memItemLeft" align="right" valign="top"><a id="a15d8d5c8120cc8a876cdcefe37cad14e"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>Double</b> (double d)</td></tr>
-<tr class="separator:a9404015067611ce1a928b0efda3d7f7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adf10165ec99f7969a1046dd9360c9993"><td class="memItemLeft" align="right" valign="top"><a id="adf10165ec99f7969a1046dd9360c9993"></a>
+<tr class="separator:a15d8d5c8120cc8a876cdcefe37cad14e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a078d4850b74835e68500be8a6978605c"><td class="memItemLeft" align="right" valign="top"><a id="a078d4850b74835e68500be8a6978605c"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>RawNumber</b> (const Ch *str, rapidjson::SizeType length, bool copy=false)</td></tr>
-<tr class="separator:adf10165ec99f7969a1046dd9360c9993"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a80ee3b81e2501729f8de4868a35796aa"><td class="memItemLeft" align="right" valign="top"><a id="a80ee3b81e2501729f8de4868a35796aa"></a>
+<tr class="separator:a078d4850b74835e68500be8a6978605c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abaf1e0dbdc938456a14adaa8bbb717df"><td class="memItemLeft" align="right" valign="top"><a id="abaf1e0dbdc938456a14adaa8bbb717df"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>String</b> (const Ch *str, rapidjson::SizeType length, bool copy=false)</td></tr>
-<tr class="separator:a80ee3b81e2501729f8de4868a35796aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a964eb6a2e95c61e11ebb9cd070e14ed3"><td class="memItemLeft" align="right" valign="top"><a id="a964eb6a2e95c61e11ebb9cd070e14ed3"></a>
+<tr class="separator:abaf1e0dbdc938456a14adaa8bbb717df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ed984ed8268211b412d261d3be15c95"><td class="memItemLeft" align="right" valign="top"><a id="a1ed984ed8268211b412d261d3be15c95"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>StartObject</b> ()</td></tr>
-<tr class="separator:a964eb6a2e95c61e11ebb9cd070e14ed3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6faa40258b5b878b143e8387af455683"><td class="memItemLeft" align="right" valign="top"><a id="a6faa40258b5b878b143e8387af455683"></a>
+<tr class="separator:a1ed984ed8268211b412d261d3be15c95"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b09162c1851ecbaef58a0c1cd647362"><td class="memItemLeft" align="right" valign="top"><a id="a8b09162c1851ecbaef58a0c1cd647362"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>Key</b> (const Ch *str, rapidjson::SizeType length, bool copy=false)</td></tr>
-<tr class="separator:a6faa40258b5b878b143e8387af455683"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aababd95a71601fb23fd9450a8e3c8499"><td class="memItemLeft" align="right" valign="top"><a id="aababd95a71601fb23fd9450a8e3c8499"></a>
+<tr class="separator:a8b09162c1851ecbaef58a0c1cd647362"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5a3fc7c4584f9829459bfecec14a4c0"><td class="memItemLeft" align="right" valign="top"><a id="ac5a3fc7c4584f9829459bfecec14a4c0"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>EndObject</b> (rapidjson::SizeType memberCount=0)</td></tr>
-<tr class="separator:aababd95a71601fb23fd9450a8e3c8499"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ace7744af0039b47cb45e67bf0fa48bba"><td class="memItemLeft" align="right" valign="top"><a id="ace7744af0039b47cb45e67bf0fa48bba"></a>
+<tr class="separator:ac5a3fc7c4584f9829459bfecec14a4c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfe937e52b4dd46b609a58e2880b73ec"><td class="memItemLeft" align="right" valign="top"><a id="adfe937e52b4dd46b609a58e2880b73ec"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>StartArray</b> ()</td></tr>
-<tr class="separator:ace7744af0039b47cb45e67bf0fa48bba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa12f8f9d2b4f70135bc501d378c98d46"><td class="memItemLeft" align="right" valign="top"><a id="aa12f8f9d2b4f70135bc501d378c98d46"></a>
+<tr class="separator:adfe937e52b4dd46b609a58e2880b73ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3239e3d373bc8f57438245cf2c287014"><td class="memItemLeft" align="right" valign="top"><a id="a3239e3d373bc8f57438245cf2c287014"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>EndArray</b> (rapidjson::SizeType elementCount=0)</td></tr>
-<tr class="separator:aa12f8f9d2b4f70135bc501d378c98d46"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a3239e3d373bc8f57438245cf2c287014"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename Handler&gt;<br />
-class ijst::SAXGeneratorWrapper&lt; Handler &gt;</h3>
+<div class="textblock"><h3>template&lt;typename Handler, typename Encoding = rapidjson::UTF8&lt;&gt;&gt;<br />
+class ijst::SAXGeneratorWrapper&lt; Handler, Encoding &gt;</h3>
 
 <p>Provide <code>bool f(Handler)</code> functor used by rapidjson::Document.Populate() </p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">Handler</td><td>rapidjson::Handler </td></tr>
+    <tr><td class="paramname">Encoding</td><td>Encoding of <a class="el" href="classijst_1_1_accessor.html" title="Accessor of ijst struct. ">Accessor</a> </td></tr>
   </table>
   </dd>
 </dl>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
-<li>D:/Code/IJST/include/ijst/<a class="el" href="ijst_8h_source.html">ijst.h</a></li>
+<li>D:/Code/IJST/include/ijst/<a class="el" href="accessor_8h_source.html">accessor.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['accessor',['Accessor',['../classijst_1_1_accessor.html#af2786eaa8c7acc4d3976dbe0d85c26b2',1,'ijst::Accessor::Accessor(const MetaClassInfo *pMetaClass, bool isParentVal, bool isValid)'],['../classijst_1_1_accessor.html#aa5194bef11a16b4027d72cd2b2bf840c',1,'ijst::Accessor::Accessor(const Accessor &amp;rhs)'],['../classijst_1_1_accessor.html#ab35b7a9c399d3e903e23536a0b2e08db',1,'ijst::Accessor::Accessor(Accessor &amp;&amp;rhs)']]]
+  ['accessor',['Accessor',['../classijst_1_1_accessor.html#ab869c2ce6914633f00d27911732885c0',1,'ijst::Accessor::Accessor(const MetaClassInfo&lt; Ch &gt; *pMetaClass, bool isParentVal, bool isValid)'],['../classijst_1_1_accessor.html#a5b4db170940d3af7987d649f067562cf',1,'ijst::Accessor::Accessor(const Accessor &amp;rhs)']]]
 ];

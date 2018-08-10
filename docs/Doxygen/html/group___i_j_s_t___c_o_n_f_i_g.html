@@ -22,7 +22,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">ijst
+   &#160;<span id="projectnumber">0.9.0</span>
    </div>
+   <div id="projectbrief">A reflection-based and header-only JSON (de)serialization library.</div>
   </td>
  </tr>
  </tbody>
@@ -73,14 +75,19 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
+<tr class="memitem:gaf7cfe5a79ae6c7aa0c189694e850cc91"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#gaf7cfe5a79ae6c7aa0c189694e850cc91">IJST_PARSE_DEFAULT_FLAGS</a>&#160;&#160;&#160;rapidjson::kParseDefaultFlags</td></tr>
+<tr class="separator:gaf7cfe5a79ae6c7aa0c189694e850cc91"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6bbaed85b1593b30eb4cd8dfb9bdc4c8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#ga6bbaed85b1593b30eb4cd8dfb9bdc4c8">IJST_GETTER_PREFIX</a>&#160;&#160;&#160;get_</td></tr>
 <tr class="separator:ga6bbaed85b1593b30eb4cd8dfb9bdc4c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6d4a07952701dc0e015747f3bb25b89b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#ga6d4a07952701dc0e015747f3bb25b89b">IJST_TRY_INIT_META_BEFORE_MAIN</a>&#160;&#160;&#160;0</td></tr>
 <tr class="separator:ga6d4a07952701dc0e015747f3bb25b89b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad1116792305988575399f43eb231b8f7"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#gad1116792305988575399f43eb231b8f7">IJST_HAS_CXX11_RVALUE_REFS</a>&#160;&#160;&#160;RAPIDJSON_HAS_CXX11_RVALUE_REFS</td></tr>
+<tr class="separator:gad1116792305988575399f43eb231b8f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaeb07a09d0c928c6ccd5a853d2b17dfc9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#gaeb07a09d0c928c6ccd5a853d2b17dfc9">IJST_ASSERT</a>(x)&#160;&#160;&#160;assert(x)</td></tr>
 <tr class="separator:gaeb07a09d0c928c6ccd5a853d2b17dfc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1ab52ff9af53da91d154cfae5c49b3ee"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#ga1ab52ff9af53da91d154cfae5c49b3ee">IJST_OFFSETOF</a>(T,  member)&#160;&#160;&#160;((size_t)&amp;(((T*)0)-&gt;member))</td></tr>
-<tr class="separator:ga1ab52ff9af53da91d154cfae5c49b3ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9f9f3f4d7c3b811aa7984cc3abaabdad"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i_j_s_t___c_o_n_f_i_g.html#ga9f9f3f4d7c3b811aa7984cc3abaabdad">IJST_OFFSET_BUFFER_NEW</a>(ptrId,  size)&#160;&#160;&#160;char* ptrId = new char[size]</td></tr>
+<tr class="memdesc:ga9f9f3f4d7c3b811aa7984cc3abaabdad"><td class="mdescLeft">&#160;</td><td class="mdescRight">customization point for new buffer to calculate ijst struct offset  <a href="#ga9f9f3f4d7c3b811aa7984cc3abaabdad">More...</a><br /></td></tr>
+<tr class="separator:ga9f9f3f4d7c3b811aa7984cc3abaabdad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Configuration macros for library features. </p>
@@ -122,32 +129,64 @@ Macros</h2></td></tr>
 
 </div>
 </div>
-<a id="ga1ab52ff9af53da91d154cfae5c49b3ee"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga1ab52ff9af53da91d154cfae5c49b3ee">&#9670;&nbsp;</a></span>IJST_OFFSETOF</h2>
+<a id="gad1116792305988575399f43eb231b8f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gad1116792305988575399f43eb231b8f7">&#9670;&nbsp;</a></span>IJST_HAS_CXX11_RVALUE_REFS</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define IJST_OFFSETOF</td>
+          <td class="memname">#define IJST_HAS_CXX11_RVALUE_REFS&#160;&#160;&#160;RAPIDJSON_HAS_CXX11_RVALUE_REFS</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>User could config rvalue reference support by setting IJST_HAS_CXX11_RVALUE_REFS. Default value is RAPIDJSON_HAS_CXX11_RVALUE_REFS which is depend on compiler version. </p>
+
+</div>
+</div>
+<a id="ga9f9f3f4d7c3b811aa7984cc3abaabdad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga9f9f3f4d7c3b811aa7984cc3abaabdad">&#9670;&nbsp;</a></span>IJST_OFFSET_BUFFER_NEW</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define IJST_OFFSET_BUFFER_NEW</td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname">T, </td>
+          <td class="paramname">ptrId, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname">member&#160;</td>
+          <td class="paramname">size&#160;</td>
         </tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td>&#160;&#160;&#160;((size_t)&amp;(((T*)0)-&gt;member))</td>
+          <td></td><td>&#160;&#160;&#160;char* ptrId = new char[size]</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>By default, the offset of each field is computed by "((Struct*)0)-&gt;field". User could overwrite by define this macro such as "offsetof()". </p>
+
+<p>customization point for new buffer to calculate ijst struct offset </p>
+<p>By default, ijst allocator a buffer in heap to calculate fields' offset of ijst struct. User can override it by defining IJST_OFFSET_BUFFER_NEW, IJST_OFFSET_BUFFER_DELETE macro. E.g, allocator in stack, or use nullptr. </p>
+
+</div>
+</div>
+<a id="gaf7cfe5a79ae6c7aa0c189694e850cc91"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaf7cfe5a79ae6c7aa0c189694e850cc91">&#9670;&nbsp;</a></span>IJST_PARSE_DEFAULT_FLAGS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define IJST_PARSE_DEFAULT_FLAGS&#160;&#160;&#160;rapidjson::kParseDefaultFlags</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>ijst use rapidjson::kParseDefaultFlags when parsing in default. User can override it by defining IJST_PARSE_DEFAULT_FLAGS macro. </p>
 
 </div>
 </div>

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.14"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>ijst: ijst::MetaClassInfo Class Reference</title>
+<title>ijst: ijst::MetaClassInfo&lt; CharType &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -22,7 +22,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">ijst
+   &#160;<span id="projectnumber">0.9.0</span>
    </div>
+   <div id="projectbrief">A reflection-based and header-only JSON (de)serialization library.</div>
   </td>
  </tr>
  </tbody>
@@ -66,65 +68,126 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classijst_1_1_meta_class_info-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">ijst::MetaClassInfo Class Reference</div>  </div>
+<div class="title">ijst::MetaClassInfo&lt; CharType &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
 <p>Meta information of class.  
  <a href="classijst_1_1_meta_class_info.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="ijst_8h_source.html">ijst.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="meta__info_8h_source.html">meta_info.h</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a71e0c626e42cc10979de1f72fd075aeb"><td class="memItemLeft" align="right" valign="top"><a id="a71e0c626e42cc10979de1f72fd075aeb"></a>
+typedef CharType&#160;</td><td class="memItemRight" valign="bottom"><b>Ch</b></td></tr>
+<tr class="separator:a71e0c626e42cc10979de1f72fd075aeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a5b7fbbf5d65eacdfd4df81bfdda7541e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_meta_class_info.html#a5b7fbbf5d65eacdfd4df81bfdda7541e">FindIndex</a> (size_t offset) const</td></tr>
-<tr class="memdesc:a5b7fbbf5d65eacdfd4df81bfdda7541e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find index of field by offset.  <a href="#a5b7fbbf5d65eacdfd4df81bfdda7541e">More...</a><br /></td></tr>
-<tr class="separator:a5b7fbbf5d65eacdfd4df81bfdda7541e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7812e1650a4d8cba24731cad2196f37a"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structijst_1_1_meta_field_info.html">MetaFieldInfo</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_meta_class_info.html#a7812e1650a4d8cba24731cad2196f37a">FindFieldByJsonName</a> (const std::string &amp;name) const</td></tr>
-<tr class="memdesc:a7812e1650a4d8cba24731cad2196f37a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find meta information of filed by json name.  <a href="#a7812e1650a4d8cba24731cad2196f37a">More...</a><br /></td></tr>
-<tr class="separator:a7812e1650a4d8cba24731cad2196f37a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:affbedf52a9f266dbd24fe15a37f2f556"><td class="memItemLeft" align="right" valign="top"><a id="affbedf52a9f266dbd24fe15a37f2f556"></a>
-const std::vector&lt; <a class="el" href="structijst_1_1_meta_field_info.html">MetaFieldInfo</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_meta_class_info.html#affbedf52a9f266dbd24fe15a37f2f556">GetFieldsInfo</a> () const</td></tr>
-<tr class="memdesc:affbedf52a9f266dbd24fe15a37f2f556"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get meta information of all fields in class. The returned vector is sorted by offset. <br /></td></tr>
-<tr class="separator:affbedf52a9f266dbd24fe15a37f2f556"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa593f264894571019dbf31eff54883c9"><td class="memItemLeft" align="right" valign="top"><a id="aa593f264894571019dbf31eff54883c9"></a>
-const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_meta_class_info.html#aa593f264894571019dbf31eff54883c9">GetClassName</a> () const</td></tr>
-<tr class="memdesc:aa593f264894571019dbf31eff54883c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get name of class. <br /></td></tr>
-<tr class="separator:aa593f264894571019dbf31eff54883c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae3ed66bef7fc9a8db2b56545b64ecf0f"><td class="memItemLeft" align="right" valign="top"><a id="ae3ed66bef7fc9a8db2b56545b64ecf0f"></a>
-std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_meta_class_info.html#ae3ed66bef7fc9a8db2b56545b64ecf0f">GetAccessorOffset</a> () const</td></tr>
-<tr class="memdesc:ae3ed66bef7fc9a8db2b56545b64ecf0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the offset of <a class="el" href="classijst_1_1_accessor.html" title="Accessor of ijst struct. ">Accessor</a> object. <br /></td></tr>
-<tr class="separator:ae3ed66bef7fc9a8db2b56545b64ecf0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:aa01d48c17eccea71d010b3df0f3c2506"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:aa01d48c17eccea71d010b3df0f3c2506"><td class="memTemplItemLeft" align="right" valign="top">static const <a class="el" href="classijst_1_1_meta_class_info.html">MetaClassInfo</a> &amp;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classijst_1_1_meta_class_info.html#aa01d48c17eccea71d010b3df0f3c2506">GetMetaInfo</a> ()</td></tr>
-<tr class="memdesc:aa01d48c17eccea71d010b3df0f3c2506"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get meta information for ijst struct T.  <a href="#aa01d48c17eccea71d010b3df0f3c2506">More...</a><br /></td></tr>
-<tr class="separator:aa01d48c17eccea71d010b3df0f3c2506"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27f296348ba4e537c239bcfeae89030b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_meta_class_info.html#a27f296348ba4e537c239bcfeae89030b">FindIndex</a> (size_t offset) const</td></tr>
+<tr class="memdesc:a27f296348ba4e537c239bcfeae89030b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find index of field by offset.  <a href="#a27f296348ba4e537c239bcfeae89030b">More...</a><br /></td></tr>
+<tr class="separator:a27f296348ba4e537c239bcfeae89030b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab15fb1ef183e4648ab5ccb1d079d64ca"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structijst_1_1_meta_field_info.html">MetaFieldInfo</a>&lt; Ch &gt; *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_meta_class_info.html#ab15fb1ef183e4648ab5ccb1d079d64ca">FindFieldByJsonName</a> (const Ch *name, size_t length) const</td></tr>
+<tr class="memdesc:ab15fb1ef183e4648ab5ccb1d079d64ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find meta information of filed by json name.  <a href="#ab15fb1ef183e4648ab5ccb1d079d64ca">More...</a><br /></td></tr>
+<tr class="separator:ab15fb1ef183e4648ab5ccb1d079d64ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ba0a2ee2c5ddd9e7fdbe629806c44bf"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structijst_1_1_meta_field_info.html">MetaFieldInfo</a>&lt; Ch &gt; *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_meta_class_info.html#a7ba0a2ee2c5ddd9e7fdbe629806c44bf">FindFieldByJsonName</a> (const std::basic_string&lt; Ch &gt; &amp;name) const</td></tr>
+<tr class="memdesc:a7ba0a2ee2c5ddd9e7fdbe629806c44bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find meta information of filed by json name.  <a href="#a7ba0a2ee2c5ddd9e7fdbe629806c44bf">More...</a><br /></td></tr>
+<tr class="separator:a7ba0a2ee2c5ddd9e7fdbe629806c44bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab808d33f76d00a9774cd2d427e2c150c"><td class="memItemLeft" align="right" valign="top"><a id="ab808d33f76d00a9774cd2d427e2c150c"></a>
+const std::vector&lt; <a class="el" href="structijst_1_1_meta_field_info.html">MetaFieldInfo</a>&lt; Ch &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_meta_class_info.html#ab808d33f76d00a9774cd2d427e2c150c">GetFieldsInfo</a> () const</td></tr>
+<tr class="memdesc:ab808d33f76d00a9774cd2d427e2c150c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get meta information of all fields in class. The returned vector is sorted by offset. <br /></td></tr>
+<tr class="separator:ab808d33f76d00a9774cd2d427e2c150c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae5a77ac9a7f08ba5f0e2b0fbdaca6209"><td class="memItemLeft" align="right" valign="top"><a id="ae5a77ac9a7f08ba5f0e2b0fbdaca6209"></a>
+const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_meta_class_info.html#ae5a77ac9a7f08ba5f0e2b0fbdaca6209">GetClassName</a> () const</td></tr>
+<tr class="memdesc:ae5a77ac9a7f08ba5f0e2b0fbdaca6209"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get name of class. <br /></td></tr>
+<tr class="separator:ae5a77ac9a7f08ba5f0e2b0fbdaca6209"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f6d3363b607ff03d14b49c33f623838"><td class="memItemLeft" align="right" valign="top"><a id="a4f6d3363b607ff03d14b49c33f623838"></a>
+std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classijst_1_1_meta_class_info.html#a4f6d3363b607ff03d14b49c33f623838">GetAccessorOffset</a> () const</td></tr>
+<tr class="memdesc:a4f6d3363b607ff03d14b49c33f623838"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the offset of <a class="el" href="classijst_1_1_accessor.html" title="Accessor of ijst struct. ">Accessor</a> object. <br /></td></tr>
+<tr class="separator:a4f6d3363b607ff03d14b49c33f623838"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Meta information of class. </p>
+<div class="textblock"><h3>template&lt;typename CharType = char&gt;<br />
+class ijst::MetaClassInfo&lt; CharType &gt;</h3>
+
+<p>Meta information of class. </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">CharType</td><td>character type of string</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="structijst_1_1_meta_field_info.html" title="Meta information of field. ">MetaFieldInfo</a> </dd></dl>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a7812e1650a4d8cba24731cad2196f37a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7812e1650a4d8cba24731cad2196f37a">&#9670;&nbsp;</a></span>FindFieldByJsonName()</h2>
+<a id="ab15fb1ef183e4648ab5ccb1d079d64ca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab15fb1ef183e4648ab5ccb1d079d64ca">&#9670;&nbsp;</a></span>FindFieldByJsonName() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
+<div class="memtemplate">
+template&lt;typename CharType = char&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="structijst_1_1_meta_field_info.html">MetaFieldInfo</a>* ijst::MetaClassInfo::FindFieldByJsonName </td>
+          <td class="memname">const <a class="el" href="structijst_1_1_meta_field_info.html">MetaFieldInfo</a>&lt;Ch&gt;* <a class="el" href="classijst_1_1_meta_class_info.html">ijst::MetaClassInfo</a>&lt; CharType &gt;::FindFieldByJsonName </td>
           <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramtype">const Ch *&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Find meta information of filed by json name. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>field's json name </td></tr>
+    <tr><td class="paramname">length</td><td>field's json name length </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>pointer of info if found, null else</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>log(FieldSize) complexity. </dd></dl>
+
+</div>
+</div>
+<a id="a7ba0a2ee2c5ddd9e7fdbe629806c44bf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7ba0a2ee2c5ddd9e7fdbe629806c44bf">&#9670;&nbsp;</a></span>FindFieldByJsonName() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename CharType = char&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="structijst_1_1_meta_field_info.html">MetaFieldInfo</a>&lt;Ch&gt;* <a class="el" href="classijst_1_1_meta_class_info.html">ijst::MetaClassInfo</a>&lt; CharType &gt;::FindFieldByJsonName </td>
+          <td>(</td>
+          <td class="paramtype">const std::basic_string&lt; Ch &gt; &amp;&#160;</td>
           <td class="paramname"><em>name</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -148,17 +211,19 @@ Static Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a5b7fbbf5d65eacdfd4df81bfdda7541e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5b7fbbf5d65eacdfd4df81bfdda7541e">&#9670;&nbsp;</a></span>FindIndex()</h2>
+<a id="a27f296348ba4e537c239bcfeae89030b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a27f296348ba4e537c239bcfeae89030b">&#9670;&nbsp;</a></span>FindIndex()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<div class="memtemplate">
+template&lt;typename CharType = char&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int ijst::MetaClassInfo::FindIndex </td>
+          <td class="memname">int <a class="el" href="classijst_1_1_meta_class_info.html">ijst::MetaClassInfo</a>&lt; CharType &gt;::FindIndex </td>
           <td>(</td>
           <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>offset</em></td><td>)</td>
@@ -184,44 +249,8 @@ Static Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aa01d48c17eccea71d010b3df0f3c2506"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa01d48c17eccea71d010b3df0f3c2506">&#9670;&nbsp;</a></span>GetMetaInfo()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const <a class="el" href="classijst_1_1_meta_class_info.html">MetaClassInfo</a> &amp; ijst::MetaClassInfo::GetMetaInfo </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Get meta information for ijst struct T. </p>
-<dl class="tparams"><dt>Template Parameters</dt><dd>
-  <table class="tparams">
-    <tr><td class="paramname">T</td><td>ijst struct </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="classijst_1_1_meta_class_info.html" title="Meta information of class. ">MetaClassInfo</a> instance </dd></dl>
-
-</div>
-</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>D:/Code/IJST/include/ijst/<a class="el" href="ijst_8h_source.html">ijst.h</a></li>
+<li>D:/Code/IJST/include/ijst/<a class="el" href="meta__info_8h_source.html">meta_info.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

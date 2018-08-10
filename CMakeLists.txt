@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.8)
-project(ijst)
+project(ijst CXX)
+
 
 if(NOT DEFINED CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 11)
