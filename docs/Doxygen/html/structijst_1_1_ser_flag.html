@@ -22,7 +22,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">ijst
+   &#160;<span id="projectnumber">0.9.0</span>
    </div>
+   <div id="projectbrief">A reflection-based and header-only JSON (de)serialization library.</div>
   </td>
  </tr>
  </tbody>
@@ -67,7 +69,6 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-types">Public Types</a> &#124;
-<a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="structijst_1_1_ser_flag-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">ijst::SerFlag Struct Reference</div>  </div>
@@ -81,33 +82,36 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:ace0bf1e057776a32d867ab1590f8baf2"><td class="memItemLeft" align="right" valign="top"><a id="ace0bf1e057776a32d867ab1590f8baf2"></a>
-typedef unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>Flag</b></td></tr>
-<tr class="separator:ace0bf1e057776a32d867ab1590f8baf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
-Static Public Attributes</h2></td></tr>
-<tr class="memitem:a11e7d31ef2ec9f8a7aa41bdeb8b72345"><td class="memItemLeft" align="right" valign="top"><a id="a11e7d31ef2ec9f8a7aa41bdeb8b72345"></a>
-static const Flag&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_ser_flag.html#a11e7d31ef2ec9f8a7aa41bdeb8b72345">kNoneFlag</a> = 0x00000000</td></tr>
-<tr class="memdesc:a11e7d31ef2ec9f8a7aa41bdeb8b72345"><td class="mdescLeft">&#160;</td><td class="mdescRight">does not set any option. <br /></td></tr>
-<tr class="separator:a11e7d31ef2ec9f8a7aa41bdeb8b72345"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac80dceb0252e096d4efdc2df75be4017"><td class="memItemLeft" align="right" valign="top"><a id="ac80dceb0252e096d4efdc2df75be4017"></a>
-static const Flag&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_ser_flag.html#ac80dceb0252e096d4efdc2df75be4017">kIgnoreMissing</a> = 0x00000001</td></tr>
-<tr class="memdesc:ac80dceb0252e096d4efdc2df75be4017"><td class="mdescLeft">&#160;</td><td class="mdescRight">set if ignore fields with kMissing status. <br /></td></tr>
-<tr class="separator:ac80dceb0252e096d4efdc2df75be4017"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6341d25b9a75fbf2943d9e9ed0fb246d"><td class="memItemLeft" align="right" valign="top"><a id="a6341d25b9a75fbf2943d9e9ed0fb246d"></a>
-static const Flag&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_ser_flag.html#a6341d25b9a75fbf2943d9e9ed0fb246d">kIgnoreUnknown</a> = 0x00000002</td></tr>
-<tr class="memdesc:a6341d25b9a75fbf2943d9e9ed0fb246d"><td class="mdescLeft">&#160;</td><td class="mdescRight">set if ignore unknown fields, otherwise will serialize all unknown fields. <br /></td></tr>
-<tr class="separator:a6341d25b9a75fbf2943d9e9ed0fb246d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3752afcf191e69e678a378eacca79d8d"><td class="memItemLeft" align="right" valign="top"><a id="a3752afcf191e69e678a378eacca79d8d"></a>
-static const Flag&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_ser_flag.html#a3752afcf191e69e678a378eacca79d8d">kIgnoreNull</a> = 0x00000004</td></tr>
-<tr class="memdesc:a3752afcf191e69e678a378eacca79d8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">set if ignore fields with kNull status. <br /></td></tr>
-<tr class="separator:a3752afcf191e69e678a378eacca79d8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada3a39d81eb55176c5b13bfe0533b4e0"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_ser_flag.html#ada3a39d81eb55176c5b13bfe0533b4e0">Flag</a> { <a class="el" href="structijst_1_1_ser_flag.html#ada3a39d81eb55176c5b13bfe0533b4e0a3a5a8f6b8f089d89a7d59f48fb8e80c6">kNoneFlag</a> = 0x0000, 
+<b>kIgnoreMissing</b> = 0x0001, 
+<b>kIgnoreUnknown</b> = 0x0002, 
+<b>kIgnoreNull</b> = 0x0004
+ }</td></tr>
+<tr class="separator:ada3a39d81eb55176c5b13bfe0533b4e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Serialization options about fields. </p>
 <p>Options can be combined by bitwise OR operator (|). </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
+</div><h2 class="groupheader">Member Enumeration Documentation</h2>
+<a id="ada3a39d81eb55176c5b13bfe0533b4e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ada3a39d81eb55176c5b13bfe0533b4e0">&#9670;&nbsp;</a></span>Flag</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="structijst_1_1_ser_flag.html#ada3a39d81eb55176c5b13bfe0533b4e0">ijst::SerFlag::Flag</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ada3a39d81eb55176c5b13bfe0533b4e0a3a5a8f6b8f089d89a7d59f48fb8e80c6"></a>kNoneFlag&#160;</td><td class="fielddoc"><p>does not set any option. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
 <li>D:/Code/IJST/include/ijst/<a class="el" href="ijst_8h_source.html">ijst.h</a></li>
 </ul>
 </div><!-- contents -->

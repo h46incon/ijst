@@ -36,6 +36,55 @@ do {																		\
 	jsonOutput.Parse(str.c_str(), str.length());							\
 	ASSERT_FALSE(jsonOutput.HasParseError());
 
+// Test for encoding
+#define DEFINE_ENCODING_TEST_STRUCT(encoding, stName, PF) \
+	IJST_DEFINE_GENERIC_STRUCT( \
+		encoding, stName \
+		, (ijst::T_int, int_v, PF ## "int_val", 0) \
+		, (IJST_TSTR, str_v, PF ## "str_val", 0) \
+		, (IJST_TMAP(ijst::T_int), map_v, PF ## "map_val", 0) \
+	)
+
+DEFINE_ENCODING_TEST_STRUCT(rapidjson::UTF8<>, U8TestEncoding, )
+#if __cplusplus >= 201103L
+DEFINE_ENCODING_TEST_STRUCT(rapidjson::UTF16<char16_t>, U16TestEncoding, u)
+DEFINE_ENCODING_TEST_STRUCT(rapidjson::UTF32<char32_t>, U32TestEncoding, U)
+#endif
+
+template<typename CharType>
+void AssertStrEq(const CharType* s1, const CharType* s2)
+{
+	while (*s1 && (*s1 == *s2)) {
+		s1++, s2++;
+	}
+
+	ASSERT_EQ(*s1, *s2);
+}
+
+template<>
+inline void AssertStrEq<char>(const char* s1, const char* s2)
+{
+	ASSERT_STREQ(s1, s2);
+}
+
+template<>
+inline void AssertStrEq<wchar_t>(const wchar_t* s1, const wchar_t* s2)
+{
+	ASSERT_STREQ(s1, s2);
+}
+
+template<typename SourceEncoding, typename TargetEncoding>
+std::basic_string<typename TargetEncoding::Ch>Transcode(const typename SourceEncoding::Ch* src)
+{
+	rapidjson::GenericStringStream<SourceEncoding> source(src);
+	rapidjson::GenericStringBuffer<TargetEncoding> target;
+	while (source.Peek() != '\0') {
+		rapidjson::Transcoder<SourceEncoding, TargetEncoding>::Transcode(source, target);
+	}
+
+	return std::basic_string<typename TargetEncoding::Ch>(target.GetString());
+};
+
 inline void CheckTypeMismatch(const rapidjson::Value& errDoc, const char* expectedType, const char* value)
 {
 	ASSERT_TRUE(errDoc.IsObject());
@@ -44,7 +93,7 @@ inline void CheckTypeMismatch(const rapidjson::Value& errDoc, const char* expect
 
 	// The test of HeadOStream is in detail_test.cpp
 	// The capacity of ostream must be same as ijst/detail/detail.h
-	ijst::detail::HeadOStream ostream(16);
+	ijst::detail::HeadOStream<rapidjson::UTF8<> > ostream(16);
 	const char* pc = value;
 	while (*pc != '\0')
 	{

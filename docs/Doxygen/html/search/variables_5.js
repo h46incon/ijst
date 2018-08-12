@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['notdefault',['NotDefault',['../structijst_1_1_f_desc.html#ab1fa35378c97967c53b15f35f5932f58',1,'ijst::FDesc']]],
-  ['nullable',['Nullable',['../structijst_1_1_f_desc.html#a2a49f1fa62a8bc69dc454bd09293e55a',1,'ijst::FDesc']]]
+  ['offset',['offset',['../structijst_1_1_meta_field_info.html#abfcee8db335f683dc16fc9f2a5da8718',1,'ijst::MetaFieldInfo']]],
+  ['optional',['Optional',['../structijst_1_1_f_desc.html#aea4d7c1b0b5ae5d59aca766f1e095728',1,'ijst::FDesc']]]
 ];

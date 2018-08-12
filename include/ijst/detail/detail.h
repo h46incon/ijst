@@ -2,8 +2,11 @@
 // Created by h46incon on 2017/12/26.
 //
 
-#ifndef IJST_DETAIL_HPP_INCLUDE_
-#define IJST_DETAIL_HPP_INCLUDE_
+#ifndef IJST_DETAIL_DETAIL_HPP_INCLUDE_
+#define IJST_DETAIL_DETAIL_HPP_INCLUDE_
+
+#include "../ijst.h"
+#include "../meta_info.h"
 
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
@@ -12,78 +15,52 @@
 
 #include <string>
 
+//! return Err::kWriteFailed if action return false
+#define IJSTI_RET_WHEN_WRITE_FAILD(action) 						\
+	do { if(!(action)) return ErrorCode::kWriteFailed; } while (false)
+//! return if action return non-0
+#define IJSTI_RET_WHEN_NOT_ZERO(action) 						\
+	do { int ret = (action); if(ret != 0) return (ret); } while (false)
+//! helper in Accessor::Deserialize()
+#define IJSTI_RET_WHEN_PARSE_ERROR(doc, encoding)							\
+	do {																	\
+		if (doc.HasParseError()) {											\
+			detail::ErrorDocSetter<encoding> errDocSetter(pErrDocOut);		\
+			errDocSetter.ParseFailed(doc.GetParseError());					\
+			return ErrorCode::kDeserializeParseFailed;						\
+		}																	\
+	} while (false)
+//! return error and set error doc when type mismatch
+#define IJSTI_RET_WHEN_TYPE_MISMATCH(checkCode, expType)			\
+	if (!(checkCode)) {												\
+		resp.errDoc.ElementTypeMismatch(expType, req.stream);		\
+		return ErrorCode::kDeserializeValueTypeError;				\
+	}
+//! return error and set error doc when value is default
+#define IJSTI_RET_WHEN_VALUE_IS_DEFAULT(checkCode)					\
+	if (detail::Util::IsBitSet(req.fDesc, FDesc::NotDefault) 		\
+			&& (checkCode)) {										\
+		resp.errDoc.ElementValueIsDefault();						\
+		return ErrorCode::kDeserializeValueIsDefault;				\
+	}
+
 namespace ijst{
-namespace detail{
-#if __cplusplus >= 201103L
-	#define IJSTI_NULL 			nullptr
-	#define IJSTI_MOVE(val) 	std::move((val))
-	#define IJSTI_OVERRIDE		override
-	#define IJSTI_NOEXCEPT		noexcept
-	#define IJSTI_DELETED		= delete
-#else
-	#define IJSTI_NULL 			NULL
-	#define IJSTI_MOVE(val) 	(val)
-	#define IJSTI_OVERRIDE
-	#define IJSTI_NOEXCEPT
-	#define IJSTI_DELETED
-#endif
-
-// Expands to the concatenation of its two arguments.
-#define IJSTI_PP_CONCAT(x, y) 		IJSTI_PP_CONCAT_I(x, y)
-#define IJSTI_PP_CONCAT_I(x, y) 	x ## y
-
-// Expand __VA_ARGS__ for msvc preprocessor
-#define IJSTI_EXPAND(...)			__VA_ARGS__
 
 // forward declaration
-class SerializerInterface;
-class MetaClassInfoSetter;
-template<typename T>
-class MetaClassInfoTyped;
+template<typename Ch> class HandlerBase;
 
-typedef rapidjson::Value JsonValue;
+namespace detail{
+
 typedef rapidjson::MemoryPoolAllocator<> JsonAllocator;
-typedef rapidjson::Document JsonDocument;
 
-/**
- * Singleton interface
- * @tparam T type
- */
-template<typename T>
-class Singleton {
+template<typename Encoding>
+class HeadOStream {
 public:
-	inline static T& GetInstance()
-	{
-		static T instance;
-		return instance;
-	}
+	typedef typename Encoding::Ch Ch;
 
-	inline static void InitInstanceInGlobal()
-	{
-		// When accessing gInstance in code, the GetInstance() function will be called in
-		// global scope (before main in many compilers)
-		volatile T* dummy = gInstance;
-		(void)dummy;
-	}
-
-private:
-	static T* gInstance;
-};
-// static member of template class could declare in header
-template<typename T> T* Singleton<T>::gInstance = &Singleton<T>::GetInstance();
-
-template <typename T>
-struct HasType {
-	typedef void Void;
-};
-
-template<typename Ch_>
-class GenericHeadOStream {
-public:
-	explicit GenericHeadOStream(size_t _capacity)
+	explicit HeadOStream(size_t _capacity)
 			: m_capacity (_capacity), m_headOnly(true) { str.reserve(m_capacity + kEllipseSize); }
 
-	typedef Ch_ Ch;
 	//! Write a character.
 	void Put(Ch c)
 	{
@@ -92,7 +69,11 @@ public:
 		}
 		else {
 			if (m_headOnly) {
-				str.append("...");
+				rapidjson::GenericStringBuffer<Encoding> sb;
+				for (size_t i = 0; i < kEllipseSize; ++i) {
+					Encoding::Encode(sb, static_cast<unsigned>('.'));
+				}
+				str.append(sb.GetString());
 				m_headOnly = false;
 			}
 		}
@@ -110,8 +91,6 @@ private:
 	bool m_headOnly;
 };
 
-typedef GenericHeadOStream<char> HeadOStream;
-
 /**
  * Head Writer that only write heading string. Implement rapidjson::Handler concept
  * It will return false when OutputStream.IsDone() return true
@@ -120,9 +99,9 @@ typedef GenericHeadOStream<char> HeadOStream;
  * @tparam BaseWriter		Should implement rapidjson::Handler concept, and BaseWriter(OutputStream&) constructor
  */
 template<typename OutputStream, typename BaseWriter>
-class GenericHeadWriter {
+class HeadWriter {
 public:
-	explicit GenericHeadWriter(OutputStream& stream) : m_stream(stream), m_baseWriter(stream) {}
+	explicit HeadWriter(OutputStream& stream) : m_stream(stream), m_baseWriter(stream) {}
 
 	typedef typename BaseWriter::Ch Ch;
 	bool Null() { return m_baseWriter.Null() && m_stream.HeadOnly(); }
@@ -151,85 +130,107 @@ private:
 	BaseWriter m_baseWriter;
 };
 
-typedef GenericHeadWriter<HeadOStream, rapidjson::Writer<HeadOStream> > HeadWriter;
+template<typename Encoding>
+rapidjson::GenericStringRef<typename Encoding::Ch> EncodeString(const char* pSrc, JsonAllocator& allocator)
+{
+	rapidjson::GenericStringBuffer<Encoding, JsonAllocator> sb(&allocator);
+	const char* ptr = pSrc;
+	while ((*ptr) != '\0') {
+		Encoding::Encode(sb, static_cast<unsigned>(*ptr));
+		++ptr;
+	}
 
+	return rapidjson::GenericStringRef<typename Encoding::Ch>
+	        (sb.GetString(), static_cast<rapidjson::SizeType>(sb.GetSize() / sizeof(typename Encoding::Ch)));
+}
+
+template<typename Encoding>
+inline std::basic_string<typename Encoding::Ch> GetJsonStr(const rapidjson::GenericValue<Encoding>& jVal)
+{
+	return std::basic_string<typename Encoding::Ch>(jVal.GetString(), jVal.GetStringLength());
+}
+
+template<typename Encoding>
 struct ErrorDocSetter {
+	typedef rapidjson::GenericDocument<Encoding> TDocument;
+	typedef rapidjson::GenericValue<Encoding> TValue;
+	typedef typename Encoding::Ch Ch;
 	//! Constructor
 	//! @param _pErrDoc		Error message output. set to nullptr if do not need to enable error message
-	explicit ErrorDocSetter(JsonDocument* _pErrDoc):
-			pAllocator(_pErrDoc == IJSTI_NULL ? IJSTI_NULL : &_pErrDoc->GetAllocator()),
+	explicit ErrorDocSetter(TDocument* _pErrDoc):
+			pAllocator(_pErrDoc == NULL ? NULL : &_pErrDoc->GetAllocator()),
 			pErrMsg(_pErrDoc) {}
 
 	void ParseFailed(rapidjson::ParseErrorCode errCode)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 		pErrMsg->SetObject();
 
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("ParseError", *pAllocator),
+				EncodeString<Encoding>("type", *pAllocator),
+				EncodeString<Encoding>("ParseError", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("errCode", *pAllocator),
-				JsonValue().SetInt(static_cast<int>(errCode)),
+				EncodeString<Encoding>("errCode", *pAllocator),
+				TValue().SetInt(static_cast<int>(errCode)),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("err", *pAllocator),
-				JsonValue().SetString(rapidjson::GetParseError_En(errCode), *pAllocator),
+				EncodeString<Encoding>("err", *pAllocator),
+				EncodeString<Encoding>(rapidjson::GetParseError_En(errCode), *pAllocator),
 				*pAllocator);
 	}
 
 	//! Set error message about error of member in object
-	void ErrorInObject(const std::string& memberName, const std::string& jsonKey)
+	void ErrorInObject(const std::string& memberName, const std::basic_string<Ch>& jsonKey)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 
 		// backup errMsg
-		JsonValue errDetail;
+		TValue errDetail;
 		errDetail = *pErrMsg;	// move
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("ErrInObject", *pAllocator),
+				EncodeString<Encoding>("type", *pAllocator),
+				EncodeString<Encoding>("ErrInObject", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("member", *pAllocator),
-				JsonValue().SetString(memberName.data(), static_cast<rapidjson::SizeType>(memberName.size()), *pAllocator),
+				EncodeString<Encoding>("member", *pAllocator),
+				EncodeString<Encoding>(memberName.c_str(), *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("jsonKey", *pAllocator),
-				JsonValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
+				EncodeString<Encoding>("jsonKey", *pAllocator),
+				TValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
 				*pAllocator);
 		if (!errDetail.IsNull()) {
 			pErrMsg->AddMember(
-					JsonValue().SetString("err", *pAllocator),
+					EncodeString<Encoding>("err", *pAllocator),
 					errDetail,
 					*pAllocator);
 		}
 	}
 
 	//! Set error message about error of member in object
-	void ErrorInMap(const std::string& jsonKey)
+	void ErrorInMap(const std::basic_string<Ch>& jsonKey)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 
 		// backup errMsg
-		JsonValue errDetail;
+		TValue errDetail;
 		errDetail = *pErrMsg;	// move
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("ErrInMap", *pAllocator),
+				EncodeString<Encoding>("type", *pAllocator),
+				EncodeString<Encoding>("ErrInMap", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("member", *pAllocator),
-				JsonValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
+				EncodeString<Encoding>("member", *pAllocator),
+				TValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
 				*pAllocator);
 		if (!errDetail.IsNull()) {
 			pErrMsg->AddMember(
-					JsonValue().SetString("err", *pAllocator),
+					EncodeString<Encoding>("err", *pAllocator),
 					errDetail,
 					*pAllocator);
 		}
@@ -238,24 +239,24 @@ struct ErrorDocSetter {
 	//! Set error message about error of member in array
 	void ErrorInArray(unsigned index)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 
 		// backup errMsg
-		JsonValue errDetail;
+		TValue errDetail;
 		errDetail = *pErrMsg;	// move
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("ErrInArray", *pAllocator),
+				EncodeString<Encoding>("type", *pAllocator),
+				EncodeString<Encoding>("ErrInArray", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("index", *pAllocator),
-				JsonValue().SetUint(index),
+				EncodeString<Encoding>("index", *pAllocator),
+				TValue().SetUint(index),
 				*pAllocator);
 		if (!errDetail.IsNull()) {
 			pErrMsg->AddMember(
-					JsonValue().SetString("err", *pAllocator),
+					EncodeString<Encoding>("err", *pAllocator),
 					errDetail,
 					*pAllocator);
 		}
@@ -263,102 +264,103 @@ struct ErrorDocSetter {
 
 	void MissingMember()
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 		assert(pErrMsg->IsArray());
 
 		// backup errMsg
-		JsonValue errDetail;
+		TValue errDetail;
 		errDetail = *pErrMsg;	// move
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("MissingMember", *pAllocator),
+				EncodeString<Encoding>("type", *pAllocator),
+				EncodeString<Encoding>("MissingMember", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("members", *pAllocator),
+				EncodeString<Encoding>("members", *pAllocator),
 				errDetail,
 				*pAllocator);
 	}
 
-	void UnknownMember(const std::string& jsonKey)
+	void UnknownMember(const std::basic_string<Ch>& jsonKey)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 
 		// backup errMsg
-		JsonValue errDetail;
+		TValue errDetail;
 		errDetail = *pErrMsg;	// move
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("UnknownMember", *pAllocator),
+				EncodeString<Encoding>("type", *pAllocator),
+				EncodeString<Encoding>("UnknownMember", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("jsonKey", *pAllocator),
-				JsonValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
+				EncodeString<Encoding>("jsonKey", *pAllocator),
+				TValue().SetString(jsonKey.data(), static_cast<rapidjson::SizeType>(jsonKey.size()), *pAllocator),
 				*pAllocator);
 	}
 
-	void ElementMapKeyDuplicated(const std::string& keyName)
+	void ElementMapKeyDuplicated(const std::basic_string<Ch>& keyName)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("MapKeyDuplicated", *pAllocator),
+				EncodeString<Encoding>("type", *pAllocator),
+				EncodeString<Encoding>("MapKeyDuplicated", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("key", *pAllocator),
-				JsonValue().SetString(keyName.data(), static_cast<rapidjson::SizeType>(keyName.size()), *pAllocator),
+				EncodeString<Encoding>("key", *pAllocator),
+				TValue().SetString(keyName.data(), static_cast<rapidjson::SizeType>(keyName.size()), *pAllocator),
 				*pAllocator);
 	}
 
-	void ElementTypeMismatch(const char *expectedType, const JsonValue &errVal)
+	void ElementTypeMismatch(const char *expectedType, const TValue &errVal)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 
-		HeadOStream ostream(16);
-		HeadWriter writer(ostream);
+		typedef HeadOStream<Encoding> THeadOStream;
+		THeadOStream ostream(16);
+		HeadWriter<THeadOStream, rapidjson::Writer<THeadOStream, Encoding, Encoding> > writer(ostream);
 		errVal.Accept(writer);
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("TypeMismatch", *pAllocator),
+				EncodeString<Encoding>("type", *pAllocator),
+				EncodeString<Encoding>("TypeMismatch", *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("expectedType", *pAllocator),
-				JsonValue().SetString(expectedType, *pAllocator),
+				EncodeString<Encoding>("expectedType", *pAllocator),
+				EncodeString<Encoding>(expectedType, *pAllocator),
 				*pAllocator);
 		pErrMsg->AddMember(
-				JsonValue().SetString("json", *pAllocator),
-				JsonValue().SetString(ostream.str.data(), static_cast<rapidjson::SizeType>(ostream.str.size()), *pAllocator),
+				EncodeString<Encoding>("json", *pAllocator),
+				TValue().SetString(ostream.str.data(), static_cast<rapidjson::SizeType>(ostream.str.size()), *pAllocator),
 				*pAllocator);
 	}
 
 	void ElementValueIsDefault()
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 
 		pErrMsg->SetObject();
 		pErrMsg->AddMember(
-				JsonValue().SetString("type", *pAllocator),
-				JsonValue().SetString("ValueIsDefault", *pAllocator),
+				EncodeString<Encoding>("type", *pAllocator),
+				EncodeString<Encoding>("ValueIsDefault", *pAllocator),
 				*pAllocator);
 	}
 
-	void ElementAddMemberName(const std::string &memberName)
+	void ElementAddMemberName(const std::basic_string<Ch>& memberName)
 	{
-		if (pAllocator == IJSTI_NULL) { return; }
+		if (pAllocator == NULL) { return; }
 		if (pErrMsg->IsNull()) {
 			pErrMsg->SetArray();
 		}
 		assert(pErrMsg->IsArray());
 
 		pErrMsg->PushBack(
-				JsonValue().SetString(memberName.data(), static_cast<rapidjson::SizeType>(memberName.size()), *pAllocator),
+				TValue().SetString(memberName.data(), static_cast<rapidjson::SizeType>(memberName.size()), *pAllocator),
 				*pAllocator
 		);
 	}
@@ -366,69 +368,268 @@ struct ErrorDocSetter {
 	// Pointer to allocator that used to setting error message
 	// Use nullptr if do not need error message
 	JsonAllocator* const pAllocator;
-	JsonValue* const pErrMsg;
+	TValue* const pErrMsg;
 };
 
-struct Util {
-	/**
-	 * Custom swap() to avoid dependency on C++ <algorithm> header
-	 * @tparam T 	Type of the arguments to swap, should be instantiated with primitive C++ types only.
-	 * @note This has the same semantics as std::swap().
-	 */
-	template <typename T>
-	static inline void Swap(T& a, T& b) RAPIDJSON_NOEXCEPT {
-		T tmp = IJSTI_MOVE(a);
-		a = IJSTI_MOVE(b);
-		b = IJSTI_MOVE(tmp);
-	}
 
-	template<typename Itera, typename Target, typename Comp>
-	static Itera BinarySearch(Itera begin, Itera end, const Target& target, Comp comp)
-	{
-		assert(begin <= end);
+template<typename Encoding>
+class SerializerInterface {
+public:
+	typedef typename Encoding::Ch Ch;
+	virtual ~SerializerInterface() { }
 
-		while (begin < end) {
-			Itera mid = begin + (end - begin) / 2;
-			int c = comp(*mid, target);
-			if (c > 0) {
-				// target < mid
-				end = mid;
-			}
-			else if (c < 0) {
-				// target > mid
-				begin = mid + 1;
-			}
-			else {
-				// target == mid
-				return mid;
-			}
-		}
-		return end;
+	struct SerializeReq {
+		// Serialize option about fields
+		SerFlag::Flag serFlag;
+
+		// Pointer of field to serialize.
+		// The actual type of field should be decide in the derived class
+		const void* pField;
+
+		HandlerBase<Ch>& writer;
+
+		SerializeReq(HandlerBase<Ch>& _writer, const void *_pField, SerFlag::Flag _serFlag)
+				: serFlag(_serFlag)
+				  , pField(_pField)
+				  , writer(_writer)
+		{ }
 	};
 
-	static void ShrinkAllocatorWithOwnDoc(JsonDocument& ownDoc, JsonValue& val, JsonAllocator*& pAllocatorOut)
+	virtual int Serialize(const SerializeReq &req) = 0;
+
+	struct FromJsonReq {
+		// Pointer of deserialize output.
+		// The instance should deserialize in this object
+		// The actual type of field should be decide in the derived class
+		void* pFieldBuffer;
+
+		// The input stream and allocator
+		// The stream maybe cast from const value if canMoveSrc is false
+		rapidjson::GenericValue<Encoding>& stream;
+		JsonAllocator& allocator;
+
+		// true if move context in stream to avoid copy when possible
+		bool canMoveSrc;
+
+		DeserFlag::Flag deserFlag;
+		FDesc::Mode fDesc;
+
+		FromJsonReq(rapidjson::GenericValue<Encoding>& _stream, JsonAllocator& _allocator,
+					DeserFlag::Flag _deserFlag, bool _canMoveSrc,
+					void* _pField, FDesc::Mode _fDesc)
+				: pFieldBuffer(_pField)
+				  , stream(_stream)
+				  , allocator(_allocator)
+				  , canMoveSrc(_canMoveSrc)
+				  , deserFlag(_deserFlag)
+				  , fDesc(_fDesc)
+		{ }
+	};
+
+	struct FromJsonResp {
+		ErrorDocSetter<Encoding>& errDoc;
+
+		explicit FromJsonResp(ErrorDocSetter<Encoding>& _errDoc) :
+				errDoc(_errDoc)
+		{ }
+
+	};
+
+	virtual int FromJson(const FromJsonReq& req, IJST_OUT FromJsonResp& resp)= 0;
+
+	virtual void ShrinkAllocator(void * pField)
+	{ (void)pField; }
+};
+
+//! Propagate structs' define in SerializeInterface<Encoding>
+#define IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding)										\
+	typedef typename SerializerInterface<Encoding>::SerializeReq SerializeReq;			\
+	typedef typename SerializerInterface<Encoding>::FromJsonReq FromJsonReq;			\
+	typedef typename SerializerInterface<Encoding>::FromJsonResp FromJsonResp;
+
+/**
+ * Template interface of serialization class
+ * This template is unimplemented, and will throw a compile error when use it.
+ *
+ * @tparam T 		class
+ * @tparam Encoding	encoding of json struct
+ * @tparam Enable	type for SFINAE
+ */
+template<typename T, typename Encoding, typename Enable = void>
+class FSerializer : public SerializerInterface<Encoding> {
+public:
+	IJSTI_STATIC_ASSERT(!(std::is_same<T, T>::value),	// always failed
+						"This base template should not be instantiated. (Maybe use wrong param when define ijst struct)");
+	typedef void VarType;
+	IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
+
+	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE = 0;
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE = 0;
+	virtual void ShrinkAllocator(void * pField) IJSTI_OVERRIDE { (void)pField; }
+};
+
+#define IJSTI_FSERIALIZER_INS(T, Encoding) 		\
+		::ijst::detail::Singleton< ::ijst::detail::FSerializer< T, Encoding > >::GetInstance()
+
+/**
+ * Get and cast serializerInterface in metaFieldInfo to specify type
+ *
+ * @tparam Encoding 		encoding of output
+ *
+ * @param metaFieldInfo 	metaFieldInfo
+ * @return 					typed SerializerInterface
+ */
+template<typename Encoding>
+inline SerializerInterface<Encoding>* GetSerializerInterface(const MetaFieldInfo<typename Encoding::Ch>& metaFieldInfo)
+{
+	return reinterpret_cast<SerializerInterface<Encoding>*>(metaFieldInfo.serializerInterface);
+}
+
+/**	========================================================================================
+ *				Private
+ */
+/**
+ * MetaClassInfo of T
+ * Push meta class info of T in specialized constructor MetaInfo<T>().
+ *
+ * @tparam T 	class. Concept require T::_ijst_InitMetaInfo<bool>(MetaInfo*), typedef T::_ijst_Ch
+ *
+ * @note		Use Singleton<MetaClassInfoTyped<T> > to get the instance
+ */
+template<typename T>
+class MetaClassInfoTyped {
+public:
+	MetaClassInfo<typename T::_ijst_Ch> metaClass;
+
+private:
+	friend class Singleton<MetaClassInfoTyped<T> >;
+
+	MetaClassInfoTyped()
 	{
-		if (pAllocatorOut == &ownDoc.GetAllocator()) {
-			if (pAllocatorOut->Capacity() == pAllocatorOut->Size()) {
-				// The capacity will not shrink
-				return;
+		T::template _ijst_InitMetaInfo<true>(this);
+	}
+};
+
+template<typename CharType>
+class MetaClassInfoSetter {
+public:
+	typedef CharType Ch;
+	explicit MetaClassInfoSetter(MetaClassInfo<Ch>& _d) : d(_d) { }
+
+	void InitBegin(const std::string& _tag, std::size_t _fieldCount, std::size_t _accessorOffset)
+	{
+		d.structName = _tag;
+		d.accessorOffset = _accessorOffset;
+		d.m_fieldsInfo.reserve(_fieldCount);
+	}
+
+	void PushMetaField(const std::string &fieldName, const std::basic_string<Ch>& jsonName,
+					   std::size_t offset, FDesc::Mode desc, void* pSerializeInterface)
+	{
+		MetaFieldInfo<Ch> metaField;
+		metaField.jsonName = jsonName;
+		metaField.fieldName = fieldName;
+		metaField.offset = offset;
+		metaField.desc = desc;
+		metaField.serializerInterface = pSerializeInterface;
+		d.m_fieldsInfo.push_back(IJSTI_MOVE(metaField));
+	}
+
+	void InitEnd()
+	{
+		// assert MetaClassInfo's map has not inited before
+		assert(!d.m_mapInited);
+		SortMetaFieldsByOffset();
+
+		d.m_offsets.reserve(d.m_fieldsInfo.size());
+		d.m_hashedFieldPtr.reserve(d.m_fieldsInfo.size());
+		d.m_nameHashVal.reserve(d.m_fieldsInfo.size());
+
+		for (size_t i = 0; i < d.m_fieldsInfo.size(); ++i)
+		{
+			MetaFieldInfo<Ch>* ptrMetaField = &(d.m_fieldsInfo[i]);
+			ptrMetaField->index = static_cast<int>(i);
+
+			d.m_offsets.push_back(ptrMetaField->offset);
+			InsertMetaFieldToHash(ptrMetaField);
+			// Assert field offset is sorted and not exist before
+			assert(i == 0 || d.m_offsets[i]  > d.m_offsets[i-1]);
+		}
+
+		assert(d.m_offsets.size() == d.m_fieldsInfo.size());
+		assert(d.m_hashedFieldPtr.size() == d.m_fieldsInfo.size());
+		assert(d.m_nameHashVal.size() == d.m_fieldsInfo.size());
+		d.m_mapInited = true;
+	}
+
+private:
+	void SortMetaFieldsByOffset()
+	{
+		// m_fieldsInfo is already sorted in most case, use insertion sort
+		const size_t n = d.m_fieldsInfo.size();
+		for (size_t i = 1; i < n; i++) {
+			for (size_t j = i; j > 0 && d.m_fieldsInfo[j - 1].offset > d.m_fieldsInfo[j].offset; j--) {
+				detail::Util::Swap(d.m_fieldsInfo[j], d.m_fieldsInfo[j - 1]);
 			}
 		}
-		JsonDocument newDoc;
-		newDoc.CopyFrom(val, newDoc.GetAllocator());
-		ownDoc.Swap(newDoc);
-		val = (JsonValue&) ownDoc;
-		pAllocatorOut = &ownDoc.GetAllocator();
 	}
 
-	static bool IsBitSet(unsigned int val, unsigned int bit)
+	void InsertMetaFieldToHash(const MetaFieldInfo<Ch> *ptrMetaField)
 	{
-		return (val & bit) != 0;
+		const uint32_t hash = MetaClassInfo<Ch>::StringHash(ptrMetaField->jsonName.data(), ptrMetaField->jsonName.length());
+
+		const detail::Util::VectorBinarySearchResult searchRet =
+				detail::Util::VectorBinarySearch(d.m_nameHashVal, hash);
+
+		// Insert new node
+		d.m_hashedFieldPtr.resize(d.m_hashedFieldPtr.size() + 1);
+		d.m_nameHashVal.resize(d.m_nameHashVal.size() + 1);
+		for (size_t i = d.m_nameHashVal.size() - 1; i > searchRet.index; --i) {
+			d.m_nameHashVal[i] = d.m_nameHashVal[i - 1];
+			d.m_hashedFieldPtr[i] = IJSTI_MOVE(d.m_hashedFieldPtr[i - 1]);
+		}
+		d.m_nameHashVal[searchRet.index] = hash;
+		d.m_hashedFieldPtr[searchRet.index] = ptrMetaField;
 	}
 
+	MetaClassInfo<Ch>& d;
+};
+
+/**
+ * Serialization of ijst struct types
+ * @tparam T 			class
+ * @tparam Encoding		encoding of json struct
+ */
+template<class T, typename Encoding>
+class FSerializer<T, Encoding, /*EnableIf*/ typename HasType<typename T::_ijst_AccessorType>::Void>
+		: public SerializerInterface<Encoding>
+{
+public:
+	IJSTI_STATIC_ASSERT((std::is_same<Encoding, typename T::_ijst_Encoding>::value),
+						"Inner ijst struct's encoding must be same as outer class's encoding");
+
+	typedef T VarType;
+	IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);
+
+	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
+	{
+		T *pField = (T *) req.pField;
+		return pField->_.ISerialize(req);
+	}
+
+	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
+	{
+		T *pField = (T *) req.pFieldBuffer;
+		return pField->_.IFromJson(req, resp);
+	}
+
+	virtual void ShrinkAllocator(void *pField) IJSTI_OVERRIDE
+	{
+		((T*)pField)->_.IShrinkAllocator(pField);
+	}
 };
 
 }	// namespace detail
 }	// namespace ijst
 
-#endif //IJST_DETAIL_HPP_INCLUDE_
+#endif //IJST_DETAIL_DETAIL_HPP_INCLUDE_

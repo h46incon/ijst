@@ -7,6 +7,21 @@ using namespace ijst;
 
 namespace dummy_ns {
 
+TEST(BasicAPI, EnumOr)
+{
+	// SerFlag::Flag
+	SerFlag::Flag serFlag = SerFlag::kNoneFlag;
+	serFlag |= SerFlag::kIgnoreMissing;
+	ASSERT_EQ(serFlag, SerFlag::kIgnoreMissing);
+	ASSERT_EQ(SerFlag::kIgnoreUnknown, SerFlag::kNoneFlag | SerFlag::kIgnoreUnknown);
+
+	// DeserFlag::Flag
+	DeserFlag::Flag deserFlag = DeserFlag::kNoneFlag;
+	deserFlag |= DeserFlag::kMoveFromIntermediateDoc;
+	ASSERT_EQ(deserFlag, DeserFlag::kMoveFromIntermediateDoc);
+	ASSERT_EQ(DeserFlag::kIgnoreUnknown, DeserFlag::kNoneFlag | DeserFlag::kIgnoreUnknown);
+}
+
 IJST_DEFINE_VALUE(
 		ValVec, IJST_TVEC(T_int), v, 0
 )
@@ -77,29 +92,133 @@ IJST_DEFINE_STRUCT(
 		, (T_string, str_2, "str_val_2", FDesc::Optional | FDesc::Nullable)
 )
 
-void CheckFieldInfo(const MetaClassInfo& metaInfo,
+#define DEFINE_TEST_STRUCT(encoding, stName, PF) \
+	IJST_DEFINE_GENERIC_STRUCT_WITH_GETTER( \
+		encoding, stName ## Inner \
+		, (T_int, int_v, PF ## "int_val", 0) \
+	) \
+	IJST_DEFINE_GENERIC_STRUCT_WITH_GETTER( \
+		encoding, stName \
+		, (T_int, int_v, PF ## "int_val", 0) \
+		, (IJST_TST(stName ## Inner), st_v, PF ## "st_val", 0) \
+		, (IJST_TSTR, str_v, PF ## "str_val", 0) \
+		, (IJST_TRAW, raw_v, PF ## "raw_val", 0) \
+		, (IJST_TMAP(T_int), map_v, PF ## "map_val", 0) \
+		, (IJST_TOBJ(T_int), obj_v, PF ## "obj_val", 0) \
+	)
+
+DEFINE_TEST_STRUCT(rapidjson::UTF8<>, U8TestSt, )
+DEFINE_TEST_STRUCT(rapidjson::UTF16<>, U16TestSt, L)
+#if __cplusplus >= 201103L
+DEFINE_TEST_STRUCT(rapidjson::UTF32<char32_t>, U32TestSt, U)
+#endif
+
+template<typename Encoding>
+void CheckFieldInfo(const MetaClassInfo<typename Encoding::Ch>& metaInfo,
 					const std::string& fieldName, const std::string& jsonName, size_t offset, FDesc::Mode desc)
 {
-	const MetaFieldInfo *fieldInfo = metaInfo.FindFieldByJsonName(jsonName);
+	std::basic_string<typename Encoding::Ch> encodedJsonName = Transcode<rapidjson::UTF8<>, Encoding>(jsonName.c_str());
+	const MetaFieldInfo<typename Encoding::Ch> *fieldInfo = metaInfo.FindFieldByJsonName(encodedJsonName);
 	ASSERT_FALSE(fieldInfo == NULL);
 	ASSERT_EQ(fieldInfo->fieldName, fieldName);
-	ASSERT_EQ(fieldInfo->jsonName, jsonName);
 	ASSERT_EQ(fieldInfo->offset, offset);
 	ASSERT_EQ(fieldInfo->desc, desc);
+	ASSERT_EQ(fieldInfo->jsonName, encodedJsonName);
 }
+
+template<typename Struct>
+void TestStructAPI(const char *className)
+{
+	typedef typename Struct::_ijst_Encoding Encoding;
+	typedef typename Encoding::Ch Ch;
+	Struct st;
+	ASSERT_FALSE(st._.IsParentVal());
+
+	//--- MetaInfo
+	const MetaClassInfo<Ch>& metaInfo = ijst::template GetMetaInfo<Struct>();
+	ASSERT_EQ(&st._.GetMetaInfo(), &metaInfo);
+	ASSERT_STREQ(metaInfo.GetClassName().c_str(), className);
+	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 6u);
+	ASSERT_EQ((ptrdiff_t)metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
+	CheckFieldInfo<Encoding>(metaInfo, "int_v", "int_val", (char*)&st.int_v - (char*)&st, 0);
+	CheckFieldInfo<Encoding>(metaInfo, "st_v", "st_val", (char*)&st.st_v - (char*)&st, 0);
+	CheckFieldInfo<Encoding>(metaInfo, "str_v", "str_val", (char*)&st.str_v - (char*)&st, 0);
+	CheckFieldInfo<Encoding>(metaInfo, "raw_v", "raw_val", (char*)&st.raw_v - (char*)&st, 0);
+	CheckFieldInfo<Encoding>(metaInfo, "map_v", "map_val", (char*)&st.map_v - (char*)&st, 0);
+	CheckFieldInfo<Encoding>(metaInfo, "obj_v", "obj_val", (char*)&st.obj_v - (char*)&st, 0);
+	// invalid json name search
+	ASSERT_EQ(NULL, metaInfo.FindFieldByJsonName(Transcode<rapidjson::UTF8<>, Encoding >("NotAField")));
+
+	//--- Optional
+	ASSERT_EQ(NULL, st.get_st_v()->get_int_v().Ptr());
+	ASSERT_EQ(NULL, st.get_int_v().Ptr());
+	ASSERT_EQ(NULL, st.get_str_v().Ptr());
+	ASSERT_EQ(NULL, st.get_raw_v().Ptr());
+	ASSERT_EQ(NULL, st.get_map_v()[std::basic_string<Ch>()].Ptr());
+	ASSERT_EQ(NULL, st.get_obj_v()[0].Ptr());
+}
+
 TEST(BasicAPI, MetaInfo)
 {
-	SimpleSt st;
-	ASSERT_FALSE(st._.IsParentVal());
-	const MetaClassInfo& metaInfo = MetaClassInfo::GetMetaInfo<SimpleSt>();
+	TestStructAPI<U8TestSt>("U8TestSt");
+	TestStructAPI<U16TestSt>("U16TestSt");
+#if __cplusplus >= 201103L
+	TestStructAPI<U32TestSt>("U32TestSt");
+#endif
+}
+
+IJST_DEFINE_STRUCT(
+		HashCollision
+		// collision group 1
+		, (T_int, int_1, "costarring", 0)
+		, (T_int, int_2, "liquid", 0)
+		// collision group 2
+		, (T_int, int_3, "zinkes", 0)
+		, (T_int, int_4, "altarages", 0)
+)
+
+TEST(BasicAPI, HashCollision)
+{
+	const MetaClassInfo<char>& metaInfo = ijst::GetMetaInfo<HashCollision>();
+	HashCollision st;
 	ASSERT_EQ(&st._.GetMetaInfo(), &metaInfo);
-	ASSERT_EQ(metaInfo.GetClassName(), "SimpleSt");
+	ASSERT_STREQ(metaInfo.GetClassName().c_str(), "HashCollision");
 	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 4u);
 	ASSERT_EQ((ptrdiff_t)metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
-	CheckFieldInfo(metaInfo, "int_1", "int_val_1", (char*)&st.int_1 - (char*)&st, 0);
-	CheckFieldInfo(metaInfo, "int_2", "int_val_2", (char*)&st.int_2 - (char*)&st, FDesc::Optional);
-	CheckFieldInfo(metaInfo, "str_1", "str_val_1", (char*)&st.str_1 - (char*)&st, FDesc::Nullable);
-	CheckFieldInfo(metaInfo, "str_2", "str_val_2", (char*)&st.str_2 - (char*)&st, FDesc::Optional | FDesc::Nullable);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_1", "costarring", (char*)&st.int_1 - (char*)&st, 0);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_2", "liquid", (char*)&st.int_2 - (char*)&st, 0);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_3", "zinkes", (char*)&st.int_3 - (char*)&st, 0);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_4", "altarages", (char*)&st.int_4 - (char*)&st, 0);
+}
+
+TEST(BasicAPI, Setter)
+{
+	SimpleSt simpleSt;
+	// Field status is tested in BasicAPI.FieldStatus
+
+	//--- lvalue setter
+	// Set with different type
+	char c1 = 'c';
+	IJST_SET(simpleSt, int_1, c1);
+	ASSERT_EQ(simpleSt.int_1, static_cast<int>(c1));
+
+	// Set with same type
+	int i1 = 42;
+	IJST_SET(simpleSt, int_1, i1);
+	ASSERT_EQ(simpleSt.int_1, i1);
+
+	// Set with expression
+	IJST_SET(simpleSt, int_1, (2 + 4) * 3 + 2);
+	ASSERT_EQ(simpleSt.int_1, 20);
+
+#if IJST_HAS_CXX11_RVALUE_REFS
+	//--- rvalue setter
+	std::string str1 = "Source";
+	simpleSt.str_1.clear();
+	IJST_SET(simpleSt, str_1, std::move(str1));
+	ASSERT_STREQ(simpleSt.str_1.c_str(), "Source");
+	ASSERT_TRUE(str1.empty());		// Note: this depend on the implementation of std
+#endif
 }
 
 TEST(BasicAPI, FieldStatus)
@@ -107,22 +226,22 @@ TEST(BasicAPI, FieldStatus)
 	SimpleSt simpleSt;
 
 	// Accessor
-	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), FStatus::kMissing);
-	simpleSt._.SetStrict(simpleSt.int_1, 0x5A5A);
+	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), (EFStatus)FStatus::kMissing);
+	IJST_SET(simpleSt,int_1, 0x5A5A);
 	ASSERT_EQ(simpleSt.int_1, 0x5A5A);
-	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), FStatus::kValid);
+	ASSERT_EQ(simpleSt._.GetStatus(&simpleSt.int_1), (EFStatus)FStatus::kValid);
 
 	// IJST_* macro
-	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), FStatus::kMissing);
-	IJST_SET_STRICT(simpleSt, str_1, T_string(std::string("str1")));
+	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), (EFStatus)FStatus::kMissing);
+	IJST_SET(simpleSt, str_1, T_string(std::string("str1")));
 	ASSERT_STREQ(simpleSt.str_1.c_str(), "str1");
-	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), FStatus::kValid);
+	ASSERT_EQ(IJST_GET_STATUS(simpleSt, str_1), (EFStatus)FStatus::kValid);
 
 	// Mark valid
 	simpleSt.int_2 = 0xA5A5;
-	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), FStatus::kMissing);
+	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), (EFStatus)FStatus::kMissing);
 	IJST_MARK_VALID(simpleSt, int_2);
-	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), FStatus::kValid);
+	ASSERT_EQ(IJST_GET_STATUS(simpleSt, int_2), (EFStatus)FStatus::kValid);
 
 	// IsField
 	ASSERT_TRUE(simpleSt._.HasField(&simpleSt.int_1));
@@ -134,10 +253,10 @@ TEST(BasicAPI, FieldValue)
 	SimpleSt simpleSt;
 
 	// Init
-	simpleSt._.SetStrict(simpleSt.int_1, 0x5A5A);
+	IJST_SET(simpleSt, int_1, 0x5A5A);
 	IJST_SET(simpleSt, int_2, 0xA5A5);
-	simpleSt._.Set(simpleSt.str_1, "str1");
-	IJST_SET_STRICT(simpleSt, str_2, T_string(std::string("str2")));
+	IJST_SET(simpleSt, str_1, "str1");
+	IJST_SET(simpleSt, str_2, T_string(std::string("str2")));
 
 	// Check
 	ASSERT_EQ(simpleSt.int_1, 0x5A5A);
@@ -157,7 +276,7 @@ TEST(BasicAPI, Constructor4LValue)
 		// copy
 		SimpleSt st1(temp1);
 		// copy value
-		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), (EFStatus)FStatus::kValid);
 		ASSERT_EQ(st1.int_1, 0x5A5A);
 		// copy inner stream
 		ASSERT_EQ(st1._.GetUnknown()["k"].GetInt(), 0xA5A5);
@@ -167,7 +286,7 @@ TEST(BasicAPI, Constructor4LValue)
 		ASSERT_NE(&st1._.GetUnknown(), &temp1._.GetUnknown());
 		// new metaField
 		IJST_SET(temp1, int_2, 0xA5A5);
-		ASSERT_EQ(IJST_GET_STATUS(st1, int_2), FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st1, int_2), (EFStatus)FStatus::kMissing);
 		// Avoid make temp1 become rvalue before
 		temp1._.MarkValid(&temp1.int_1);
 	}
@@ -183,9 +302,9 @@ TEST(BasicAPI, Constructor4LValue)
 		IJST_SET(st2, int_2, 0x5A5A);
 		st2 = temp2;
 		// copy value
-		ASSERT_EQ(IJST_GET_STATUS(st2, int_1), FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st2, int_1), (EFStatus)FStatus::kValid);
 		ASSERT_EQ(st2.int_1, 0x5A5A);
-		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), (EFStatus)FStatus::kMissing);
 		// copy inner stream
 		ASSERT_EQ(st2._.GetUnknown()["k"].GetInt(), 0xA5A5);
 		// new inner stream and allocator
@@ -194,13 +313,14 @@ TEST(BasicAPI, Constructor4LValue)
 		ASSERT_NE(&st2._.GetUnknown(), &temp2._.GetUnknown());
 		// new metaField
 		IJST_SET(temp2, int_2, 0xA5A5);
-		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), FStatus::kMissing);
+		ASSERT_EQ(IJST_GET_STATUS(st2, int_2), (EFStatus)FStatus::kMissing);
 		// Avoid make temp2 become rvalue
 		temp2._.MarkValid(&temp2.int_1);
 	}
 }
 
-#if __cplusplus >= 201103L
+// visual studio before 2015 will not generate move constructor and move assignment implicitly
+#if IJST_HAS_CXX11_RVALUE_REFS && (!defined(_MSC_VER) || _MSC_VER >= 1900)
 TEST(BasicAPI, Constructor4RValue)
 {
 	// copy
@@ -213,13 +333,13 @@ TEST(BasicAPI, Constructor4RValue)
 
 		SimpleSt st1(std::move(temp1));
 		// value
-		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st1, int_1), (EFStatus)FStatus::kValid);
 		ASSERT_EQ(st1.int_1, 0x5A5A);
 		// inner stream
 		ASSERT_EQ(&st1._.GetUnknown(), streamTemp1);
 		ASSERT_EQ(&st1._.GetAllocator(), allocatorTemp1);
 		ASSERT_EQ(&st1._.GetOwnAllocator(), ownAllocatorTemp1);
-		//	ASSERT_ANY_THROW(temp3._.GetUnknown());
+		//	ASSERT_ANY_THROW(temp1._.GetUnknown());
 	}
 
 	// assign
@@ -233,19 +353,18 @@ TEST(BasicAPI, Constructor4RValue)
 		SimpleSt st2;
 		st2 = std::move(temp2);
 		// value
-		ASSERT_EQ(IJST_GET_STATUS(st2, int_1), FStatus::kValid);
+		ASSERT_EQ(IJST_GET_STATUS(st2, int_1), (EFStatus)FStatus::kValid);
 		ASSERT_EQ(st2.int_1, 0x5A5A);
 		// inner stream
 		ASSERT_EQ(&st2._.GetUnknown(), streamTemp2);
 		ASSERT_EQ(&st2._.GetAllocator(), allocatorTemp2);
 		ASSERT_EQ(&st2._.GetOwnAllocator(), ownAllocatorTemp2);
-		//	ASSERT_ANY_THROW(temp3._.GetUnknown());
+		//	ASSERT_ANY_THROW(temp2._.GetUnknown());
 	}
 }
+#endif
 
 // TODO: Constructor for out buffer
-
-#endif
 
 TEST(BasicAPI, GetOptional)
 {
@@ -301,14 +420,14 @@ TEST(BasicAPI, ChainedOptional)
 	// fields are missing:
 
 	// get_* null
-	ASSERT_EQ(IJST_NULL, st.get_v().Ptr());
+	ASSERT_EQ(NULL, st.get_v().Ptr());
 	// get_* null chained
-	ASSERT_EQ(IJST_NULL, st.get_v()->get_vec().Ptr());
+	ASSERT_EQ(NULL, st.get_v()->get_vec().Ptr());
 	// Long null chained
-	ASSERT_EQ(IJST_NULL, st.get_v()->get_sim().Ptr());
-	ASSERT_EQ(IJST_NULL, st.get_v()->get_vec()[0]->get_int_1().Ptr());
-	ASSERT_EQ(IJST_NULL, st.get_v()->get_deq()[0]->get_int_1().Ptr());
-	ASSERT_EQ(IJST_NULL, st.get_v()->get_map()[""]->get_int_1().Ptr());
+	ASSERT_EQ(NULL, st.get_v()->get_sim().Ptr());
+	ASSERT_EQ(NULL, st.get_v()->get_vec()[0]->get_int_1().Ptr());
+	ASSERT_EQ(NULL, st.get_v()->get_deq()[0]->get_int_1().Ptr());
+	ASSERT_EQ(NULL, st.get_v()->get_map()[""]->get_int_1().Ptr());
 
 	// get_ valid
 	IJST_MARK_VALID(st, v);
@@ -317,37 +436,37 @@ TEST(BasicAPI, ChainedOptional)
 	ASSERT_EQ(st.get_v()->get_sim().Ptr(), &(st.v.sim));
 
 	// vector null
-	ASSERT_EQ(IJST_NULL, st.v.get_vec()[0].Ptr());
+	ASSERT_EQ(NULL, st.v.get_vec()[0].Ptr());
 	// vector elem out of range
 	IJST_MARK_VALID(st.v, vec);
 	ASSERT_EQ(st.v.get_vec().Ptr(), &(st.v.vec));
-	ASSERT_EQ(IJST_NULL, st.v.get_vec()[0].Ptr());
+	ASSERT_EQ(NULL, st.v.get_vec()[0].Ptr());
 	// vector valid
 	st.v.vec.resize(1);
 	ASSERT_EQ(st.v.get_vec()[0].Ptr(), &(st.v.vec[0]));
-	ASSERT_EQ(IJST_NULL, st.v.get_vec()[0]->get_int_1().Ptr());
+	ASSERT_EQ(NULL, st.v.get_vec()[0]->get_int_1().Ptr());
 
 	// deq null
-	ASSERT_EQ(IJST_NULL, st.v.get_deq()[0].Ptr());
+	ASSERT_EQ(NULL, st.v.get_deq()[0].Ptr());
 	// deq elem out of range
 	IJST_MARK_VALID(st.v, deq);
 	ASSERT_EQ(st.v.get_deq().Ptr(), &(st.v.deq));
-	ASSERT_EQ(IJST_NULL, st.v.get_deq()[0].Ptr());
+	ASSERT_EQ(NULL, st.v.get_deq()[0].Ptr());
 	// deq valid
 	st.v.deq.resize(1);
 	ASSERT_EQ(st.v.get_deq()[0].Ptr(), &(st.v.deq[0]));
-	ASSERT_EQ(IJST_NULL, st.v.get_deq()[0]->get_int_1().Ptr());
+	ASSERT_EQ(NULL, st.v.get_deq()[0]->get_int_1().Ptr());
 
 	// map null
-	ASSERT_EQ(IJST_NULL, st.v.get_map()[""].Ptr());
+	ASSERT_EQ(NULL, st.v.get_map()[""].Ptr());
 	// map key not exist
 	IJST_MARK_VALID(st.v, map);
 	ASSERT_EQ(st.v.get_map().Ptr(), &(st.v.map));
-	ASSERT_EQ(IJST_NULL, st.v.get_map()[""].Ptr());
+	ASSERT_EQ(NULL, st.v.get_map()[""].Ptr());
 	// map valid
 	st.v.map[""];
 	ASSERT_EQ(st.v.get_map()[""].Ptr(), &(st.v.map[""]));
-	ASSERT_EQ(IJST_NULL, st.v.get_map()[""]->get_int_1().Ptr());
+	ASSERT_EQ(NULL, st.v.get_map()[""]->get_int_1().Ptr());
 
 	// Long valid chained
 	IJST_MARK_VALID(st.v.vec[0], int_1);

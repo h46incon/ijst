@@ -61,21 +61,24 @@ SampleStruct sampleStruct;
 
     - **容器类型**
 
-            在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TVEC(T), IJST_TDEQUE(T), IJST_TLIST(T)，IJST_TMAP(T)，IJST_TOBJ(T)`。
+        在 `ijst/ijst.h` 中定义。提供的宏为 `IJST_TVEC(T), IJST_TDEQUE(T), IJST_TLIST(T)，IJST_TMAP(T)，IJST_TOBJ(T)`。
 
         ijst 分别用以下宏表达 JSON 的 list：
 
-        - `IJST_TVEC(T)`：将 list 序列化为 `std::vector<T>`。
-        - `IJST_TDEQUE(T)`：将 list 序列化为 `std::deque<T>`。
-        - `IJST_TLIST(T)`：将 list 序列化为 `std::list<T>`。
+        - `IJST_TVEC(T)`： 将 list 序列化为 `std::vector<T>`。
+        - `IJST_TDEQUE(T)`： 将 list 序列化为 `std::deque<T>`。
+        - `IJST_TLIST(T)`： 将 list 序列化为 `std::list<T>`。
 
         用以下宏表达非固定键的 object：
 
-        - `IJST_TMAP(T)`：将 object 序列化为 `std::map<std::string, T>`。
-        - `IJST_TOBJ`：将 object 序列化为 `std::vector<ijst::T_Member<T> >`，即以数组的形式储存键值对。
+        - `IJST_TMAP(T)`： 将 object 序列化为 `std::map<std::string, T>`。
+        - `IJST_TOBJ(T)`： 将 object 序列化为 `std::vector<ijst::T_Member<T> >`，即以数组的形式储存键值对。
 
         容器的元素类型可以为原子类型和容器（即支持**嵌套**定义）。
         如 `IJST_TVEC(T_int)` 可表达 JSON 值 *[1, 2, 3]*， `IJST_TMAP(IJST_TVEC(T_ubool))` 可表达 JSON 值 *{"key1": [true, true], "key2": [true, false]}*。
+
+        另外，定义容器时，可以指定 allocator 和 comparator。
+        如 `IJST_TVEC(T_int, MyAllocator<T_int>)`， `IJST_TMAP(T_int, MyLess<string>, MyAllocator<pair<const string, T_int> >)` 等。
 
     - **ijst 结构体类型**
 
@@ -355,7 +358,7 @@ doc.Populate(generator);
 const std::string json = "[0, 1, 2]";
 
 IJST_DEFINE_VALUE(
-		VecVal, IJST_TVEC(T_int), v, 0
+	VecVal, IJST_TVEC(T_int), v, 0
 )
 
 VecVal vec;
@@ -374,7 +377,7 @@ const std::string json = R"(
 })";
 
 IJST_DEFINE_VALUE(
-		MapVal, IJST_TMAP(T_int), v2, 0
+	MapVal, IJST_TMAP(T_int), v2, 0
 )
 
 MapVal vec;
@@ -382,6 +385,49 @@ st._.Deserialize(json);
 assert(st.v2["v2"] == 4);
 ```
 
+# UTF 编码
+
+除默认情况下的 UTF-8 编码外，ijst 也支持 UTF-16，UTF-32 编码。这些编码的支持是建立在 RadpidJSON 的基础上的，所以在使用相关 API 时，需先了解 RapidJSON 的编码用法：[RapidJSON: Encoding][link]。
+
+[link]: http://rapidjson.org/md_doc_encoding.html "RapidJson: Encoding"
+
+## 序列化/反序列化时指定编吗
+
+在序列化/反序列化时，可以通过以下方法指定输入/输出的编码：
+
+```cpp
+SampleStruct st;
+
+// 反序列化时指定输入为 UTF-16 编码
+const wchar_t* json = L"...";  // 假设平台的宽字符串为 UTF-16 鳊码
+st._.Deserialize<rapidjson::kParseDefaultFlags, rapidjson::UTF16<> >(json);
+
+// 序列化时指定编码
+std::basic_string<wchar_t> out;
+st._.Serialize<rapidjson::UTF16<> >(out);
+```
+
+## 定义结构体时指定编码
+
+在上面例子中，会把 UTF-16 的输入，转换成 UTF-8 的 ijst 结构体，再在输出时转换为 UTF-16 的编码。
+
+为避免这种转换，可以定义非 UTF-8 编码的 ijst 结构体（配合 C++ 11 使用更佳）：
+
+```cpp
+// 使用 IJST_DEFINE_GENERIC_STRUCT 宏，其他定义 ijst 结构体的宏也有相应的自定义编码的版本：
+IJST_DEFINE_GENERIC_STRUCT (
+	rapidjson::UTF16<char32_t>, U32SampleStruct       // 第一个参数指定编码
+	, (ijst::T_int, iVal, u"int", 0)                  // 定义 JSON 键名时,使用 C++ 11 提供的 UTF-16 常量字符串（`u` 前缀）
+	, (ijst::T_uint, uiVal, u"uint", 0)
+	, (IJST_TSTR, strVal, u"str", 0)                  // 定义字符串时,使用 IJST_TSTR 宏。
+	, (IJST_TRAW, rawVal, u"raw", 0)                  // 定义字符串时,使用 ISJT_TRAW 宏。
+)
+```
+
+这样 ijst 就会在内部使用 UTF-16 编码进行处理。
+
+注意到，这里引入了 `IJST_TSTR`，`IJST_TRAW` 两个宏，这是因为这两种类型需要依赖实际的编码。
+而 `ijst::T_string`，`ijst::T_raw` 类型是 ijst 在未考虑多编码支持时设计出来的。为了兼容，保留了这两个类型。
 
 # 其他
 
@@ -403,7 +449,7 @@ assert(st.v2["v2"] == 4);
 
 
 // explicit.cpp
-#define IJST_EXPLICIT_TEMPLATE  // 在该文件中显示实例化模板
+#define IJST_EXPLICIT_TEMPLATE  // 在该文件中显式实例化模板
 #include "header.h"
 ```
 
@@ -411,7 +457,7 @@ assert(st.v2["v2"] == 4);
 
 ijst 在实现时需要记录相关的元信息，也提供了接口获取这些信息：
 
-```
+```cpp
 // 直接获取某个结构的元信息
 const ijst::MetaClassInfo& metaInfo = ijst::MetaClassInfo::GetMetaInfo<SampleStruct>();
 // 或通过 Accessor 获取

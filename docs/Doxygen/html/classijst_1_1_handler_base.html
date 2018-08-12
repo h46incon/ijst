@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.14"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>ijst: ijst::GenericHandlerBase&lt; Ch_ &gt; Class Template Reference</title>
+<title>ijst: ijst::HandlerBase&lt; CharType &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -22,7 +22,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">ijst
+   &#160;<span id="projectnumber">0.9.0</span>
    </div>
+   <div id="projectbrief">A reflection-based and header-only JSON (de)serialization library.</div>
   </td>
  </tr>
  </tbody>
@@ -61,99 +63,90 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>ijst</b></li><li class="navelem"><a class="el" href="classijst_1_1_generic_handler_base.html">GenericHandlerBase</a></li>  </ul>
+<li class="navelem"><b>ijst</b></li><li class="navelem"><a class="el" href="classijst_1_1_handler_base.html">HandlerBase</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="classijst_1_1_generic_handler_base-members.html">List of all members</a>  </div>
+<a href="classijst_1_1_handler_base-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">ijst::GenericHandlerBase&lt; Ch_ &gt; Class Template Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
+<div class="title">ijst::HandlerBase&lt; CharType &gt; Class Template Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
 </div><!--header-->
 <div class="contents">
 
 <p>A virtual based class implement rapidjson::Handler concept.  
- <a href="classijst_1_1_generic_handler_base.html#details">More...</a></p>
+ <a href="classijst_1_1_handler_base.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="ijst_8h_source.html">ijst.h</a>&gt;</code></p>
-<div class="dynheader">
-Inheritance diagram for ijst::GenericHandlerBase&lt; Ch_ &gt;:</div>
-<div class="dyncontent">
- <div class="center">
-  <img src="classijst_1_1_generic_handler_base.png" usemap="#ijst::GenericHandlerBase_3C_20Ch_5F_20_3E_map" alt=""/>
-  <map id="ijst::GenericHandlerBase_3C_20Ch_5F_20_3E_map" name="ijst::GenericHandlerBase_3C_20Ch_5F_20_3E_map">
-<area href="classijst_1_1_s_a_x_generator_wrapper.html" title="Provide bool f(Handler) functor used by rapidjson::Document.Populate() " alt="ijst::SAXGeneratorWrapper&lt; Handler &gt;" shape="rect" coords="0,56,234,80"/>
-</map>
- </div></div>
+<p><code>#include &lt;<a class="el" href="accessor_8h_source.html">accessor.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a754fbbb396579ffc4a919cbab99f0971"><td class="memItemLeft" align="right" valign="top"><a id="a754fbbb396579ffc4a919cbab99f0971"></a>
-typedef Ch_&#160;</td><td class="memItemRight" valign="bottom"><b>Ch</b></td></tr>
-<tr class="separator:a754fbbb396579ffc4a919cbab99f0971"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae936807139642acdf0fba22b67a7d92b"><td class="memItemLeft" align="right" valign="top"><a id="ae936807139642acdf0fba22b67a7d92b"></a>
+typedef CharType&#160;</td><td class="memItemRight" valign="bottom"><b>Ch</b></td></tr>
+<tr class="separator:ae936807139642acdf0fba22b67a7d92b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a6e2afc78abf14a70c16afdd6e7270cc7"><td class="memItemLeft" align="right" valign="top"><a id="a6e2afc78abf14a70c16afdd6e7270cc7"></a>
+<tr class="memitem:a4b341d6c7088863354e578372a1116e9"><td class="memItemLeft" align="right" valign="top"><a id="a4b341d6c7088863354e578372a1116e9"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>Null</b> ()=0</td></tr>
-<tr class="separator:a6e2afc78abf14a70c16afdd6e7270cc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa91d2e9fb9e9cd115ec011b03b3455f1"><td class="memItemLeft" align="right" valign="top"><a id="aa91d2e9fb9e9cd115ec011b03b3455f1"></a>
+<tr class="separator:a4b341d6c7088863354e578372a1116e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aadd43037f51013e61c359ade5c741d9c"><td class="memItemLeft" align="right" valign="top"><a id="aadd43037f51013e61c359ade5c741d9c"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>Bool</b> (bool b)=0</td></tr>
-<tr class="separator:aa91d2e9fb9e9cd115ec011b03b3455f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adafa7a0c6b1a918468dc13d89a20dfd8"><td class="memItemLeft" align="right" valign="top"><a id="adafa7a0c6b1a918468dc13d89a20dfd8"></a>
+<tr class="separator:aadd43037f51013e61c359ade5c741d9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad78dd7d2f235e42b225294038e943342"><td class="memItemLeft" align="right" valign="top"><a id="ad78dd7d2f235e42b225294038e943342"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>Int</b> (int i)=0</td></tr>
-<tr class="separator:adafa7a0c6b1a918468dc13d89a20dfd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71b1cf5f4fb34377d05f29510610c214"><td class="memItemLeft" align="right" valign="top"><a id="a71b1cf5f4fb34377d05f29510610c214"></a>
+<tr class="separator:ad78dd7d2f235e42b225294038e943342"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a221bd0af51376a01d252887b0aacaf81"><td class="memItemLeft" align="right" valign="top"><a id="a221bd0af51376a01d252887b0aacaf81"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>Uint</b> (unsigned i)=0</td></tr>
-<tr class="separator:a71b1cf5f4fb34377d05f29510610c214"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3fc10141ec10bfce629a001da76d48a4"><td class="memItemLeft" align="right" valign="top"><a id="a3fc10141ec10bfce629a001da76d48a4"></a>
+<tr class="separator:a221bd0af51376a01d252887b0aacaf81"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ba0405c7cd1e88eda2837503f514a19"><td class="memItemLeft" align="right" valign="top"><a id="a9ba0405c7cd1e88eda2837503f514a19"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>Int64</b> (int64_t i)=0</td></tr>
-<tr class="separator:a3fc10141ec10bfce629a001da76d48a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d1c42b8427986fb7c695f072dba2c59"><td class="memItemLeft" align="right" valign="top"><a id="a5d1c42b8427986fb7c695f072dba2c59"></a>
+<tr class="separator:a9ba0405c7cd1e88eda2837503f514a19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af8d176c80a004afdbbbb0822a2d6b7df"><td class="memItemLeft" align="right" valign="top"><a id="af8d176c80a004afdbbbb0822a2d6b7df"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>Uint64</b> (uint64_t i)=0</td></tr>
-<tr class="separator:a5d1c42b8427986fb7c695f072dba2c59"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c227cc95c51e1167c36b49c1826470d"><td class="memItemLeft" align="right" valign="top"><a id="a7c227cc95c51e1167c36b49c1826470d"></a>
+<tr class="separator:af8d176c80a004afdbbbb0822a2d6b7df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aabb44c36e3a6db116a027c616d11b8db"><td class="memItemLeft" align="right" valign="top"><a id="aabb44c36e3a6db116a027c616d11b8db"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>Double</b> (double d)=0</td></tr>
-<tr class="separator:a7c227cc95c51e1167c36b49c1826470d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a243d2151d07205cca46068b6fd215bc6"><td class="memItemLeft" align="right" valign="top"><a id="a243d2151d07205cca46068b6fd215bc6"></a>
+<tr class="separator:aabb44c36e3a6db116a027c616d11b8db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad01ffa91b4a872d0e45fea398457cf42"><td class="memItemLeft" align="right" valign="top"><a id="ad01ffa91b4a872d0e45fea398457cf42"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>RawNumber</b> (const Ch *str, rapidjson::SizeType length, bool copy=false)=0</td></tr>
-<tr class="separator:a243d2151d07205cca46068b6fd215bc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a27be7ad05be42c9ed6aa0694ee3db7a1"><td class="memItemLeft" align="right" valign="top"><a id="a27be7ad05be42c9ed6aa0694ee3db7a1"></a>
+<tr class="separator:ad01ffa91b4a872d0e45fea398457cf42"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d92899821645edac8fb4b36a0ecb826"><td class="memItemLeft" align="right" valign="top"><a id="a8d92899821645edac8fb4b36a0ecb826"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>String</b> (const Ch *str, rapidjson::SizeType length, bool copy=false)=0</td></tr>
-<tr class="separator:a27be7ad05be42c9ed6aa0694ee3db7a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ace434bf6243a3c1a9d7adba59cb77c95"><td class="memItemLeft" align="right" valign="top"><a id="ace434bf6243a3c1a9d7adba59cb77c95"></a>
+<tr class="separator:a8d92899821645edac8fb4b36a0ecb826"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5058fd7c019884bcc417a5b06646b5b9"><td class="memItemLeft" align="right" valign="top"><a id="a5058fd7c019884bcc417a5b06646b5b9"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>StartObject</b> ()=0</td></tr>
-<tr class="separator:ace434bf6243a3c1a9d7adba59cb77c95"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1113714acd398a13ae22d608ad82386a"><td class="memItemLeft" align="right" valign="top"><a id="a1113714acd398a13ae22d608ad82386a"></a>
+<tr class="separator:a5058fd7c019884bcc417a5b06646b5b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ebd4be64c10c978186d25594cdc7ee8"><td class="memItemLeft" align="right" valign="top"><a id="a2ebd4be64c10c978186d25594cdc7ee8"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>Key</b> (const Ch *str, rapidjson::SizeType length, bool copy=false)=0</td></tr>
-<tr class="separator:a1113714acd398a13ae22d608ad82386a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3a4d706971bf7a8d613c51ff82a3100"><td class="memItemLeft" align="right" valign="top"><a id="af3a4d706971bf7a8d613c51ff82a3100"></a>
+<tr class="separator:a2ebd4be64c10c978186d25594cdc7ee8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad40c010724d0b337b26bec038def3c1a"><td class="memItemLeft" align="right" valign="top"><a id="ad40c010724d0b337b26bec038def3c1a"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>EndObject</b> (rapidjson::SizeType memberCount=0)=0</td></tr>
-<tr class="separator:af3a4d706971bf7a8d613c51ff82a3100"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8cadee78d8518c65523563af1a4c5f12"><td class="memItemLeft" align="right" valign="top"><a id="a8cadee78d8518c65523563af1a4c5f12"></a>
+<tr class="separator:ad40c010724d0b337b26bec038def3c1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab4dc23b2352cd9ed264f260020305851"><td class="memItemLeft" align="right" valign="top"><a id="ab4dc23b2352cd9ed264f260020305851"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>StartArray</b> ()=0</td></tr>
-<tr class="separator:a8cadee78d8518c65523563af1a4c5f12"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a88104790eb6bb4c5e5ce1bc7b86d9c80"><td class="memItemLeft" align="right" valign="top"><a id="a88104790eb6bb4c5e5ce1bc7b86d9c80"></a>
+<tr class="separator:ab4dc23b2352cd9ed264f260020305851"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a238ba2d986343aed1b2dc402483690f1"><td class="memItemLeft" align="right" valign="top"><a id="a238ba2d986343aed1b2dc402483690f1"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>EndArray</b> (rapidjson::SizeType elementCount=0)=0</td></tr>
-<tr class="separator:a88104790eb6bb4c5e5ce1bc7b86d9c80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a238ba2d986343aed1b2dc402483690f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename Ch_&gt;<br />
-class ijst::GenericHandlerBase&lt; Ch_ &gt;</h3>
+<div class="textblock"><h3>template&lt;typename CharType = char&gt;<br />
+class ijst::HandlerBase&lt; CharType &gt;</h3>
 
 <p>A virtual based class implement rapidjson::Handler concept. </p>
 <p>Using raw rapidjson::Handler concept have to make function as a template, which is not convince is some situations.</p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
-    <tr><td class="paramname">Ch_</td><td>character type of string</td></tr>
+    <tr><td class="paramname">CharType</td><td>character type of string</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="classijst_1_1_handler_wrapper.html" title="A wrapper that convert raw rapidjson::Handler instance to derived class of GenericHandlerBase. ">HandlerWrapper</a> </dd></dl>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
-<li>D:/Code/IJST/include/ijst/<a class="el" href="ijst_8h_source.html">ijst.h</a></li>
+<li>D:/Code/IJST/include/ijst/<a class="el" href="accessor_8h_source.html">accessor.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

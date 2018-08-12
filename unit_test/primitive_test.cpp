@@ -10,6 +10,7 @@
 using std::vector;
 using std::map;
 using std::string;
+using std::pair;
 using namespace ijst;
 
 
@@ -62,7 +63,7 @@ string GetJsonVal<string>(rapidjson::Value& jVal)
 	IJST_DEFINE_STRUCT(										\
 		StName												\
 		, (PrimType, vd, "f_vd", 0)							\
-		, (PrimType, v, "f_v", FDesc::NotDefault)		\
+		, (PrimType, v, "f_v", FDesc::NotDefault)			\
 		, (IJST_TMAP(PrimType), map_v, "f_map", 0)			\
 		, (IJST_TVEC(PrimType), vec_v, "f_vec", 0)			\
 		, (IJST_TDEQUE(PrimType), deq_v, "f_deq", 0)		\
@@ -345,8 +346,8 @@ TEST(Primitive, Int64)
 
 	TestSt<StInt64, int64_t>(
 			json, "0", 0
-			, -1, 2, 4, i64Min, 9223372036854775807, -1, 1, -2, 2, 6, 8
-			, i64Min, i64Min, i64Max, 0, i64Min, 9223372036854775807, 10, -10, 20, -20, 30, -30
+			, -1, 2, 4, i64Min, i64Max, -1, 1, -2, 2, 6, 8
+			, i64Min, i64Min, i64Max, 0, i64Min, i64Max, 10, -10, 20, -20, 30, -30
 	);
 }
 
@@ -394,11 +395,12 @@ TEST(Primitive, UInt64)
 	const string json = "{\"f_vd\": 0, \"f_v\": 1"
 			", \"f_map\": {\"v1\": 2, \"v2\": 4}, \"f_obj\": {\"o0\": 6, \"o1\": 8}"
 			", \"f_vec\": [18446744073709551615, 1], \"f_deq\": [0, 1], \"f_list\": [2, 3]}";
+	const uint64_t u64Max = std::numeric_limits<uint64_t>::max();
 
 	TestSt<StUInt64, uint64_t> (
 			json, "0", 0
-			, 1, 2, 4, 18446744073709551615ul, 1, 0, 1, 2, 3, 6, 8
-			, 18446744073709551615ul, 18446744073709551615ul, 0, 0, 18446744073709551615ul, 200, 4, 5, 6, 7, 9, 10
+			, 1, 2, 4, u64Max, 1, 0, 1, 2, 3, 6, 8
+			, u64Max, u64Max, 0, 0, u64Max, 200, 4, 5, 6, 7, 9, 10
 	);
 }
 
@@ -604,7 +606,7 @@ TEST(Primitive, Raw_BasicAPI)
 		ASSERT_NE(&src.GetAllocator(), &dst.GetAllocator());
 	}
 
-#if __cplusplus >= 201103L
+#if IJST_HAS_CXX11_RVALUE_REFS
 	{
 		// Rvalue Copy constructor
 		T_raw src;
@@ -614,7 +616,7 @@ TEST(Primitive, Raw_BasicAPI)
 		T_raw dst(std::move(src));
 		ASSERT_STREQ(dst.V().GetString(), "src_v");
 		ASSERT_EQ(&dst.GetAllocator(), pSrcAlloc);
-		ASSERT_EQ(&src.GetAllocator(), nullptr);
+		ASSERT_EQ(NULL, &src.GetAllocator());
 	}
 
 	{
@@ -627,8 +629,143 @@ TEST(Primitive, Raw_BasicAPI)
 		dst = std::move(src);
 		ASSERT_STREQ(dst.V().GetString(), "src_v");
 		ASSERT_EQ(&dst.GetAllocator(), pSrcAlloc);
-		ASSERT_EQ(&src.GetAllocator(), nullptr);
-
+		ASSERT_EQ(NULL, &src.GetAllocator());
 	}
 #endif
+}
+
+template<typename T>
+class Allocator : public std::allocator<T> {
+public:
+	template<class Other>
+	struct rebind {
+		typedef Allocator<Other> other;
+	};
+
+	Allocator() {}
+	Allocator(Allocator<T> const&) {}
+	Allocator<T>& operator=(Allocator<T> const&) { return (*this); }
+	template<class Other> Allocator(Allocator<Other> const&) {}
+	template<class Other> Allocator<T>& operator=(Allocator<Other> const&) { return (*this); }
+};
+
+template<typename T>
+class Less : public std::less<T> {
+};
+
+template<typename T>
+class CharTraits: public std::char_traits<T> {
+};
+
+IJST_DEFINE_STRUCT_WITH_GETTER(
+	CustomContainer
+	, (IJST_TVEC(T_int, ::Allocator<T_int>), f_vec, "vec", 0)
+	, (IJST_TDEQUE(T_int, ::Allocator<T_int>), f_deq, "deq", 0)
+	, (IJST_TLIST(T_int, ::Allocator<T_int>), f_list, "list", 0)
+	, (IJST_TMAP(T_int, ::Less<string>), f_map, "map", 0)
+	, (IJST_TMAP(T_int, ::Less<string>, Allocator<pair<const string, T_int> >), f_map2, "map2", 0)
+	, (IJST_TOBJ(T_int, ::Allocator<T_Member<T_int> >), f_obj, "obj", 0)
+	, (IJST_TSTR_X(CharTraits<char>), f_str, "str", 0)
+	, (IJST_TSTR_X(CharTraits<char>, Allocator<char>), f_str2, "str2", 0)
+)
+
+TEST(Primitive, CustomContainer)
+{
+	CustomContainer st;
+	const string json = "{\"vec\": [1, 2], \"deq\": [3, 4], \"list\": [5, 6]"
+						", \"map\": {\"v1\": 1, \"v2\": 2 }, \"map2\": {\"v3\": 3, \"v4\": 4}"
+	  					", \"obj\": {\"v5\": 5, \"v6\": 6 }"
+	  					", \"str\": \"s\", \"str2\": \"s2\""
+	 					"}";
+
+	//--- deserialize
+	string strErrMsg;
+	int ret = st._.Deserialize(json, strErrMsg);
+	ASSERT_EQ(ret, 0);
+	ASSERT_EQ(st.f_vec.size(), 2u);
+	ASSERT_EQ(st.f_vec[0], 1);
+	ASSERT_EQ(st.f_vec[1], 2);
+	ASSERT_EQ(st.f_deq.size(), 2u);
+	ASSERT_EQ(st.f_deq[0], 3);
+	ASSERT_EQ(st.f_deq[1], 4);
+	ASSERT_EQ(st.f_list.size(), 2u);
+	ASSERT_EQ(st.f_list.front(), 5);
+	ASSERT_EQ(st.f_list.back(), 6);
+	ASSERT_EQ(st.f_map.size(), 2u);
+	ASSERT_EQ(st.f_map["v1"], 1);
+	ASSERT_EQ(st.f_map["v2"], 2);
+	ASSERT_EQ(st.f_map2.size(), 2u);
+	ASSERT_EQ(st.f_map2["v3"], 3);
+	ASSERT_EQ(st.f_map2["v4"], 4);
+	ASSERT_EQ(st.f_obj.size(), 2u);
+	ASSERT_STREQ(st.f_obj[0].name.c_str(), "v5");
+	ASSERT_EQ(st.f_obj[0].value, 5);
+	ASSERT_STREQ(st.f_obj[1].name.c_str(), "v6");
+	ASSERT_EQ(st.f_obj[1].value, 6);
+	ASSERT_STREQ(st.f_str.c_str(), "s");
+	ASSERT_STREQ(st.f_str2.c_str(), "s2");
+
+	//--- serialize
+	string jsonOut;
+	ret = st._.Serialize(jsonOut);
+	ASSERT_EQ(ret, 0);
+	rapidjson::Document doc;
+	doc.Parse(jsonOut.c_str(), jsonOut.length());
+	ASSERT_FALSE(doc.HasParseError());
+
+	ASSERT_TRUE(doc.HasMember("vec"));
+	ASSERT_TRUE(doc["vec"].IsArray());
+	ASSERT_EQ(doc["vec"].Size(), 2u);
+	ASSERT_EQ(doc["vec"][0].GetInt(), 1);
+	ASSERT_EQ(doc["vec"][1].GetInt(), 2);
+
+	ASSERT_TRUE(doc.HasMember("deq"));
+	ASSERT_TRUE(doc["deq"].IsArray());
+	ASSERT_EQ(doc["deq"].Size(), 2u);
+	ASSERT_EQ(doc["deq"][0].GetInt(), 3);
+	ASSERT_EQ(doc["deq"][1].GetInt(), 4);
+
+	ASSERT_TRUE(doc.HasMember("list"));
+	ASSERT_TRUE(doc["list"].IsArray());
+	ASSERT_EQ(doc["list"].Size(), 2u);
+	ASSERT_EQ(doc["list"][0].GetInt(), 5);
+	ASSERT_EQ(doc["list"][1].GetInt(), 6);
+
+	ASSERT_TRUE(doc.HasMember("map"));
+	ASSERT_TRUE(doc["map"].IsObject());
+	ASSERT_EQ(doc["map"].MemberCount(), 2u);
+	ASSERT_EQ(doc["map"]["v1"].GetInt(), 1);
+	ASSERT_EQ(doc["map"]["v2"].GetInt(), 2);
+
+	ASSERT_TRUE(doc.HasMember("map2"));
+	ASSERT_TRUE(doc["map2"].IsObject());
+	ASSERT_EQ(doc["map2"].MemberCount(), 2u);
+	ASSERT_EQ(doc["map2"]["v3"].GetInt(), 3);
+	ASSERT_EQ(doc["map2"]["v4"].GetInt(), 4);
+
+	ASSERT_TRUE(doc.HasMember("obj"));
+	ASSERT_TRUE(doc["obj"].IsObject());
+	ASSERT_EQ(doc["obj"].MemberCount(), 2u);
+	ASSERT_EQ(doc["obj"]["v5"].GetInt(), 5);
+	ASSERT_EQ(doc["obj"]["v6"].GetInt(), 6);
+
+	ASSERT_TRUE(doc.HasMember("str"));
+	ASSERT_STREQ(doc["str"].GetString(), "s");
+	ASSERT_TRUE(doc.HasMember("str2"));
+	ASSERT_STREQ(doc["str2"].GetString(), "s2");
+
+	//--- optional
+	// test simply
+	ASSERT_EQ(&(st.f_vec[0]), st.get_f_vec()[0].Ptr());
+	ASSERT_EQ(NULL, st.get_f_vec()[2].Ptr());
+	ASSERT_EQ(&(st.f_deq[0]), st.get_f_deq()[0].Ptr());
+	ASSERT_EQ(NULL, st.get_f_deq()[2].Ptr());
+	ASSERT_EQ(&(st.f_list), st.get_f_list().Ptr());
+	ASSERT_EQ(&(st.f_map["v1"]), st.get_f_map()["v1"].Ptr());
+	ASSERT_EQ(NULL, st.get_f_map()["v3"].Ptr());
+	ASSERT_EQ(&(st.f_map2["v4"]), st.get_f_map2()["v4"].Ptr());
+	ASSERT_EQ(NULL, st.get_f_map()["v5"].Ptr());
+	ASSERT_EQ(&(st.f_obj), st.get_f_obj().Ptr());
+	ASSERT_EQ(&(st.f_str), st.get_f_str().Ptr());
+	ASSERT_EQ(&(st.f_str2), st.get_f_str2().Ptr());
 }

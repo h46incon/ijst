@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.14"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>ijst: ijst::MetaFieldInfo Struct Reference</title>
+<title>ijst: ijst::MetaFieldInfo&lt; CharType &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -22,7 +22,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">ijst
+   &#160;<span id="projectnumber">0.9.0</span>
    </div>
+   <div id="projectbrief">A reflection-based and header-only JSON (de)serialization library.</div>
   </td>
  </tr>
  </tbody>
@@ -66,46 +68,62 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structijst_1_1_meta_field_info-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">ijst::MetaFieldInfo Struct Reference</div>  </div>
+<div class="title">ijst::MetaFieldInfo&lt; CharType &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
 <p>Meta information of field.  
  <a href="structijst_1_1_meta_field_info.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="ijst_8h_source.html">ijst.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="meta__info_8h_source.html">meta_info.h</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:ac78624f14c12980f187fdd1017519a9c"><td class="memItemLeft" align="right" valign="top"><a id="ac78624f14c12980f187fdd1017519a9c"></a>
+typedef CharType&#160;</td><td class="memItemRight" valign="bottom"><b>Ch</b></td></tr>
+<tr class="separator:ac78624f14c12980f187fdd1017519a9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:aa09b652394708ed32fc11e629017e76b"><td class="memItemLeft" align="right" valign="top"><a id="aa09b652394708ed32fc11e629017e76b"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_meta_field_info.html#aa09b652394708ed32fc11e629017e76b">index</a></td></tr>
-<tr class="memdesc:aa09b652394708ed32fc11e629017e76b"><td class="mdescLeft">&#160;</td><td class="mdescRight">The index of this fields in the meta information in the class. (Fields are sorted by offset inside class) <br /></td></tr>
-<tr class="separator:aa09b652394708ed32fc11e629017e76b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1f06a058f527f9489d588b60fd7fc3d"><td class="memItemLeft" align="right" valign="top"><a id="af1f06a058f527f9489d588b60fd7fc3d"></a>
-FDesc::Mode&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_meta_field_info.html#af1f06a058f527f9489d588b60fd7fc3d">desc</a></td></tr>
-<tr class="memdesc:af1f06a058f527f9489d588b60fd7fc3d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Field description. <br /></td></tr>
-<tr class="separator:af1f06a058f527f9489d588b60fd7fc3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a62f8550319987b44c08ee7a4fe536b3e"><td class="memItemLeft" align="right" valign="top"><a id="a62f8550319987b44c08ee7a4fe536b3e"></a>
-std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_meta_field_info.html#a62f8550319987b44c08ee7a4fe536b3e">offset</a></td></tr>
-<tr class="memdesc:a62f8550319987b44c08ee7a4fe536b3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Field's offset inside class. <br /></td></tr>
-<tr class="separator:a62f8550319987b44c08ee7a4fe536b3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3e11b0e7b483ab6399c5a71e01ffc558"><td class="memItemLeft" align="right" valign="top"><a id="a3e11b0e7b483ab6399c5a71e01ffc558"></a>
-std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_meta_field_info.html#a3e11b0e7b483ab6399c5a71e01ffc558">jsonName</a></td></tr>
-<tr class="memdesc:a3e11b0e7b483ab6399c5a71e01ffc558"><td class="mdescLeft">&#160;</td><td class="mdescRight">Json name when (de)serialization. <br /></td></tr>
-<tr class="separator:a3e11b0e7b483ab6399c5a71e01ffc558"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab5cef7f742540673048c508707fdf964"><td class="memItemLeft" align="right" valign="top"><a id="ab5cef7f742540673048c508707fdf964"></a>
-std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_meta_field_info.html#ab5cef7f742540673048c508707fdf964">fieldName</a></td></tr>
-<tr class="memdesc:ab5cef7f742540673048c508707fdf964"><td class="mdescLeft">&#160;</td><td class="mdescRight">field name. <br /></td></tr>
-<tr class="separator:ab5cef7f742540673048c508707fdf964"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2bfb2ffcac3ddf00562c59a07210d120"><td class="memItemLeft" align="right" valign="top"><a id="a2bfb2ffcac3ddf00562c59a07210d120"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_meta_field_info.html#a2bfb2ffcac3ddf00562c59a07210d120">index</a></td></tr>
+<tr class="memdesc:a2bfb2ffcac3ddf00562c59a07210d120"><td class="mdescLeft">&#160;</td><td class="mdescRight">The index of this fields in the meta information in the class. (Fields are sorted by offset inside class) <br /></td></tr>
+<tr class="separator:a2bfb2ffcac3ddf00562c59a07210d120"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e54dc760128b4119e7bd15017028887"><td class="memItemLeft" align="right" valign="top"><a id="a5e54dc760128b4119e7bd15017028887"></a>
+FDesc::Mode&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_meta_field_info.html#a5e54dc760128b4119e7bd15017028887">desc</a></td></tr>
+<tr class="memdesc:a5e54dc760128b4119e7bd15017028887"><td class="mdescLeft">&#160;</td><td class="mdescRight">Field description. <br /></td></tr>
+<tr class="separator:a5e54dc760128b4119e7bd15017028887"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abfcee8db335f683dc16fc9f2a5da8718"><td class="memItemLeft" align="right" valign="top"><a id="abfcee8db335f683dc16fc9f2a5da8718"></a>
+std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_meta_field_info.html#abfcee8db335f683dc16fc9f2a5da8718">offset</a></td></tr>
+<tr class="memdesc:abfcee8db335f683dc16fc9f2a5da8718"><td class="mdescLeft">&#160;</td><td class="mdescRight">Field's offset inside class. <br /></td></tr>
+<tr class="separator:abfcee8db335f683dc16fc9f2a5da8718"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1be58af82099c5f5c692dc3d40e3ac0e"><td class="memItemLeft" align="right" valign="top"><a id="a1be58af82099c5f5c692dc3d40e3ac0e"></a>
+std::basic_string&lt; Ch &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_meta_field_info.html#a1be58af82099c5f5c692dc3d40e3ac0e">jsonName</a></td></tr>
+<tr class="memdesc:a1be58af82099c5f5c692dc3d40e3ac0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Json name when (de)serialization. <br /></td></tr>
+<tr class="separator:a1be58af82099c5f5c692dc3d40e3ac0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0f80520c855b78ad3e69a5ff5505215"><td class="memItemLeft" align="right" valign="top"><a id="ad0f80520c855b78ad3e69a5ff5505215"></a>
+std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structijst_1_1_meta_field_info.html#ad0f80520c855b78ad3e69a5ff5505215">fieldName</a></td></tr>
+<tr class="memdesc:ad0f80520c855b78ad3e69a5ff5505215"><td class="mdescLeft">&#160;</td><td class="mdescRight">field name. <br /></td></tr>
+<tr class="separator:ad0f80520c855b78ad3e69a5ff5505215"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Meta information of field. </p>
+<div class="textblock"><h3>template&lt;typename CharType = char&gt;<br />
+struct ijst::MetaFieldInfo&lt; CharType &gt;</h3>
+
+<p>Meta information of field. </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">CharType</td><td>character type of string</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="classijst_1_1_meta_class_info.html" title="Meta information of class. ">MetaClassInfo</a> </dd></dl>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
-<li>D:/Code/IJST/include/ijst/<a class="el" href="ijst_8h_source.html">ijst.h</a></li>
+<li>D:/Code/IJST/include/ijst/<a class="el" href="meta__info_8h_source.html">meta_info.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
