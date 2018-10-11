@@ -14,10 +14,10 @@ using namespace ijst;
 
 IJST_DEFINE_STRUCT(
 		Inner
-		, (T_int, int_1, "int_val_1", 0)
-		, (T_int, int_2, "int_val_2", 0)
-		, (T_string, str_1, "str_val_1", 0)
-		, (T_string, str_2, "str_val_2", 0)
+		, (IJST_TINT, int_1, "int_val_1", 0)
+		, (IJST_TINT, int_2, "int_val_2", 0)
+		, (IJST_TSTR, str_1, "str_val_1", 0)
+		, (IJST_TSTR, str_2, "str_val_2", 0)
 )
 
 TEST(Serialize, SerFlag)
@@ -89,9 +89,9 @@ TEST(Serialize, SerFlag)
 
 IJST_DEFINE_STRUCT(
 		NestSt
-		, (IJST_TVEC(T_int), vec_1, "vec_val_1", 0)
+		, (IJST_TVEC(IJST_TINT), vec_1, "vec_val_1", 0)
 		, (IJST_TST(Inner), inner_1, "inner_val_1", 0)
-		, (IJST_TMAP(T_string), map_1, "map_val_1", 0)
+		, (IJST_TMAP(IJST_TSTR), map_1, "map_val_1", 0)
 		, (IJST_TVEC(IJST_TST(Inner)), vec_2, "vec_val_2", 0)
 )
 
@@ -197,8 +197,8 @@ IJST_DEFINE_STRUCT(
 IJST_DEFINE_STRUCT(
 		Complicate2
 		, (IJST_TST(Complicate1), c1, "c1_v", 0)
-		, (IJST_TVEC(IJST_TMAP(T_string)), vms, "vms_v", 0)
-		, (IJST_TMAP(IJST_TVEC(T_string)), mvs, "mvs_v", 0)
+		, (IJST_TVEC(IJST_TMAP(IJST_TSTR)), vms, "vms_v", 0)
+		, (IJST_TMAP(IJST_TVEC(IJST_TSTR)), mvs, "mvs_v", 0)
 		, (IJST_TMAP(IJST_TMAP(IJST_TST(Inner))), mmo, "mmo_v", 0)
 )
 
@@ -212,16 +212,19 @@ TEST(Serialize, Complicate)
 	st.c1.i3.str_1 = "str1";
 	st.c1.i4.str_2 = "str2";
 	// vms
-	map<string, T_string> ms1;
+	//TODO
+	map<string, std::string> ms1;
 	ms1["k1"] = "v1";
 	ms1["k2"] = "v2";
-	map<string, T_string> ms2;
+	//TODO
+	map<string, std::string> ms2;
 	ms2["k1"] = "v3";
 	ms2["k3"] = "v4";
 	st.vms.push_back(ms1);
 	st.vms.push_back(ms2);
 	// mvs
-	vector<T_string> vs1;
+	//TODO
+	vector<std::string> vs1;
 	vs1.push_back(string("s1"));
 	vs1.push_back(string("s2"));
 	st.mvs["mk1"] = vs1;
@@ -264,9 +267,9 @@ TEST(Serialize, Complicate)
 
 IJST_DEFINE_STRUCT(
 	Container
-	, (IJST_TVEC(T_int), dVector, "vec", 0)
-	, (IJST_TDEQUE(T_int), dDeque, "deque", 0)
-	, (IJST_TLIST(T_int), dList, "list", 0)
+	, (IJST_TVEC(IJST_TINT), dVector, "vec", 0)
+	, (IJST_TDEQUE(IJST_TINT), dDeque, "deque", 0)
+	, (IJST_TLIST(IJST_TINT), dList, "list", 0)
 )
 
 TEST(Serialize, Container)
@@ -378,70 +381,70 @@ TEST(Serialize, EmptyStruct)
 
 IJST_DEFINE_STRUCT(
 		Complicate3
-		, (T_string, i1, "i1_k", 0)
-		, (T_string, i2, "i2_k", 0)
-		, (T_string, i3, "i3_k", 0)
-		, (T_string, i4, "i4_k", 0)
-		, (T_string, i5, "i5_k", 0)
-		, (T_string, i6, "i6_k", 0)
-		, (T_string, i7, "i7_k", 0)
-		, (T_string, i8, "i8_k", 0)
-		, (T_string, i9, "i9_k", 0)
-		, (T_string, i10, "i10_k", 0)
-		, (T_string, i11, "i11_k", 0)
-		, (T_string, i12, "i12_k", 0)
-		, (T_string, i13, "i13_k", 0)
-		, (T_string, i14, "i14_k", 0)
-		, (T_string, i15, "i15_k", 0)
-		, (T_string, i16, "i16_k", 0)
-		, (T_string, i17, "i17_k", 0)
-		, (T_string, i18, "i18_k", 0)
-		, (T_string, i19, "i19_k", 0)
-		, (T_string, i20, "i20_k", 0)
-		, (T_string, i21, "i21_k", 0)
-		, (T_string, i22, "i22_k", 0)
-		, (T_string, i23, "i23_k", 0)
-		, (T_string, i24, "i24_k", 0)
-		, (T_string, i25, "i25_k", 0)
-		, (T_string, i26, "i26_k", 0)
-		, (T_string, i27, "i27_k", 0)
-		, (T_string, i28, "i28_k", 0)
-		, (T_string, i29, "i29_k", 0)
-		, (T_string, i30, "i30_k", 0)
-		, (T_string, i31, "i31_k", 0)
-		, (T_string, i32, "i32_k", 0)
-		, (T_string, i33, "i33_k", 0)
-		, (T_string, i34, "i34_k", 0)
-		, (T_string, i35, "i35_k", 0)
-		, (T_string, i36, "i36_k", 0)
-		, (T_string, i37, "i37_k", 0)
-		, (T_string, i38, "i38_k", 0)
-		, (T_string, i39, "i39_k", 0)
-		, (T_string, i40, "i40_k", 0)
-		, (T_string, i41, "i41_k", 0)
-		, (T_string, i42, "i42_k", 0)
-		, (T_string, i43, "i43_k", 0)
-		, (T_string, i44, "i44_k", 0)
-		, (T_string, i45, "i45_k", 0)
-		, (T_string, i46, "i46_k", 0)
-		, (T_string, i47, "i47_k", 0)
-		, (T_string, i48, "i48_k", 0)
-		, (T_string, i49, "i49_k", 0)
-		, (T_string, i50, "i50_k", 0)
-		, (T_string, i51, "i51_k", 0)
-		, (T_string, i52, "i52_k", 0)
-		, (T_string, i53, "i53_k", 0)
-		, (T_string, i54, "i54_k", 0)
-		, (T_string, i55, "i55_k", 0)
-		, (T_string, i56, "i56_k", 0)
-		, (T_string, i57, "i57_k", 0)
-		, (T_string, i58, "i58_k", 0)
-		, (T_string, i59, "i59_k", 0)
-		, (T_string, i60, "i60_k", 0)
-		, (T_string, i61, "i61_k", 0)
-		, (T_string, i62, "i62_k", 0)
-		, (T_string, i63, "i63_k", 0)
-		, (T_string, i64, "i64_k", 0)
+		, (IJST_TSTR, i1, "i1_k", 0)
+		, (IJST_TSTR, i2, "i2_k", 0)
+		, (IJST_TSTR, i3, "i3_k", 0)
+		, (IJST_TSTR, i4, "i4_k", 0)
+		, (IJST_TSTR, i5, "i5_k", 0)
+		, (IJST_TSTR, i6, "i6_k", 0)
+		, (IJST_TSTR, i7, "i7_k", 0)
+		, (IJST_TSTR, i8, "i8_k", 0)
+		, (IJST_TSTR, i9, "i9_k", 0)
+		, (IJST_TSTR, i10, "i10_k", 0)
+		, (IJST_TSTR, i11, "i11_k", 0)
+		, (IJST_TSTR, i12, "i12_k", 0)
+		, (IJST_TSTR, i13, "i13_k", 0)
+		, (IJST_TSTR, i14, "i14_k", 0)
+		, (IJST_TSTR, i15, "i15_k", 0)
+		, (IJST_TSTR, i16, "i16_k", 0)
+		, (IJST_TSTR, i17, "i17_k", 0)
+		, (IJST_TSTR, i18, "i18_k", 0)
+		, (IJST_TSTR, i19, "i19_k", 0)
+		, (IJST_TSTR, i20, "i20_k", 0)
+		, (IJST_TSTR, i21, "i21_k", 0)
+		, (IJST_TSTR, i22, "i22_k", 0)
+		, (IJST_TSTR, i23, "i23_k", 0)
+		, (IJST_TSTR, i24, "i24_k", 0)
+		, (IJST_TSTR, i25, "i25_k", 0)
+		, (IJST_TSTR, i26, "i26_k", 0)
+		, (IJST_TSTR, i27, "i27_k", 0)
+		, (IJST_TSTR, i28, "i28_k", 0)
+		, (IJST_TSTR, i29, "i29_k", 0)
+		, (IJST_TSTR, i30, "i30_k", 0)
+		, (IJST_TSTR, i31, "i31_k", 0)
+		, (IJST_TSTR, i32, "i32_k", 0)
+		, (IJST_TSTR, i33, "i33_k", 0)
+		, (IJST_TSTR, i34, "i34_k", 0)
+		, (IJST_TSTR, i35, "i35_k", 0)
+		, (IJST_TSTR, i36, "i36_k", 0)
+		, (IJST_TSTR, i37, "i37_k", 0)
+		, (IJST_TSTR, i38, "i38_k", 0)
+		, (IJST_TSTR, i39, "i39_k", 0)
+		, (IJST_TSTR, i40, "i40_k", 0)
+		, (IJST_TSTR, i41, "i41_k", 0)
+		, (IJST_TSTR, i42, "i42_k", 0)
+		, (IJST_TSTR, i43, "i43_k", 0)
+		, (IJST_TSTR, i44, "i44_k", 0)
+		, (IJST_TSTR, i45, "i45_k", 0)
+		, (IJST_TSTR, i46, "i46_k", 0)
+		, (IJST_TSTR, i47, "i47_k", 0)
+		, (IJST_TSTR, i48, "i48_k", 0)
+		, (IJST_TSTR, i49, "i49_k", 0)
+		, (IJST_TSTR, i50, "i50_k", 0)
+		, (IJST_TSTR, i51, "i51_k", 0)
+		, (IJST_TSTR, i52, "i52_k", 0)
+		, (IJST_TSTR, i53, "i53_k", 0)
+		, (IJST_TSTR, i54, "i54_k", 0)
+		, (IJST_TSTR, i55, "i55_k", 0)
+		, (IJST_TSTR, i56, "i56_k", 0)
+		, (IJST_TSTR, i57, "i57_k", 0)
+		, (IJST_TSTR, i58, "i58_k", 0)
+		, (IJST_TSTR, i59, "i59_k", 0)
+		, (IJST_TSTR, i60, "i60_k", 0)
+		, (IJST_TSTR, i61, "i61_k", 0)
+		, (IJST_TSTR, i62, "i62_k", 0)
+		, (IJST_TSTR, i63, "i63_k", 0)
+		, (IJST_TSTR, i64, "i64_k", 0)
 )
 
 void InitComplicate3(Complicate3& st)

@@ -27,12 +27,12 @@ using namespace ijst;
 
 IJST_DEFINE_STRUCT (
     SampleStruct
-    , (T_int, iID, "id", 0)
-    , (T_string, strName, "name", 0)
-    , (T_bool, bSex, "sex", 0)     // 只是举一个bool的栗子
+    , (IJST_TINT, iID, "id", 0)
+    , (IJST_TSTR, strName, "name", 0)
+    , (IJST_TBOOL, bSex, "sex", 0)     // 只是举一个bool的栗子
     // 接下来是复杂的字段
-    , (IJST_TVEC(T_uint64), vecFriendsID, "friends_id", ijst::FDesc::Optional)      // Optional，可能没朋友
-    , (IJST_TMAP(IJST_TVEC(T_string)), mapWhatEver, "what_ever", ijst::FDesc::NotDefault)    // NotDefault 表示这个 map 不为默认值，即不为空
+    , (IJST_TVEC(IJST_TUINT64), vecFriendsID, "friends_id", ijst::FDesc::Optional)      // Optional，可能没朋友
+    , (IJST_TMAP(IJST_TVEC(IJST_TSTR)), mapWhatEver, "what_ever", ijst::FDesc::NotDefault)    // NotDefault 表示这个 map 不为默认值，即不为空
 );
 
 // 定义该类型的变量
@@ -53,9 +53,9 @@ SampleStruct sampleStruct;
 
     - **原子类型**
 
-        在 `ijst/types_std.h` 中定义。提供的类型有 `T_int, T_int64, T_uint, T_uint64, T_string, T_raw, T_bool, T_ubool, T_wbool`。
+        在 `ijst/types_std.h` 中定义。提供的类型有 `IJST_TINT, IJST_TINT64, IJST_TUINT, IJST_TUINT64, IJST_TSTR, T_raw, IJST_TBOOL, IJST_TUBOOL, IJST_TWBOOL`。
 
-        由于 `std::vector<bool>` 的特殊性， ijst 提供了 `T_bool(bool), T_ubool(uint8_t), T_wbool(BoolWrapper)` 这几种类型来储存 bool 变量。
+        由于 `std::vector<bool>` 的特殊性， ijst 提供了 `IJST_TBOOL(bool), IJST_TUBOOL(uint8_t), IJST_TWBOOL(BoolWrapper)` 这几种类型来储存 bool 变量。
 
         如果不能确定某个字段的类型，则可以使用 `T_raw` 类型操作原始的 `rapidjson::Value` 对象。
 
@@ -75,10 +75,10 @@ SampleStruct sampleStruct;
         - `IJST_TOBJ(T)`： 将 object 序列化为 `std::vector<ijst::T_Member<T> >`，即以数组的形式储存键值对。
 
         容器的元素类型可以为原子类型和容器（即支持**嵌套**定义）。
-        如 `IJST_TVEC(T_int)` 可表达 JSON 值 *[1, 2, 3]*， `IJST_TMAP(IJST_TVEC(T_ubool))` 可表达 JSON 值 *{"key1": [true, true], "key2": [true, false]}*。
+        如 `IJST_TVEC(IJST_TINT)` 可表达 JSON 值 *[1, 2, 3]*， `IJST_TMAP(IJST_TVEC(IJST_TUBOOL))` 可表达 JSON 值 *{"key1": [true, true], "key2": [true, false]}*。
 
         另外，定义容器时，可以指定 allocator 和 comparator。
-        如 `IJST_TVEC(T_int, MyAllocator<T_int>)`， `IJST_TMAP(T_int, MyLess<string>, MyAllocator<pair<const string, T_int> >)` 等。
+        如 `IJST_TVEC(IJST_TINT, MyAllocator<T_int>)`， `IJST_TMAP(T_int, MyLess<string>, MyAllocator<pair<const string, T_int> >)` 等。
 
     - **ijst 结构体类型**
 
@@ -106,7 +106,7 @@ SampleStruct sampleStruct;
 
     - Optional：该字段在 JSON 中不必须出现。
     - Nullable：该字段的 JSON 值可能为 null。
-    - NotDefault：该字段不能为默认值，如数组不能为空，`T_int` 值不能为0。
+    - NotDefault：该字段不能为默认值，如数组不能为空，`IJST_TINT` 值不能为0。
 
 
 # 接口
@@ -263,7 +263,7 @@ ijst 也提供了类似的**静态类型**的方法：为每个字段定义 `get
 // 需使用 *_WITH_GETTER 宏
 IJST_DEFINE_STRUCT_WITH_GETTER(
     StFoo
-    , (IJST_TVEC(T_int), bar, "bar", 0)
+    , (IJST_TVEC(IJST_TINT), bar, "bar", 0)
 )
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
@@ -358,7 +358,7 @@ doc.Populate(generator);
 const std::string json = "[0, 1, 2]";
 
 IJST_DEFINE_VALUE(
-	VecVal, IJST_TVEC(T_int), v, 0
+	VecVal, IJST_TVEC(IJST_TINT), v, 0
 )
 
 VecVal vec;
@@ -377,7 +377,7 @@ const std::string json = R"(
 })";
 
 IJST_DEFINE_VALUE(
-	MapVal, IJST_TMAP(T_int), v2, 0
+	MapVal, IJST_TMAP(IJST_TINT), v2, 0
 )
 
 MapVal vec;
@@ -417,8 +417,8 @@ st._.Serialize<rapidjson::UTF16<> >(out);
 // 使用 IJST_DEFINE_GENERIC_STRUCT 宏，其他定义 ijst 结构体的宏也有相应的自定义编码的版本：
 IJST_DEFINE_GENERIC_STRUCT (
 	rapidjson::UTF16<char32_t>, U32SampleStruct       // 第一个参数指定编码
-	, (ijst::T_int, iVal, u"int", 0)                  // 定义 JSON 键名时,使用 C++ 11 提供的 UTF-16 常量字符串（`u` 前缀）
-	, (ijst::T_uint, uiVal, u"uint", 0)
+	, (ijst::IJST_TINT, iVal, u"int", 0)                  // 定义 JSON 键名时,使用 C++ 11 提供的 UTF-16 常量字符串（`u` 前缀）
+	, (ijst::IJST_TUINT, uiVal, u"uint", 0)
 	, (IJST_TSTR, strVal, u"str", 0)                  // 定义字符串时,使用 IJST_TSTR 宏。
 	, (IJST_TRAW, rawVal, u"raw", 0)                  // 定义字符串时,使用 ISJT_TRAW 宏。
 )
@@ -427,7 +427,7 @@ IJST_DEFINE_GENERIC_STRUCT (
 这样 ijst 就会在内部使用 UTF-16 编码进行处理。
 
 注意到，这里引入了 `IJST_TSTR`，`IJST_TRAW` 两个宏，这是因为这两种类型需要依赖实际的编码。
-而 `ijst::T_string`，`ijst::T_raw` 类型是 ijst 在未考虑多编码支持时设计出来的。为了兼容，保留了这两个类型。
+而 `ijst::IJST_TSTR`，`ijst::T_raw` 类型是 ijst 在未考虑多编码支持时设计出来的。为了兼容，保留了这两个类型。
 
 # 其他
 

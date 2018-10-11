@@ -257,14 +257,14 @@ class FSerializer : public SerializerInterface {
 };
 
 // 对于每种类型，编写相关的序列化/反序列化代码
-template<> class FSerializer<T_int> : public SerializerInterface {
+template<> class FSerializer<int> : public SerializerInterface {
     // 实现
 };
 
 // 获取和储存对象地址，FIELD_TYPE 是 IDL 中声明的数据类型
 SerializerInterface& intf = Singleton<FSerializer<FIELD_TYPE> >::GetInstance();
 
-// 注：FIELD_TYPE 是不能提前完全确定的，比如 vector<T_int> 或 vector<vector<T_int> > 都是支持的，所以不能使用宏拼接函数名
+// 注：FIELD_TYPE 是不能提前完全确定的，比如 vector<int> 或 vector<vector<int> > 都是支持的，所以不能使用宏拼接函数名
 // 如： SerializerInterface& intf = FSerializer##TYPE::GetInstance();
 ```
 
@@ -280,7 +280,7 @@ template<typename T> struct Primitive<T> {};
 template<typename T> struct IjstStruct<T> {};
 
 // IDL 接口中的数据类型
-#define T_int   Primitive<int>
+#define IJST_TINT   Primitive<int>
 #define T_ST(T) IjstStruct<T>
 
 // FSerializer 实现
@@ -303,7 +303,7 @@ template <typename T>
 struct IfHasType { typedef void Void; };
 
 // IDL 接口中的数据类型
-#define T_int   int
+#define IJST_TINT   int
 #define T_ST(T) T
 
 // FSerializer 实现

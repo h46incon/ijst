@@ -28,10 +28,10 @@ IJST_DEFINE_STRUCT(
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
 		ExternTest
-		, (T_int, i, "i", 0)
-		, (T_raw, r, "r", 0)
-		, (IJST_TVEC(T_string), vs, "vs", 0)
-		, (IJST_TMAP(T_bool), mb, "mb", 0)
+		, (IJST_TINT, i, "i", 0)
+		, (IJST_TRAW, r, "r", 0)
+		, (IJST_TVEC(IJST_TSTR), vs, "vs", 0)
+		, (IJST_TMAP(IJST_TBOOL), mb, "mb", 0)
 		, (IJST_TST(Empty), e, "e", 0)
 )
 

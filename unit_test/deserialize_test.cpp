@@ -10,10 +10,10 @@ using namespace ijst;
 
 IJST_DEFINE_STRUCT(
 		SimpleSt
-		, (T_int, int_1, "int_val_1", FDesc::Optional)
-		, (T_int, int_2, "int_val_2", 0)
-		, (T_string, str_1, "str_val_1", FDesc::Optional)
-		, (T_string, str_2, "str_val_2", 0)
+		, (IJST_TINT, int_1, "int_val_1", FDesc::Optional)
+		, (IJST_TINT, int_2, "int_val_2", 0)
+		, (IJST_TSTR, str_1, "str_val_1", FDesc::Optional)
+		, (IJST_TSTR, str_2, "str_val_2", 0)
 )
 
 TEST(Deserialize, Empty)
@@ -302,9 +302,9 @@ TEST(Deserialize, MoveFromJson)
 
 IJST_DEFINE_STRUCT(
 		NullableSt
-		, (T_int, int_1, "int_val_1", FDesc::Optional)
-		, (T_int, int_2, "int_val_2", FDesc::Nullable)
-		, (T_int, int_3, "int_val_3", FDesc::Nullable | FDesc::Optional)
+		, (IJST_TINT, int_1, "int_val_1", FDesc::Optional)
+		, (IJST_TINT, int_2, "int_val_2", FDesc::Nullable)
+		, (IJST_TINT, int_3, "int_val_3", FDesc::Nullable | FDesc::Optional)
 )
 
 TEST(Deserialize, NullValue)
@@ -367,11 +367,11 @@ TEST(Deserialize, NullValue)
 
 IJST_DEFINE_STRUCT(
 		NotEmptySt
-		, (IJST_TVEC(T_int), vec_v, "vec", FDesc::NotDefault | FDesc::Optional)
-		, (IJST_TDEQUE(T_int), deq_v, "deq", FDesc::NotDefault | FDesc::Optional)
-		, (IJST_TLIST(T_int), list_v, "list", FDesc::NotDefault | FDesc::Optional)
-		, (IJST_TMAP(T_int), map_v, "map", FDesc::NotDefault | FDesc::Optional)
-		, (IJST_TOBJ(T_int), obj_v, "obj", FDesc::NotDefault | FDesc::Optional)
+		, (IJST_TVEC(IJST_TINT), vec_v, "vec", FDesc::NotDefault | FDesc::Optional)
+		, (IJST_TDEQUE(IJST_TINT), deq_v, "deq", FDesc::NotDefault | FDesc::Optional)
+		, (IJST_TLIST(IJST_TINT), list_v, "list", FDesc::NotDefault | FDesc::Optional)
+		, (IJST_TMAP(IJST_TINT), map_v, "map", FDesc::NotDefault | FDesc::Optional)
+		, (IJST_TOBJ(IJST_TINT), obj_v, "obj", FDesc::NotDefault | FDesc::Optional)
 )
 
 void CheckNotEmpty(const string& validJson, const string& fieldEmptyJson, const char* emptyMemberName, const char* emptyJsonKey)
@@ -451,7 +451,7 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TLIST(StEmpty), listEmpty, "list", 0)
 		, (IJST_TMAP(StEmpty), mapEmpty, "map", 0)
 		, (IJST_TOBJ(StEmpty), objEmpty, "obj", 0)
-		, (T_raw, raw, "raw", 0)
+		, (IJST_TRAW, raw, "raw", 0)
 )
 
 #define UTEST_ASSERT_USER_OWN_ALLOCATOR(st)		\
@@ -588,12 +588,12 @@ TEST(Deserialize, ErrDoc_MemberMissing)
 
 IJST_DEFINE_STRUCT(
 		StErrCheck
-		, (T_ubool, v, "f_v", FDesc::Optional)
-		, (IJST_TMAP(T_ubool), map_v, "f_map", FDesc::Optional)
-		, (IJST_TOBJ(T_ubool), obj_v, "f_obj", FDesc::Optional)
-		, (IJST_TVEC(T_ubool), vec_v, "f_vec", FDesc::Optional)
-		, (IJST_TDEQUE(T_ubool), deq_v, "f_deq", FDesc::Optional)
-		, (IJST_TLIST(T_ubool), list_v, "f_list", FDesc::Optional)
+		, (IJST_TUBOOL, v, "f_v", FDesc::Optional)
+		, (IJST_TMAP(IJST_TUBOOL), map_v, "f_map", FDesc::Optional)
+		, (IJST_TOBJ(IJST_TUBOOL), obj_v, "f_obj", FDesc::Optional)
+		, (IJST_TVEC(IJST_TUBOOL), vec_v, "f_vec", FDesc::Optional)
+		, (IJST_TDEQUE(IJST_TUBOOL), deq_v, "f_deq", FDesc::Optional)
+		, (IJST_TLIST(IJST_TUBOOL), list_v, "f_list", FDesc::Optional)
 )
 
 void TestErrCheckTypeError(const std::string& errJson, const char* memberName, const char* jsonKey, const char* expectedType, const char* jsonVal)

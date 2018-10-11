@@ -13,35 +13,29 @@
 
 namespace ijst {
 
-//! bool -> bool. @note: Could not declare std::vector<T_bool>
-typedef bool 					T_bool;
+//! bool -> bool. @note: Could not declare std::vector<IJST_TBOOL>
+#define IJST_TBOOL		bool
 //! bool -> uint8_t
-typedef uint8_t 				T_ubool;
+#define IJST_TUBOOL		uint8_t
 //! bool -> a wrapper of bool
-class 							T_wbool;
+#define IJST_TWBOOL		::ijst::T_wbool
 //! number -> int
-typedef int 					T_int;
+#define IJST_TINT		int
 //! number -> int64_t
-typedef int64_t 				T_int64;
+#define IJST_TINT64		int64_t
 //! number -> unsigned int
-typedef unsigned int 			T_uint;
+#define IJST_TUINT		unsigned int
 //! number -> uint64_t
-typedef uint64_t 				T_uint64;
+#define IJST_TUINT64	uint64_t
 //! string -> std::string
-typedef double 					T_double;
+#define IJST_TDOUBLE	double
 //! @brief IJST_TASTR(CharTraits, Alloc=std::allocator), use for declaring a basic_string<_ijst_Ch, CharTraits, Alloc> field in ijst struct.
 //! @ingroup IJST_MACRO_API
 #define IJST_TSTR_X(...)		IJST_TYPE(::std::basic_string<_ijst_Ch, __VA_ARGS__ >)
 //! string -> std::basic_string<Encoding::Ch>
 #define IJST_TSTR				::std::basic_string<_ijst_Ch>
-//! string -> std::string, for backward compatibility
-typedef std::string 			T_string;
 //! anything -> a wrapper of rapidjson::GenericValue<Encoding>
 #define IJST_TRAW				::ijst::T_GenericRaw<_ijst_Encoding>
-//! anything -> a wrapper of rapidjson::Value, for backward compatibility
-template<typename Encoding> class T_GenericRaw;
-typedef
-T_GenericRaw<rapidjson::UTF8<> > T_raw;
 
 /**
  * @brief Wrapper of bool to support normal vector<bool>.
@@ -149,8 +143,8 @@ namespace detail {
 #define IJSTI_DEFINE_SERIALIZE_INTERFACE_END()											\
 	};
 
-//--- T_ubool
-IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_ubool)
+//--- IJST_TUBOOL
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(IJST_TUBOOL)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -188,20 +182,20 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 	}
 
 
-//--- T_bool
-IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_bool)
+//--- IJST_TBOOL
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(IJST_TBOOL)
 	IJSTI_SERIALIZER_BOOL_DEFINE()
 	IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-//--- T_wbool
-IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_wbool)
+//--- IJST_TWBOOL
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(IJST_TWBOOL)
 	IJSTI_SERIALIZER_BOOL_DEFINE()
 	IJSTI_SERIALIZER_BOOL_DEFINE_FROM_JSON()
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-//--- T_int
-IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int)
+//--- IJST_TINT
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(IJST_TINT)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -218,8 +212,8 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int)
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-//--- T_int64
-IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int64)
+//--- IJST_TINT64
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(IJST_TINT64)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -236,8 +230,8 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int64)
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-//--- T_uint
-IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint)
+//--- IJST_TUINT
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(IJST_TUINT)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -254,8 +248,8 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint)
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-//--- T_uint64
-IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint64)
+//--- IJST_TUINT64
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(IJST_TUINT64)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);
@@ -272,8 +266,8 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint64)
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 
-//--- T_double
-IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_double)
+//--- IJST_TDOUBLE
+IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(IJST_TDOUBLE)
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE
 	{
 		const VarType *pField = static_cast<const VarType *>(req.pField);

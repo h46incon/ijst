@@ -1,6 +1,6 @@
 ## ijst
 
-ijst (iJsonStruct) 一个是 C++ Json 序列化/反序列化库：
+ijst (iJsonStruct) 一个是 C++ Json 序列化/反序列化库，用于 Json 字符串和**结构体**互转：
 
 - 只需定义**一次**结构体，无须重复添加元信息。
 - 支持 Getter Chaining，可以很简单地访问路径较深的字段。
@@ -49,9 +49,9 @@ IJST_DEFINE_STRUCT(
     // 结构体名字
     JsonStruct
     // 定义字段
-    , (T_int, iVal, "int_val", 0)  
-    , (IJST_TVEC(T_string), vecVal, "vec_val", 0)
-    , (IJST_TMAP(T_uint64), mapVal, "map_val", 0)
+    , (IJST_TINT, iVal, "int_val", 0)
+    , (IJST_TVEC(IJST_TSTR), vecVal, "vec_val", 0)
+    , (IJST_TMAP(IJST_TUINT64), mapVal, "map_val", 0)
 );
 
 //*** 默认情况下会生成这样的类：
@@ -96,9 +96,9 @@ assert (ret == 0);
 //*** 和 IJST_DEFINE_STRUCT 类似
 IJST_DEFINE_STRUCT_WITH_GETTER(
     StIn
-    , (T_int, iData, "i", ijst::FDesc::Optional)
-    , (IJST_TVEC(T_int), vecData, "vec", ijst::FDesc::Optional)
-    , (IJST_TMAP(T_int), mapData, "map", ijst::FDesc::Optional)
+    , (IJST_TINT, iData, "i", ijst::FDesc::Optional)
+    , (IJST_TVEC(IJST_TINT), vecData, "vec", ijst::FDesc::Optional)
+    , (IJST_TMAP(IJST_TINT), mapData, "map", ijst::FDesc::Optional)
 )
 
 //*** 默认情况下会生成这样的结构体：
