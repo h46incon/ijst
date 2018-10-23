@@ -105,8 +105,7 @@ inline void CheckTypeMismatch(const rapidjson::Value& errDoc, const char* expect
 
 inline void CheckMemberValueIsDefault(const char* memberName, const char* jsonKey, int retCode, const std::string& errMsg)
 {
-	int retExpect = ijst::ErrorCode::kDeserializeValueIsDefault;
-	ASSERT_EQ(retExpect, retCode);
+	ASSERT_EQ(ijst::ErrorCode::kDeserializeValueIsDefault, retCode);
 	rapidjson::Document errDoc;
 	errDoc.Parse(errMsg.data(), errMsg.length());
 	ASSERT_FALSE(errDoc.HasParseError());

@@ -217,17 +217,17 @@ struct DeserFlag {
 IJSTI_DECLARE_ENUM_OPERATOR_OR(DeserFlag::Flag)
 
 //! Error codes.
-struct ErrorCode {
-	static const int kSucc 							= 0x00000000;
-	static const int kDeserializeValueTypeError 	= 0x00001001;
-	static const int kDeserializeSomeFieldsInvalid 	= 0x00001002;
-	static const int kDeserializeParseFailed 		= 0x00001003;
-	static const int kDeserializeValueIsDefault		= 0x00001004;
-	static const int kDeserializeSomeUnknownMember	= 0x00001005;
-	static const int kDeserializeMapKeyDuplicated	= 0x00001006;
-	static const int kInnerError 					= 0x00002001;
-	static const int kWriteFailed					= 0x00003001;
-};
+namespace ErrorCode {
+	const int kSucc 							= 0x00000000;
+	const int kDeserializeValueTypeError 		= 0x00001001;
+	const int kDeserializeSomeFieldsInvalid 	= 0x00001002;
+	const int kDeserializeParseFailed 			= 0x00001003;
+	const int kDeserializeValueIsDefault		= 0x00001004;
+	const int kDeserializeSomeUnknownMember		= 0x00001005;
+	const int kDeserializeMapKeyDuplicated		= 0x00001006;
+	const int kInnerError 						= 0x00002001;
+	const int kWriteFailed						= 0x00003001;
+} // namespace ErrorCode
 
 } // namespace ijst
 #endif //IJST_IJST_HPP_INCLUDE_
