@@ -138,25 +138,29 @@ namespace ijst {
 
 //! Field description.
 struct FDesc {
-	typedef unsigned int Mode;
-	//! Field is optional.
-	static const Mode Optional 			= 0x00000001;
-	//! Field can be null.
-	static const Mode Nullable 			= 0x00000002;
-	//! Field's value is not default, e.g, int is not 0, string, vector, map is not empty
-	static const Mode NotDefault 		= 0x00000004;
-	// FDesc of Element (i.e. Nullable, NotDefault) inside container is hard to represent, has not plan to implement it
+	enum Mode{
+		//! None Flag
+		NoneFlag		= 0x0
+		//! Field is optional.
+		, Optional 		= 0x1
+		//! Field can be null.
+		, Nullable 		= 0x2
+		//! Field's value is not default, e.g, int is not 0, string, vector, map is not empty
+		, NotDefault 	= 0x4
+
+		// FDesc of Element (i.e. Nullable, NotDefault) inside container is hard to represent, has not plan to implement it
+	};
 };
+IJSTI_DECLARE_ENUM_OPERATOR_OR(FDesc::Mode)
 
 //! Field status.
 struct FStatus {
-	//! @private use EFStatus instead
-	typedef unsigned char Enum;
-
-	static const Enum kNotAField 		= (Enum)0;
-	static const Enum kMissing 			= (Enum)1;
-	static const Enum kNull 			= (Enum)2;
-	static const Enum kValid 			= (Enum)3;
+	enum Enum{
+		kNotAField 		= 0,
+		kMissing 		= 1,
+		kNull 			= 2,
+		kValid 			= 3
+	};
 };
 typedef FStatus::Enum EFStatus;
 
@@ -168,13 +172,13 @@ typedef FStatus::Enum EFStatus;
 struct SerFlag {
 	enum Flag {
 		//! does not set any option.
-		kNoneFlag					= 0x0000
+		kNoneFlag					= 0x0
 		//! set if ignore fields with kMissing status.
-		, kIgnoreMissing			= 0x0001
+		, kIgnoreMissing			= 0x1
 		//! set if ignore unknown fields, otherwise will serialize all unknown fields.
-		, kIgnoreUnknown			= 0x0002
+		, kIgnoreUnknown			= 0x2
 		//! set if ignore fields with kNull status.
-		, kIgnoreNull				= 0x0004
+		, kIgnoreNull				= 0x4
 	};
 };
 IJSTI_DECLARE_ENUM_OPERATOR_OR(SerFlag::Flag)
@@ -187,13 +191,13 @@ IJSTI_DECLARE_ENUM_OPERATOR_OR(SerFlag::Flag)
 struct DeserFlag {
 	enum Flag{
 		//! Does not set any option.
-		kNoneFlag					= 0x0000
+		kNoneFlag					= 0x0
 		//! Set if return error when meet unknown fields, otherwise will keep all unknown fields.
-		, kErrorWhenUnknown			= 0x0001
+		, kErrorWhenUnknown			= 0x1
 		//! Set if ignore unknown fields, otherwise will keep all unknown fields.
-		, kIgnoreUnknown			= 0x0002
+		, kIgnoreUnknown			= 0x2
 		//! Set if ignore field status, otherwise will check if field status is matched requirement
-		, kNotCheckFieldStatus		= 0x0004
+		, kNotCheckFieldStatus		= 0x4
 		/**
 		 * @brief  Set if move resource (to unknown or T_raw fields) from intermediate document when deserialize.
 		 *
@@ -217,16 +221,16 @@ struct DeserFlag {
 IJSTI_DECLARE_ENUM_OPERATOR_OR(DeserFlag::Flag)
 
 //! Error codes.
-namespace ErrorCode {
-	const int kSucc 							= 0x00000000;
-	const int kDeserializeValueTypeError 		= 0x00001001;
-	const int kDeserializeSomeFieldsInvalid 	= 0x00001002;
-	const int kDeserializeParseFailed 			= 0x00001003;
-	const int kDeserializeValueIsDefault		= 0x00001004;
-	const int kDeserializeSomeUnknownMember		= 0x00001005;
-	const int kDeserializeMapKeyDuplicated		= 0x00001006;
-	const int kInnerError 						= 0x00002001;
-	const int kWriteFailed						= 0x00003001;
+namespace ErrorCode { // Declare ErrorCode in namespace to make it easy to add error codes in other places
+	const int kSucc 							= 0x0000;
+	const int kDeserializeValueTypeError 		= 0x1001;
+	const int kDeserializeSomeFieldsInvalid 	= 0x1002;
+	const int kDeserializeParseFailed 			= 0x1003;
+	const int kDeserializeValueIsDefault		= 0x1004;
+	const int kDeserializeSomeUnknownMember		= 0x1005;
+	const int kDeserializeMapKeyDuplicated		= 0x1006;
+	const int kInnerError 						= 0x2001;
+	const int kWriteFailed						= 0x3001;
 } // namespace ErrorCode
 
 } // namespace ijst

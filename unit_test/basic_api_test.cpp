@@ -20,6 +20,12 @@ TEST(BasicAPI, EnumOr)
 	deserFlag |= DeserFlag::kMoveFromIntermediateDoc;
 	ASSERT_EQ(deserFlag, DeserFlag::kMoveFromIntermediateDoc);
 	ASSERT_EQ(DeserFlag::kIgnoreUnknown, DeserFlag::kNoneFlag | DeserFlag::kIgnoreUnknown);
+
+	// FDesc::Mode
+	FDesc::Mode desc = FDesc::NoneFlag;
+	desc |= FDesc::Nullable;
+	ASSERT_EQ(desc, FDesc::Nullable);
+	ASSERT_EQ(FDesc::NotDefault, FDesc::NoneFlag | FDesc::NotDefault);
 }
 
 IJST_DEFINE_VALUE(
@@ -140,12 +146,12 @@ void TestStructAPI(const char *className)
 	ASSERT_STREQ(metaInfo.GetClassName().c_str(), className);
 	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 6u);
 	ASSERT_EQ((ptrdiff_t)metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
-	CheckFieldInfo<Encoding>(metaInfo, "int_v", "int_val", (char*)&st.int_v - (char*)&st, 0);
-	CheckFieldInfo<Encoding>(metaInfo, "st_v", "st_val", (char*)&st.st_v - (char*)&st, 0);
-	CheckFieldInfo<Encoding>(metaInfo, "str_v", "str_val", (char*)&st.str_v - (char*)&st, 0);
-	CheckFieldInfo<Encoding>(metaInfo, "raw_v", "raw_val", (char*)&st.raw_v - (char*)&st, 0);
-	CheckFieldInfo<Encoding>(metaInfo, "map_v", "map_val", (char*)&st.map_v - (char*)&st, 0);
-	CheckFieldInfo<Encoding>(metaInfo, "obj_v", "obj_val", (char*)&st.obj_v - (char*)&st, 0);
+	CheckFieldInfo<Encoding>(metaInfo, "int_v", "int_val", (char*)&st.int_v - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "st_v", "st_val", (char*)&st.st_v - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "str_v", "str_val", (char*)&st.str_v - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "raw_v", "raw_val", (char*)&st.raw_v - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "map_v", "map_val", (char*)&st.map_v - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "obj_v", "obj_val", (char*)&st.obj_v - (char*)&st, FDesc::NoneFlag);
 	// invalid json name search
 	ASSERT_EQ(NULL, metaInfo.FindFieldByJsonName(Transcode<rapidjson::UTF8<>, Encoding >("NotAField")));
 
@@ -185,10 +191,10 @@ TEST(BasicAPI, HashCollision)
 	ASSERT_STREQ(metaInfo.GetClassName().c_str(), "HashCollision");
 	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 4u);
 	ASSERT_EQ((ptrdiff_t)metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
-	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_1", "costarring", (char*)&st.int_1 - (char*)&st, 0);
-	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_2", "liquid", (char*)&st.int_2 - (char*)&st, 0);
-	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_3", "zinkes", (char*)&st.int_3 - (char*)&st, 0);
-	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_4", "altarages", (char*)&st.int_4 - (char*)&st, 0);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_1", "costarring", (char*)&st.int_1 - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_2", "liquid", (char*)&st.int_2 - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_3", "zinkes", (char*)&st.int_3 - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_4", "altarages", (char*)&st.int_4 - (char*)&st, FDesc::NoneFlag);
 }
 
 TEST(BasicAPI, Setter)

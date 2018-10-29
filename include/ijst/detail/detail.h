@@ -535,6 +535,13 @@ public:
 		d.m_fieldsInfo.push_back(IJSTI_MOVE(metaField));
 	}
 
+	// Backward compatibility with FDesc declaration is "0"
+	void PushMetaField(const std::string &fieldName, const std::basic_string<Ch>& jsonName,
+					   std::size_t offset, int desc, void* pSerializeInterface)
+	{
+		PushMetaField(fieldName, jsonName, offset, static_cast<FDesc::Mode>(desc), pSerializeInterface);
+	}
+
 	void InitEnd()
 	{
 		// assert MetaClassInfo's map has not inited before
