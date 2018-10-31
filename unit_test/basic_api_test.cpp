@@ -106,6 +106,10 @@ IJST_DEFINE_STRUCT(
 	IJST_DEFINE_GENERIC_STRUCT_WITH_GETTER( \
 		encoding, stName \
 		, (T_int, int_v, PF ## "int_val", 0) \
+		, (T_int, int_v2) \
+		, (T_int, int_v3, PF ## "true_int_v3") \
+		, (T_int, int_v4, FDesc::Nullable) \
+		, (T_int, int_v5, PF ## "int_val_5", FDesc::Optional) \
 		, (IJST_TST(stName ## Inner), st_v, PF ## "st_val", 0) \
 		, (IJST_TSTR, str_v, PF ## "str_val", 0) \
 		, (IJST_TRAW, raw_v, PF ## "raw_val", 0) \
@@ -144,9 +148,13 @@ void TestStructAPI(const char *className)
 	const MetaClassInfo<Ch>& metaInfo = ijst::template GetMetaInfo<Struct>();
 	ASSERT_EQ(&st._.GetMetaInfo(), &metaInfo);
 	ASSERT_STREQ(metaInfo.GetClassName().c_str(), className);
-	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 6u);
+	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 10u);
 	ASSERT_EQ((ptrdiff_t)metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
 	CheckFieldInfo<Encoding>(metaInfo, "int_v", "int_val", (char*)&st.int_v - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "int_v2", "int_v2", (char*)&st.int_v2 - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "int_v3", "true_int_v3", (char*)&st.int_v3 - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "int_v4", "int_v4", (char*)&st.int_v4 - (char*)&st, FDesc::Nullable);
+	CheckFieldInfo<Encoding>(metaInfo, "int_v5", "int_val_5", (char*)&st.int_v5 - (char*)&st, FDesc::Optional);
 	CheckFieldInfo<Encoding>(metaInfo, "st_v", "st_val", (char*)&st.st_v - (char*)&st, FDesc::NoneFlag);
 	CheckFieldInfo<Encoding>(metaInfo, "str_v", "str_val", (char*)&st.str_v - (char*)&st, FDesc::NoneFlag);
 	CheckFieldInfo<Encoding>(metaInfo, "raw_v", "raw_val", (char*)&st.raw_v - (char*)&st, FDesc::NoneFlag);

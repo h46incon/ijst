@@ -1232,7 +1232,7 @@ private:
 //! @param needGetter	need get_* function: T/F
 //! @param encoding		encoding of json struct
 //! @param stName		struct name
-//! @param ...			fields define: [(fType, fName, sName, desc)]*
+//! @param ...			fields define: [(fType, fName, ...)]*
 #ifdef _MSC_VER
 	//! @params	N, isRawVal, needGetter, encoding, stName, ...
 	#define IJSTI_DEFINE_STRUCT_IMPL(N, ...) \
@@ -1255,11 +1255,11 @@ private:
 #endif
 #define IJSTI_DEFINE_GETTER_F(N, ...)	// empty
 
-#define IJSTI_IDL_FTYPE(fType, fName, sName, desc)		fType
-#define IJSTI_IDL_FNAME(fType, fName, sName, desc)		fName
-#define IJSTI_IDL_SNAME(fType, fName, sName, desc)		sName
-#define IJSTI_IDL_DESC(fType, fName, sName, desc)		desc
-#define IJSTI_IDL_FNAME_STR(fType, fName, sName, desc)		#fName
+#define IJSTI_IDL_FTYPE(fType, fName, ...)				fType
+#define IJSTI_IDL_FNAME(fType, fName, ...)				fName
+#define IJSTI_IDL_P3(fType, fName, p3, ...)				p3
+#define IJSTI_IDL_P4(fType, fName, p3, p4)				p4
+#define IJSTI_IDL_FNAME_STR(fType, fName, ...)			#fName
 
 #define IJSTI_OFFSETOF(base, member)	(size_t(&base->member) - size_t(base))
 
@@ -1289,17 +1289,48 @@ private:
 		/* Do not call MetaInfoS::GetInstance() int this function */			 			\
 		IJST_OFFSET_BUFFER_NEW(dummyBuffer, sizeof(stName));								\
 		const stName* stPtr = reinterpret_cast<const stName*>(dummyBuffer);					\
-		::ijst::detail::MetaClassInfoSetter<_ijst_Ch>					 					\
+		::ijst::detail::MetaClassInfoSetter<_ijst_Encoding>					 				\
 					mSetter(metaInfo->metaClass);											\
 		mSetter.InitBegin(#stName, N, IJSTI_OFFSETOF(stPtr, _));
 
-#define IJSTI_METAINFO_ADD(stName, fDef)  													\
-		mSetter.PushMetaField(																\
-			IJSTI_IDL_FNAME_STR fDef,														\
-			IJSTI_IDL_SNAME fDef, 															\
+// Add meta info of field
+// e.g., IJSTI_METAINFO_ADD(MyStruct, (ijst::T_int, i, "i"))
+#ifdef _MSC_VER
+	#define IJSTI_METAINFO_ADD(stName, fDef)  													\
+			IJSTI_EXPAND(IJSTI_PP_CONCAT(IJSTI_METAINFO_ADD_IMPL_, IJSTI_PP_NARGS fDef)(stName, fDef))
+#else
+	#define IJSTI_METAINFO_ADD(stName, fDef)  													\
+			IJSTI_PP_CONCAT(IJSTI_METAINFO_ADD_IMPL_, IJSTI_PP_NARGS fDef)(stName, fDef)
+#endif
+
+// Impl of meta info adding with fDef format (type, fileName)
+// The json name is same as field name
+#define IJSTI_METAINFO_ADD_IMPL_2(stName, fDef)  											\
+		mSetter.PushMetaField_2(															\
+			&(IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef, _ijst_Encoding)),					\
 			IJSTI_OFFSETOF(stPtr, IJSTI_IDL_FNAME fDef),									\
-			IJSTI_IDL_DESC fDef, 															\
-			&(IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef, _ijst_Encoding))					\
+			IJSTI_IDL_FNAME_STR fDef,														\
+			IJSTI_IDL_FNAME_STR fDef														\
+		);
+
+// Impl of meta info adding with fDef format (type, fileName, p3)
+#define IJSTI_METAINFO_ADD_IMPL_3(stName, fDef)  											\
+		mSetter.PushMetaField_3(															\
+			&(IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef, _ijst_Encoding)),					\
+			IJSTI_OFFSETOF(stPtr, IJSTI_IDL_FNAME fDef),									\
+			IJSTI_IDL_FNAME_STR fDef,														\
+			IJSTI_IDL_FNAME_STR fDef,														\
+			IJSTI_IDL_P3 fDef 																\
+		);
+
+// Impl of meta info adding with fDef format (type, fileName, p3, p4)
+#define IJSTI_METAINFO_ADD_IMPL_4(stName, fDef)  											\
+		mSetter.PushMetaField_4(															\
+			&(IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef, _ijst_Encoding)),					\
+			IJSTI_OFFSETOF(stPtr, IJSTI_IDL_FNAME fDef),									\
+			IJSTI_IDL_FNAME_STR fDef,														\
+			IJSTI_IDL_P3 fDef, 																\
+			IJSTI_IDL_P4 fDef 																\
 		);
 
 #define IJSTI_METAINFO_DEFINE_END()															\

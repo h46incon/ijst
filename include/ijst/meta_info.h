@@ -127,8 +127,8 @@ public:
 	std::size_t GetAccessorOffset() const { return accessorOffset; }
 
 private:
-	friend class detail::MetaClassInfoSetter<CharType>;		// use CharType instead of Ch to make IDE happy
-	template<typename T> friend class detail::MetaClassInfoTyped;
+	template<typename> friend class detail::MetaClassInfoSetter;
+	template<typename> friend class detail::MetaClassInfoTyped;
 	MetaClassInfo() : accessorOffset(0), m_mapInited(false) { }
 
 	MetaClassInfo(const MetaClassInfo&) IJSTI_DELETED;

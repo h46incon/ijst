@@ -131,15 +131,20 @@ private:
 };
 
 template<typename Encoding>
+void EncodeStringToBuffer(const char* pSrc, rapidjson::GenericStringBuffer<Encoding, JsonAllocator>& bufferOut)
+{
+	const char* ptr = pSrc;
+	while ((*ptr) != '\0') {
+		Encoding::Encode(bufferOut, static_cast<unsigned>(*ptr));
+		++ptr;
+	}
+}
+
+template<typename Encoding>
 rapidjson::GenericStringRef<typename Encoding::Ch> EncodeString(const char* pSrc, JsonAllocator& allocator)
 {
 	rapidjson::GenericStringBuffer<Encoding, JsonAllocator> sb(&allocator);
-	const char* ptr = pSrc;
-	while ((*ptr) != '\0') {
-		Encoding::Encode(sb, static_cast<unsigned>(*ptr));
-		++ptr;
-	}
-
+	EncodeStringToBuffer(pSrc, sb);
 	return rapidjson::GenericStringRef<typename Encoding::Ch>
 	        (sb.GetString(), static_cast<rapidjson::SizeType>(sb.GetSize() / sizeof(typename Encoding::Ch)));
 }
@@ -510,10 +515,10 @@ private:
 	}
 };
 
-template<typename CharType>
+template<typename Encoding>
 class MetaClassInfoSetter {
 public:
-	typedef CharType Ch;
+	typedef typename Encoding::Ch Ch;
 	explicit MetaClassInfoSetter(MetaClassInfo<Ch>& _d) : d(_d) { }
 
 	void InitBegin(const std::string& _tag, std::size_t _fieldCount, std::size_t _accessorOffset)
@@ -523,23 +528,47 @@ public:
 		d.m_fieldsInfo.reserve(_fieldCount);
 	}
 
-	void PushMetaField(const std::string &fieldName, const std::basic_string<Ch>& jsonName,
-					   std::size_t offset, FDesc::Mode desc, void* pSerializeInterface)
+	// Call from IJSTI_METAINFO_ADD_IMPL_2
+	void PushMetaField_2(void* pSerializeInterface, std::size_t offset, const char* fieldName, const char* jsonName)
+	{
+		PushMetaField_3(pSerializeInterface, offset, fieldName, jsonName, FDesc::NoneFlag);
+	}
+
+	// Call from IJSTI_METAINFO_ADD_IMPL_3
+	void PushMetaField_3(void* pSerializeInterface, std::size_t offset, const char* fieldName, const char* _, const std::basic_string<Ch>& trueJsonName)
+	{
+		(void)_;
+		PushMetaField_4(pSerializeInterface, offset, fieldName, trueJsonName, FDesc::NoneFlag);
+	}
+
+	// Call from IJSTI_METAINFO_ADD_IMPL_3
+	void PushMetaField_3(void* pSerializeInterface, std::size_t offset, const char* fieldName, const char* jsonName, FDesc::Mode desc)
+	{
+		// convert encoding of jsonName
+		JsonAllocator allocator;
+		rapidjson::GenericStringBuffer<Encoding, JsonAllocator> sb(&allocator);
+		EncodeStringToBuffer(jsonName, sb);
+		std::basic_string<Ch> jsonNameEncoded = std::basic_string<Ch>(sb.GetString(), static_cast<rapidjson::SizeType>(sb.GetSize() / sizeof(Ch)));
+		PushMetaField_4(pSerializeInterface, offset, fieldName, jsonNameEncoded, desc);
+	}
+
+	// Call from IJSTI_METAINFO_ADD_IMPL_4
+	// Backward compatibility with FDesc declaration is "0"
+	void PushMetaField_4(void* pSerializeInterface, std::size_t offset, const char* fieldName, const std::basic_string<Ch>& jsonName, int desc)
+	{
+		PushMetaField_4(pSerializeInterface, offset, fieldName, jsonName, static_cast<FDesc::Mode>(desc));
+	}
+
+	// Call from IJSTI_METAINFO_ADD_IMPL_4
+	void PushMetaField_4(void* pSerializeInterface, std::size_t offset, const char* fieldName, const std::basic_string<Ch>& jsonName, FDesc::Mode desc)
 	{
 		MetaFieldInfo<Ch> metaField;
 		metaField.jsonName = jsonName;
-		metaField.fieldName = fieldName;
+		metaField.fieldName = std::string(fieldName);
 		metaField.offset = offset;
 		metaField.desc = desc;
 		metaField.serializerInterface = pSerializeInterface;
 		d.m_fieldsInfo.push_back(IJSTI_MOVE(metaField));
-	}
-
-	// Backward compatibility with FDesc declaration is "0"
-	void PushMetaField(const std::string &fieldName, const std::basic_string<Ch>& jsonName,
-					   std::size_t offset, int desc, void* pSerializeInterface)
-	{
-		PushMetaField(fieldName, jsonName, offset, static_cast<FDesc::Mode>(desc), pSerializeInterface);
 	}
 
 	void InitEnd()
