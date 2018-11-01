@@ -7,8 +7,10 @@
 ```cpp
 IJST_DEFINE_STRUCT (
     struct_name
-    , (field_type0, field_name0, "json_name0", filed_desc0)
-    , (field_type1, field_name1, "json_name1", filed_desc1)
+    , (field_type0, field_name0)  // 仅指定字段类型和名字，JSON 键名和字段名相同
+    , (field_type1, field_name1, "json_name1")  // 自定义 JSON 键名
+    , (field_type2, field_name2, filed_desc2)   // 添加字段描述
+    , (field_type3, field_name3, "json_name3", filed_desc3)  // 同时指定 JSON 键名及字段描述
     // ...
 )
 
@@ -27,11 +29,11 @@ using namespace ijst;
 
 IJST_DEFINE_STRUCT (
     SampleStruct
-    , (T_int, iID, "id", 0)
-    , (T_string, strName, "name", 0)
-    , (T_bool, bSex, "sex", 0)     // 只是举一个bool的栗子
+    , (T_int, iID)
+    , (T_string, strName, "name")
+    , (T_bool, bSex, "sex")     // 只是举一个bool的栗子
     // 接下来是复杂的字段
-    , (IJST_TVEC(T_uint64), vecFriendsID, "friends_id", ijst::FDesc::Optional)      // Optional，可能没朋友
+    , (IJST_TVEC(T_uint64), vecFriendsID, ijst::FDesc::Optional)      // Optional，可能没朋友
     , (IJST_TMAP(IJST_TVEC(T_string)), mapWhatEver, "what_ever", ijst::FDesc::NotDefault)    // NotDefault 表示这个 map 不为默认值，即不为空
 );
 
@@ -102,8 +104,9 @@ SampleStruct sampleStruct;
 
 - **FieldDesc**
 
-    字段描述。该值可以为`ijst::FDesc`中值的组合，如无特殊情况，使用0即可。值的含义如下：
+    字段描述。该值可以为`ijst::FDesc`中值的组合（用 `|` 操作符连接），值的含义如下：
 
+    - NoneFlag: 默认值。
     - Optional：该字段在 JSON 中不必须出现。
     - Nullable：该字段的 JSON 值可能为 null。
     - NotDefault：该字段不能为默认值，如数组不能为空，`T_int` 值不能为0。
@@ -171,7 +174,6 @@ IJST_MARK_MISSING(obj, field)
 
 ```cpp
 IJST_SET(obj, field, val)
-IJST_SET_STRICT(obj, field, val)    // field 和 val 的类型必须完全相同
 ```
 
 一个例子：
@@ -416,7 +418,7 @@ st._.Serialize<rapidjson::UTF16<> >(out);
 ```cpp
 // 使用 IJST_DEFINE_GENERIC_STRUCT 宏，其他定义 ijst 结构体的宏也有相应的自定义编码的版本：
 IJST_DEFINE_GENERIC_STRUCT (
-	rapidjson::UTF16<char32_t>, U32SampleStruct       // 第一个参数指定编码
+	rapidjson::UTF16<char16_t>, U16SampleStruct       // 第一个参数指定编码
 	, (ijst::T_int, iVal, u"int", 0)                  // 定义 JSON 键名时,使用 C++ 11 提供的 UTF-16 常量字符串（`u` 前缀）
 	, (ijst::T_uint, uiVal, u"uint", 0)
 	, (IJST_TSTR, strVal, u"str", 0)                  // 定义字符串时,使用 IJST_TSTR 宏。
