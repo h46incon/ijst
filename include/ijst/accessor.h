@@ -1258,7 +1258,8 @@ private:
 #define IJSTI_IDL_FTYPE(fType, fName, ...)				fType
 #define IJSTI_IDL_FNAME(fType, fName, ...)				fName
 #define IJSTI_IDL_P3(fType, fName, p3, ...)				p3
-#define IJSTI_IDL_P4(fType, fName, p3, p4)				p4
+#define IJSTI_IDL_P4(fType, fName, p3, p4, ...)			p4
+#define IJSTI_IDL_P5(fType, fName, p3, p4, p5)			p5
 #define IJSTI_IDL_FNAME_STR(fType, fName, ...)			#fName
 
 #define IJSTI_OFFSETOF(base, member)	(size_t(&base->member) - size_t(base))
@@ -1303,8 +1304,9 @@ private:
 			IJSTI_PP_CONCAT(IJSTI_METAINFO_ADD_IMPL_, IJSTI_PP_NARGS fDef)(stName, fDef)
 #endif
 
-// Impl of meta info adding with fDef format (type, fileName)
+// Impl of meta info adding with fDef format (type, field_name)
 // The json name is same as field name
+// The serialize_intf is always decided by field type in this case
 #define IJSTI_METAINFO_ADD_IMPL_2(stName, fDef)  											\
 		mSetter.PushMetaField_2(															\
 			&(IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef, _ijst_Encoding)),					\
@@ -1313,24 +1315,35 @@ private:
 			IJSTI_IDL_FNAME_STR fDef														\
 		);
 
-// Impl of meta info adding with fDef format (type, fileName, p3)
+// Impl of meta info adding with fDef format (type, field_name, p3)
 #define IJSTI_METAINFO_ADD_IMPL_3(stName, fDef)  											\
-		mSetter.PushMetaField_3(															\
-			&(IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef, _ijst_Encoding)),					\
+		mSetter.PushMetaField_3<IJSTI_IDL_FTYPE fDef>(										\
 			IJSTI_OFFSETOF(stPtr, IJSTI_IDL_FNAME fDef),									\
 			IJSTI_IDL_FNAME_STR fDef,														\
 			IJSTI_IDL_FNAME_STR fDef,														\
 			IJSTI_IDL_P3 fDef 																\
 		);
 
-// Impl of meta info adding with fDef format (type, fileName, p3, p4)
+// Impl of meta info adding with fDef format (type, field_name, p3, p4)
 #define IJSTI_METAINFO_ADD_IMPL_4(stName, fDef)  											\
-		mSetter.PushMetaField_4(															\
-			&(IJSTI_FSERIALIZER_INS(IJSTI_IDL_FTYPE fDef, _ijst_Encoding)),					\
+		mSetter.PushMetaField_4<IJSTI_IDL_FTYPE fDef>(										\
 			IJSTI_OFFSETOF(stPtr, IJSTI_IDL_FNAME fDef),									\
+			IJSTI_IDL_FNAME_STR fDef,														\
 			IJSTI_IDL_FNAME_STR fDef,														\
 			IJSTI_IDL_P3 fDef, 																\
 			IJSTI_IDL_P4 fDef 																\
+		);
+
+// Impl of meta info adding with fDef format (type, field_name, p3, p4, p5)
+// The serialize_intf is always declared by user in this case
+// The json_name is always declared by user in this case
+#define IJSTI_METAINFO_ADD_IMPL_5(stName, fDef)  											\
+		mSetter.PushMetaField_5(															\
+			IJSTI_OFFSETOF(stPtr, IJSTI_IDL_FNAME fDef),									\
+			IJSTI_IDL_FNAME_STR fDef,														\
+			IJSTI_IDL_P3 fDef, 																\
+			IJSTI_IDL_P4 fDef, 																\
+			IJSTI_IDL_P5 fDef 																\
 		);
 
 #define IJSTI_METAINFO_DEFINE_END()															\

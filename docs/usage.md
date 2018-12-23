@@ -6,11 +6,29 @@
 
 ```cpp
 IJST_DEFINE_STRUCT (
+	// 结构体的名字
     struct_name
-    , (field_type0, field_name0)  // 仅指定字段类型和名字，JSON 键名和字段名相同
-    , (field_type1, field_name1, "json_name1")  // 自定义 JSON 键名
-    , (field_type2, field_name2, filed_desc2)   // 添加字段描述
-    , (field_type3, field_name3, "json_name3", filed_desc3)  // 同时指定 JSON 键名及字段描述
+    // 成员信息。由以下字段组成，其中 field_type，field_name 是必须的。其他字段是可选的，但在声明时必须保持相对顺序不变
+    , (field_type0, field_name0, "json_name0", filed_desc0, serialize_intf0)
+    
+    // 仅指定字段类型和名字，JSON 键名和字段名相同
+    , (field_type1, field_name1)  
+    
+    // 自定义 JSON 键名
+    , (field_type2, field_name2, "json_name2")  
+    
+    // 添加字段描述，见后文
+    , (field_type3, field_name3, filed_desc3)  
+    
+    // 使用自定义的序列化/反序列化方法，在自定义类型时有用，见后文
+    , (field_type4, field_name4, serialize_intf4)
+    
+    // 可以声明多个字段，比如同时指定 JSON 键名和字段描述
+    , (field_type5, field_name5, "json_name5", serialize_intf5)
+    
+    // 以下声明错误，因为 desc6 和 json_name6 破坏了相对顺序
+    // , (field_type6, field_name6, desc6, "json_name6")
+    
     // ...
 )
 
@@ -111,6 +129,13 @@ SampleStruct sampleStruct;
     - Nullable：该字段的 JSON 值可能为 null。
     - NotDefault：该字段不能为默认值，如数组不能为空，`T_int` 值不能为0。
 
+- **SerializerIntf**
+
+	该成员的序列化/反序列化方法。默认情况下，成员的序列化方法通过 FieldType 确定，由 ijst 内置实现。
+	如果需要增加 ijst 不支持的类型，或者需要自定义序列化方法的时候，可以通过该参数指定。
+
+	当该值指定为 `NULL` 时，会定义该成员，但是序列化/反序列化时会被忽略，也无法获取其元信息。
+	使用此特性可以在 ijst 结构体中很方便地添加其他用途的成员。
 
 # 接口
 
