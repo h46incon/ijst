@@ -190,9 +190,9 @@ void TestStructAPI(const char *className)
 	CheckFieldInfo<Encoding>(metaInfo, "int_v21", "int_v21", (char*)&st.int_v21 - (char*)&st, FDesc::NoneFlag);
 	CheckFieldInfo<Encoding>(metaInfo, "int_v31", "int_val_31", (char*)&st.int_v31 - (char*)&st, FDesc::NoneFlag);
 	CheckFieldInfo<Encoding>(metaInfo, "int_v32", "int_v32", (char*)&st.int_v32 - (char*)&st, FDesc::Nullable);
-	ASSERT_EQ(typeid(T_int).hash_code(), typeid(st.int_v33).hash_code());
+	ASSERT_EQ(typeid(T_int), typeid(st.int_v33));
 	CheckFieldInfoNotExisted<Encoding>(metaInfo, "int_v33", &st.int_v33);
-	ASSERT_EQ(typeid(rapidjson::Document).hash_code(), typeid(st.doc_v34).hash_code());
+	ASSERT_EQ(typeid(rapidjson::Document), typeid(st.doc_v34));
 	CheckFieldInfoNotExisted<Encoding>(metaInfo, "doc_v34", &st.doc_v34);
 	CheckFieldInfoWithSerializeIntf<Encoding>(metaInfo, "int_v34", "int_v34", (char*)&st.int_v34 - (char*)&st, FDesc::NoneFlag, pUintSerializerIntf);
 	CheckFieldInfo<Encoding>(metaInfo, "int_v41", "int_val_41", (char*)&st.int_v41 - (char*)&st, FDesc::NoneFlag);
