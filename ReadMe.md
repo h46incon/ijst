@@ -7,7 +7,7 @@ ijst (iJsonStruct) 一个是 C++ JSON 序列化/反序列化库：
 
 - 只需定义**一次**结构体，无须重复添加元信息。
 - 支持 Getter Chaining，可以很简单地访问路径较深的字段。
-- 支持 unknown 字段和可选字段。
+- 丰富的语义：支持 unknown 字段和可选字段，支持成员名与 JSON 键名不同，支持添加自定义的类型及序列化行为。
 - 支持 UTF-8, UTF-16, UTF-32 编码。
 - 轻量：header-only，仅依赖 stl 和 [RapidJSON](https://github.com/Tencent/rapidjson)。
 - 反序列失败时，会有详细的错误信息。

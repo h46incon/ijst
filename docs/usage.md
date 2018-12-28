@@ -127,7 +127,7 @@ SampleStruct sampleStruct;
     - NoneFlag: 默认值。
     - Optional：该字段在 JSON 中不必须出现。
     - Nullable：该字段的 JSON 值可能为 null。
-    - NotDefault：该字段不能为默认值，如数组不能为空，`T_int` 值不能为0。
+    - NotDefault：该字段不能为默认值，如数组不能为空，`T_int` 值不能为 0 等。
 
 - **SerializerIntf**
 
@@ -290,12 +290,12 @@ ijst 也提供了类似的**静态类型**的方法：为每个字段定义 `get
 // 需使用 *_WITH_GETTER 宏
 IJST_DEFINE_STRUCT_WITH_GETTER(
     StFoo
-    , (IJST_TVEC(T_int), bar, "bar", 0)
+    , (IJST_TVEC(T_int), bar)
 )
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
     StOut
-    , (IJST_TST(StFoo), foo, "foo", 0)
+    , (IJST_TST(StFoo), foo)
 )
 
 // 默认情况下会生成下面的定义
@@ -444,10 +444,10 @@ st._.Serialize<rapidjson::UTF16<> >(out);
 // 使用 IJST_DEFINE_GENERIC_STRUCT 宏，其他定义 ijst 结构体的宏也有相应的自定义编码的版本：
 IJST_DEFINE_GENERIC_STRUCT (
 	rapidjson::UTF16<char16_t>, U16SampleStruct       // 第一个参数指定编码
-	, (ijst::T_int, iVal, u"int", 0)                  // 定义 JSON 键名时,使用 C++ 11 提供的 UTF-16 常量字符串（`u` 前缀）
-	, (ijst::T_uint, uiVal, u"uint", 0)
-	, (IJST_TSTR, strVal, u"str", 0)                  // 定义字符串时,使用 IJST_TSTR 宏。
-	, (IJST_TRAW, rawVal, u"raw", 0)                  // 定义字符串时,使用 ISJT_TRAW 宏。
+	, (ijst::T_int, iVal, u"int")                  // 定义 JSON 键名时,使用 C++ 11 提供的 UTF-16 常量字符串（`u` 前缀）
+	, (ijst::T_uint, uiVal, u"uint")
+	, (IJST_TSTR, strVal, u"str")                  // 定义字符串时,使用 IJST_TSTR 宏。
+	, (IJST_TRAW, rawVal, u"raw")                  // 定义字符串时,使用 ISJT_TRAW 宏。
 )
 ```
 

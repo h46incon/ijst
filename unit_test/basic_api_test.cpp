@@ -3,6 +3,7 @@
 //
 
 #include "util.h"
+#include <typeinfo>
 using namespace ijst;
 
 namespace dummy_ns {
@@ -109,6 +110,7 @@ IJST_DEFINE_STRUCT(
 		, (T_int, int_v31, PF ## "int_val_31") /*type, name, json_name*/\
 		, (T_int, int_v32, FDesc::Nullable) /*type, name, desc*/ \
 		, (T_int, int_v33, NULL) /*type, name, serialize_intf(NULL)*/ \
+		, (rapidjson::Document, doc_v34, NULL) /*type, name, serialize_intf(NULL) with not built-in type*/ \
 		, (T_int, int_v34, (&IJSTI_FSERIALIZER_INS(T_uint, encoding)) ) /*type, name, serialize_intf*/ \
 		, (T_int, int_v41, PF ## "int_val_41", 0) /*type, name, json_name, 0*/ \
 		, (T_int, int_v42, PF ## "int_val_42", FDesc::Optional) /*type, name, json_name, desc*/\
@@ -188,7 +190,10 @@ void TestStructAPI(const char *className)
 	CheckFieldInfo<Encoding>(metaInfo, "int_v21", "int_v21", (char*)&st.int_v21 - (char*)&st, FDesc::NoneFlag);
 	CheckFieldInfo<Encoding>(metaInfo, "int_v31", "int_val_31", (char*)&st.int_v31 - (char*)&st, FDesc::NoneFlag);
 	CheckFieldInfo<Encoding>(metaInfo, "int_v32", "int_v32", (char*)&st.int_v32 - (char*)&st, FDesc::Nullable);
+	ASSERT_EQ(typeid(T_int).hash_code(), typeid(st.int_v33).hash_code());
 	CheckFieldInfoNotExisted<Encoding>(metaInfo, "int_v33", &st.int_v33);
+	ASSERT_EQ(typeid(rapidjson::Document).hash_code(), typeid(st.doc_v34).hash_code());
+	CheckFieldInfoNotExisted<Encoding>(metaInfo, "doc_v34", &st.doc_v34);
 	CheckFieldInfoWithSerializeIntf<Encoding>(metaInfo, "int_v34", "int_v34", (char*)&st.int_v34 - (char*)&st, FDesc::NoneFlag, pUintSerializerIntf);
 	CheckFieldInfo<Encoding>(metaInfo, "int_v41", "int_val_41", (char*)&st.int_v41 - (char*)&st, FDesc::NoneFlag);
 	CheckFieldInfo<Encoding>(metaInfo, "int_v42", "int_val_42", (char*)&st.int_v42 - (char*)&st, FDesc::Optional);
