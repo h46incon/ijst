@@ -1,6 +1,19 @@
 ## ijst
-[![Build Status](https://travis-ci.org/h46incon/ijst.svg?branch=master)](https://travis-ci.org/h46incon/ijst)
-[![Build status](https://ci.appveyor.com/api/projects/status/pkwfr31bdoicw1hd?svg=true)](https://ci.appveyor.com/project/h46incon/ijst)
+
+branch | TravisCI (gcc,clang) | AppVeyor (msvc)
+:---: | :---: | :---:
+master | [![Status][m_i_travis_ci]][m_l_travis_ci] | [![Status][m_i_appveyor]][m_l_appveyor]
+dev    | [![Status][d_i_travis_ci]][d_l_travis_ci] | [![Status][d_i_appveyor]][d_l_appveyor]
+
+[m_i_travis_ci]: https://travis-ci.org/h46incon/ijst.svg?branch=master
+[m_l_travis_ci]: https://travis-ci.org/h46incon/ijst/branches
+[d_i_travis_ci]: https://travis-ci.org/h46incon/ijst.svg?branch=dev
+[d_l_travis_ci]: https://travis-ci.org/h46incon/ijst/branches
+
+[m_i_appveyor]: https://ci.appveyor.com/api/projects/status/pkwfr31bdoicw1hd/branch/master?svg=true
+[m_l_appveyor]: https://ci.appveyor.com/project/h46incon/ijst/branch/master
+[d_i_appveyor]: https://ci.appveyor.com/api/projects/status/pkwfr31bdoicw1hd/branch/dev?svg=true
+[d_l_appveyor]: https://ci.appveyor.com/project/h46incon/ijst/branch/dev
 
 
 ijst (iJsonStruct) 一个是 C++ JSON 序列化/反序列化库：
