@@ -3,6 +3,7 @@
 //
 
 #include "util.h"
+#include <typeinfo>
 using namespace ijst;
 
 namespace dummy_ns {
@@ -20,6 +21,12 @@ TEST(BasicAPI, EnumOr)
 	deserFlag |= DeserFlag::kMoveFromIntermediateDoc;
 	ASSERT_EQ(deserFlag, DeserFlag::kMoveFromIntermediateDoc);
 	ASSERT_EQ(DeserFlag::kIgnoreUnknown, DeserFlag::kNoneFlag | DeserFlag::kIgnoreUnknown);
+
+	// FDesc::Mode
+	FDesc::Mode desc = FDesc::NoneFlag;
+	desc |= FDesc::Nullable;
+	ASSERT_EQ(desc, FDesc::Nullable);
+	ASSERT_EQ(FDesc::NotDefault, FDesc::NoneFlag | FDesc::NotDefault);
 }
 
 IJST_DEFINE_VALUE(
@@ -99,7 +106,17 @@ IJST_DEFINE_STRUCT(
 	) \
 	IJST_DEFINE_GENERIC_STRUCT_WITH_GETTER( \
 		encoding, stName \
-		, (T_int, int_v, PF ## "int_val", 0) \
+		, (T_int, int_v21) /*type, name*/\
+		, (T_int, int_v31, PF ## "int_val_31") /*type, name, json_name*/\
+		, (T_int, int_v32, FDesc::Nullable) /*type, name, desc*/ \
+		, (T_int, int_v33, NULL) /*type, name, serialize_intf(NULL)*/ \
+		, (rapidjson::Document, doc_v34, NULL) /*type, name, serialize_intf(NULL) with not built-in type*/ \
+		, (T_int, int_v34, (&IJSTI_FSERIALIZER_INS(T_uint, encoding)) ) /*type, name, serialize_intf*/ \
+		, (T_int, int_v41, PF ## "int_val_41", 0) /*type, name, json_name, 0*/ \
+		, (T_int, int_v42, PF ## "int_val_42", FDesc::Optional) /*type, name, json_name, desc*/\
+		, (T_int, int_v43, PF ## "int_val_43", (&IJSTI_FSERIALIZER_INS(T_uint, encoding)) ) /*type, name, json_name, serialize_intf*/ \
+		, (T_int, int_v44, FDesc::NotDefault, (&IJSTI_FSERIALIZER_INS(T_uint, encoding)) ) /*type, name, desc, serialize_intf*/ \
+		, (T_int, int_v51, PF ## "int_val_51", FDesc::Nullable, (&IJSTI_FSERIALIZER_INS(T_uint, encoding)) ) /*type, name, json_name, desc, serialize_intf*/ \
 		, (IJST_TST(stName ## Inner), st_v, PF ## "st_val", 0) \
 		, (IJST_TSTR, str_v, PF ## "str_val", 0) \
 		, (IJST_TRAW, raw_v, PF ## "raw_val", 0) \
@@ -113,17 +130,45 @@ DEFINE_TEST_STRUCT(rapidjson::UTF16<>, U16TestSt, L)
 DEFINE_TEST_STRUCT(rapidjson::UTF32<char32_t>, U32TestSt, U)
 #endif
 
+template<typename Ch>
+void DoCheckFieldInfo(const MetaFieldInfo<Ch> *fieldInfo,
+					const std::string& fieldName, const std::basic_string<Ch>& jsonName, size_t offset, FDesc::Mode desc)
+{
+	ASSERT_TRUE(fieldInfo != NULL);
+	ASSERT_EQ(fieldInfo->fieldName, fieldName);
+	ASSERT_EQ(fieldInfo->offset, offset);
+	ASSERT_EQ(fieldInfo->desc, desc);
+	ASSERT_EQ(fieldInfo->jsonName, jsonName);
+}
+
 template<typename Encoding>
 void CheckFieldInfo(const MetaClassInfo<typename Encoding::Ch>& metaInfo,
 					const std::string& fieldName, const std::string& jsonName, size_t offset, FDesc::Mode desc)
 {
 	std::basic_string<typename Encoding::Ch> encodedJsonName = Transcode<rapidjson::UTF8<>, Encoding>(jsonName.c_str());
 	const MetaFieldInfo<typename Encoding::Ch> *fieldInfo = metaInfo.FindFieldByJsonName(encodedJsonName);
-	ASSERT_FALSE(fieldInfo == NULL);
-	ASSERT_EQ(fieldInfo->fieldName, fieldName);
-	ASSERT_EQ(fieldInfo->offset, offset);
-	ASSERT_EQ(fieldInfo->desc, desc);
-	ASSERT_EQ(fieldInfo->jsonName, encodedJsonName);
+	ASSERT_TRUE(fieldInfo != NULL);
+	DoCheckFieldInfo(fieldInfo, fieldName, encodedJsonName, offset, desc);
+}
+
+template<typename Encoding>
+void CheckFieldInfoWithSerializeIntf(const MetaClassInfo<typename Encoding::Ch>& metaInfo,
+					const std::string& fieldName, const std::string& jsonName, size_t offset, FDesc::Mode desc, void* pSerializeIntf)
+{
+	std::basic_string<typename Encoding::Ch> encodedJsonName = Transcode<rapidjson::UTF8<>, Encoding>(jsonName.c_str());
+	const MetaFieldInfo<typename Encoding::Ch> *fieldInfo = metaInfo.FindFieldByJsonName(encodedJsonName);
+	ASSERT_TRUE(fieldInfo != NULL);
+	DoCheckFieldInfo(fieldInfo, fieldName, encodedJsonName, offset, desc);
+	ASSERT_EQ(fieldInfo->serializerInterface, pSerializeIntf);
+}
+
+template<typename Encoding>
+void CheckFieldInfoNotExisted(const MetaClassInfo<typename Encoding::Ch>& metaInfo, const std::string& jsonName, void* field_ptr)
+{
+	std::basic_string<typename Encoding::Ch> encodedJsonName = Transcode<rapidjson::UTF8<>, Encoding>(jsonName.c_str());
+	const MetaFieldInfo<typename Encoding::Ch> *fieldInfo = metaInfo.FindFieldByJsonName(encodedJsonName);
+	ASSERT_TRUE(field_ptr != NULL);
+	ASSERT_TRUE(fieldInfo == NULL);
 }
 
 template<typename Struct>
@@ -134,24 +179,38 @@ void TestStructAPI(const char *className)
 	Struct st;
 	ASSERT_FALSE(st._.IsParentVal());
 
+	void* pUintSerializerIntf = &IJSTI_FSERIALIZER_INS(T_uint, Encoding);
+
 	//--- MetaInfo
 	const MetaClassInfo<Ch>& metaInfo = ijst::template GetMetaInfo<Struct>();
 	ASSERT_EQ(&st._.GetMetaInfo(), &metaInfo);
 	ASSERT_STREQ(metaInfo.GetClassName().c_str(), className);
-	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 6u);
+	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 14u);
 	ASSERT_EQ((ptrdiff_t)metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
-	CheckFieldInfo<Encoding>(metaInfo, "int_v", "int_val", (char*)&st.int_v - (char*)&st, 0);
-	CheckFieldInfo<Encoding>(metaInfo, "st_v", "st_val", (char*)&st.st_v - (char*)&st, 0);
-	CheckFieldInfo<Encoding>(metaInfo, "str_v", "str_val", (char*)&st.str_v - (char*)&st, 0);
-	CheckFieldInfo<Encoding>(metaInfo, "raw_v", "raw_val", (char*)&st.raw_v - (char*)&st, 0);
-	CheckFieldInfo<Encoding>(metaInfo, "map_v", "map_val", (char*)&st.map_v - (char*)&st, 0);
-	CheckFieldInfo<Encoding>(metaInfo, "obj_v", "obj_val", (char*)&st.obj_v - (char*)&st, 0);
+	CheckFieldInfo<Encoding>(metaInfo, "int_v21", "int_v21", (char*)&st.int_v21 - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "int_v31", "int_val_31", (char*)&st.int_v31 - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "int_v32", "int_v32", (char*)&st.int_v32 - (char*)&st, FDesc::Nullable);
+	ASSERT_EQ(typeid(T_int), typeid(st.int_v33));
+	CheckFieldInfoNotExisted<Encoding>(metaInfo, "int_v33", &st.int_v33);
+	ASSERT_EQ(typeid(rapidjson::Document), typeid(st.doc_v34));
+	CheckFieldInfoNotExisted<Encoding>(metaInfo, "doc_v34", &st.doc_v34);
+	CheckFieldInfoWithSerializeIntf<Encoding>(metaInfo, "int_v34", "int_v34", (char*)&st.int_v34 - (char*)&st, FDesc::NoneFlag, pUintSerializerIntf);
+	CheckFieldInfo<Encoding>(metaInfo, "int_v41", "int_val_41", (char*)&st.int_v41 - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "int_v42", "int_val_42", (char*)&st.int_v42 - (char*)&st, FDesc::Optional);
+	CheckFieldInfoWithSerializeIntf<Encoding>(metaInfo, "int_v43", "int_val_43", (char*)&st.int_v43 - (char*)&st, FDesc::NoneFlag, pUintSerializerIntf);
+	CheckFieldInfoWithSerializeIntf<Encoding>(metaInfo, "int_v44", "int_v44", (char*)&st.int_v44 - (char*)&st, FDesc::NotDefault, pUintSerializerIntf);
+	CheckFieldInfoWithSerializeIntf<Encoding>(metaInfo, "int_v51", "int_val_51", (char*)&st.int_v51 - (char*)&st, FDesc::Nullable, pUintSerializerIntf);
+	CheckFieldInfo<Encoding>(metaInfo, "st_v", "st_val", (char*)&st.st_v - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "str_v", "str_val", (char*)&st.str_v - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "raw_v", "raw_val", (char*)&st.raw_v - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "map_v", "map_val", (char*)&st.map_v - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<Encoding>(metaInfo, "obj_v", "obj_val", (char*)&st.obj_v - (char*)&st, FDesc::NoneFlag);
 	// invalid json name search
 	ASSERT_EQ(NULL, metaInfo.FindFieldByJsonName(Transcode<rapidjson::UTF8<>, Encoding >("NotAField")));
 
 	//--- Optional
 	ASSERT_EQ(NULL, st.get_st_v()->get_int_v().Ptr());
-	ASSERT_EQ(NULL, st.get_int_v().Ptr());
+	ASSERT_EQ(NULL, st.get_int_v42().Ptr());
 	ASSERT_EQ(NULL, st.get_str_v().Ptr());
 	ASSERT_EQ(NULL, st.get_raw_v().Ptr());
 	ASSERT_EQ(NULL, st.get_map_v()[std::basic_string<Ch>()].Ptr());
@@ -185,10 +244,10 @@ TEST(BasicAPI, HashCollision)
 	ASSERT_STREQ(metaInfo.GetClassName().c_str(), "HashCollision");
 	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 4u);
 	ASSERT_EQ((ptrdiff_t)metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
-	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_1", "costarring", (char*)&st.int_1 - (char*)&st, 0);
-	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_2", "liquid", (char*)&st.int_2 - (char*)&st, 0);
-	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_3", "zinkes", (char*)&st.int_3 - (char*)&st, 0);
-	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_4", "altarages", (char*)&st.int_4 - (char*)&st, 0);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_1", "costarring", (char*)&st.int_1 - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_2", "liquid", (char*)&st.int_2 - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_3", "zinkes", (char*)&st.int_3 - (char*)&st, FDesc::NoneFlag);
+	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_4", "altarages", (char*)&st.int_4 - (char*)&st, FDesc::NoneFlag);
 }
 
 TEST(BasicAPI, Setter)

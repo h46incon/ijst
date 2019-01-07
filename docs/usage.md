@@ -6,9 +6,29 @@
 
 ```cpp
 IJST_DEFINE_STRUCT (
+	// 结构体的名字
     struct_name
-    , (field_type0, field_name0, "json_name0", filed_desc0)
-    , (field_type1, field_name1, "json_name1", filed_desc1)
+    // 成员信息。由以下字段组成，其中 field_type，field_name 是必须的。其他字段是可选的，但在声明时必须保持相对顺序不变
+    , (field_type0, field_name0, "json_name0", filed_desc0, serialize_intf0)
+    
+    // 仅指定字段类型和名字，JSON 键名和字段名相同
+    , (field_type1, field_name1)  
+    
+    // 自定义 JSON 键名
+    , (field_type2, field_name2, "json_name2")  
+    
+    // 添加字段描述，见后文
+    , (field_type3, field_name3, filed_desc3)  
+    
+    // 使用自定义的序列化/反序列化方法，在自定义类型时有用，见后文
+    , (field_type4, field_name4, serialize_intf4)
+    
+    // 可以声明多个字段，比如同时指定 JSON 键名和字段描述
+    , (field_type5, field_name5, "json_name5", serialize_intf5)
+    
+    // 以下声明错误，因为 desc6 和 json_name6 破坏了相对顺序
+    // , (field_type6, field_name6, desc6, "json_name6")
+    
     // ...
 )
 
@@ -27,11 +47,11 @@ using namespace ijst;
 
 IJST_DEFINE_STRUCT (
     SampleStruct
-    , (T_int, iID, "id", 0)
-    , (T_string, strName, "name", 0)
-    , (T_bool, bSex, "sex", 0)     // 只是举一个bool的栗子
+    , (T_int, iID)
+    , (T_string, strName, "name")
+    , (T_bool, bSex, "sex")     // 只是举一个bool的栗子
     // 接下来是复杂的字段
-    , (IJST_TVEC(T_uint64), vecFriendsID, "friends_id", ijst::FDesc::Optional)      // Optional，可能没朋友
+    , (IJST_TVEC(T_uint64), vecFriendsID, ijst::FDesc::Optional)      // Optional，可能没朋友
     , (IJST_TMAP(IJST_TVEC(T_string)), mapWhatEver, "what_ever", ijst::FDesc::NotDefault)    // NotDefault 表示这个 map 不为默认值，即不为空
 );
 
@@ -102,12 +122,20 @@ SampleStruct sampleStruct;
 
 - **FieldDesc**
 
-    字段描述。该值可以为`ijst::FDesc`中值的组合，如无特殊情况，使用0即可。值的含义如下：
+    字段描述。该值可以为`ijst::FDesc`中值的组合（用 `|` 操作符连接），值的含义如下：
 
+    - NoneFlag: 默认值。
     - Optional：该字段在 JSON 中不必须出现。
     - Nullable：该字段的 JSON 值可能为 null。
-    - NotDefault：该字段不能为默认值，如数组不能为空，`T_int` 值不能为0。
+    - NotDefault：该字段不能为默认值，如数组不能为空，`T_int` 值不能为 0 等。
 
+- **SerializerIntf**
+
+	该成员的序列化/反序列化方法。默认情况下，成员的序列化方法通过 FieldType 确定，由 ijst 内置实现。
+	如果需要增加 ijst 不支持的类型，或者需要自定义序列化方法的时候，可以通过该参数指定。
+
+	当该值指定为 `NULL` 时，会定义该成员，但是序列化/反序列化时会被忽略，也无法获取其元信息。
+	使用此特性可以在 ijst 结构体中很方便地添加其他用途的成员。
 
 # 接口
 
@@ -171,7 +199,6 @@ IJST_MARK_MISSING(obj, field)
 
 ```cpp
 IJST_SET(obj, field, val)
-IJST_SET_STRICT(obj, field, val)    // field 和 val 的类型必须完全相同
 ```
 
 一个例子：
@@ -263,12 +290,12 @@ ijst 也提供了类似的**静态类型**的方法：为每个字段定义 `get
 // 需使用 *_WITH_GETTER 宏
 IJST_DEFINE_STRUCT_WITH_GETTER(
     StFoo
-    , (IJST_TVEC(T_int), bar, "bar", 0)
+    , (IJST_TVEC(T_int), bar)
 )
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
     StOut
-    , (IJST_TST(StFoo), foo, "foo", 0)
+    , (IJST_TST(StFoo), foo)
 )
 
 // 默认情况下会生成下面的定义
@@ -416,11 +443,11 @@ st._.Serialize<rapidjson::UTF16<> >(out);
 ```cpp
 // 使用 IJST_DEFINE_GENERIC_STRUCT 宏，其他定义 ijst 结构体的宏也有相应的自定义编码的版本：
 IJST_DEFINE_GENERIC_STRUCT (
-	rapidjson::UTF16<char32_t>, U32SampleStruct       // 第一个参数指定编码
-	, (ijst::T_int, iVal, u"int", 0)                  // 定义 JSON 键名时,使用 C++ 11 提供的 UTF-16 常量字符串（`u` 前缀）
-	, (ijst::T_uint, uiVal, u"uint", 0)
-	, (IJST_TSTR, strVal, u"str", 0)                  // 定义字符串时,使用 IJST_TSTR 宏。
-	, (IJST_TRAW, rawVal, u"raw", 0)                  // 定义字符串时,使用 ISJT_TRAW 宏。
+	rapidjson::UTF16<char16_t>, U16SampleStruct       // 第一个参数指定编码
+	, (ijst::T_int, iVal, u"int")                  // 定义 JSON 键名时,使用 C++ 11 提供的 UTF-16 常量字符串（`u` 前缀）
+	, (ijst::T_uint, uiVal, u"uint")
+	, (IJST_TSTR, strVal, u"str")                  // 定义字符串时,使用 IJST_TSTR 宏。
+	, (IJST_TRAW, rawVal, u"raw")                  // 定义字符串时,使用 ISJT_TRAW 宏。
 )
 ```
 

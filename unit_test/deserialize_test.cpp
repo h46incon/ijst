@@ -21,8 +21,7 @@ TEST(Deserialize, Empty)
 	string emptyJson = "{}";
 	SimpleSt st;
 	int ret = st._.Deserialize(emptyJson);
-	int retExpected = ErrorCode::kDeserializeSomeFieldsInvalid;
-	ASSERT_EQ(ret, retExpected);
+	ASSERT_EQ(ErrorCode::kDeserializeSomeFieldsInvalid, ret);
 }
 
 TEST(Deserialize, IgnoreFieldStatus)

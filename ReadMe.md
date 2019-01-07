@@ -1,14 +1,30 @@
 ## ijst
 
-ijst (iJsonStruct) 一个是 C++ Json 序列化/反序列化库：
+branch | TravisCI (gcc,clang) | AppVeyor (msvc)
+:---: | :---: | :---:
+master | [![Status][m_i_travis_ci]][m_l_travis_ci] | [![Status][m_i_appveyor]][m_l_appveyor]
+dev    | [![Status][d_i_travis_ci]][d_l_travis_ci] | [![Status][d_i_appveyor]][d_l_appveyor]
+
+[m_i_travis_ci]: https://travis-ci.org/h46incon/ijst.svg?branch=master
+[m_l_travis_ci]: https://travis-ci.org/h46incon/ijst/branches
+[d_i_travis_ci]: https://travis-ci.org/h46incon/ijst.svg?branch=dev
+[d_l_travis_ci]: https://travis-ci.org/h46incon/ijst/branches
+
+[m_i_appveyor]: https://ci.appveyor.com/api/projects/status/pkwfr31bdoicw1hd/branch/master?svg=true
+[m_l_appveyor]: https://ci.appveyor.com/project/h46incon/ijst/branch/master
+[d_i_appveyor]: https://ci.appveyor.com/api/projects/status/pkwfr31bdoicw1hd/branch/dev?svg=true
+[d_l_appveyor]: https://ci.appveyor.com/project/h46incon/ijst/branch/dev
+
+
+ijst (iJsonStruct) 一个是 C++ JSON 序列化/反序列化库：
 
 - 只需定义**一次**结构体，无须重复添加元信息。
 - 支持 Getter Chaining，可以很简单地访问路径较深的字段。
-- 支持 unknown 字段和可选字段。
+- 丰富的语义：支持 unknown 字段和可选字段，支持成员名与 JSON 键名不同，支持添加自定义的类型及序列化行为。
 - 支持 UTF-8, UTF-16, UTF-32 编码。
 - 轻量：header-only，仅依赖 stl 和 [RapidJSON](https://github.com/Tencent/rapidjson)。
-- 兼容 C++ 98/03。支持 C++ 11 特性，如右值构造、extern template 等。
 - 反序列失败时，会有详细的错误信息。
+- 兼容 C++ 98/03。支持 C++ 11 特性，如右值构造、extern template 等。
 
 ## 使用
 ### 安装
@@ -39,19 +55,23 @@ using namespace ijst;
 //*** 需要反序列化的 JSON 字符串
 const std::string jsonStr = R"(
 {
-    "int_val": 42, 
-    "vec_val": ["str1", "str2"], 
+    "iVal": 42,
+    "vecVal": ["str1", "str2"],
     "map_val": {"k1": 1, "k2": 2}
 })";
 
 //*** 定义一个 ijst 结构体：
 IJST_DEFINE_STRUCT(
-    // 结构体名字
+    //-- 结构体名字
     JsonStruct
-    // 定义字段
-    , (T_int, iVal, "int_val", 0)  
-    , (IJST_TVEC(T_string), vecVal, "vec_val", 0)
-    , (IJST_TMAP(T_uint64), mapVal, "map_val", 0)
+
+    //-- 定义字段
+    // 32 位整型
+    , (T_int, iVal)
+    // 数组，元素为 string
+    , (IJST_TVEC(T_string), vecVal)
+    // 字典，元素为 uint64_t；且 JSON 键值与定义的字段名不同
+    , (IJST_TMAP(T_uint64), mapVal, "map_val")
 );
 
 //*** 默认情况下会生成这样的类：
@@ -59,8 +79,8 @@ IJST_DEFINE_STRUCT(
 class JsonStruct {
 public:
     ijst::Accessor _;   // 通过这个对象进行序列化等操作
-    int iVal; 
-    std::vector<std::string> vecVal; 
+    int iVal;
+    std::vector<std::string> vecVal;
     std::map<std::string, uint64_t> mapVal; 
 
 private:
@@ -96,9 +116,10 @@ assert (ret == 0);
 //*** 和 IJST_DEFINE_STRUCT 类似
 IJST_DEFINE_STRUCT_WITH_GETTER(
     StIn
-    , (T_int, iData, "i", ijst::FDesc::Optional)
-    , (IJST_TVEC(T_int), vecData, "vec", ijst::FDesc::Optional)
-    , (IJST_TMAP(T_int), mapData, "map", ijst::FDesc::Optional)
+    // 通过 Optional 描述该字段在 JSON 中是可选的
+    , (T_int, iData, ijst::FDesc::Optional)
+    , (IJST_TVEC(T_int), vecData, ijst::FDesc::Optional)
+    , (IJST_TMAP(T_int), mapData, ijst::FDesc::Optional)
 )
 
 //*** 默认情况下会生成这样的结构体：

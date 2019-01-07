@@ -61,7 +61,6 @@
 
 	#define IJSTM_DEFINE_GETTER(i) 			BOOST_PP_CAT(IJSTI_DEFINE_GETTER_IMPL_, i)
 	#define IJSTM_FIELD_GETTER(z, i, _) 	IJSTI_FIELD_GETTER f##i
-	#define IJSTM_FIELD_TYPEDEF(z, i, _) 	IJSTI_FIELD_TYPEDEF f##i
 
 	// Add splitter
 	IJSTM_HASH undef IJSTM_SPLITTER_________________________________________________________________________________________________
