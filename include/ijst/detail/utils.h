@@ -43,11 +43,6 @@ namespace detail {
 #endif
 #define IJSTI_PP_NARGS_IMPL(e1, e2, e3, e4, e5, e6, e7, e8, N, ...) N
 
-#if IJST_TRY_INIT_META_BEFORE_MAIN
-	#define IJSTI_TRY_INIT_META_BEFORE_MAIN(T)			::ijst::detail::Singleton< T >::InitInstanceInGlobal();
-#else
-	#define IJSTI_TRY_INIT_META_BEFORE_MAIN(T)
-#endif
 
 /**
  * Singleton interface
@@ -58,23 +53,14 @@ class Singleton {
 public:
 	inline static T& GetInstance()
 	{
-		static T instance;
-		return instance;
-	}
-
-	inline static void InitInstanceInGlobal()
-	{
-		// When accessing gInstance in code, the GetInstance() function will be called in
-		// global scope (before main in many compilers)
-		volatile T* dummy = gInstance;
-		(void)dummy;
+		return m_instance;
 	}
 
 private:
-	static T* gInstance;
+	static T m_instance;
 };
 // static member of template class could declare in header
-template<typename T> T* Singleton<T>::gInstance = &Singleton<T>::GetInstance();
+template<typename T> T Singleton<T>::m_instance;
 
 template <typename T>
 struct HasType {

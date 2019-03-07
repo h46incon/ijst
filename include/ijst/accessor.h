@@ -232,7 +232,6 @@ public:
 template<typename T>
 const MetaClassInfo<typename T::_ijst_Ch>& GetMetaInfo()
 {
-	IJSTI_TRY_INIT_META_BEFORE_MAIN(detail::MetaClassInfoTyped<T>);
 	return detail::Singleton<detail::MetaClassInfoTyped<T> >::GetInstance().metaClass;
 }
 
@@ -1286,7 +1285,6 @@ private:
 	template<bool DummyTrue>																\
 	static void _ijst_InitMetaInfo(_ijst_MetaInfoT* metaInfo)								\
 	{																						\
-		IJSTI_TRY_INIT_META_BEFORE_MAIN(_ijst_MetaInfoT);									\
 		/* Do not call MetaInfoS::GetInstance() int this function */			 			\
 		IJST_OFFSET_BUFFER_NEW(dummyBuffer, sizeof(stName));								\
 		const stName* stPtr = reinterpret_cast<const stName*>(dummyBuffer);					\
