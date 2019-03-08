@@ -3,6 +3,8 @@ ijst 实现时没有使用什么新的技术或黑魔法，甚至也没有使用
 [toc]
 
 # IDL
+C++ 不支持反射，无法直接得到结构体的元信息。所以需要绕些弯路。
+
 ijst 不打算通过外部工具生成 C++ 代码，所以需要使用合法的 C++ 语言编写 IDL。在这种情况下，能提供最大自由度的就是宏了。
 
 简单的实现方法是把字段信息重复一遍，如：
@@ -15,9 +17,9 @@ struct Range {
 };
 ```
 
-这样很容易出问题。
+这样繁琐，容易出问题，也不方便添加需要的业务信息。
 
-但是 C++ 不支持反射，无法直接得到结构体的元信息。所以 ijst 选择放弃使用正常的结构体定义方式，使用宏同时定义结构体和记录元信息。具体的 IDL 语法参考了 *Boost::Hana*，并做了简化：
+ijst 选择放弃使用正常的结构体定义方式，而是使用宏**同时定义结构体和记录元信息**。具体的 IDL 语法参考了 *Boost::Hana*，并做了简化：
 
 ```cpp
 IJST_DEFINE_STRUCT (
@@ -161,7 +163,7 @@ IJSTM_HASH  define      // 生成 "# define"
 C++ 不支持反射，需要主动注册元信息。元信息的一个目的是通过*类型*得到所需要的信息，即 map，注册的时候往这个 map 里写入信息，读取的时候从里面获取信息。直接的想法是使用 `map<type_index(type_id(Type)), MetaClassInfo>` 储存这个映射关系，但这样实现单例模式会有不便，且很难保证在元信息会在使用前被插入。
 比如常用的做法在一个全局变量初始化的过程中完成元信息的写入，但这在使用 static library 时可能会发生问题，参考 [StackOverflow](https://stackoverflow.com/questions/9459980/c-global-variable-not-initialized-when-linked-through-static-libraries-but-ok)。
 
-ijst 的选择是使用**模板**，实现类型与元信息的映射以及单例：
+ijst 的选择是使用**模板+单例**，实现类型与元信息的映射，同时确保元信息在使用前会被生成：
 
 ```cpp
 // T 为元信息的类型
@@ -234,7 +236,7 @@ struct MetaClassInfoTyped {
 ```
 
 这个方法有一定的问题。首先是 `T.member` 可能会重载 `&` 操作符。但是因为需要进行操作的都是 ijst 预定义的类型，可以避免这个问题。
-另一个问题是在标准中，这种方法无法保证避免零指针的解引用。为此，ijst 使用了一个栈上变量：
+另一个问题是在标准中，这种方法无法保证避免零指针的解引用。为此，ijst 尝试过使用栈上变量：
 
 ```cpp
 char dummyBuffer[sizeof(T)];   // 避免 T 初始化
@@ -242,13 +244,15 @@ const T* stPtr = reinterpret_cast< T*>(dummyBuffer);
 size_t offset = size_t(&stPtr->member) - size_t(stPtr);
 ```
 
+但后来遇到一个问题，就是结构体非常大的情况下，会导致栈溢出。所以现在 ijst 默认的选择是使用 new 在堆上创建一个对象。
+
 ## 业务信息
-业务信息中的 JSON 键名、描述等都可以直接从 IDL 中获取。但是相关的操作（序列化/反序列化等），需要自行获取其函数地址。为便于代码生成，采用模板特化的方法实现这些方法：
+业务信息中的 JSON 键名、描述等**数据**都可以直接从 IDL 中获取。但是相关的操作**代码**（序列化/反序列化等），需要获取相关的函数地址。一般而言，操作和类型是绑定的，所以可以在模板中实现这些方法，然后在需要使通过指定模板形参的方式，获取到相应的函数：
 
 ```cpp
 // 为便于编码，使用多态。实际也可以直接保存函数地址
 class SerializerInterface {
-    // 接口
+    // ...接口
 };
 
 // 模板定义，这个通用的模版不应该被实例化
@@ -258,7 +262,7 @@ class FSerializer : public SerializerInterface {
 
 // 对于每种类型，编写相关的序列化/反序列化代码
 template<> class FSerializer<T_int> : public SerializerInterface {
-    // 实现
+    // ...实现
 };
 
 // 获取和储存对象地址，FIELD_TYPE 是 IDL 中声明的数据类型
