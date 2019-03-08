@@ -429,7 +429,7 @@ public:
 	}
 
 	/**
-	 * @brief Serialize the structure to string.
+	 * @brief Generate SAX events to handler
 	 *
 	 * @param writer 		writer
 	 * @param serFlag	 	Serialization options about fields, options can be combined by bitwise OR operator (|)
@@ -908,7 +908,7 @@ private:
 		}
 
 		// For each member
-		typename TValue::MemberIterator itNextRemain = stream.MemberBegin();
+		m_r->unknown.SetObject();
 		for (typename TValue::MemberIterator itMember = stream.MemberBegin(), itEnd = stream.MemberEnd();
 			 itMember != itEnd; ++itMember)
 		{
@@ -924,13 +924,8 @@ private:
 					return ErrorCode::kDeserializeSomeUnknownMember;
 				}
 				if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
-					// Move unknown fields to the front of array first
-					// TODO: This is relay on the implementation details of rapidjson's object storage (array), how to check?
-					if (itNextRemain != itMember) {
-						itNextRemain->name.SetNull().Swap(itMember->name);
-						itNextRemain->value.SetNull().Swap(itMember->value);
-					}
-					++itNextRemain;
+					// Move member from stream to unknown
+					m_r->unknown.AddMember(itMember->name, itMember->value, *m_r->pAllocator);
 				}
 				continue;
 			}
@@ -941,17 +936,6 @@ private:
 
 			IJSTI_RET_WHEN_NOT_ZERO(
 					DoFieldFromJson(pMetaField, memberStream, /*canMoveSrc=*/true, p) );
-		}
-
-		// Clean deserialized
-		if (stream.MemberCount() != 0) {
-			stream.EraseMember(itNextRemain, stream.MemberEnd());
-		}
-		if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
-			m_r->unknown.SetObject();
-		}
-		else {
-			m_r->unknown.SetNull().Swap(stream);
 		}
 
 		if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kNotCheckFieldStatus)) {
