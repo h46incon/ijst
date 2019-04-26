@@ -474,7 +474,7 @@ public:
 };
 
 #define IJSTI_FSERIALIZER_INS(T, Encoding) 		\
-		::ijst::detail::Singleton< ::ijst::detail::FSerializer< T, Encoding > >::GetInstance()
+		::ijst::detail::Singleton< ::ijst::detail::FSerializer< T, Encoding > >()
 
 /**
  * Get and cast serializerInterface in metaFieldInfo to specify type
@@ -507,7 +507,7 @@ public:
 	MetaClassInfo<typename T::_ijst_Ch> metaClass;
 
 private:
-	friend class Singleton<MetaClassInfoTyped<T> >;
+	friend MetaClassInfoTyped<T>& Singleton<MetaClassInfoTyped<T> >();
 
 	MetaClassInfoTyped()
 	{

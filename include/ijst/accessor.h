@@ -232,7 +232,7 @@ public:
 template<typename T>
 const MetaClassInfo<typename T::_ijst_Ch>& GetMetaInfo()
 {
-	return detail::Singleton<detail::MetaClassInfoTyped<T> >::GetInstance().metaClass;
+	return detail::Singleton<detail::MetaClassInfoTyped<T> >().metaClass;
 }
 
 /**
@@ -1264,7 +1264,6 @@ private:
 
 #define IJSTI_METAINFO_DEFINE_START(stName, N)												\
 	typedef ::ijst::detail::MetaClassInfoTyped< stName > _ijst_MetaInfoT;					\
-	typedef ::ijst::detail::Singleton<_ijst_MetaInfoT> _ijst_MetaInfoS;						\
 	friend class ::ijst::detail::MetaClassInfoTyped< stName >;								\
 	template<bool DummyTrue>																\
 	static void _ijst_InitMetaInfo(_ijst_MetaInfoT* metaInfo)								\

@@ -49,18 +49,12 @@ namespace detail {
  * @tparam T type
  */
 template<typename T>
-class Singleton {
-public:
-	inline static T& GetInstance()
-	{
-		return m_instance;
-	}
+inline static T& Singleton()
+{
+	static T instance;
+	return instance;
+}
 
-private:
-	static T m_instance;
-};
-// static member of template class could declare in header
-template<typename T> T Singleton<T>::m_instance;
 
 template <typename T>
 struct HasType {
