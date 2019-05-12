@@ -232,8 +232,7 @@ public:
 template<typename T>
 const MetaClassInfo<typename T::_ijst_Ch>& GetMetaInfo()
 {
-	IJSTI_TRY_INIT_META_BEFORE_MAIN(detail::MetaClassInfoTyped<T>);
-	return detail::Singleton<detail::MetaClassInfoTyped<T> >::GetInstance().metaClass;
+	return detail::Singleton<detail::MetaClassInfoTyped<T> >().metaClass;
 }
 
 /**
@@ -430,7 +429,7 @@ public:
 	}
 
 	/**
-	 * @brief Serialize the structure to string.
+	 * @brief Generate SAX events to handler
 	 *
 	 * @param writer 		writer
 	 * @param serFlag	 	Serialization options about fields, options can be combined by bitwise OR operator (|)
@@ -909,7 +908,7 @@ private:
 		}
 
 		// For each member
-		typename TValue::MemberIterator itNextRemain = stream.MemberBegin();
+		m_r->unknown.SetObject();
 		for (typename TValue::MemberIterator itMember = stream.MemberBegin(), itEnd = stream.MemberEnd();
 			 itMember != itEnd; ++itMember)
 		{
@@ -925,13 +924,8 @@ private:
 					return ErrorCode::kDeserializeSomeUnknownMember;
 				}
 				if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
-					// Move unknown fields to the front of array first
-					// TODO: This is relay on the implementation details of rapidjson's object storage (array), how to check?
-					if (itNextRemain != itMember) {
-						itNextRemain->name.SetNull().Swap(itMember->name);
-						itNextRemain->value.SetNull().Swap(itMember->value);
-					}
-					++itNextRemain;
+					// Move member from stream to unknown
+					m_r->unknown.AddMember(itMember->name, itMember->value, *m_r->pAllocator);
 				}
 				continue;
 			}
@@ -942,17 +936,6 @@ private:
 
 			IJSTI_RET_WHEN_NOT_ZERO(
 					DoFieldFromJson(pMetaField, memberStream, /*canMoveSrc=*/true, p) );
-		}
-
-		// Clean deserialized
-		if (stream.MemberCount() != 0) {
-			stream.EraseMember(itNextRemain, stream.MemberEnd());
-		}
-		if (detail::Util::IsBitSet(p.deserFlag, DeserFlag::kIgnoreUnknown)) {
-			m_r->unknown.SetObject();
-		}
-		else {
-			m_r->unknown.SetNull().Swap(stream);
 		}
 
 		if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kNotCheckFieldStatus)) {
@@ -1281,12 +1264,10 @@ private:
 
 #define IJSTI_METAINFO_DEFINE_START(stName, N)												\
 	typedef ::ijst::detail::MetaClassInfoTyped< stName > _ijst_MetaInfoT;					\
-	typedef ::ijst::detail::Singleton<_ijst_MetaInfoT> _ijst_MetaInfoS;						\
 	friend class ::ijst::detail::MetaClassInfoTyped< stName >;								\
 	template<bool DummyTrue>																\
 	static void _ijst_InitMetaInfo(_ijst_MetaInfoT* metaInfo)								\
 	{																						\
-		IJSTI_TRY_INIT_META_BEFORE_MAIN(_ijst_MetaInfoT);									\
 		/* Do not call MetaInfoS::GetInstance() int this function */			 			\
 		IJST_OFFSET_BUFFER_NEW(dummyBuffer, sizeof(stName));								\
 		const stName* stPtr = reinterpret_cast<const stName*>(dummyBuffer);					\

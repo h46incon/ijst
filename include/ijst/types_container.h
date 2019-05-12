@@ -253,11 +253,11 @@ public:
 #define IJSTI_SERIALIZER_CONTAINER_DEFINE()																		\
 	IJSTI_PROPAGATE_SINTERFACE_TYPE(Encoding);																	\
 	virtual int Serialize(const SerializeReq &req) IJSTI_OVERRIDE												\
-	{ return ContainerSerializerSingleton::GetInstance().Serialize(req); }										\
+	{ return Singleton<ContainerSerializer<T, VarType, Encoding> >().Serialize(req); }										\
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE					\
-	{ return ContainerSerializerSingleton::GetInstance().FromJson(req, resp); }									\
+	{ return Singleton<ContainerSerializer<T, VarType, Encoding> >().FromJson(req, resp); }									\
 	virtual void ShrinkAllocator(void* pField) IJSTI_OVERRIDE													\
-	{ return ContainerSerializerSingleton::GetInstance().ShrinkAllocator(pField); }
+	{ return Singleton<ContainerSerializer<T, VarType, Encoding> >().ShrinkAllocator(pField); }
 
 /**
  * Serialization class of Vector types
@@ -266,7 +266,6 @@ public:
 template<class T, typename Alloc, typename Encoding>
 class FSerializer<std::vector<T, Alloc>, Encoding> : public SerializerInterface<Encoding> {
 	typedef std::vector<T, Alloc> VarType;
-	typedef Singleton<ContainerSerializer<T, VarType, Encoding> > ContainerSerializerSingleton;
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
 };
@@ -278,8 +277,6 @@ public:
 template<class T, typename Alloc, typename Encoding>
 class FSerializer<std::deque<T, Alloc>, Encoding> : public SerializerInterface<Encoding> {
 	typedef std::deque<T, Alloc> VarType;
-	typedef Singleton<ContainerSerializer<T, VarType, Encoding> > ContainerSerializerSingleton;
-
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
 };
@@ -291,7 +288,6 @@ public:
 template<class T, typename Alloc, typename Encoding>
 class FSerializer<std::list<T, Alloc>, Encoding> : public SerializerInterface<Encoding> {
 	typedef std::list<T, Alloc> VarType;
-	typedef Singleton<ContainerSerializer<T, VarType, Encoding> > ContainerSerializerSingleton;
 public:
 	IJSTI_SERIALIZER_CONTAINER_DEFINE()
 };

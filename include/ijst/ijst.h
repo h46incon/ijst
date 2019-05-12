@@ -46,22 +46,6 @@
 /**
  * @ingroup IJST_CONFIG
  *
- *  ijst use static object in function to implement singleton, but it's not thread-safe before C++11.
- *  If declare IJST_TRY_INIT_META_BEFORE_MAIN to 1, ijst will init the singleton's instance when
- *  a static member of template class initialization, that init before main() in many compilers to avoid thread-safety problem.
- *	The feature is enable default before C++11.
- */
-#ifndef IJST_TRY_INIT_META_BEFORE_MAIN
-	#if __cplusplus < 201103L
-		#define IJST_TRY_INIT_META_BEFORE_MAIN		1
-	#else
-		#define IJST_TRY_INIT_META_BEFORE_MAIN		0
-	#endif
-#endif
-
-/**
- * @ingroup IJST_CONFIG
- *
  *  User could config rvalue reference support by setting IJST_HAS_CXX11_RVALUE_REFS.
  *  Default value is RAPIDJSON_HAS_CXX11_RVALUE_REFS which is depend on compiler version.
  */
