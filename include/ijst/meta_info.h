@@ -160,6 +160,11 @@ private:
 	bool m_mapInited;
 };
 
+struct OverrideMetaInfo {
+	std::vector<FDesc::Mode> fieldDescs;
+	std::vector<OverrideMetaInfo*> ijstFieldMetaInfos;
+};
+
 } // namespace ijst
 
 #endif //IJST_META_INFO_H

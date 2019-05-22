@@ -245,6 +245,7 @@ const MetaClassInfo<typename T::_ijst_Ch>& GetMetaInfo()
 template<typename Encoding = rapidjson::UTF8<> >
 class Accessor {
 public:
+	// TODO: make this private
 	typedef typename Encoding::Ch Ch;
 	//! Constructor
 	explicit Accessor(const MetaClassInfo<Ch>* pMetaClass, bool isParentVal, bool isValid)
@@ -262,6 +263,7 @@ public:
 		InitOuterPtr();
 		m_r->isValid = isValid;
 		m_r->isParentVal = isParentVal;
+		m_r->pOverrideMetaInfo = NULL;
 
 		// Init fieldStatus with kMissing
 		for (size_t i = 0; i < sizeFieldStatus; ++i) {
@@ -288,6 +290,7 @@ public:
 		InitOuterPtr();
 		m_r->isValid = rhs.m_r->isValid;
 		m_r->isParentVal = rhs.m_r->isParentVal;
+		m_r->pOverrideMetaInfo = rhs.m_r->pOverrideMetaInfo;
 
 		// Init fieldStatus from rhs
 		for (size_t i = 0; i < sizeFieldStatus; ++i) {
@@ -337,6 +340,12 @@ public:
 		rhs.m_r = NULL;
 
 		InitOuterPtr();
+	}
+
+	//! Set override meta info
+	void SetOverrideMetaInfo(const OverrideMetaInfo* _pMetaInfo)
+	{
+		m_r->pOverrideMetaInfo = _pMetaInfo;
 	}
 
 	bool IsValid() const { return m_r->isValid; }
@@ -1133,6 +1142,7 @@ private:
 		const TMetaClassInfo* pMetaClass;
 		detail::JsonAllocator* pAllocator;
 		const unsigned char *pOuter;
+		const OverrideMetaInfo* pOverrideMetaInfo;
 
 		bool isValid;
 		bool isParentVal;
