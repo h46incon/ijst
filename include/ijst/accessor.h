@@ -1012,12 +1012,24 @@ private:
 			FromJsonReq elemReq(stream, *(m_r->pAllocator), p.deserFlag, canMoveSrc, pField, metaField->desc);
 			FromJsonResp elemResp(p.errDoc);
 			int ret = detail::GetSerializerInterface<Encoding>(*metaField)->FromJson(elemReq, elemResp);
+
 			// Check return
 			if (ret != 0) {
 				m_r->fieldStatus[metaField->index] = FStatus::kMissing;
 				p.errDoc.ErrorInObject(metaField->fieldName, metaField->jsonName);
 				return ret;
 			}
+
+			// check not default
+			if (elemResp.isValueDefault) {
+				if (detail::Util::IsBitSet(metaField->desc, FDesc::NotDefault)) {
+					p.errDoc.ElementValueIsDefault();
+					p.errDoc.ErrorInObject(metaField->fieldName, metaField->jsonName);
+					return ErrorCode::kDeserializeValueIsDefault;
+				}
+				// TODO: return default status?
+			}
+
 			// succ
 			m_r->fieldStatus[metaField->index] = FStatus::kValid;
 		}

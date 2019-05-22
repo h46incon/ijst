@@ -160,10 +160,10 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_ubool)
 	virtual int FromJson(const FromJsonReq &req, IJST_OUT FromJsonResp &resp) IJSTI_OVERRIDE
 	{
 		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsBool()), "bool");
-		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((req.stream.GetBool() == false));
 
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = static_cast<VarType>(req.stream.GetBool() ? 1 : 0);
+		resp.isValueDefault = (*pField == 0);
 		return 0;
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
@@ -183,7 +183,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
 		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsBool()), "bool");											\
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);												\
 		*pField = req.stream.GetBool();																			\
-		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((*pField == false));													\
+		resp.isValueDefault = (*pField == false);																\
 		return 0;																								\
 	}
 
@@ -213,7 +213,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int)
 		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsInt()), "int");
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = req.stream.GetInt();
-		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((*pField == 0));
+		resp.isValueDefault = (*pField == 0);
 		return 0;
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
@@ -231,7 +231,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_int64)
 		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsInt64()), "int64");
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = req.stream.GetInt64();
-		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((*pField == 0));
+		resp.isValueDefault = (*pField == 0);
 		return 0;
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
@@ -249,7 +249,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint)
 		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsUint()), "uint");
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = req.stream.GetUint();
-		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((*pField == 0));
+		resp.isValueDefault = (*pField == 0);
 		return 0;
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
@@ -267,7 +267,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_uint64)
 		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsUint64()), "uint64");
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = req.stream.GetUint64();
-		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((*pField == 0));
+		resp.isValueDefault = (*pField == 0);
 		return 0;
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
@@ -285,7 +285,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_double)
 		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsNumber()), "number");
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = req.stream.GetDouble();
-		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((*pField == 0.0));
+		resp.isValueDefault = (*pField == 0.0);
 		return 0;
 	}
 IJSTI_DEFINE_SERIALIZE_INTERFACE_END()
@@ -307,7 +307,7 @@ public:
 		IJSTI_RET_WHEN_TYPE_MISMATCH((req.stream.IsString()), "string");
 		VarType *pField = static_cast<VarType *>(req.pFieldBuffer);
 		*pField = VarType(req.stream.GetString(), req.stream.GetStringLength());
-		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((pField->empty()));
+		resp.isValueDefault = (pField->empty());
 		return 0;
 	}
 };
@@ -333,7 +333,7 @@ IJSTI_DEFINE_SERIALIZE_INTERFACE_BEGIN(T_GenericRaw<Encoding>)
 			pField->m_pAllocator = pField->m_pOwnAllocator;
 			pField->v.CopyFrom(req.stream, *pField->m_pAllocator);
 		}
-		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((pField->v.IsNull()));
+		resp.isValueDefault = (pField->v.IsNull());
 		return 0;
 	}
 

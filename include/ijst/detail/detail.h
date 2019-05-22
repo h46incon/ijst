@@ -36,13 +36,6 @@
 		resp.errDoc.ElementTypeMismatch(expType, req.stream);		\
 		return ErrorCode::kDeserializeValueTypeError;				\
 	}
-//! return error and set error doc when value is default
-#define IJSTI_RET_WHEN_VALUE_IS_DEFAULT(checkCode)					\
-	if (detail::Util::IsBitSet(req.fDesc, FDesc::NotDefault) 		\
-			&& (checkCode)) {										\
-		resp.errDoc.ElementValueIsDefault();						\
-		return ErrorCode::kDeserializeValueIsDefault;				\
-	}
 
 namespace ijst{
 
@@ -433,9 +426,10 @@ public:
 
 	struct FromJsonResp {
 		ErrorDocSetter<Encoding>& errDoc;
+		bool isValueDefault;
 
 		explicit FromJsonResp(ErrorDocSetter<Encoding>& _errDoc) :
-				errDoc(_errDoc)
+				errDoc(_errDoc), isValueDefault(false)
 		{ }
 
 	};

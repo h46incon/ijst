@@ -235,7 +235,7 @@ public:
 		}
 		assert(i == field.size());
 
-		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((field.empty()));
+		resp.isValueDefault = (field.empty());
 		return 0;
 	}
 
@@ -361,7 +361,7 @@ public:
 				return ret;
 			}
 		}
-		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((field.empty()));
+		resp.isValueDefault = (field.empty());
 		return 0;
 	}
 
@@ -445,7 +445,7 @@ public:
 			}
 		}
 		assert(i == field.size());
-		IJSTI_RET_WHEN_VALUE_IS_DEFAULT((field.empty()));
+		resp.isValueDefault = (field.empty());
 		return 0;
 	}
 
