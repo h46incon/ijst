@@ -11,6 +11,7 @@ set(TEST_SRC
         deserialize_test.cpp
         primitive_test.cpp
         detail_test.cpp
+        override_test.cpp
         extern_template_extern_test.cpp
         extern_template_explicit_test.cpp
         )

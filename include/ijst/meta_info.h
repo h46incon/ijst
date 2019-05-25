@@ -193,6 +193,9 @@ public:
 		OverrideMetaInfos* ijstFieldMetaInfo;	//! override meta info of ijst field, available if not nullptr
 
 		MetaInfo(): isFieldDescSet(false), fieldDesc(FDesc::NoneFlag), ijstFieldMetaInfo(NULL) {}
+
+		void SetFieldDesc(FDesc::Mode desc)
+		{isFieldDescSet = true; fieldDesc = desc;}
 	};
 
 	explicit OverrideMetaInfos(size_t _fieldSize)

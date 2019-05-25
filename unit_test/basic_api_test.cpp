@@ -6,7 +6,7 @@
 #include <typeinfo>
 using namespace ijst;
 
-namespace dummy_ns {
+namespace basic_api_test_ns {
 
 TEST(BasicAPI, EnumOr)
 {
