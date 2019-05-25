@@ -251,10 +251,10 @@ public:
 	explicit Accessor(const MetaClassInfo<Ch>* pMetaClass, bool isParentVal, bool isValid)
 			: m_r(NULL)
 	{
-		IJST_ASSERT(!isParentVal || pMetaClass->GetFieldsInfo().size() == 1);
+		IJST_ASSERT(!isParentVal || pMetaClass->GetFieldSize() == 1);
 
 		// Allocate fieldStatus followed by m_r
-		const size_t sizeFieldStatus = pMetaClass->GetFieldsInfo().size();
+		const size_t sizeFieldStatus = pMetaClass->GetFieldSize();
 		m_r = static_cast<Resource *>(operator new(
 				sizeof(Resource) + sizeFieldStatus * sizeof(EFStatus)));
 		m_r->fieldStatus = reinterpret_cast<EFStatus*>(m_r + 1);
@@ -281,7 +281,7 @@ public:
 		assert(this != &rhs);
 
 		// Allocate fieldStatus followed by m_r
-		const size_t sizeFieldStatus = rhs.m_r->pMetaClass->GetFieldsInfo().size();
+		const size_t sizeFieldStatus = rhs.m_r->pMetaClass->GetFieldSize();
 		m_r = static_cast<Resource *>(operator new(
 				sizeof(Resource) + sizeFieldStatus * sizeof(EFStatus)));
 		m_r->fieldStatus = reinterpret_cast<EFStatus*>(m_r + 1);
@@ -346,7 +346,7 @@ public:
 	void SetOverrideMetaInfo(const OverrideMetaInfos* pOvrMetas)
 	{
 		assert(pOvrMetas != NULL);
-		assert(pOvrMetas->filedSize == m_r->pMetaClass->GetFieldsInfo().size());
+		assert(pOvrMetas->filedSize == m_r->pMetaClass->GetFieldSize());
 		m_r->pOvrMetas = pOvrMetas;
 	}
 
@@ -835,13 +835,14 @@ private:
 
 	int DoSerializeFields(HandlerBase<Ch> &writer, SerFlag::Flag serFlag, IJST_OUT rapidjson::SizeType& fieldCountOut) const
 	{
-		IJST_ASSERT(!m_r->isParentVal || m_r->pMetaClass->GetFieldsInfo().size() == 1);
-		for (typename std::vector<TMetaFieldInfo>::const_iterator
-					 itMetaField = m_r->pMetaClass->GetFieldsInfo().begin(), itEnd = m_r->pMetaClass->GetFieldsInfo().end();
-			 itMetaField != itEnd; ++itMetaField)
+		const size_t fieldSize = m_r->pMetaClass->GetFieldSize();
+		IJST_ASSERT(!m_r->isParentVal || fieldSize == 1);
+
+		for (size_t i = 0; i < fieldSize; ++i)
 		{
 			// Check field state
-			const EFStatus fstatus = m_r->fieldStatus[itMetaField->index];
+			const TMetaFieldInfo &metaField = m_r->pMetaClass->GetFieldInfos()[i];
+			const EFStatus fstatus = m_r->fieldStatus[metaField.index];
 			switch (fstatus) {
 				case FStatus::kMissing:
 					if (detail::Util::IsBitSet(serFlag, SerFlag::kIgnoreMissing)) {
@@ -850,16 +851,16 @@ private:
 					// Fall through
 				case FStatus::kValid:
 				{
-					const void *pFieldValue = GetFieldByOffset(itMetaField->offset);
+					const void *pFieldValue = GetFieldByOffset(metaField.offset);
 					if (!m_r->isParentVal) {
 						// write key
 						IJSTI_RET_WHEN_WRITE_FAILD(
-								writer.Key(itMetaField->jsonName.data(), (rapidjson::SizeType)itMetaField->jsonName.size()) );
+								writer.Key(metaField.jsonName.data(), (rapidjson::SizeType)metaField.jsonName.size()) );
 					}
 					// write value
 					SerializeReq req(writer, pFieldValue, serFlag);
 					IJSTI_RET_WHEN_NOT_ZERO(
-							detail::GetSerializerInterface<Encoding>(*itMetaField)->Serialize(req));
+							detail::GetSerializerInterface<Encoding>(metaField)->Serialize(req));
 					++fieldCountOut;
 				}
 					break;
@@ -873,7 +874,7 @@ private:
 					if (!m_r->isParentVal) {
 						// write key
 						IJSTI_RET_WHEN_WRITE_FAILD(
-								writer.Key(itMetaField->jsonName.data(), (rapidjson::SizeType)itMetaField->jsonName.size()) );
+								writer.Key(metaField.jsonName.data(), (rapidjson::SizeType)metaField.jsonName.size()) );
 					}
 					// write value
 					IJSTI_RET_WHEN_WRITE_FAILD(writer.Null());
@@ -907,10 +908,10 @@ private:
 	{
 		if (m_r->isParentVal) {
 			// Set field by stream itself
-			assert(m_r->pMetaClass->GetFieldsInfo().size() == 1);
+			assert(m_r->pMetaClass->GetFieldSize() == 1);
 			const OverrideMetaInfos::MetaInfo* pOvrMeta = GetOvrMeta(0);
 			return DoFieldFromJson(
-					&m_r->pMetaClass->GetFieldsInfo()[0], pOvrMeta, stream, /*canMoveSrc=*/true, p);
+					m_r->pMetaClass->GetFieldInfos()[0], pOvrMeta, stream, /*canMoveSrc=*/true, p);
 		}
 
 		// Set fields by members of stream
@@ -948,7 +949,7 @@ private:
 			const OverrideMetaInfos::MetaInfo* pOvrMeta = GetOvrMeta(pMetaField->index);
 
 			IJSTI_RET_WHEN_NOT_ZERO(
-					DoFieldFromJson(pMetaField, pOvrMeta, memberStream, /*canMoveSrc=*/true, p) );
+					DoFieldFromJson(*pMetaField, pOvrMeta, memberStream, /*canMoveSrc=*/true, p) );
 		}
 
 		if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kNotCheckFieldStatus)) {
@@ -964,10 +965,10 @@ private:
 	{
 		if (m_r->isParentVal) {
 			// Serialize field by stream itself
-			assert(m_r->pMetaClass->GetFieldsInfo().size() == 1);
+			assert(m_r->pMetaClass->GetFieldSize() == 1);
 			const OverrideMetaInfos::MetaInfo* pOvrMeta = GetOvrMeta(0);
 			return DoFieldFromJson(
-					&m_r->pMetaClass->GetFieldsInfo()[0], pOvrMeta, const_cast<TValue &>(stream), /*canMoveSrc=*/true, p);
+					m_r->pMetaClass->GetFieldInfos()[0], pOvrMeta, const_cast<TValue &>(stream), /*canMoveSrc=*/true, p);
 		}
 
 		// Serialize fields by members of stream
@@ -1005,7 +1006,7 @@ private:
 			const OverrideMetaInfos::MetaInfo* pOvrMeta = GetOvrMeta(pMetaField->index);
 
 			IJSTI_RET_WHEN_NOT_ZERO(
-					DoFieldFromJson(pMetaField, pOvrMeta, memberStream, /*canMoveSrc=*/false, p) );
+					DoFieldFromJson(*pMetaField, pOvrMeta, memberStream, /*canMoveSrc=*/false, p) );
 		}
 
 		if (!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kNotCheckFieldStatus)) {
@@ -1017,31 +1018,31 @@ private:
 	}
 
 
-	int DoFieldFromJson(const TMetaFieldInfo* metaField, const OverrideMetaInfos::MetaInfo* ovrMetaField, TValue &stream, bool canMoveSrc, FromJsonParam& p)
+	int DoFieldFromJson(const TMetaFieldInfo& metaField, const OverrideMetaInfos::MetaInfo* ovrMetaField, TValue &stream, bool canMoveSrc, FromJsonParam& p)
 	{
 		// Get actually field desc
-		FDesc::Mode desc = metaField->desc;
+		FDesc::Mode desc = metaField.desc;
 		if (ovrMetaField != NULL && ovrMetaField->isFieldDescSet) {
 			desc = ovrMetaField->fieldDesc;
 		}
 
 		// Check nullable
 		if (stream.IsNull() && detail::Util::IsBitSet(desc, FDesc::Nullable)) {
-			m_r->fieldStatus[metaField->index] = FStatus::kNull;
+			m_r->fieldStatus[metaField.index] = FStatus::kNull;
 		}
 		else {
-			void *pField = GetFieldByOffset(metaField->offset);
+			void *pField = GetFieldByOffset(metaField.offset);
 			const OverrideMetaInfos* fieldOvrMeta = ovrMetaField == NULL ? NULL : ovrMetaField->ijstFieldMetaInfo;
 			FromJsonReq elemReq(stream, *(m_r->pAllocator), p.deserFlag, canMoveSrc, pField,
 								fieldOvrMeta	// always pass ijstFieldMetaInfo because there's no way to known if field is ijst struct
 			);
 			FromJsonResp elemResp(p.errDoc);
-			int ret = detail::GetSerializerInterface<Encoding>(*metaField)->FromJson(elemReq, elemResp);
+			int ret = detail::GetSerializerInterface<Encoding>(metaField)->FromJson(elemReq, elemResp);
 
 			// Check return
 			if (ret != 0) {
-				m_r->fieldStatus[metaField->index] = FStatus::kMissing;
-				p.errDoc.ErrorInObject(metaField->fieldName, metaField->jsonName);
+				m_r->fieldStatus[metaField.index] = FStatus::kMissing;
+				p.errDoc.ErrorInObject(metaField.fieldName, metaField.jsonName);
 				return ret;
 			}
 
@@ -1050,14 +1051,14 @@ private:
 			if (elemResp.isValueDefault) {
 				if (detail::Util::IsBitSet(desc, FDesc::NotDefault)) {
 					p.errDoc.ElementValueIsDefault();
-					p.errDoc.ErrorInObject(metaField->fieldName, metaField->jsonName);
+					p.errDoc.ErrorInObject(metaField.fieldName, metaField.jsonName);
 					return ErrorCode::kDeserializeValueIsDefault;
 				}
 				// TODO: return default status?
 			}
 
 			// succ
-			m_r->fieldStatus[metaField->index] = FStatus::kValid;
+			m_r->fieldStatus[metaField.index] = FStatus::kValid;
 		}
 		return 0;
 	}
@@ -1065,12 +1066,12 @@ private:
 	void DoShrinkAllocator()
 	{
 		// Shrink allocator of each field
-		for (typename std::vector<TMetaFieldInfo>::const_iterator
-					 itFieldInfo = m_r->pMetaClass->GetFieldsInfo().begin(), itEnd = m_r->pMetaClass->GetFieldsInfo().end();
-			 itFieldInfo != itEnd; ++itFieldInfo)
+		const size_t fieldSize = m_r->pMetaClass->GetFieldSize();
+		for (size_t i = 0; i < fieldSize; ++i)
 		{
-			void *pField = GetFieldByOffset(itFieldInfo->offset);
-			detail::GetSerializerInterface<Encoding>(*itFieldInfo)->ShrinkAllocator(pField);
+			const TMetaFieldInfo& metaField = m_r->pMetaClass->GetFieldInfos()[i];
+			void *pField = GetFieldByOffset(metaField.offset);
+			detail::GetSerializerInterface<Encoding>(metaField)->ShrinkAllocator(pField);
 		}
 
 		// Shrink self allocator
@@ -1097,7 +1098,7 @@ private:
 	{
 		const std::size_t offset = GetFieldOffset(field);
 		const int index = m_r->pMetaClass->FindIndex(offset);
-		IJST_ASSERT(index >= 0 && (unsigned int)index < m_r->pMetaClass->GetFieldsInfo().size());
+		IJST_ASSERT(index >= 0 && (unsigned int)index < m_r->pMetaClass->GetFieldSize());
 		m_r->fieldStatus[index] = fStatus;
 	}
 
@@ -1106,11 +1107,11 @@ private:
 		// Check all required field status
 		bool hasErr = false;
 
-		const size_t fieldSize = m_r->pMetaClass->GetFieldsInfo().size();
+		const size_t fieldSize = m_r->pMetaClass->GetFieldSize();
 		for (size_t i = 0; i < fieldSize; ++i)
 		{
 			// get actually field desc
-			const TMetaFieldInfo& fieldMeta = m_r->pMetaClass->GetFieldsInfo()[i];
+			const TMetaFieldInfo& fieldMeta = m_r->pMetaClass->GetFieldInfos()[i];
 			FDesc::Mode desc = fieldMeta.desc;
 			if (m_r->pOvrMetas != NULL && m_r->pOvrMetas->metaInfos[i].isFieldDescSet) {
 				desc = m_r->pOvrMetas->metaInfos[i].fieldDesc;

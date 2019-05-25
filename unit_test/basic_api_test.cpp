@@ -185,7 +185,7 @@ void TestStructAPI(const char *className)
 	const MetaClassInfo<Ch>& metaInfo = ijst::template GetMetaInfo<Struct>();
 	ASSERT_EQ(&st._.GetMetaInfo(), &metaInfo);
 	ASSERT_STREQ(metaInfo.GetClassName().c_str(), className);
-	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 14u);
+	ASSERT_EQ(metaInfo.GetFieldSize(), 14u);
 	ASSERT_EQ((ptrdiff_t)metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
 	CheckFieldInfo<Encoding>(metaInfo, "int_v21", "int_v21", (char*)&st.int_v21 - (char*)&st, FDesc::NoneFlag);
 	CheckFieldInfo<Encoding>(metaInfo, "int_v31", "int_val_31", (char*)&st.int_v31 - (char*)&st, FDesc::NoneFlag);
@@ -242,7 +242,7 @@ TEST(BasicAPI, HashCollision)
 	HashCollision st;
 	ASSERT_EQ(&st._.GetMetaInfo(), &metaInfo);
 	ASSERT_STREQ(metaInfo.GetClassName().c_str(), "HashCollision");
-	ASSERT_EQ(metaInfo.GetFieldsInfo().size(), 4u);
+	ASSERT_EQ(metaInfo.GetFieldSize(), 4u);
 	ASSERT_EQ((ptrdiff_t)metaInfo.GetAccessorOffset(), (char*)&st._ - (char*)&st);
 	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_1", "costarring", (char*)&st.int_1 - (char*)&st, FDesc::NoneFlag);
 	CheckFieldInfo<rapidjson::UTF8<> >(metaInfo, "int_2", "liquid", (char*)&st.int_2 - (char*)&st, FDesc::NoneFlag);

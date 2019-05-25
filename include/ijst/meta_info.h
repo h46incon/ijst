@@ -119,8 +119,12 @@ public:
 	const MetaFieldInfo<Ch>* FindFieldByJsonName(const std::basic_string<Ch>& name) const
 	{ return FindFieldByJsonName(name.data(), name.length()); }
 
-	//! Get meta information of all fields in class. The returned vector is sorted by offset.
-	const std::vector<MetaFieldInfo<Ch> >& GetFieldsInfo() const { return m_fieldsInfo; }
+	//! Get array of meta information of all fields in class.
+	//! The returned vector is sorted by offset size is return from @ref GetFieldSize()
+	const MetaFieldInfo<Ch>* GetFieldInfos() const { assert(!m_fieldsInfo.empty()); return m_fieldsInfo.data(); }
+	//! Get field size.
+	size_t GetFieldSize() const { return m_fieldsInfo.size(); }
+
 	//! Get name of class.
 	const std::string& GetClassName() const { return structName; }
 	//! Get the offset of Accessor object.
