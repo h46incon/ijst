@@ -1047,9 +1047,11 @@ private:
 			}
 
 			// check not default
-			// TODO: not check default when kNotCheckFieldStatus
-			if (elemResp.isValueDefault) {
-				if (detail::Util::IsBitSet(desc, FDesc::NotDefault)) {
+			if (elemResp.isValueDefault)
+			{
+				if(!detail::Util::IsBitSet(p.deserFlag, DeserFlag::kNotCheckFieldStatus)
+				   && detail::Util::IsBitSet(desc, FDesc::NotDefault))
+				{
 					p.errDoc.ElementValueIsDefault();
 					p.errDoc.ErrorInObject(metaField.fieldName, metaField.jsonName);
 					return ErrorCode::kDeserializeValueIsDefault;

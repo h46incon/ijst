@@ -12,6 +12,7 @@ IJST_DEFINE_STRUCT(
 		SimpleSt
 		, (T_int, int_1, "int_val_1", FDesc::Optional)
 		, (T_int, int_2, "int_val_2", 0)
+		, (T_int, int_3, "int_val_3", FDesc::NotDefault | FDesc::Optional)
 		, (T_string, str_1, "str_val_1", FDesc::Optional)
 		, (T_string, str_2, "str_val_2", 0)
 )
@@ -24,32 +25,41 @@ TEST(Deserialize, Empty)
 	ASSERT_EQ(ErrorCode::kDeserializeSomeFieldsInvalid, ret);
 }
 
-TEST(Deserialize, IgnoreFieldStatus)
+TEST(Deserialize, NotCheckFieldStatus)
 {
-	string emptyJson = "{}";
+	string emptyJson = "{\"int_val_3\": 0}";
 	// Deserialize
 	{
 		SimpleSt st;
 		int ret = st._.Deserialize(emptyJson, DeserFlag::kNotCheckFieldStatus);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(IJST_GET_STATUS(st, int_2), (EFStatus)FStatus::kMissing);
+		ASSERT_EQ(st.int_3, 0);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_3), (EFStatus)FStatus::kValid);
 	}
 
 	// From Json
 	{
-		rapidjson::Document doc(rapidjson::kObjectType);
+		rapidjson::Document doc;
+		doc.Parse(emptyJson.c_str());
 		SimpleSt st;
 		int ret = st._.FromJson(doc, DeserFlag::kNotCheckFieldStatus);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(IJST_GET_STATUS(st, int_2), (EFStatus)FStatus::kMissing);
+		ASSERT_EQ(st.int_3, 0);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_3), (EFStatus)FStatus::kValid);
 	}
+
 	// Move From Json
 	{
-		rapidjson::Document doc(rapidjson::kObjectType);
+		rapidjson::Document doc;
+		doc.Parse(emptyJson.c_str());
 		SimpleSt st;
 		int ret = st._.MoveFromJson(doc, DeserFlag::kNotCheckFieldStatus);
 		ASSERT_EQ(ret, 0);
 		ASSERT_EQ(IJST_GET_STATUS(st, int_2), (EFStatus)FStatus::kMissing);
+		ASSERT_EQ(st.int_3, 0);
+		ASSERT_EQ(IJST_GET_STATUS(st, int_3), (EFStatus)FStatus::kValid);
 	}
 }
 
