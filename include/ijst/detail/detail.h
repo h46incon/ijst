@@ -518,13 +518,15 @@ template<typename Encoding>
 class MetaClassInfoSetter {
 public:
 	typedef typename Encoding::Ch Ch;
-	explicit MetaClassInfoSetter(MetaClassInfo<Ch>& _d) : d(_d) { }
+	explicit MetaClassInfoSetter(MetaClassInfo<Ch>& _d) : d(_d), m_fieldSize(0), m_maxSize(0) { }
 
-	void InitBegin(const std::string& _tag, std::size_t _fieldCount, std::size_t _accessorOffset)
+	void InitBegin(const std::string& _tag, std::size_t _maxFieldCount, std::size_t _accessorOffset)
 	{
-		d.structName = _tag;
-		d.accessorOffset = _accessorOffset;
-		d.m_fieldsInfo.reserve(_fieldCount);
+		d.m_structName = _tag;
+		d.m_accessorOffset = _accessorOffset;
+		d.m_fieldsInfo = new MetaFieldInfo<Ch>[_maxFieldCount];
+
+		m_maxSize = _maxFieldCount;
 	}
 
 	/// The complete IDL of declaring a field is (type, name, json_name, desc, serialize_intf)
@@ -609,26 +611,32 @@ public:
 	{
 		// assert MetaClassInfo's map has not inited before
 		assert(!d.m_mapInited);
-		SortMetaFieldsByOffset();
 
-		d.m_offsets.reserve(d.m_fieldsInfo.size());
-		d.m_hashedFieldPtr.reserve(d.m_fieldsInfo.size());
-		d.m_nameHashVal.reserve(d.m_fieldsInfo.size());
+		//--- sort field info by offset
+		// m_fieldsInfo is already sorted in most case, use insertion sort
+		for (size_t i1 = 1; i1 < m_fieldSize; i1++) {
+			for (size_t j = i1; j > 0 && d.m_fieldsInfo[j - 1].offset > d.m_fieldsInfo[j].offset; j--) {
+				Util::Swap(d.m_fieldsInfo[j], d.m_fieldsInfo[j - 1]);
+			}
+		}
 
-		for (size_t i = 0; i < d.m_fieldsInfo.size(); ++i)
+		// new resource
+		d.m_fieldSize = m_fieldSize;
+		d.m_nameHashVal = new uint32_t[m_fieldSize];
+		d.m_hashedFieldPtr = new const MetaFieldInfo<Ch>*[m_fieldSize];
+		d.m_offsets = new size_t[m_fieldSize];
+
+		for (size_t i = 0; i < m_fieldSize; ++i)
 		{
-			MetaFieldInfo<Ch>* ptrMetaField = &(d.m_fieldsInfo[i]);
-			ptrMetaField->index = static_cast<int>(i);
+			MetaFieldInfo<Ch>& ptrMetaField = d.m_fieldsInfo[i];
+			ptrMetaField.index = static_cast<int>(i);
 
-			d.m_offsets.push_back(ptrMetaField->offset);
-			InsertMetaFieldToHash(ptrMetaField);
+			d.m_offsets[i] = ptrMetaField.offset;
+			InsertMetaFieldToHash(ptrMetaField, i);
 			// Assert field offset is sorted and not exist before
 			assert(i == 0 || d.m_offsets[i]  > d.m_offsets[i-1]);
 		}
 
-		assert(d.m_offsets.size() == d.m_fieldsInfo.size());
-		assert(d.m_hashedFieldPtr.size() == d.m_fieldsInfo.size());
-		assert(d.m_nameHashVal.size() == d.m_fieldsInfo.size());
 		d.m_mapInited = true;
 	}
 
@@ -654,45 +662,35 @@ private:
 			return;
 		}
 
-		MetaFieldInfo<Ch> metaField;
+		assert(m_fieldSize < m_maxSize);
+		MetaFieldInfo<Ch>& metaField = d.m_fieldsInfo[m_fieldSize];
+		++m_fieldSize;
+
 		metaField.jsonName = jsonName;
 		metaField.fieldName = std::string(fieldName);
 		metaField.offset = offset;
 		metaField.desc = desc;
 		metaField.serializerInterface = pSerializeInterface;
-		d.m_fieldsInfo.push_back(IJSTI_MOVE(metaField));
 	}
 
-	void SortMetaFieldsByOffset()
+	void InsertMetaFieldToHash(const MetaFieldInfo<Ch> &ptrMetaField, size_t insertedSize)
 	{
-		// m_fieldsInfo is already sorted in most case, use insertion sort
-		const size_t n = d.m_fieldsInfo.size();
-		for (size_t i = 1; i < n; i++) {
-			for (size_t j = i; j > 0 && d.m_fieldsInfo[j - 1].offset > d.m_fieldsInfo[j].offset; j--) {
-				detail::Util::Swap(d.m_fieldsInfo[j], d.m_fieldsInfo[j - 1]);
-			}
-		}
-	}
-
-	void InsertMetaFieldToHash(const MetaFieldInfo<Ch> *ptrMetaField)
-	{
-		const uint32_t hash = MetaClassInfo<Ch>::StringHash(ptrMetaField->jsonName.data(), ptrMetaField->jsonName.length());
+		const uint32_t hash = MetaClassInfo<Ch>::StringHash(ptrMetaField.jsonName.data(), ptrMetaField.jsonName.length());
 
 		const detail::Util::VectorBinarySearchResult searchRet =
-				detail::Util::VectorBinarySearch(d.m_nameHashVal, hash);
+				detail::Util::VectorBinarySearch(d.m_nameHashVal, insertedSize, hash);
 
-		// Insert new node
-		d.m_hashedFieldPtr.resize(d.m_hashedFieldPtr.size() + 1);
-		d.m_nameHashVal.resize(d.m_nameHashVal.size() + 1);
-		for (size_t i = d.m_nameHashVal.size() - 1; i > searchRet.index; --i) {
+		for (size_t i = insertedSize; i > searchRet.index; --i) {
 			d.m_nameHashVal[i] = d.m_nameHashVal[i - 1];
 			d.m_hashedFieldPtr[i] = IJSTI_MOVE(d.m_hashedFieldPtr[i - 1]);
 		}
 		d.m_nameHashVal[searchRet.index] = hash;
-		d.m_hashedFieldPtr[searchRet.index] = ptrMetaField;
+		d.m_hashedFieldPtr[searchRet.index] = &ptrMetaField;
 	}
 
 	MetaClassInfo<Ch>& d;
+	size_t m_fieldSize;
+	size_t m_maxSize;
 };
 
 /**

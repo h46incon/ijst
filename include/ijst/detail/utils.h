@@ -2,8 +2,11 @@
 #define IJST_DETAIL_UTILS_HPP_INCLUDE_
 
 #include "../ijst.h"
-#include <vector>
 #include <cstddef>	// NULL, size_t
+
+#if __cplusplus >= 201103L
+#include <utility>  // std::move
+#endif
 
 namespace ijst {
 namespace detail {
@@ -93,14 +96,14 @@ struct Util {
 	};
 
 	template<typename VType>
-	static VectorBinarySearchResult VectorBinarySearch(const std::vector<VType>& vec, const VType& target)
+	static VectorBinarySearchResult VectorBinarySearch(const VType* ary, size_t size, const VType& target)
 	{
 		size_t beg = 0;
-		size_t end = vec.size();
+		size_t end = size;
 
 		while (beg < end) {
 			const size_t mid = beg + (end - beg) / 2;
-			const VType& vMid = vec[mid];
+			const VType& vMid = ary[mid];
 			if (target < vMid) {
 				// target is in left half
 				end = mid;

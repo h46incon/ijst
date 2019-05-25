@@ -62,7 +62,7 @@ public:
 	int FindIndex(size_t offset) const
 	{
 		const detail::Util::VectorBinarySearchResult searchRet =
-				detail::Util::VectorBinarySearch(m_offsets, offset);
+				detail::Util::VectorBinarySearch(m_offsets, m_fieldSize, offset);
 		if (searchRet.isFind) {
 			return static_cast<int>(searchRet.index);
 		}
@@ -84,7 +84,7 @@ public:
 	{
 		const uint32_t hash = StringHash(name, length);
 		const detail::Util::VectorBinarySearchResult searchRet =
-				detail::Util::VectorBinarySearch(m_nameHashVal, hash);
+				detail::Util::VectorBinarySearch(m_nameHashVal, m_fieldSize, hash);
 
 		if (!searchRet.isFind) {
 			// not find
@@ -97,7 +97,7 @@ public:
 		}
 
 		// compare each json name with target hash
-		for (const size_t iSize = m_hashedFieldPtr.size(); i < iSize && m_nameHashVal[i] == hash; ++i) {
+		for (; i < m_fieldSize && m_nameHashVal[i] == hash; ++i) {
 			const MetaFieldInfo<Ch>* pField = m_hashedFieldPtr[i];
 			const std::basic_string<Ch>& fieldJsonName = pField->jsonName;
 			if (fieldJsonName.compare(0, fieldJsonName.length(), name, length) == 0) {
@@ -121,19 +121,38 @@ public:
 
 	//! Get array of meta information of all fields in class.
 	//! The returned vector is sorted by offset size is return from @ref GetFieldSize()
-	const MetaFieldInfo<Ch>* GetFieldInfos() const { assert(!m_fieldsInfo.empty()); return m_fieldsInfo.data(); }
+	const MetaFieldInfo<Ch>* GetFieldInfos() const { assert(m_fieldsInfo); return m_fieldsInfo; }
 	//! Get field size.
-	size_t GetFieldSize() const { return m_fieldsInfo.size(); }
+	size_t GetFieldSize() const { return m_fieldSize; }
 
 	//! Get name of class.
-	const std::string& GetClassName() const { return structName; }
+	const std::string& GetClassName() const { return m_structName; }
 	//! Get the offset of Accessor object.
-	std::size_t GetAccessorOffset() const { return accessorOffset; }
+	std::size_t GetAccessorOffset() const { return m_accessorOffset; }
 
 private:
 	template<typename> friend class detail::MetaClassInfoSetter;
 	template<typename> friend class detail::MetaClassInfoTyped;
-	MetaClassInfo() : accessorOffset(0), m_mapInited(false) { }
+	MetaClassInfo() :
+			m_accessorOffset(0),
+			m_fieldSize(0),
+			m_fieldsInfo(NULL),
+			m_nameHashVal(NULL),
+			m_hashedFieldPtr(NULL),
+			m_offsets(NULL),
+			m_mapInited(false)
+	{ }
+
+	~MetaClassInfo()
+	{
+		m_fieldSize = 0;
+#define IJSTIM_DELETE_ARRAY(field)	delete [] field; field = NULL;
+		IJSTIM_DELETE_ARRAY(m_fieldsInfo)
+		IJSTIM_DELETE_ARRAY(m_nameHashVal)
+		IJSTIM_DELETE_ARRAY(m_hashedFieldPtr)
+		IJSTIM_DELETE_ARRAY(m_offsets)
+#undef IJSTIM_DELETE_ARRAY
+	}
 
 	MetaClassInfo(const MetaClassInfo&) IJSTI_DELETED;
 	MetaClassInfo& operator=(MetaClassInfo) IJSTI_DELETED;
@@ -153,13 +172,15 @@ private:
 		return hash;
 	}
 
-	std::vector<MetaFieldInfo<Ch> > m_fieldsInfo;
-	std::string structName;
-	std::size_t accessorOffset;
+	std::string m_structName;
+	std::size_t m_accessorOffset;
+	std::size_t m_fieldSize;
 
-	std::vector<uint32_t> m_nameHashVal;
-	std::vector<const MetaFieldInfo<Ch>*> m_hashedFieldPtr;
-	std::vector<size_t> m_offsets;
+	typedef const MetaFieldInfo<Ch> CMetaFieldInfo;
+	MetaFieldInfo<Ch>* m_fieldsInfo;
+	uint32_t* m_nameHashVal;
+	CMetaFieldInfo** m_hashedFieldPtr;
+	size_t* m_offsets;
 
 	bool m_mapInited;
 };

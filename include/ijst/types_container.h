@@ -10,6 +10,7 @@
 #include <map>
 #include <list>
 #include <deque>
+#include <vector>
 
 #ifdef _MSC_VER
 	#define IJSTI_IMPL_WRAPPER(Name, ... )	IJSTI_EXPAND(IJSTI_PP_CONCAT(IJSTI_ ## Name ## _IMPL_, IJSTI_PP_NARGS(__VA_ARGS__))(__VA_ARGS__))
