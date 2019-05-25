@@ -406,21 +406,26 @@ public:
 		rapidjson::GenericValue<Encoding>& stream;
 		JsonAllocator& allocator;
 
+		// override meta info when deserialize
+		const OverrideMetaInfos* pOvrMetaInfo;
+
 		// true if move context in stream to avoid copy when possible
 		bool canMoveSrc;
 
 		DeserFlag::Flag deserFlag;
-		FDesc::Mode fDesc;
+
+		// handler FDesc in the parent, so do not need it now
+//		FDesc::Mode fDesc;
 
 		FromJsonReq(rapidjson::GenericValue<Encoding>& _stream, JsonAllocator& _allocator,
 					DeserFlag::Flag _deserFlag, bool _canMoveSrc,
-					void* _pField, FDesc::Mode _fDesc)
+					void* _pField, const OverrideMetaInfos* _pOvrMetaInfo)
 				: pFieldBuffer(_pField)
 				  , stream(_stream)
 				  , allocator(_allocator)
+				  , pOvrMetaInfo(_pOvrMetaInfo)
 				  , canMoveSrc(_canMoveSrc)
 				  , deserFlag(_deserFlag)
-				  , fDesc(_fDesc)
 		{ }
 	};
 

@@ -26,7 +26,7 @@ template<typename CharType = char>
 struct MetaFieldInfo { // NOLINT
 	typedef CharType Ch;
 	//! The index of this fields in the meta information in the class. (Fields are sorted by offset inside class)
-	int index;
+	std::size_t index;
 	//! Field description.
 	FDesc::Mode desc;
 	//! Field's offset inside class.
@@ -158,6 +158,35 @@ private:
 	std::vector<size_t> m_offsets;
 
 	bool m_mapInited;
+};
+
+class OverrideMetaInfos {
+public:
+	struct MetaInfo {
+		bool isFieldDescSet;
+		FDesc::Mode fieldDesc;					//! override field desc, available if isFieldDescSet is true
+		OverrideMetaInfos* ijstFieldMetaInfo;	//! override meta info of ijst field, available if not nullptr
+
+		MetaInfo(): isFieldDescSet(false), fieldDesc(FDesc::NoneFlag), ijstFieldMetaInfo(NULL) {}
+	};
+
+	explicit OverrideMetaInfos(size_t _fieldSize)
+	: filedSize(_fieldSize), metaInfos(new MetaInfo[_fieldSize])
+	{ }
+
+	~OverrideMetaInfos()
+	{
+		delete [] metaInfos;
+		const_cast<MetaInfo*&>(metaInfos) = NULL;
+		const_cast<std::size_t&>(filedSize) = 0;
+	}
+
+	const std::size_t filedSize;		//! size of metaInfos
+	MetaInfo* const metaInfos;			//! array of MetaInfo
+
+private:
+	OverrideMetaInfos(const OverrideMetaInfos&) IJSTI_DELETED;
+	OverrideMetaInfos& operator=(OverrideMetaInfos) IJSTI_DELETED;
 };
 
 } // namespace ijst
