@@ -232,7 +232,7 @@ public:
 template<typename T>
 const MetaClassInfo<typename T::_ijst_Ch>& GetMetaInfo()
 {
-	return detail::Singleton<detail::MetaClassInfoTyped<T> >().metaClass;
+	return detail::Singleton<detail::IjstStructMetas<T> >().metaClass;
 }
 
 /**
@@ -1246,7 +1246,7 @@ private:
 } // namespace ijst
 
 #define IJSTI_STRUCT_META_INITER_DECLARE(stName)	\
-	template void stName::template _ijst_InitMetaInfo<true>(stName::_ijst_MetaInfoT*);
+	template void stName::template _ijst_InitMetaInfo<true>(::ijst::MetaClassInfo<_ijst_Ch>&);
 
 //! IJSTI_STRUCT_EXTERN_TEMPLATE
 #if IJST_EXTERN_TEMPLATE
@@ -1312,6 +1312,10 @@ private:
 #define IJSTI_DEFINE_FIELD(fType, fName, ... )												\
 	fType fName;
 
+#define IJSTI_STRUCT_CONSTRUCTOR_BEG(stName, isRawVal)										\
+	explicit stName(bool isValid = true): 	 												\
+		_(&(::ijst::GetMetaInfo< stName >()), isRawVal, isValid)
+
 #define IJSTI_FIELD_GETTER(fType, fName, ... )												\
 	::ijst::Optional<const fType > IJSTI_PP_CONCAT(IJST_GETTER_PREFIX, fName)() const 		\
 	{ return static_cast<const _ijst_AccessorType&>(this->_).GetOptional(this->fName); }	\
@@ -1319,16 +1323,14 @@ private:
 	{ return this->_.GetOptional(this->fName); }
 
 #define IJSTI_METAINFO_DEFINE_START(stName, N)												\
-	typedef ::ijst::detail::MetaClassInfoTyped< stName > _ijst_MetaInfoT;					\
-	friend class ::ijst::detail::MetaClassInfoTyped< stName >;								\
+	friend class ::ijst::detail::IjstStructMetas< stName >;									\
 	template<bool DummyTrue>																\
-	static void _ijst_InitMetaInfo(_ijst_MetaInfoT* metaInfo)								\
+	static void _ijst_InitMetaInfo(::ijst::MetaClassInfo<_ijst_Ch>& metaInfo)				\
 	{																						\
 		/* Do not call MetaInfoS::GetInstance() int this function */			 			\
 		IJST_OFFSET_BUFFER_NEW(dummyBuffer, sizeof(stName));								\
 		const stName* stPtr = reinterpret_cast<const stName*>(dummyBuffer);					\
-		::ijst::detail::MetaClassInfoSetter<_ijst_Encoding>					 				\
-					mSetter(metaInfo->metaClass);											\
+		::ijst::detail::MetaClassInfoSetter<_ijst_Encoding>	mSetter(metaInfo);				\
 		mSetter.InitBegin(#stName, N, IJSTI_OFFSETOF(stPtr, _));
 
 // Add meta info of field

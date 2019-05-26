@@ -12,7 +12,7 @@ namespace ijst {
 namespace detail {
 	// forward declaration
 	// these declaration is only use for friend class declaration
-	template<typename T> class MetaClassInfoTyped;
+	template<typename T> class IjstStructMetas;
 	template<typename CharType> class MetaClassInfoSetter;
 }
 /**
@@ -132,7 +132,7 @@ public:
 
 private:
 	template<typename> friend class detail::MetaClassInfoSetter;
-	template<typename> friend class detail::MetaClassInfoTyped;
+	template<typename> friend class detail::IjstStructMetas;
 	MetaClassInfo() :
 			m_accessorOffset(0),
 			m_fieldSize(0),

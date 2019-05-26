@@ -79,15 +79,14 @@
 		IJSTI_STRUCT_PUBLIC_DEFINE(encoding)																IJSTM_BSLASH
 		BOOST_PP_REPEAT(n, IJSTM_DEFINE_FIELD, ~)															IJSTM_BSLASH
 		IJSTI_PP_CONCAT(IJSTI_DEFINE_GETTER_, needGetter) (n BOOST_PP_ENUM_TRAILING_PARAMS(n,f))			IJSTM_BSLASH
-		explicit stName(bool isValid = true): 	 															IJSTM_BSLASH
-			_(&(::ijst::detail::Singleton<_ijst_MetaInfoT>().metaClass), isRawVal, isValid)	 				IJSTM_BSLASH
+		IJSTI_STRUCT_CONSTRUCTOR_BEG(stName, isRawVal)														IJSTM_BSLASH
 			BOOST_PP_REPEAT(n, IJSTM_FIELD_INIT, ~)															IJSTM_BSLASH
 			{}	 																							IJSTM_BSLASH
 	private:	 																							IJSTM_BSLASH
 		IJSTI_METAINFO_DEFINE_START(stName, n)	 															IJSTM_BSLASH
 			BOOST_PP_REPEAT(n, IJSTM_METAINFO_ADD, ~)														IJSTM_BSLASH
 		IJSTI_METAINFO_DEFINE_END()	 																		IJSTM_BSLASH
-	IJSTI_DEFINE_CLASS_END(stName)
+	};
 
 	#undef n
 

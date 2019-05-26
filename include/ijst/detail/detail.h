@@ -493,24 +493,26 @@ inline SerializerInterface<Encoding>* GetSerializerInterface(const MetaFieldInfo
  *				Private
  */
 /**
- * MetaClassInfo of T
- * Push meta class info of T in specialized constructor MetaInfo<T>().
+ * MetaClassInfo of ijst struct
  *
- * @tparam T 	class. Concept require T::_ijst_InitMetaInfo<bool>(MetaInfo*), typedef T::_ijst_Ch
+ * @tparam T 	class. Concept require
+ * 					typedef T::_ijst_Ch
+ * 					T::_ijst_InitMetaInfo<bool>(MetaClassInfo&)
  *
  * @note		Use Singleton<MetaClassInfoTyped<T> > to get the instance
  */
 template<typename T>
-class MetaClassInfoTyped {
+class IjstStructMetas {
 public:
 	MetaClassInfo<typename T::_ijst_Ch> metaClass;
+	OverrideMetaInfos* pOvrMetaInfo;
 
 private:
-	friend MetaClassInfoTyped<T>& Singleton<MetaClassInfoTyped<T> >();
+	friend IjstStructMetas<T>& Singleton<IjstStructMetas<T> >();
 
-	MetaClassInfoTyped()
+	IjstStructMetas()
 	{
-		T::template _ijst_InitMetaInfo<true>(this);
+		T::template _ijst_InitMetaInfo<true>(metaClass);
 	}
 };
 

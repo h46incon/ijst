@@ -168,11 +168,11 @@ ijst 的选择是使用**模板+单例**，实现类型与元信息的映射，�
 ```cpp
 // T 为元信息的类型
 template<typename T>
-struct MetaClassInfoTyped {
+struct IjstStructMetas {
     MetaClassInfo info;
 };
 
-class Singleton<MetaClassInfoTyped<Type> >;  // 或直接把 MetaClassInfoTyped 实现为单例模式
+class Singleton<IjstStructMetas<Type> >;  // 或直接把 IjstStructMetas 实现为单例模式
 ```
 
 这样使用单例的 `GetInstance` 方法即可获取元信息，也避免了 map 的查找操作。
@@ -185,12 +185,12 @@ class Singleton<MetaClassInfoTyped<Type> >;  // 或直接把 MetaClassInfoTyped 
     //... 相关的元信息注册代码
 ```
 
-接下来需要考虑的是，怎么样让这些代码在合适的时候**运行**起来。直接的想法是借助单例模式，将这些代码在 `MetaClassInfoTyped` 的构造函数中定义：
+接下来需要考虑的是，怎么样让这些代码在合适的时候**运行**起来。直接的想法是借助单例模式，将这些代码在 `IjstStructMetas` 的构造函数中定义：
 
 ```cpp
 #define IJST_DEFINE_STRUCT_IMPL_1(stName, f0) \
     class stName {  /* 类定义 */ };  \
-    template<> MetaClassInfoType<stName>::MetaClassInfoTyped()  \
+    template<> MetaClassInfoType<stName>::IjstStructMetas()  \
     { /* 元信息的注册 */ }
 ```
 
@@ -200,8 +200,8 @@ class Singleton<MetaClassInfoTyped<Type> >;  // 或直接把 MetaClassInfoTyped 
 
 ```cpp
 template<typename T>
-struct MetaClassInfoTyped {
-    MetaClassInfoTyped()
+struct IjstStructMetas {
+    IjstStructMetas()
     {
         // 调用生成的函数
         T::InitMetaInfo(this);
@@ -211,10 +211,10 @@ struct MetaClassInfoTyped {
 #define IJST_DEFINE_STRUCT_IMPL_1(stName, f0)  \
     class stName {  \
         /* 正常的类定义 */  \
-        void InitMetaInfo(MetaClassInfoTyped* p)  \
+        void InitMetaInfo(IjstStructMetas* p)  \
         {  \
             /* 元信息的注册 */  \
-            /* 注意此时 MetaClassInfoTyped 还没构造完成，不能调用其单例的 GetInstance() 方法 */  \
+            /* 注意此时 IjstStructMetas 还没构造完成，不能调用其单例的 GetInstance() 方法 */  \
         }  \
     };
 ```
