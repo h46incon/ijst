@@ -497,22 +497,64 @@ inline SerializerInterface<Encoding>* GetSerializerInterface(const MetaFieldInfo
  *
  * @tparam T 	class. Concept require
  * 					typedef T::_ijst_Ch
- * 					T::_ijst_InitMetaInfo<bool>(MetaClassInfo&)
- *
- * @note		Use Singleton<MetaClassInfoTyped<T> > to get the instance
+ * 					void T::_ijst_InitMetaInfo<bool>(MetaClassInfo&, const T*)
  */
 template<typename T>
-class IjstStructMetas {
+class IjstStructMeta {
 public:
-	MetaClassInfo<typename T::_ijst_Ch> metaClass;
-	OverrideMetaInfos* pOvrMetaInfo;
+	static const MetaClassInfo<typename T::_ijst_Ch>& Ins()
+	{
+		static IjstStructMeta ins;
+		return ins.metaClass;
+	}
 
 private:
-	friend IjstStructMetas<T>& Singleton<IjstStructMetas<T> >();
+	MetaClassInfo<typename T::_ijst_Ch> metaClass;
 
-	IjstStructMetas()
+	IjstStructMeta()
 	{
-		T::template _ijst_InitMetaInfo<true>(metaClass);
+		IJST_OFFSET_BUFFER_NEW(dummyBuffer, sizeof(T));
+		const T* stPtr = reinterpret_cast<T*>(dummyBuffer);
+
+		T::template _ijst_InitMetaInfo<true>(metaClass, stPtr);
+
+		IJST_OFFSET_BUFFER_DELETE(dummyBuffer);
+	}
+};
+
+/**
+ * OverrideMetaInfos of ijst struct
+ *
+ * @tparam T 	class. Concept require
+ * 					const OverrideMetaInfos* T::_ijst_NewOvrMetaInfo(const T*)
+ */
+template<typename T>
+class IjstStructOvrMeta {
+public:
+	static const OverrideMetaInfos* Ins()
+	{
+		static IjstStructOvrMeta ins;
+		return ins.pOverMetas;
+	}
+
+private:
+	const OverrideMetaInfos* pOverMetas;
+
+	IjstStructOvrMeta() :
+			pOverMetas(NULL)
+	{
+		IJST_OFFSET_BUFFER_NEW(dummyBuffer, sizeof(T));
+		const T* stPtr = reinterpret_cast<T*>(dummyBuffer);
+
+		pOverMetas = T::_ijst_NewOvrMetaInfo(stPtr);
+
+		IJST_OFFSET_BUFFER_DELETE(dummyBuffer);
+	}
+
+	~IjstStructOvrMeta()
+	{
+		delete pOverMetas;
+		pOverMetas = NULL;
 	}
 };
 
@@ -527,8 +569,14 @@ public:
 		d.m_structName = _tag;
 		d.m_accessorOffset = _accessorOffset;
 		d.m_fieldsInfo = new MetaFieldInfo<Ch>[_maxFieldCount];
+		d.m_isResourceOwner = true;
 
 		m_maxSize = _maxFieldCount;
+	}
+
+	void ShadowFrom(const MetaClassInfo<Ch>& src, const std::string& _tag)
+	{
+		d.ShadowFrom(src, _tag);
 	}
 
 	/// The complete IDL of declaring a field is (type, name, json_name, desc, serialize_intf)

@@ -232,7 +232,7 @@ public:
 template<typename T>
 const MetaClassInfo<typename T::_ijst_Ch>& GetMetaInfo()
 {
-	return detail::Singleton<detail::IjstStructMetas<T> >().metaClass;
+	return detail::IjstStructMeta<T>::Ins();
 }
 
 /**
@@ -349,6 +349,14 @@ public:
 		assert(pOvrMetas != NULL);
 		assert(pOvrMetas->filedSize == m_r->pMetaClass->GetFieldSize());
 		m_r->pOvrMetas = pOvrMetas;
+	}
+
+	//! Update meta class to a shadow one
+	void UpdateShadowMetaClass(const MetaClassInfo<Ch>* pMetaClass)
+	{
+		// TODO: Add test
+		assert(pMetaClass && pMetaClass->GetFieldSize() == m_r->pMetaClass->GetFieldSize());
+		m_r->pMetaClass = pMetaClass;
 	}
 
 	bool IsValid() const { return m_r->isValid; }
@@ -751,7 +759,6 @@ private:
 	typedef rapidjson::GenericDocument<Encoding> TDocument;
 	typedef rapidjson::GenericValue<Encoding> TValue;
 	typedef MetaFieldInfo<Ch> TMetaFieldInfo;
-	typedef MetaClassInfo<Ch> TMetaClassInfo;
 
 	// #region Implement SerializeInterface
 	template <typename, typename, typename> friend class detail::FSerializer;
@@ -1173,7 +1180,7 @@ private:
 		TDocument ownDoc;
 
 		EFStatus* fieldStatus;
-		const TMetaClassInfo* pMetaClass;
+		const MetaClassInfo<Ch>* pMetaClass;
 		detail::JsonAllocator* pAllocator;
 		const unsigned char *pOuter;
 		const OverrideMetaInfos* pOvrMetas;
@@ -1246,7 +1253,7 @@ private:
 } // namespace ijst
 
 #define IJSTI_STRUCT_META_INITER_DECLARE(stName)	\
-	template void stName::template _ijst_InitMetaInfo<true>(::ijst::MetaClassInfo<_ijst_Ch>&);
+	template void stName::template _ijst_InitMetaInfo<true>(::ijst::MetaClassInfo<_ijst_Ch>&, const stName*);
 
 //! IJSTI_STRUCT_EXTERN_TEMPLATE
 #if IJST_EXTERN_TEMPLATE
@@ -1314,7 +1321,7 @@ private:
 
 #define IJSTI_STRUCT_CONSTRUCTOR_BEG(stName, isRawVal)										\
 	explicit stName(bool isValid = true): 	 												\
-		_(&(::ijst::GetMetaInfo< stName >()), isRawVal, isValid)
+		_(&(::ijst::detail::IjstStructMeta< stName >::Ins()), isRawVal, isValid)
 
 #define IJSTI_FIELD_GETTER(fType, fName, ... )												\
 	::ijst::Optional<const fType > IJSTI_PP_CONCAT(IJST_GETTER_PREFIX, fName)() const 		\
@@ -1323,13 +1330,14 @@ private:
 	{ return this->_.GetOptional(this->fName); }
 
 #define IJSTI_METAINFO_DEFINE_START(stName, N)												\
-	friend class ::ijst::detail::IjstStructMetas< stName >;									\
+	friend class ::ijst::detail::IjstStructMeta< stName >;									\
+	friend class ::ijst::detail::IjstStructOvrMeta< stName >;								\
+	static ::ijst::OverrideMetaInfos* _ijst_NewOvrMetaInfo(const stName*) { return NULL; }	\
 	template<bool DummyTrue>																\
-	static void _ijst_InitMetaInfo(::ijst::MetaClassInfo<_ijst_Ch>& metaInfo)				\
+	static void _ijst_InitMetaInfo(::ijst::MetaClassInfo<_ijst_Ch>& metaInfo, 				\
+								   const stName* stPtr)										\
 	{																						\
-		/* Do not call MetaInfoS::GetInstance() int this function */			 			\
-		IJST_OFFSET_BUFFER_NEW(dummyBuffer, sizeof(stName));								\
-		const stName* stPtr = reinterpret_cast<const stName*>(dummyBuffer);					\
+		/* Do not call IjstStructMeta<stName>::GetInstance() int this function */			\
 		::ijst::detail::MetaClassInfoSetter<_ijst_Encoding>	mSetter(metaInfo);				\
 		mSetter.InitBegin(#stName, N, IJSTI_OFFSETOF(stPtr, _));
 
@@ -1387,7 +1395,6 @@ private:
 
 #define IJSTI_METAINFO_DEFINE_END()															\
 		mSetter.InitEnd();																	\
-		IJST_OFFSET_BUFFER_DELETE(dummyBuffer);												\
 	}
 
 #define IJSTI_DEFINE_CLASS_END(stName)														\

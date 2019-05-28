@@ -12,7 +12,7 @@ namespace ijst {
 namespace detail {
 	// forward declaration
 	// these declaration is only use for friend class declaration
-	template<typename T> class IjstStructMetas;
+	template<typename T> class IjstStructMeta;
 	template<typename CharType> class MetaClassInfoSetter;
 }
 /**
@@ -132,7 +132,7 @@ public:
 
 private:
 	template<typename> friend class detail::MetaClassInfoSetter;
-	template<typename> friend class detail::IjstStructMetas;
+	template<typename> friend class detail::IjstStructMeta;
 	MetaClassInfo() :
 			m_accessorOffset(0),
 			m_fieldSize(0),
@@ -140,18 +140,38 @@ private:
 			m_nameHashVal(NULL),
 			m_hashedFieldPtr(NULL),
 			m_offsets(NULL),
-			m_mapInited(false)
+			m_mapInited(false),
+			m_isResourceOwner(false)
 	{ }
 
 	~MetaClassInfo()
 	{
 		m_fieldSize = 0;
-#define IJSTIM_DELETE_ARRAY(field)	delete [] field; field = NULL;
+#define IJSTIM_DELETE_ARRAY(field)	if (m_isResourceOwner) { delete [] field; } field = NULL;
 		IJSTIM_DELETE_ARRAY(m_fieldsInfo)
 		IJSTIM_DELETE_ARRAY(m_nameHashVal)
 		IJSTIM_DELETE_ARRAY(m_hashedFieldPtr)
 		IJSTIM_DELETE_ARRAY(m_offsets)
 #undef IJSTIM_DELETE_ARRAY
+	}
+
+	void ShadowFrom(const MetaClassInfo& src, const std::string& structName)
+	{
+#define IJSTIM_COPY_FIELD(field)	field = src.field;
+
+		IJSTIM_COPY_FIELD(m_mapInited)
+		IJSTIM_COPY_FIELD(m_accessorOffset)
+		IJSTIM_COPY_FIELD(m_fieldSize)
+
+		IJSTIM_COPY_FIELD(m_fieldsInfo)
+		IJSTIM_COPY_FIELD(m_nameHashVal)
+		IJSTIM_COPY_FIELD(m_hashedFieldPtr)
+		IJSTIM_COPY_FIELD(m_offsets)
+
+#undef IJSTIM_COPY_FIELD
+
+		m_structName = structName;
+		m_isResourceOwner = false;
 	}
 
 	MetaClassInfo(const MetaClassInfo&) IJSTI_DELETED;
@@ -183,6 +203,7 @@ private:
 	size_t* m_offsets;
 
 	bool m_mapInited;
+	bool m_isResourceOwner;
 };
 
 class OverrideMetaInfos {
@@ -207,6 +228,25 @@ public:
 		delete [] metaInfos;
 		const_cast<MetaInfo*&>(metaInfos) = NULL;
 		const_cast<std::size_t&>(filedSize) = 0;
+	}
+
+	//! Copy from _src if not empty, else new a empty one
+	//! The caller must release the pointer returned
+	static OverrideMetaInfos* NewFromSrcOrEmpty(const OverrideMetaInfos* _src, size_t _fieldSize)
+	{
+		if (_src == NULL) {
+			return new OverrideMetaInfos(_fieldSize);
+		}
+		else
+		{
+			assert(_src->filedSize == _fieldSize);
+			OverrideMetaInfos *ret = new OverrideMetaInfos(_fieldSize);
+			for (size_t i = 0; i < _fieldSize; ++i) {
+				ret->metaInfos[i] = _src->metaInfos[i];
+			}
+			return ret;
+		}
+
 	}
 
 	const std::size_t filedSize;		//! size of metaInfos
