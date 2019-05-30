@@ -28,11 +28,11 @@ IJST_DEFINE_STRUCT(
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
 		ExternTest
-		, (T_int, i, "i", 0)
-		, (T_raw, r, "r", 0)
-		, (IJST_TVEC(T_string), vs, "vs", 0)
-		, (IJST_TMAP(T_bool), mb, "mb", 0)
-		, (IJST_TST(Empty), e, "e", 0)
+		, (T_int, i, "i")
+		, (T_raw, r, "r")
+		, (IJST_TVEC(T_string), vs, "vs")
+		, (IJST_TMAP(T_bool), mb, "mb")
+		, (IJST_TST(Empty), e, "e")
 )
 
 TEST(Template, UTEST_PP_CONCAT(UT_TEST_NAME, Accessor))

@@ -157,6 +157,8 @@ private:
 
 	void ShadowFrom(const MetaClassInfo& src, const std::string& structName)
 	{
+		this->~MetaClassInfo();
+
 #define IJSTIM_COPY_FIELD(field)	field = src.field;
 
 		IJSTIM_COPY_FIELD(m_mapInited)
@@ -237,8 +239,7 @@ public:
 		if (_src == NULL) {
 			return new OverrideMetaInfos(_fieldSize);
 		}
-		else
-		{
+		else {
 			assert(_src->filedSize == _fieldSize);
 			OverrideMetaInfos *ret = new OverrideMetaInfos(_fieldSize);
 			for (size_t i = 0; i < _fieldSize; ++i) {

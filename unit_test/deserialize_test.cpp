@@ -11,10 +11,10 @@ using namespace ijst;
 IJST_DEFINE_STRUCT(
 		SimpleSt
 		, (T_int, int_1, "int_val_1", FDesc::Optional)
-		, (T_int, int_2, "int_val_2", 0)
+		, (T_int, int_2, "int_val_2")
 		, (T_int, int_3, "int_val_3", FDesc::NotDefault | FDesc::Optional)
 		, (T_string, str_1, "str_val_1", FDesc::Optional)
-		, (T_string, str_2, "str_val_2", 0)
+		, (T_string, str_2, "str_val_2")
 )
 
 TEST(Deserialize, Empty)
@@ -454,13 +454,13 @@ IJST_DEFINE_STRUCT(
 
 IJST_DEFINE_STRUCT(
 		StAllocShrink
-		, (IJST_TST(StEmpty), empty, "val", 0)
-		, (IJST_TVEC(StEmpty), vecEmpty, "vec", 0)
-		, (IJST_TDEQUE(StEmpty), deqEmpty, "deq", 0)
-		, (IJST_TLIST(StEmpty), listEmpty, "list", 0)
-		, (IJST_TMAP(StEmpty), mapEmpty, "map", 0)
-		, (IJST_TOBJ(StEmpty), objEmpty, "obj", 0)
-		, (T_raw, raw, "raw", 0)
+		, (IJST_TST(StEmpty), empty, "val")
+		, (IJST_TVEC(StEmpty), vecEmpty, "vec")
+		, (IJST_TDEQUE(StEmpty), deqEmpty, "deq")
+		, (IJST_TLIST(StEmpty), listEmpty, "list")
+		, (IJST_TMAP(StEmpty), mapEmpty, "map")
+		, (IJST_TOBJ(StEmpty), objEmpty, "obj")
+		, (T_raw, raw, "raw")
 )
 
 #define UTEST_ASSERT_USER_OWN_ALLOCATOR(st)		\

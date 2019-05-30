@@ -30,7 +30,7 @@ TEST(BasicAPI, EnumOr)
 }
 
 IJST_DEFINE_VALUE(
-		ValVec, IJST_TVEC(T_int), v, 0
+		ValVec, IJST_TVEC(T_int), v, FDesc::NoneFlag
 )
 
 TEST(BasicAPI, DefineValueStVec)
@@ -63,7 +63,7 @@ TEST(BasicAPI, DefineValueStVec)
 }
 
 IJST_DEFINE_VALUE_WITH_GETTER(
-		ValMap, IJST_TMAP(T_int), v, 0
+		ValMap, IJST_TMAP(T_int), v, FDesc::NoneFlag
 )
 
 TEST(BasicAPI, DefineValueStMap)
@@ -93,7 +93,7 @@ TEST(BasicAPI, DefineValueStMap)
 
 IJST_DEFINE_STRUCT(
 		SimpleSt
-		, (T_int, int_1, "int_val_1", 0)
+		, (T_int, int_1, "int_val_1")
 		, (T_int, int_2, "int_val_2", FDesc::Optional)
 		, (T_string, str_1, "str_val_1", FDesc::Nullable)
 		, (T_string, str_2, "str_val_2", FDesc::Optional | FDesc::Nullable)
@@ -102,7 +102,7 @@ IJST_DEFINE_STRUCT(
 #define DEFINE_TEST_STRUCT(encoding, stName, PF) \
 	IJST_DEFINE_GENERIC_STRUCT_WITH_GETTER( \
 		encoding, stName ## Inner \
-		, (T_int, int_v, PF ## "int_val", 0) \
+		, (T_int, int_v, PF ## "int_val")\
 	) \
 	IJST_DEFINE_GENERIC_STRUCT_WITH_GETTER( \
 		encoding, stName \
@@ -112,16 +112,16 @@ IJST_DEFINE_STRUCT(
 		, (T_int, int_v33, NULL) /*type, name, serialize_intf(NULL)*/ \
 		, (rapidjson::Document, doc_v34, NULL) /*type, name, serialize_intf(NULL) with not built-in type*/ \
 		, (T_int, int_v34, (&IJSTI_FSERIALIZER_INS(T_uint, encoding)) ) /*type, name, serialize_intf*/ \
-		, (T_int, int_v41, PF ## "int_val_41", 0) /*type, name, json_name, 0*/ \
+		, (T_int, int_v41, PF ## "int_val_41")/*type, name, json_name*/ \
 		, (T_int, int_v42, PF ## "int_val_42", FDesc::Optional) /*type, name, json_name, desc*/\
 		, (T_int, int_v43, PF ## "int_val_43", (&IJSTI_FSERIALIZER_INS(T_uint, encoding)) ) /*type, name, json_name, serialize_intf*/ \
 		, (T_int, int_v44, FDesc::NotDefault, (&IJSTI_FSERIALIZER_INS(T_uint, encoding)) ) /*type, name, desc, serialize_intf*/ \
 		, (T_int, int_v51, PF ## "int_val_51", FDesc::Nullable, (&IJSTI_FSERIALIZER_INS(T_uint, encoding)) ) /*type, name, json_name, desc, serialize_intf*/ \
-		, (IJST_TST(stName ## Inner), st_v, PF ## "st_val", 0) \
-		, (IJST_TSTR, str_v, PF ## "str_val", 0) \
-		, (IJST_TRAW, raw_v, PF ## "raw_val", 0) \
-		, (IJST_TMAP(T_int), map_v, PF ## "map_val", 0) \
-		, (IJST_TOBJ(T_int), obj_v, PF ## "obj_val", 0) \
+		, (IJST_TST(stName ## Inner), st_v, PF ## "st_val")\
+		, (IJST_TSTR, str_v, PF ## "str_val")\
+		, (IJST_TRAW, raw_v, PF ## "raw_val")\
+		, (IJST_TMAP(T_int), map_v, PF ## "map_val")\
+		, (IJST_TOBJ(T_int), obj_v, PF ## "obj_val")\
 	)
 
 DEFINE_TEST_STRUCT(rapidjson::UTF8<>, U8TestSt, )
@@ -229,11 +229,11 @@ TEST(BasicAPI, MetaInfo)
 IJST_DEFINE_STRUCT(
 		HashCollision
 		// collision group 1
-		, (T_int, int_1, "costarring", 0)
-		, (T_int, int_2, "liquid", 0)
+		, (T_int, int_1, "costarring")
+		, (T_int, int_2, "liquid")
 		// collision group 2
-		, (T_int, int_3, "zinkes", 0)
-		, (T_int, int_4, "altarages", 0)
+		, (T_int, int_3, "zinkes")
+		, (T_int, int_4, "altarages")
 )
 
 TEST(BasicAPI, HashCollision)
@@ -444,31 +444,31 @@ TEST(BasicAPI, GetOptional)
 
 IJST_DEFINE_STRUCT(
 		Complicate
-		, (IJST_TST(SimpleSt), st, "st_v", 0)
-		, (IJST_TVEC(IJST_TST(SimpleSt)), vec, "vec_v", 0)
-		, (IJST_TMAP(IJST_TST(SimpleSt)), map, "map_v", 0)
+		, (IJST_TST(SimpleSt), st, "st_v")
+		, (IJST_TVEC(IJST_TST(SimpleSt)), vec, "vec_v")
+		, (IJST_TMAP(IJST_TST(SimpleSt)), map, "map_v")
 )
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
 		SWGetter
-		, (T_int, int_1, "int_val_1", 0)
-		, (T_int, int_2, "int_val_2", 0)
-		, (T_string, str_1, "str_val_1", 0)
-		, (T_string, str_2, "str_val_2", 0)
+		, (T_int, int_1, "int_val_1")
+		, (T_int, int_2, "int_val_2")
+		, (T_string, str_1, "str_val_1")
+		, (T_string, str_2, "str_val_2")
 )
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
 		CWGetter
-		, (IJST_TST(SimpleSt), sim, "sim_v", 0)
-		, (IJST_TST(SWGetter), st, "st_v", 0)
-		, (IJST_TVEC(IJST_TST(SWGetter)), vec, "vec_v", 0)
-		, (IJST_TDEQUE(IJST_TST(SWGetter)), deq, "deq_v", 0)
-		, (IJST_TMAP(IJST_TST(SWGetter)), map, "map_v", 0)
+		, (IJST_TST(SimpleSt), sim, "sim_v")
+		, (IJST_TST(SWGetter), st, "st_v")
+		, (IJST_TVEC(IJST_TST(SWGetter)), vec, "vec_v")
+		, (IJST_TDEQUE(IJST_TST(SWGetter)), deq, "deq_v")
+		, (IJST_TMAP(IJST_TST(SWGetter)), map, "map_v")
 )
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
 		CWGetter2
-		, (IJST_TST(CWGetter), v, "v", 0)
+		, (IJST_TST(CWGetter), v, "v")
 )
 
 TEST(BasicAPI, ChainedOptional)
@@ -545,10 +545,10 @@ TEST(BasicAPI, ChainedOptional)
 struct DummySt {
 	IJST_DEFINE_STRUCT(
 			SimpleSt
-			, (T_int, int_1, "int_val_1", 0)
-			, (T_int, int_2, "int_val_2", 0)
-			, (T_string, str_1, "str_val_1", 0)
-			, (T_string, str_2, "str_val_2", 0)
+			, (T_int, int_1, "int_val_1")
+			, (T_int, int_2, "int_val_2")
+			, (T_string, str_1, "str_val_1")
+			, (T_string, str_2, "str_val_2")
 	)
 };
 

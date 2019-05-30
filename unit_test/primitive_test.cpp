@@ -59,16 +59,16 @@ string GetJsonVal<string>(rapidjson::Value& jVal)
 	return string(jVal.GetString(), jVal.GetStringLength());
 }
 
-#define UTEST_DEFINE_STRUCT(StName, PrimType) 				\
-	IJST_DEFINE_STRUCT(										\
-		StName												\
-		, (PrimType, vd, "f_vd", 0)							\
-		, (PrimType, v, "f_v", FDesc::NotDefault)			\
-		, (IJST_TMAP(PrimType), map_v, "f_map", 0)			\
-		, (IJST_TVEC(PrimType), vec_v, "f_vec", 0)			\
-		, (IJST_TDEQUE(PrimType), deq_v, "f_deq", 0)		\
-		, (IJST_TLIST(PrimType), list_v, "f_list", 0)		\
-		, (IJST_TOBJ(PrimType), obj_v, "f_obj", 0)			\
+#define UTEST_DEFINE_STRUCT(StName, PrimType) 		\
+	IJST_DEFINE_STRUCT(								\
+		StName										\
+		, (PrimType, vd, "f_vd")					\
+		, (PrimType, v, "f_v", FDesc::NotDefault)	\
+		, (IJST_TMAP(PrimType), map_v, "f_map")		\
+		, (IJST_TVEC(PrimType), vec_v, "f_vec")		\
+		, (IJST_TDEQUE(PrimType), deq_v, "f_deq")	\
+		, (IJST_TLIST(PrimType), list_v, "f_list")	\
+		, (IJST_TOBJ(PrimType), obj_v, "f_obj")		\
 	)
 
 /**
@@ -240,13 +240,13 @@ void TestMemberTypeMismatch(const string& errJson, const char* type, const char*
 
 IJST_DEFINE_STRUCT(
 		StBool
-		, (T_bool, vd, "f_vd", 0)
+		, (T_bool, vd, "f_vd")
 		, (T_bool, v, "f_v", FDesc::NotDefault)
-		, (IJST_TMAP(T_bool), map_v, "f_map", 0)
-		, (IJST_TVEC(T_wbool), vec_v, "f_vec", 0)  // use vector<T_wbool> because not support vector<T_bool>
-		, (IJST_TDEQUE(T_bool), deq_v, "f_deq", 0)
-		, (IJST_TLIST(T_bool), list_v, "f_list", 0)
-		, (IJST_TOBJ(T_bool), obj_v, "f_obj", 0)
+		, (IJST_TMAP(T_bool), map_v, "f_map")
+		, (IJST_TVEC(T_wbool), vec_v, "f_vec") // use vector<T_wbool> because not support vector<T_bool>
+		, (IJST_TDEQUE(T_bool), deq_v, "f_deq")
+		, (IJST_TLIST(T_bool), list_v, "f_list")
+		, (IJST_TOBJ(T_bool), obj_v, "f_obj")
 )
 
 TEST(Primitive, Bool)
@@ -659,14 +659,14 @@ class CharTraits: public std::char_traits<T> {
 
 IJST_DEFINE_STRUCT_WITH_GETTER(
 	CustomContainer
-	, (IJST_TVEC(T_int, ::Allocator<T_int>), f_vec, "vec", 0)
-	, (IJST_TDEQUE(T_int, ::Allocator<T_int>), f_deq, "deq", 0)
-	, (IJST_TLIST(T_int, ::Allocator<T_int>), f_list, "list", 0)
-	, (IJST_TMAP(T_int, ::Less<string>), f_map, "map", 0)
-	, (IJST_TMAP(T_int, ::Less<string>, Allocator<pair<const string, T_int> >), f_map2, "map2", 0)
-	, (IJST_TOBJ(T_int, ::Allocator<T_Member<T_int> >), f_obj, "obj", 0)
-	, (IJST_TSTR_X(CharTraits<char>), f_str, "str", 0)
-	, (IJST_TSTR_X(CharTraits<char>, Allocator<char>), f_str2, "str2", 0)
+	, (IJST_TVEC(T_int, ::Allocator<T_int>), f_vec, "vec")
+	, (IJST_TDEQUE(T_int, ::Allocator<T_int>), f_deq, "deq")
+	, (IJST_TLIST(T_int, ::Allocator<T_int>), f_list, "list")
+	, (IJST_TMAP(T_int, ::Less<string>), f_map, "map")
+	, (IJST_TMAP(T_int, ::Less<string>, Allocator<pair<const string, T_int> >), f_map2, "map2")
+	, (IJST_TOBJ(T_int, ::Allocator<T_Member<T_int> >), f_obj, "obj")
+	, (IJST_TSTR_X(CharTraits<char>), f_str, "str")
+	, (IJST_TSTR_X(CharTraits<char>, Allocator<char>), f_str2, "str2")
 )
 
 TEST(Primitive, CustomContainer)

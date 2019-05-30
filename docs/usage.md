@@ -385,7 +385,7 @@ doc.Populate(generator);
 const std::string json = "[0, 1, 2]";
 
 IJST_DEFINE_VALUE(
-	VecVal, IJST_TVEC(T_int), v, 0
+	VecVal, IJST_TVEC(T_int), v, FDesc::NoneFlag
 )
 
 VecVal vec;
@@ -404,7 +404,7 @@ const std::string json = R"(
 })";
 
 IJST_DEFINE_VALUE(
-	MapVal, IJST_TMAP(T_int), v2, 0
+	MapVal, IJST_TMAP(T_int), v2, FDesc::NoneFlag
 )
 
 MapVal vec;

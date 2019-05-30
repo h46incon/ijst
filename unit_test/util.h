@@ -40,9 +40,9 @@ do {																		\
 #define DEFINE_ENCODING_TEST_STRUCT(encoding, stName, PF) \
 	IJST_DEFINE_GENERIC_STRUCT( \
 		encoding, stName \
-		, (ijst::T_int, int_v, PF ## "int_val", 0) \
-		, (IJST_TSTR, str_v, PF ## "str_val", 0) \
-		, (IJST_TMAP(ijst::T_int), map_v, PF ## "map_val", 0) \
+		, (ijst::T_int, int_v, PF ## "int_val")\
+		, (IJST_TSTR, str_v, PF ## "str_val")\
+		, (IJST_TMAP(ijst::T_int), map_v, PF ## "map_val")\
 	)
 
 DEFINE_ENCODING_TEST_STRUCT(rapidjson::UTF8<>, U8TestEncoding, )

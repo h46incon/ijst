@@ -617,16 +617,6 @@ public:
 	}
 
 	//! Call from IJSTI_METAINFO_ADD_IMPL_4 with IDL (type, name, json_name, desc)
-	//! Backward compatibility with FDesc declaration is "0"
-	template<typename FieldType>
-	void PushMetaField_4(std::size_t offset, const char* fieldName, const char* jsonNameIgnored, const std::basic_string<Ch>& trueJsonName, int desc)
-	{
-		(void)jsonNameIgnored;
-		SerializerInterface<Encoding>* pSerializeInterface = &IJSTI_FSERIALIZER_INS(FieldType, Encoding);
-		DoPushMetaField(pSerializeInterface, offset, fieldName, trueJsonName, static_cast<FDesc::Mode>(desc));
-	}
-
-	//! Call from IJSTI_METAINFO_ADD_IMPL_4 with IDL (type, name, json_name, desc)
 	template<typename FieldType>
 	void PushMetaField_4(std::size_t offset, const char* fieldName, const char* jsonNameIgnored, const std::basic_string<Ch>& trueJsonName, FDesc::Mode desc)
 	{

@@ -9,7 +9,7 @@ namespace override_test_ns {
 
 IJST_DEFINE_STRUCT(
 		SimpleSt
-		, (T_int, int_1, 0)
+		, (T_int, int_1)
 		, (T_int, int_2, FDesc::Optional)
 		, (T_int, int_3, FDesc::Optional)
 		, (T_int, int_4, FDesc::Optional)
