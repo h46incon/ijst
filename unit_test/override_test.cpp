@@ -16,51 +16,65 @@ IJST_DEFINE_STRUCT(
 )
 
 
-class OverrideSt: private SimpleSt {
-public:
-	typedef SimpleSt _ijst_BaseClass;
+// class stName: private stBase {
+#define IJST_DEFINE_OVERRIDE_P1(stName, stBase) \
+	typedef stBase _ijst_BaseClass; \
+	typedef stName _ijst_ThisClass; \
+	template<bool DummyTrue> \
+	static void _ijst_InitMetaInfo(::ijst::MetaClassInfo<_ijst_Ch>& metaInfo, const _ijst_ThisClass * stPtr) \
+	{ \
+		(void)stPtr; \
+		::ijst::detail::MetaClassInfoSetter<_ijst_Encoding> mSetter(metaInfo); \
+		mSetter.ShadowFrom(::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(), #stName); \
+	} \
+public: \
+	stName() \
+	{ \
+		_.UpdateShadowMetaClass(&(::ijst::detail::IjstStructMeta<_ijst_ThisClass>::Ins())); \
+		_.SetOverrideMetaInfo(::ijst::detail::IjstStructOvrMeta<_ijst_ThisClass>::Ins()); \
+	} \
+	_ijst_BaseClass& _ijst_Base() {return *this;} \
+	const _ijst_BaseClass& _ijst_Base() const {return *this;} \
+	using _ijst_BaseClass::_; \
+	using _ijst_BaseClass::_ijst_Encoding; \
+	using _ijst_BaseClass::_ijst_Ch; \
+	using _ijst_BaseClass::_ijst_AccessorType;
 
-	OverrideSt()
-	{
-		_.UpdateShadowMetaClass(&(::ijst::detail::IjstStructMeta<OverrideSt>::Ins()));
-		_.SetOverrideMetaInfo(::ijst::detail::IjstStructOvrMeta<OverrideSt>::Ins());
+#define IJST_DEFINE_OVERRIDE_P2() \
+private: \
+	friend class ::ijst::detail::IjstStructMeta< _ijst_ThisClass >; \
+	friend class ::ijst::detail::IjstStructOvrMeta< _ijst_ThisClass >; \
+	static ::ijst::OverrideMetaInfos* _ijst_NewOvrMetaInfo(const _ijst_ThisClass* stPtr) \
+	{ \
+		const MetaClassInfo<char> &metaInfo = ::ijst::detail::IjstStructMeta<_ijst_ThisClass>::Ins(); \
+		::ijst::OverrideMetaInfos* pOverrideStOvrMeta = ijst::OverrideMetaInfos::NewFromSrcOrEmpty( \
+				::ijst::detail::IjstStructOvrMeta<_ijst_BaseClass>::Ins(), metaInfo.GetFieldSize()); \
+
+#define IJST_DEFINE_OVERRIDE_P3() \
+		return pOverrideStOvrMeta; \
 	}
 
-	_ijst_BaseClass& _ijst_Base() {return *this;}
-	const _ijst_BaseClass& _ijst_Base() const {return *this;}
+//};
 
-	using _ijst_BaseClass::_;
-	using _ijst_BaseClass::_ijst_Encoding;
-	using _ijst_BaseClass::_ijst_Ch;
-	using _ijst_BaseClass::_ijst_AccessorType;
+#define IJST_DEFINE_OVERRIDE_SET_FIELD_DESC(field, desc) \
+	do { \
+		int idx = metaInfo.FindIndex(IJSTI_OFFSETOF(stPtr, field)); \
+		assert(idx != -1); \
+		pOverrideStOvrMeta->metaInfos[idx].SetFieldDesc((desc)); \
+	} while (false)
+
+class OverrideSt: private SimpleSt {
+IJST_DEFINE_OVERRIDE_P1(OverrideSt, SimpleSt)
 
 	using _ijst_BaseClass::int_1;
 	using _ijst_BaseClass::int_2;
 
-private:
-	friend class ::ijst::detail::IjstStructMeta< OverrideSt >;
-	friend class ::ijst::detail::IjstStructOvrMeta< OverrideSt >;
+IJST_DEFINE_OVERRIDE_P2()
 
-	template<bool DummyTrue>
-	static void _ijst_InitMetaInfo(::ijst::MetaClassInfo<_ijst_Ch>& metaInfo, const OverrideSt* stPtr)
-	{
-		(void)stPtr;
-		::ijst::detail::MetaClassInfoSetter<_ijst_Encoding> mSetter(metaInfo);
-		mSetter.ShadowFrom(::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(), "OverrideSt");
-	}
+	IJST_DEFINE_OVERRIDE_SET_FIELD_DESC(int_1, FDesc::Optional); // relax
+	IJST_DEFINE_OVERRIDE_SET_FIELD_DESC(int_2, FDesc::NoneFlag); // strict
 
-	static ::ijst::OverrideMetaInfos* _ijst_NewOvrMetaInfo(const OverrideSt* stPtr)
-	{
-		const MetaClassInfo<char> &metaInfo = ::ijst::detail::IjstStructMeta<OverrideSt>::Ins();
-		::ijst::OverrideMetaInfos* pOverrideStOvrMeta = ijst::OverrideMetaInfos::NewFromSrcOrEmpty(
-				::ijst::detail::IjstStructOvrMeta<_ijst_BaseClass>::Ins(), metaInfo.GetFieldSize());
-
-		pOverrideStOvrMeta->metaInfos[metaInfo.FindIndex(IJSTI_OFFSETOF(stPtr, int_1))].SetFieldDesc(FDesc::Optional);  // relax
-		pOverrideStOvrMeta->metaInfos[metaInfo.FindIndex(IJSTI_OFFSETOF(stPtr, int_2))].SetFieldDesc(FDesc::NoneFlag);  // strict
-		pOverrideStOvrMeta->metaInfos[metaInfo.FindIndex(IJSTI_OFFSETOF(stPtr, int_3))].ijstFieldMetaInfo = NULL;  // just test
-
-		return pOverrideStOvrMeta;
-	}
+IJST_DEFINE_OVERRIDE_P3()
 };
 
 TEST(Override, Base)
