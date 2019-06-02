@@ -17,7 +17,7 @@ IJST_DEFINE_STRUCT(
 
 
 // class stName: private stBase {
-#define IJST_DEFINE_OVERRIDE_P1(stName, stBase) \
+#define IJST_OVR_DEFINE_P1(stName, stBase) \
 	typedef stBase _ijst_BaseClass; \
 	typedef stName _ijst_ThisClass; \
 	template<bool DummyTrue> \
@@ -40,7 +40,7 @@ public: \
 	using _ijst_BaseClass::_ijst_Ch; \
 	using _ijst_BaseClass::_ijst_AccessorType;
 
-#define IJST_DEFINE_OVERRIDE_P2() \
+#define IJST_OVR_DEFINE_P2() \
 private: \
 	friend class ::ijst::detail::IjstStructMeta< _ijst_ThisClass >; \
 	friend class ::ijst::detail::IjstStructOvrMeta< _ijst_ThisClass >; \
@@ -50,31 +50,38 @@ private: \
 		::ijst::OverrideMetaInfos* pOverrideStOvrMeta = ijst::OverrideMetaInfos::NewFromSrcOrEmpty( \
 				::ijst::detail::IjstStructOvrMeta<_ijst_BaseClass>::Ins(), metaInfo.GetFieldSize()); \
 
-#define IJST_DEFINE_OVERRIDE_P3() \
+#define IJST_OVR_DEFINE_P3() \
 		return pOverrideStOvrMeta; \
 	}
 
 //};
 
-#define IJST_DEFINE_OVERRIDE_SET_FIELD_DESC(field, desc) \
+#define IJST_OVR_SET_FIELD_DESC(field, desc) \
 	do { \
 		int idx = metaInfo.FindIndex(IJSTI_OFFSETOF(stPtr, field)); \
 		assert(idx != -1); \
 		pOverrideStOvrMeta->metaInfos[idx].SetFieldDesc((desc)); \
 	} while (false)
 
+#define IJST_OVR_SET_FIELD_OVR_TYPE(field, type) \
+	do { \
+		int idx = metaInfo.FindIndex(IJSTI_OFFSETOF(stPtr, field)); \
+		assert(idx != -1); \
+		pOverrideStOvrMeta->metaInfos[idx].ijstFieldMetaInfo = ::ijst::detail::IjstStructOvrMeta< type >::Ins(); \
+	} while (false)
+
 class OverrideSt: private SimpleSt {
-IJST_DEFINE_OVERRIDE_P1(OverrideSt, SimpleSt)
+IJST_OVR_DEFINE_P1(OverrideSt, SimpleSt)
 
 	using _ijst_BaseClass::int_1;
 	using _ijst_BaseClass::int_2;
 
-IJST_DEFINE_OVERRIDE_P2()
+IJST_OVR_DEFINE_P2()
 
-	IJST_DEFINE_OVERRIDE_SET_FIELD_DESC(int_1, FDesc::Optional); // relax
-	IJST_DEFINE_OVERRIDE_SET_FIELD_DESC(int_2, FDesc::NoneFlag); // strict
+	IJST_OVR_SET_FIELD_DESC(int_1, FDesc::Optional); // relax
+	IJST_OVR_SET_FIELD_DESC(int_2, FDesc::NoneFlag); // strict
 
-IJST_DEFINE_OVERRIDE_P3()
+IJST_OVR_DEFINE_P3()
 };
 
 TEST(Override, Base)
@@ -98,80 +105,68 @@ TEST(Override, Base)
 	}
 }
 
-//IJST_DEFINE_STRUCT(
-//		OutSt
-//		, (IJST_TST(SimpleSt), in)
-//		, (IJST_TST(SimpleSt), in2)
-//		, (IJST_TST(OverrideSt), ost, ijst::FDesc::Optional)  // TODO: add test
-//		, (IJST_TVEC(IJST_TST(SimpleSt)), vec)
-//)
-//
-//class OverrideOutSt: private OutSt {
-//public:
-//	typedef OutSt _ijst_BaseClass;
-//	_ijst_BaseClass& _ijst_Base() {return *this;}
-//	const _ijst_BaseClass& _ijst_Base() const {return *this;}
-//
-//	using _ijst_BaseClass::_;
-//	using _ijst_BaseClass::_ijst_Encoding;
-//	using _ijst_BaseClass::_ijst_Ch;
-//	using _ijst_BaseClass::_ijst_AccessorType;
-//
-//	using _ijst_BaseClass::in;
-//	using _ijst_BaseClass::in2;
-//	using _ijst_BaseClass::vec;
-//
-//	OverrideOutSt()
-//	{
-//		const MetaClassInfo<char> &metaInfo = _.GetMetaInfo();
-//		ijst::OverrideMetaInfos* ovrMeta = new ijst::OverrideMetaInfos(metaInfo.GetFieldSize());
-//
-//		ovrMeta->metaInfos[metaInfo.FindIndex((char*)&in - (char*)this)].ijstFieldMetaInfo = pOverrideStOvrMeta;
-//		ovrMeta->metaInfos[metaInfo.FindIndex((char*)&vec - (char*)this)].ijstFieldMetaInfo = pOverrideStOvrMeta;
-//
-//		_.SetOverrideMetaInfo(ovrMeta);
-//	}
-//};
-//
-//TEST(Override, Out)
-//{
-//	{
-//		OverrideOutSt st;
-//
-//		string json = "{"
-//					  "\"in\": {\"int_2\": 1},"
-//					  "\"in2\": {\"int_1\": 1},"
-//					  "\"vec\": [{\"int_2\": 1}]"
-//					  "}";
-//
-//		string strErrMsg;
-//		int iRet = st._.Deserialize(json, strErrMsg);
-//		ASSERT_EQ(iRet, 0);
-//	}
-//
-//	// in failed
-//	{
-//		OverrideOutSt st;
-//		string json = "{"
-//					  "\"in\": {\"int_1\": 1},"
-//					  "\"in2\": {\"int_1\": 1},"
-//					  "\"vec\": [{\"int_2\": 1}]"
-//					  "}";
-//		int iRet = st._.Deserialize(json);
-//		ASSERT_EQ(iRet, ijst::ErrorCode::kDeserializeSomeFieldsInvalid);
-//	}
-//
-//	// vec failed
-//	{
-//		OverrideOutSt st;
-//		string json = "{"
-//					  "\"in\": {\"int_2\": 1},"
-//					  "\"in2\": {\"int_1\": 1},"
-//					  "\"vec\": [{\"int_1\": 1}]"
-//					  "}";
-//		int iRet = st._.Deserialize(json);
-//		ASSERT_EQ(iRet, ijst::ErrorCode::kDeserializeSomeFieldsInvalid);
-//	}
-//}
-//
+IJST_DEFINE_STRUCT(
+		OutSt
+		, (IJST_TST(SimpleSt), in)
+		, (IJST_TST(SimpleSt), in2)
+		, (IJST_TST(OverrideSt), ost, ijst::FDesc::Optional)  // TODO: add test
+		, (IJST_TVEC(IJST_TST(SimpleSt)), vec)
+)
+
+class OverrideOutSt: private OutSt {
+IJST_OVR_DEFINE_P1(OverrideOutSt, OutSt)
+
+	using _ijst_BaseClass::in;
+	using _ijst_BaseClass::in2;
+	using _ijst_BaseClass::vec;
+
+IJST_OVR_DEFINE_P2()
+
+	IJST_OVR_SET_FIELD_OVR_TYPE(in, OverrideSt);
+	IJST_OVR_SET_FIELD_OVR_TYPE(vec, OverrideSt);
+
+IJST_OVR_DEFINE_P3()
+};
+
+TEST(Override, Out)
+{
+	{
+		OverrideOutSt st;
+
+		string json = "{"
+					  "\"in\": {\"int_2\": 1},"
+					  "\"in2\": {\"int_1\": 1},"
+					  "\"vec\": [{\"int_2\": 1}]"
+					  "}";
+
+		string strErrMsg;
+		int iRet = st._.Deserialize(json, strErrMsg);
+		ASSERT_EQ(iRet, 0);
+	}
+
+	// in failed
+	{
+		OverrideOutSt st;
+		string json = "{"
+					  "\"in\": {\"int_1\": 1},"
+					  "\"in2\": {\"int_1\": 1},"
+					  "\"vec\": [{\"int_2\": 1}]"
+					  "}";
+		int iRet = st._.Deserialize(json);
+		ASSERT_EQ(iRet, ijst::ErrorCode::kDeserializeSomeFieldsInvalid);
+	}
+
+	// vec failed
+	{
+		OverrideOutSt st;
+		string json = "{"
+					  "\"in\": {\"int_2\": 1},"
+					  "\"in2\": {\"int_1\": 1},"
+					  "\"vec\": [{\"int_1\": 1}]"
+					  "}";
+		int iRet = st._.Deserialize(json);
+		ASSERT_EQ(iRet, ijst::ErrorCode::kDeserializeSomeFieldsInvalid);
+	}
+}
+
 }

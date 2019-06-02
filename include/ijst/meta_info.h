@@ -212,8 +212,8 @@ class OverrideMetaInfos {
 public:
 	struct MetaInfo {
 		bool isFieldDescSet;
-		FDesc::Mode fieldDesc;					//! override field desc, available if isFieldDescSet is true
-		OverrideMetaInfos* ijstFieldMetaInfo;	//! override meta info of ijst field, available if not nullptr
+		FDesc::Mode fieldDesc;						//! override field desc, available if isFieldDescSet is true
+		const OverrideMetaInfos* ijstFieldMetaInfo;	//! override meta info of ijst field, available if not nullptr
 
 		MetaInfo(): isFieldDescSet(false), fieldDesc(FDesc::NoneFlag), ijstFieldMetaInfo(NULL) {}
 
