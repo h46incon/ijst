@@ -564,19 +564,19 @@ public:
 	typedef typename Encoding::Ch Ch;
 	explicit MetaClassInfoSetter(MetaClassInfo<Ch>& _d) : d(_d), m_fieldSize(0), m_maxSize(0) { }
 
-	void InitBegin(const std::string& _tag, std::size_t _maxFieldCount, std::size_t _accessorOffset)
+	void InitBegin(const std::string& tag, std::size_t maxFieldCount, std::size_t accessorOffset)
 	{
-		d.m_structName = _tag;
-		d.m_accessorOffset = _accessorOffset;
-		d.m_fieldsInfo = new MetaFieldInfo<Ch>[_maxFieldCount];
+		d.m_structName = tag;
+		d.m_accessorOffset = accessorOffset;
+		d.m_fieldsInfo = new MetaFieldInfo<Ch>[maxFieldCount];
 		d.m_isResourceOwner = true;
 
-		m_maxSize = _maxFieldCount;
+		m_maxSize = maxFieldCount;
 	}
 
-	void ShadowFrom(const MetaClassInfo<Ch>& src, const std::string& _tag)
+	void ShadowFrom(const MetaClassInfo<Ch>& src, const std::string& tag, const OverrideMetaInfos* pOvrMeta)
 	{
-		d.ShadowFrom(src, _tag);
+		d.ShadowFrom(src, tag, pOvrMeta);
 	}
 
 	/// The complete IDL of declaring a field is (type, name, json_name, desc, serialize_intf)

@@ -2,7 +2,7 @@
  * Using following command to generate .h file of thie meta macro file (require Boost):
  * g++ -I. -P -E ijst_repeat_def_src.h > ijst_repeat_def.inc
  */
-// Define the max filed number supported here:
+// Define the max field number supported here:
 #define IJSTM_MAX_FIELD_NUM		64
 
 #define IJSTM_HASH 		#
@@ -21,7 +21,7 @@
 	#include <boost/preprocessor/cat.hpp>
 
 	// Generate IJSTI_PP_NFIELD
-	// Params: encoding, stName, fileds. So fileds_count = count(__VA_ARGS__) - 2
+	// Params: encoding, stName, field. So fileds_count = count(__VA_ARGS__) - 2
 	IJSTM_HASH ifdef _MSC_VER
 		#define IJSTM_PP_COUNT_DESC(z, n, max)	,BOOST_PP_SUB(max, n)
 		IJSTM_HASH define IJSTI_PP_NFIELD(...)													IJSTM_BSLASH

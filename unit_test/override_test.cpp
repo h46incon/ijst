@@ -15,61 +15,6 @@ IJST_DEFINE_STRUCT(
 		, (T_int, int_4, FDesc::Optional)
 )
 
-
-// class stName: private stBase {
-#define IJST_OVR_DEFINE_P1(stName, stBase) \
-	typedef stBase _ijst_BaseClass; \
-	typedef stName _ijst_ThisClass; \
-	template<bool DummyTrue> \
-	static void _ijst_InitMetaInfo(::ijst::MetaClassInfo<_ijst_Ch>& metaInfo, const _ijst_ThisClass * stPtr) \
-	{ \
-		(void)stPtr; \
-		::ijst::detail::MetaClassInfoSetter<_ijst_Encoding> mSetter(metaInfo); \
-		mSetter.ShadowFrom(::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(), #stName); \
-	} \
-public: \
-	stName() \
-	{ \
-		_.UpdateShadowMetaClass(&(::ijst::detail::IjstStructMeta<_ijst_ThisClass>::Ins())); \
-		_.SetOverrideMetaInfo(::ijst::detail::IjstStructOvrMeta<_ijst_ThisClass>::Ins()); \
-	} \
-	_ijst_BaseClass& _ijst_Base() {return *this;} \
-	const _ijst_BaseClass& _ijst_Base() const {return *this;} \
-	using _ijst_BaseClass::_; \
-	using _ijst_BaseClass::_ijst_Encoding; \
-	using _ijst_BaseClass::_ijst_Ch; \
-	using _ijst_BaseClass::_ijst_AccessorType;
-
-#define IJST_OVR_DEFINE_P2() \
-private: \
-	friend class ::ijst::detail::IjstStructMeta< _ijst_ThisClass >; \
-	friend class ::ijst::detail::IjstStructOvrMeta< _ijst_ThisClass >; \
-	static ::ijst::OverrideMetaInfos* _ijst_NewOvrMetaInfo(const _ijst_ThisClass* stPtr) \
-	{ \
-		const MetaClassInfo<char> &metaInfo = ::ijst::detail::IjstStructMeta<_ijst_ThisClass>::Ins(); \
-		::ijst::OverrideMetaInfos* pOverrideStOvrMeta = ijst::OverrideMetaInfos::NewFromSrcOrEmpty( \
-				::ijst::detail::IjstStructOvrMeta<_ijst_BaseClass>::Ins(), metaInfo.GetFieldSize()); \
-
-#define IJST_OVR_DEFINE_P3() \
-		return pOverrideStOvrMeta; \
-	}
-
-//};
-
-#define IJST_OVR_SET_FIELD_DESC(field, desc) \
-	do { \
-		int idx = metaInfo.FindIndex(IJSTI_OFFSETOF(stPtr, field)); \
-		assert(idx != -1); \
-		pOverrideStOvrMeta->metaInfos[idx].SetFieldDesc((desc)); \
-	} while (false)
-
-#define IJST_OVR_SET_FIELD_OVR_TYPE(field, type) \
-	do { \
-		int idx = metaInfo.FindIndex(IJSTI_OFFSETOF(stPtr, field)); \
-		assert(idx != -1); \
-		pOverrideStOvrMeta->metaInfos[idx].ijstFieldMetaInfo = ::ijst::detail::IjstStructOvrMeta< type >::Ins(); \
-	} while (false)
-
 class OverrideSt: private SimpleSt {
 IJST_OVR_DEFINE_P1(OverrideSt, SimpleSt)
 
@@ -78,8 +23,10 @@ IJST_OVR_DEFINE_P1(OverrideSt, SimpleSt)
 
 IJST_OVR_DEFINE_P2()
 
-	IJST_OVR_SET_FIELD_DESC(int_1, FDesc::Optional); // relax
-	IJST_OVR_SET_FIELD_DESC(int_2, FDesc::NoneFlag); // strict
+		IJST_OVR_SET_FIELD_DESC(int_1, FDesc::Optional); // relax
+		IJST_OVR_SET_FIELD_DESC(int_2, FDesc::NoneFlag); // strict
+		IJST_OVR_SET_FIELD_DESC(int_3, FDesc::NotDefault | FDesc::Optional); // change
+		IJST_OVR_SET_FIELD_DESC(int_4, FDesc::Nullable | FDesc::Optional); // change
 
 IJST_OVR_DEFINE_P3()
 };
@@ -89,6 +36,7 @@ TEST(Override, Base)
 	{
 		OverrideSt st;
 
+		// int_2: NoneFlag
 		string json = "{\"int_1\": 1}";
 		int iRet = st._.Deserialize(json);
 		ASSERT_EQ(iRet, ijst::ErrorCode::kDeserializeSomeFieldsInvalid);
@@ -96,21 +44,39 @@ TEST(Override, Base)
 
 	{
 		OverrideSt st;
-		string json = "{\"int_2\": 1}";
+
+		// int_3: NotDefault
+		string json = "{\"int_2\": 1, \"int_3\": 0}";
+		int iRet = st._.Deserialize(json);
+		ASSERT_EQ(iRet, ijst::ErrorCode::kDeserializeValueIsDefault);
+	}
+
+
+	{
+		OverrideSt st;
+
+		// valid
+		// int_1 Optional, int_4: Nullable
+		string json = "{\"int_2\": 1, \"int_3\": 1, \"int_4\": null}";
 		int iRet = st._.Deserialize(json);
 		ASSERT_EQ(iRet, 0);
 		ASSERT_EQ(st.int_1, 0);
 		SimpleSt& bst = st._ijst_Base();
-		ASSERT_EQ(bst.int_2, 1);
+		ASSERT_EQ(bst.int_3, 1);
 	}
 }
+
+// TODO: override of overrided
 
 IJST_DEFINE_STRUCT(
 		OutSt
 		, (IJST_TST(SimpleSt), in)
 		, (IJST_TST(SimpleSt), in2)
-		, (IJST_TST(OverrideSt), ost, ijst::FDesc::Optional)  // TODO: add test
+		, (IJST_TST(OverrideSt), ost)
 		, (IJST_TVEC(IJST_TST(SimpleSt)), vec)
+		, (IJST_TLIST(IJST_TST(SimpleSt)), list)
+		, (IJST_TDEQUE(IJST_TST(SimpleSt)), deq)
+		, (IJST_TMAP(IJST_TST(SimpleSt)), map)
 )
 
 class OverrideOutSt: private OutSt {
@@ -119,11 +85,18 @@ IJST_OVR_DEFINE_P1(OverrideOutSt, OutSt)
 	using _ijst_BaseClass::in;
 	using _ijst_BaseClass::in2;
 	using _ijst_BaseClass::vec;
+	using _ijst_BaseClass::list;
+	using _ijst_BaseClass::deq;
+	using _ijst_BaseClass::map;
 
 IJST_OVR_DEFINE_P2()
 
-	IJST_OVR_SET_FIELD_OVR_TYPE(in, OverrideSt);
-	IJST_OVR_SET_FIELD_OVR_TYPE(vec, OverrideSt);
+		IJST_OVR_SET_FIELD_OVR_TYPE(in, OverrideSt);
+		// keep in2 SimpleSt
+		IJST_OVR_SET_FIELD_OVR_TYPE(vec, OverrideSt);
+		IJST_OVR_SET_FIELD_OVR_TYPE(list, OverrideSt);
+		IJST_OVR_SET_FIELD_OVR_TYPE(deq, OverrideSt);
+		IJST_OVR_SET_FIELD_OVR_TYPE(map, OverrideSt);
 
 IJST_OVR_DEFINE_P3()
 };
@@ -133,10 +106,16 @@ TEST(Override, Out)
 	{
 		OverrideOutSt st;
 
+		// {"int_2": 1} is valid for OverrideSt, but not for SimpleSt
+		// use this string to check if the override meta info is effective
 		string json = "{"
-					  "\"in\": {\"int_2\": 1},"
-					  "\"in2\": {\"int_1\": 1},"
-					  "\"vec\": [{\"int_2\": 1}]"
+					  "\"in\": {\"int_2\": 1},"		// OverrideSt
+					  "\"in2\": {\"int_1\": 1},"	// SimpleSt
+					  "\"ost\": {\"int_2\": 1},"	// OverrideSt member declared directly
+					  "\"vec\": [{\"int_2\": 1}],"	// OverrideSt
+					  "\"list\": [{\"int_2\": 1}],"	// OverrideSt
+					  "\"deq\": [{\"int_2\": 1}],"	// OverrideSt
+					  "\"map\": {\"key\": {\"int_2\": 1}}"	// OverrideSt
 					  "}";
 
 		string strErrMsg;
@@ -144,29 +123,6 @@ TEST(Override, Out)
 		ASSERT_EQ(iRet, 0);
 	}
 
-	// in failed
-	{
-		OverrideOutSt st;
-		string json = "{"
-					  "\"in\": {\"int_1\": 1},"
-					  "\"in2\": {\"int_1\": 1},"
-					  "\"vec\": [{\"int_2\": 1}]"
-					  "}";
-		int iRet = st._.Deserialize(json);
-		ASSERT_EQ(iRet, ijst::ErrorCode::kDeserializeSomeFieldsInvalid);
-	}
-
-	// vec failed
-	{
-		OverrideOutSt st;
-		string json = "{"
-					  "\"in\": {\"int_2\": 1},"
-					  "\"in2\": {\"int_1\": 1},"
-					  "\"vec\": [{\"int_1\": 1}]"
-					  "}";
-		int iRet = st._.Deserialize(json);
-		ASSERT_EQ(iRet, ijst::ErrorCode::kDeserializeSomeFieldsInvalid);
-	}
 }
 
 }

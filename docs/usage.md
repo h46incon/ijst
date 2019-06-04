@@ -9,7 +9,7 @@ IJST_DEFINE_STRUCT (
 	// 结构体的名字
     struct_name
     // 成员信息。由以下字段组成，其中 field_type，field_name 是必须的。其他字段是可选的，但在声明时必须保持相对顺序不变
-    , (field_type0, field_name0, "json_name0", filed_desc0, serialize_intf0)
+    , (field_type0, field_name0, "json_name0", field_desc0, serialize_intf0)
     
     // 仅指定字段类型和名字，JSON 键名和字段名相同
     , (field_type1, field_name1)  
@@ -18,7 +18,7 @@ IJST_DEFINE_STRUCT (
     , (field_type2, field_name2, "json_name2")  
     
     // 添加字段描述，见后文
-    , (field_type3, field_name3, filed_desc3)  
+    , (field_type3, field_name3, field_desc3)
     
     // 使用自定义的序列化/反序列化方法，在自定义类型时有用，见后文
     , (field_type4, field_name4, serialize_intf4)

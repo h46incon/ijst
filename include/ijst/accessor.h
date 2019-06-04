@@ -65,6 +65,47 @@
 #define IJST_DEFINE_VALUE_WITH_GETTER(stName, type, fName, desc)	\
     IJST_DEFINE_GENERIC_VALUE_WITH_GETTER(::rapidjson::UTF8<>, stName, type, fName, desc)
 
+//! @brief Part 1 of ijst override struct define
+//! @ingroup IJST_MACRO_API
+#define IJST_OVR_DEFINE_P1(stName, stBase) 		IJSTI_OVR_DEFINE_P1(stName, stBase)
+//! @brief Part 2 of ijst override struct define
+//! @ingroup IJST_MACRO_API
+#define IJST_OVR_DEFINE_P2()					IJSTI_OVR_DEFINE_P2()
+//! @brief Part 3 of ijst override struct define
+//! @ingroup IJST_MACRO_API
+#define IJST_OVR_DEFINE_P3()					IJSTI_OVR_DEFINE_P3()
+
+//! @brief Set override field desc of ijst override struct define
+//! @ingroup IJST_MACRO_API
+#define IJST_OVR_SET_FIELD_DESC(field, desc) \
+	do { \
+		int idx = metaInfo.FindIndex(IJSTI_OFFSETOF(stPtr, field)); \
+		assert(idx != -1); \
+		pOverrideStOvrMeta->metaInfos[idx].SetFieldDesc((desc)); \
+	} while (false)
+
+//! @brief Set override type of ijst field of ijst override struct define
+//! @ingroup IJST_MACRO_API
+#define IJST_OVR_SET_FIELD_OVR_TYPE(field, type) \
+	do { \
+		int idx = metaInfo.FindIndex(IJSTI_OFFSETOF(stPtr, field)); \
+		assert(idx != -1); \
+		pOverrideStOvrMeta->metaInfos[idx].ijstFieldMetaInfo = ::ijst::detail::IjstStructOvrMeta< type >::Ins(); \
+	} while (false)
+
+/**
+ * @example ijst override struct define example:
+ *
+ * class StrictClass : private BaseIjstClass {
+ * IJST_OVR_DEFINE_P1(StrictClass, BaseIjstClass)
+ * 		using _ijst_BaseClass::field_1;				// any field in BaseIjstClass
+ * 		using _ijst_BaseClass::ijst_field_2;		// ijst field, or container of ijst field in BaseIjstClass
+ * IJST_OVR_DEFINE_P2()
+ * 		IJST_OVR_SET_FIELD_DESC(field_1, ijst::FDesc::NotDefault);
+ * 		IJST_OVR_SET_FIELD_OVR_TYPE(ijst_field_2, StrictTypeOfIjstField2;
+ * IJST_OVR_DEFINE_P3()
+ * };
+ */
 //! @brief Get status of field in obj.
 //! @ingroup IJST_MACRO_API
 #define IJST_GET_STATUS(obj, field)				obj._.GetStatus(& ((obj).field))
@@ -264,7 +305,6 @@ public:
 		InitOuterPtr();
 		m_r->isValid = isValid;
 		m_r->isParentVal = isParentVal;
-		m_r->pOvrMetas = NULL;
 
 		// Init fieldStatus with kMissing
 		for (size_t i = 0; i < sizeFieldStatus; ++i) {
@@ -291,7 +331,6 @@ public:
 		InitOuterPtr();
 		m_r->isValid = rhs.m_r->isValid;
 		m_r->isParentVal = rhs.m_r->isParentVal;
-		m_r->pOvrMetas = rhs.m_r->pOvrMetas;
 
 		// Init fieldStatus from rhs
 		for (size_t i = 0; i < sizeFieldStatus; ++i) {
@@ -343,18 +382,9 @@ public:
 		InitOuterPtr();
 	}
 
-	//! Set override meta info
-	void SetOverrideMetaInfo(const OverrideMetaInfos* pOvrMetas)
-	{
-		assert(pOvrMetas != NULL);
-		assert(pOvrMetas->filedSize == m_r->pMetaClass->GetFieldSize());
-		m_r->pOvrMetas = pOvrMetas;
-	}
-
 	//! Update meta class to a shadow one
 	void UpdateShadowMetaClass(const MetaClassInfo<Ch>* pMetaClass)
 	{
-		// TODO: Add test
 		assert(pMetaClass && pMetaClass->GetFieldSize() == m_r->pMetaClass->GetFieldSize());
 		m_r->pMetaClass = pMetaClass;
 	}
@@ -367,7 +397,7 @@ public:
 	 * Field accessor.
 	 */
 
-	//! Check if pField is a filed in this object.
+	//! Check if pField is a field in this object.
 	bool HasField(const void *pField) const
 	{
 		size_t offset = GetFieldOffset(pField);
@@ -785,10 +815,11 @@ private:
 	{
 		assert(req.pFieldBuffer == this);
 		// assert pOvrMetaInfo size is same as self
-		assert(req.pOvrMetaInfo == NULL || req.pOvrMetaInfo->filedSize == m_r->pMetaClass->GetFieldSize());
+		assert(req.pOvrMetaInfo == NULL || req.pOvrMetaInfo->fieldSize == m_r->pMetaClass->GetFieldSize());
 		// TODO: check pOvrMetaInfo typeid
 
-		FromJsonParam param(req.deserFlag, resp.errDoc, req.pOvrMetaInfo);
+		FromJsonParam param(req.deserFlag, resp.errDoc,
+							req.pOvrMetaInfo != NULL ? req.pOvrMetaInfo : m_r->pMetaClass->GetOvrMeta());
 		if (req.canMoveSrc) {
 			m_r->pAllocator = &req.allocator;
 			return DoMoveFromJson(req.stream, param);
@@ -908,7 +939,7 @@ private:
 	int DoFromJsonWrap(Func func, TJsonValue &stream, DeserFlag::Flag deserFlag, TDocument* pErrDocOut)
 	{
 		detail::ErrorDocSetter<Encoding> errDoc(pErrDocOut);
-		FromJsonParam param(deserFlag, errDoc, m_r->pOvrMetas);
+		FromJsonParam param(deserFlag, errDoc, m_r->pMetaClass->GetOvrMeta());
 		return (this->*func)(stream, param);
 	}
 
@@ -1032,7 +1063,7 @@ private:
 		// Try get override meta info of field
 		OverrideMetaInfos::MetaInfo* ovrMetaField = NULL;
 		if (p.pOvrMeta != NULL) {
-			assert(metaField.index < p.pOvrMeta->filedSize);
+			assert(metaField.index < p.pOvrMeta->fieldSize);
 			ovrMetaField = p.pOvrMeta->metaInfos + metaField.index;
 		}
 
@@ -1162,8 +1193,8 @@ private:
 
 	std::size_t GetFieldOffset(const void *ptr) const
 	{
-		const unsigned char *filed_ptr = reinterpret_cast<const unsigned char *>(ptr);
-		return filed_ptr - m_r->pOuter;
+		const unsigned char *field_ptr = reinterpret_cast<const unsigned char *>(ptr);
+		return field_ptr - m_r->pOuter;
 	}
 
 	void *GetFieldByOffset(std::size_t offset) const
@@ -1183,7 +1214,6 @@ private:
 		const MetaClassInfo<Ch>* pMetaClass;
 		detail::JsonAllocator* pAllocator;
 		const unsigned char *pOuter;
-		const OverrideMetaInfos* pOvrMetas;
 
 		bool isValid;
 		bool isParentVal;
@@ -1402,6 +1432,53 @@ private:
 	IJSTI_STRUCT_EXTERN_TEMPLATE(stName)													\
 	IJSTI_STRUCT_EXPLICIT_TEMPLATE(stName)
 
+//! IJSTI_OVR_DEFINE_IMPL
+// class stName: private stBase {
+#define IJSTI_OVR_DEFINE_P1(stName, stBase) \
+	typedef stBase _ijst_BaseClass; \
+	typedef stName _ijst_ThisClass; \
+	template<bool DummyTrue> \
+	static void _ijst_InitMetaInfo(::ijst::MetaClassInfo<_ijst_Ch>& metaInfo, const _ijst_ThisClass * stPtr) \
+	{ \
+		(void)stPtr; \
+		::ijst::detail::MetaClassInfoSetter<_ijst_Encoding> mSetter(metaInfo); \
+		mSetter.ShadowFrom(::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(), \
+						   #stName, \
+					       ::ijst::detail::IjstStructOvrMeta<_ijst_ThisClass>::Ins() ); \
+	} \
+public: \
+	stName() \
+	{ \
+		_.UpdateShadowMetaClass(&(::ijst::detail::IjstStructMeta<_ijst_ThisClass>::Ins())); \
+	} \
+	_ijst_BaseClass& _ijst_Base() {return *this;} \
+	const _ijst_BaseClass& _ijst_Base() const {return *this;} \
+	using _ijst_BaseClass::_; \
+	using _ijst_BaseClass::_ijst_Encoding; \
+	using _ijst_BaseClass::_ijst_Ch; \
+	using _ijst_BaseClass::_ijst_AccessorType;
+
+//  using _ijst_BaseClass::field_1;
+//  using _ijst_BaseClass::ijst_field_1;
+
+#define IJSTI_OVR_DEFINE_P2() \
+private: \
+	friend class ::ijst::detail::IjstStructMeta< _ijst_ThisClass >; \
+	friend class ::ijst::detail::IjstStructOvrMeta< _ijst_ThisClass >; \
+	static ::ijst::OverrideMetaInfos* _ijst_NewOvrMetaInfo(const _ijst_ThisClass* stPtr) \
+	{ \
+		/*This function will be called in _ijst_ThisClass::_ijst_InitMetaInfo(), So use meta info in base class */ \
+		const MetaClassInfo<char> &metaInfo = ::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(); \
+		::ijst::OverrideMetaInfos* pOverrideStOvrMeta = ijst::OverrideMetaInfos::NewFromSrcOrEmpty( \
+				::ijst::detail::IjstStructOvrMeta<_ijst_BaseClass>::Ins(), metaInfo.GetFieldSize()); \
+
+// 		IJST_OVR_SET_FIELD_DESC(field_1, ijst::FDesc::NotDefault);
+// 		IJST_OVR_SET_FIELD_OVR_TYPE(ijst_field_2, StrictTypeOfIjstField2;
+
+#define IJSTI_OVR_DEFINE_P3() \
+		return pOverrideStOvrMeta; \
+	}
+// };
 
 //! list of templates could been declared extern
 #define IJSTI_EXTERNAL_TEMPLATE_XLIST														\

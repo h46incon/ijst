@@ -24,7 +24,7 @@ ijst 选择放弃使用正常的结构体定义方式，而是使用宏**同时�
 ```cpp
 IJST_DEFINE_STRUCT (
     struct_name
-    , (field_type0, field_name0, "json_name0", filed_desc0)
+    , (field_type0, field_name0, "json_name0", field_desc0)
     // ...
 )
 ```
@@ -56,7 +56,7 @@ SOME_MACRO(map<string COMMA int>)
 FIELD((map<string, int>), m);
 ```
 
-如此一来就需要将所有的 `filed_type` 定义都加上括号，较为不便。
+如此一来就需要将所有的 `field_type` 定义都加上括号，较为不便。
 
 C++11 后，使用 `decltype` 关键字实现起来不难：
 
