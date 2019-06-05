@@ -1,7 +1,6 @@
 #include "util.h"
 #include <typeinfo>
 
-using namespace ijst;
 using namespace std;
 
 // TODO: test when ijst struct with same name
@@ -9,24 +8,24 @@ namespace override_test_ns {
 
 IJST_DEFINE_STRUCT(
 		SimpleSt
-		, (T_int, int_1)
-		, (T_int, int_2, FDesc::Optional)
-		, (T_int, int_3, FDesc::Optional)
-		, (T_int, int_4, FDesc::Optional)
+		, (ijst::T_int, int_1)
+		, (ijst::T_int, int_2, ijst::FDesc::Optional)
+		, (ijst::T_int, int_3, ijst::FDesc::Optional)
+		, (ijst::T_int, int_4, ijst::FDesc::Optional)
 )
 
-class OverrideSt: private SimpleSt {
-IJST_OVR_DEFINE_P1(OverrideSt, SimpleSt)
+class OverrideSt: private override_test_ns::SimpleSt {
+IJST_OVR_DEFINE_P1(OverrideSt, override_test_ns::SimpleSt)
 
 	using _ijst_BaseClass::int_1;
 	using _ijst_BaseClass::int_2;
 
 IJST_OVR_DEFINE_P2()
 
-		IJST_OVR_SET_FIELD_DESC(int_1, FDesc::Optional); // relax
-		IJST_OVR_SET_FIELD_DESC(int_2, FDesc::NoneFlag); // strict
-		IJST_OVR_SET_FIELD_DESC(int_3, FDesc::NotDefault | FDesc::Optional); // change
-		IJST_OVR_SET_FIELD_DESC(int_4, FDesc::Nullable | FDesc::Optional); // change
+		IJST_OVR_SET_FIELD_DESC(int_1, ijst::FDesc::Optional); // relax
+		IJST_OVR_SET_FIELD_DESC(int_2, ijst::FDesc::NoneFlag); // strict
+		IJST_OVR_SET_FIELD_DESC(int_3, ijst::FDesc::NotDefault | ijst::FDesc::Optional); // change
+		IJST_OVR_SET_FIELD_DESC(int_4, ijst::FDesc::Nullable | ijst::FDesc::Optional); // change
 
 IJST_OVR_DEFINE_P3()
 };

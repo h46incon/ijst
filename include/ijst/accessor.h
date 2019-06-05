@@ -1468,8 +1468,8 @@ private: \
 	static ::ijst::OverrideMetaInfos* _ijst_NewOvrMetaInfo(const _ijst_ThisClass* stPtr) \
 	{ \
 		/*This function will be called in _ijst_ThisClass::_ijst_InitMetaInfo(), So use meta info in base class */ \
-		const MetaClassInfo<char> &metaInfo = ::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(); \
-		::ijst::OverrideMetaInfos* pOverrideStOvrMeta = ijst::OverrideMetaInfos::NewFromSrcOrEmpty( \
+		const ::ijst::MetaClassInfo<char> &metaInfo = ::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(); \
+		::ijst::OverrideMetaInfos* pOverrideStOvrMeta = ::ijst::OverrideMetaInfos::NewFromSrcOrEmpty( \
 				::ijst::detail::IjstStructOvrMeta<_ijst_BaseClass>::Ins(), metaInfo.GetFieldSize()); \
 
 // 		IJST_OVR_SET_FIELD_DESC(field_1, ijst::FDesc::NotDefault);
