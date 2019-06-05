@@ -14,21 +14,20 @@ IJST_DEFINE_STRUCT(
 		, (ijst::T_int, int_4, ijst::FDesc::Optional)
 )
 
-class OverrideSt: private override_test_ns::SimpleSt {
-IJST_OVR_DEFINE_P1(OverrideSt, override_test_ns::SimpleSt)
+IJST_OVR_DEFINE_STRUCT(
+		OverrideSt, override_test_ns::SimpleSt,
+		(
+				using _ijst_BaseClass::int_1;
+				using _ijst_BaseClass::int_2;
+		),
+		(
+				IJST_OVR_SET_FIELD_DESC(int_1, ijst::FDesc::Optional); // relax
+				IJST_OVR_SET_FIELD_DESC(int_2, ijst::FDesc::NoneFlag); // strict
+				IJST_OVR_SET_FIELD_DESC(int_3, ijst::FDesc::NotDefault | ijst::FDesc::Optional); // change
+				IJST_OVR_SET_FIELD_DESC(int_4, ijst::FDesc::Nullable | ijst::FDesc::Optional); // change
+		)
+)
 
-	using _ijst_BaseClass::int_1;
-	using _ijst_BaseClass::int_2;
-
-IJST_OVR_DEFINE_P2()
-
-		IJST_OVR_SET_FIELD_DESC(int_1, ijst::FDesc::Optional); // relax
-		IJST_OVR_SET_FIELD_DESC(int_2, ijst::FDesc::NoneFlag); // strict
-		IJST_OVR_SET_FIELD_DESC(int_3, ijst::FDesc::NotDefault | ijst::FDesc::Optional); // change
-		IJST_OVR_SET_FIELD_DESC(int_4, ijst::FDesc::Nullable | ijst::FDesc::Optional); // change
-
-IJST_OVR_DEFINE_P3()
-};
 
 TEST(Override, SetFieldDesc)
 {
@@ -78,27 +77,25 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TMAP(IJST_TST(SimpleSt)), map)
 )
 
-class OverrideOutSt: private OutSt {
-IJST_OVR_DEFINE_P1(OverrideOutSt, OutSt)
-
-	using _ijst_BaseClass::in;
-	using _ijst_BaseClass::in2;
-	using _ijst_BaseClass::vec;
-	using _ijst_BaseClass::list;
-	using _ijst_BaseClass::deq;
-	using _ijst_BaseClass::map;
-
-IJST_OVR_DEFINE_P2()
-
-		IJST_OVR_SET_FIELD_OVR_TYPE(in, OverrideSt);
-		// keep in2 SimpleSt
-		IJST_OVR_SET_FIELD_OVR_TYPE(vec, OverrideSt);
-		IJST_OVR_SET_FIELD_OVR_TYPE(list, OverrideSt);
-		IJST_OVR_SET_FIELD_OVR_TYPE(deq, OverrideSt);
-		IJST_OVR_SET_FIELD_OVR_TYPE(map, OverrideSt);
-
-IJST_OVR_DEFINE_P3()
-};
+IJST_OVR_DEFINE_STRUCT(
+		OverrideOutSt, OutSt,
+		(
+				using _ijst_BaseClass::in;
+				using _ijst_BaseClass::in2;
+				using _ijst_BaseClass::vec;
+				using _ijst_BaseClass::list;
+				using _ijst_BaseClass::deq;
+				using _ijst_BaseClass::map;
+		),
+		(
+				IJST_OVR_SET_FIELD_OVR_TYPE(in, OverrideSt);
+				// keep in2 SimpleSt
+				IJST_OVR_SET_FIELD_OVR_TYPE(vec, OverrideSt);
+				IJST_OVR_SET_FIELD_OVR_TYPE(list, OverrideSt);
+				IJST_OVR_SET_FIELD_OVR_TYPE(deq, OverrideSt);
+				IJST_OVR_SET_FIELD_OVR_TYPE(map, OverrideSt);
+		)
+)
 
 TEST(Override, SetFieldOvrType)
 {

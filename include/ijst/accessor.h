@@ -65,15 +65,10 @@
 #define IJST_DEFINE_VALUE_WITH_GETTER(stName, type, fName, desc)	\
     IJST_DEFINE_GENERIC_VALUE_WITH_GETTER(::rapidjson::UTF8<>, stName, type, fName, desc)
 
-//! @brief Part 1 of ijst override struct define
+//! @brief ijst override struct define
 //! @ingroup IJST_MACRO_API
-#define IJST_OVR_DEFINE_P1(stName, stBase) 		IJSTI_OVR_DEFINE_P1(stName, stBase)
-//! @brief Part 2 of ijst override struct define
-//! @ingroup IJST_MACRO_API
-#define IJST_OVR_DEFINE_P2()					IJSTI_OVR_DEFINE_P2()
-//! @brief Part 3 of ijst override struct define
-//! @ingroup IJST_MACRO_API
-#define IJST_OVR_DEFINE_P3()					IJSTI_OVR_DEFINE_P3()
+#define IJST_OVR_DEFINE_STRUCT(stName, stBase, using_define, field_setting) \
+	IJSTI_OVR_DEFINE_STRUCT(stName, stBase, using_define, field_setting)
 
 //! @brief Set override field desc of ijst override struct define
 //! @ingroup IJST_MACRO_API
@@ -96,15 +91,15 @@
 /**
  * @example ijst override struct define example:
  *
- * class StrictClass : private BaseIjstClass {
- * IJST_OVR_DEFINE_P1(StrictClass, BaseIjstClass)
+ * IJST_OVR_DEFINE_STRUCT (StrictClass, BaseIjstClass,
+ * 	(
  * 		using _ijst_BaseClass::field_1;				// any field in BaseIjstClass
  * 		using _ijst_BaseClass::ijst_field_2;		// ijst field, or container of ijst field in BaseIjstClass
- * IJST_OVR_DEFINE_P2()
+ * 	),
+ * 	(
  * 		IJST_OVR_SET_FIELD_DESC(field_1, ijst::FDesc::NotDefault);
  * 		IJST_OVR_SET_FIELD_OVR_TYPE(ijst_field_2, StrictTypeOfIjstField2;
- * IJST_OVR_DEFINE_P3()
- * };
+ * 	)
  */
 //! @brief Get status of field in obj.
 //! @ingroup IJST_MACRO_API
@@ -1331,6 +1326,8 @@ private:
 #endif
 #define IJSTI_DEFINE_GETTER_F(N, ...)	// empty
 
+#define IJSTI_ESCAPE_PAR(...)				__VA_ARGS__
+
 #define IJSTI_IDL_FTYPE(fType, fName, ...)				fType
 #define IJSTI_IDL_FNAME(fType, fName, ...)				fName
 #define IJSTI_IDL_P3(fType, fName, p3, ...)				p3
@@ -1433,52 +1430,59 @@ private:
 	IJSTI_STRUCT_EXPLICIT_TEMPLATE(stName)
 
 //! IJSTI_OVR_DEFINE_IMPL
-// class stName: private stBase {
 #define IJSTI_OVR_DEFINE_P1(stName, stBase) \
-	typedef stBase _ijst_BaseClass; \
-	typedef stName _ijst_ThisClass; \
-	template<bool DummyTrue> \
-	static void _ijst_InitMetaInfo(::ijst::MetaClassInfo<_ijst_Ch>& metaInfo, const _ijst_ThisClass * stPtr) \
-	{ \
-		(void)stPtr; \
-		::ijst::detail::MetaClassInfoSetter<_ijst_Encoding> mSetter(metaInfo); \
-		mSetter.ShadowFrom(::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(), \
-						   #stName, \
-					       ::ijst::detail::IjstStructOvrMeta<_ijst_ThisClass>::Ins() ); \
-	} \
-public: \
-	stName() \
-	{ \
-		_.UpdateShadowMetaClass(&(::ijst::detail::IjstStructMeta<_ijst_ThisClass>::Ins())); \
-	} \
-	_ijst_BaseClass& _ijst_Base() {return *this;} \
-	const _ijst_BaseClass& _ijst_Base() const {return *this;} \
-	using _ijst_BaseClass::_; \
-	using _ijst_BaseClass::_ijst_Encoding; \
-	using _ijst_BaseClass::_ijst_Ch; \
-	using _ijst_BaseClass::_ijst_AccessorType;
+	class stName: private stBase { \
+		typedef stBase _ijst_BaseClass; \
+		typedef stName _ijst_ThisClass; \
+		template<bool DummyTrue> \
+		static void _ijst_InitMetaInfo(::ijst::MetaClassInfo<_ijst_Ch>& metaInfo, const _ijst_ThisClass * stPtr) \
+		{ \
+			(void)stPtr; \
+			::ijst::detail::MetaClassInfoSetter<_ijst_Encoding> mSetter(metaInfo); \
+			mSetter.ShadowFrom(::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(), \
+							   #stName, \
+							   ::ijst::detail::IjstStructOvrMeta<_ijst_ThisClass>::Ins() ); \
+		} \
+	public: \
+		stName() \
+		{ \
+			_.UpdateShadowMetaClass(&(::ijst::detail::IjstStructMeta<_ijst_ThisClass>::Ins())); \
+		} \
+		_ijst_BaseClass& _ijst_Base() {return *this;} \
+		const _ijst_BaseClass& _ijst_Base() const {return *this;} \
+		using _ijst_BaseClass::_; \
+		using _ijst_BaseClass::_ijst_Encoding; \
+		using _ijst_BaseClass::_ijst_Ch; \
+		using _ijst_BaseClass::_ijst_AccessorType;
 
-//  using _ijst_BaseClass::field_1;
-//  using _ijst_BaseClass::ijst_field_1;
+//  	using _ijst_BaseClass::field_1;
+//  	using _ijst_BaseClass::ijst_field_1;
 
 #define IJSTI_OVR_DEFINE_P2() \
-private: \
-	friend class ::ijst::detail::IjstStructMeta< _ijst_ThisClass >; \
-	friend class ::ijst::detail::IjstStructOvrMeta< _ijst_ThisClass >; \
-	static ::ijst::OverrideMetaInfos* _ijst_NewOvrMetaInfo(const _ijst_ThisClass* stPtr) \
-	{ \
-		/*This function will be called in _ijst_ThisClass::_ijst_InitMetaInfo(), So use meta info in base class */ \
-		const ::ijst::MetaClassInfo<char> &metaInfo = ::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(); \
-		::ijst::OverrideMetaInfos* pOverrideStOvrMeta = ::ijst::OverrideMetaInfos::NewFromSrcOrEmpty( \
-				::ijst::detail::IjstStructOvrMeta<_ijst_BaseClass>::Ins(), metaInfo.GetFieldSize()); \
+	private: \
+		friend class ::ijst::detail::IjstStructMeta< _ijst_ThisClass >; \
+		friend class ::ijst::detail::IjstStructOvrMeta< _ijst_ThisClass >; \
+		static ::ijst::OverrideMetaInfos* _ijst_NewOvrMetaInfo(const _ijst_ThisClass* stPtr) \
+		{ \
+			/*This function will be called in _ijst_ThisClass::_ijst_InitMetaInfo(), So use meta info in base class */ \
+			const ::ijst::MetaClassInfo<char> &metaInfo = ::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(); \
+			::ijst::OverrideMetaInfos* pOverrideStOvrMeta = ::ijst::OverrideMetaInfos::NewFromSrcOrEmpty( \
+					::ijst::detail::IjstStructOvrMeta<_ijst_BaseClass>::Ins(), metaInfo.GetFieldSize()); \
 
-// 		IJST_OVR_SET_FIELD_DESC(field_1, ijst::FDesc::NotDefault);
-// 		IJST_OVR_SET_FIELD_OVR_TYPE(ijst_field_2, StrictTypeOfIjstField2;
+// 			IJST_OVR_SET_FIELD_DESC(field_1, ijst::FDesc::NotDefault);
+// 			IJST_OVR_SET_FIELD_OVR_TYPE(ijst_field_2, StrictTypeOfIjstField2;
 
 #define IJSTI_OVR_DEFINE_P3() \
-		return pOverrideStOvrMeta; \
-	}
-// };
+			return pOverrideStOvrMeta; \
+		} \
+ 	};
+
+#define IJSTI_OVR_DEFINE_STRUCT(stName, stBase, using_define, field_setting) \
+	IJSTI_OVR_DEFINE_P1(stName, stBase) \
+		IJSTI_ESCAPE_PAR using_define \
+	IJSTI_OVR_DEFINE_P2() \
+		IJSTI_ESCAPE_PAR field_setting \
+	IJSTI_OVR_DEFINE_P3()
 
 //! list of templates could been declared extern
 #define IJSTI_EXTERNAL_TEMPLATE_XLIST														\
