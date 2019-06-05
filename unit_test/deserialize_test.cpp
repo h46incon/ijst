@@ -330,7 +330,7 @@ TEST(Deserialize, NullValue)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	// require filed is null
+	// require field is null
 	{
 		string json = "{\"int_val_2\": null}";
 		ret = st._.Deserialize(json);
@@ -338,7 +338,7 @@ TEST(Deserialize, NullValue)
 		ASSERT_EQ(IJST_GET_STATUS(st, int_2), (EFStatus)FStatus::kNull);
 	}
 
-	// require filed is valid
+	// require field is valid
 	{
 		string json = "{\"int_val_2\": 2}";
 		ret = st._.Deserialize(json);
@@ -346,7 +346,7 @@ TEST(Deserialize, NullValue)
 		ASSERT_EQ(st.int_2, 2);
 	}
 
-	// optional filed is null
+	// optional field is null
 	{
 		string json = "{\"int_val_2\": 2, \"int_val_1\": null}";
 		ret = st._.Deserialize(json);
@@ -354,7 +354,7 @@ TEST(Deserialize, NullValue)
 		ASSERT_EQ(ret, retExpected);
 	}
 
-	// optional | nullable filed is null
+	// optional | nullable field is null
 	{
 		string json = "{\"int_val_2\": 2, \"int_val_3\": null}";
 		ret = st._.Deserialize(json);
@@ -363,7 +363,7 @@ TEST(Deserialize, NullValue)
 		ASSERT_EQ(IJST_GET_STATUS(st, int_3), (EFStatus)FStatus::kNull);
 	}
 
-	// optional | nullable filed is valid
+	// optional | nullable field is valid
 	{
 		string json = "{\"int_val_2\": 2, \"int_val_3\": 3}";
 		ret = st._.Deserialize(json);

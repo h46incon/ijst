@@ -31,7 +31,7 @@ IJST_OVR_DEFINE_P2()
 IJST_OVR_DEFINE_P3()
 };
 
-TEST(Override, Base)
+TEST(Override, SetFieldDesc)
 {
 	{
 		OverrideSt st;
@@ -101,7 +101,7 @@ IJST_OVR_DEFINE_P2()
 IJST_OVR_DEFINE_P3()
 };
 
-TEST(Override, Out)
+TEST(Override, SetFieldOvrType)
 {
 	{
 		OverrideOutSt st;
