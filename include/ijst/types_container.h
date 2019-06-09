@@ -65,23 +65,23 @@ struct IsArrayContainer {
 template<typename TElem, typename Alloc>
 struct IsArrayContainer<std::vector<TElem, Alloc> > {
 	typedef void Tag;
-	typedef TElem TOptionalElem;
+	typedef TElem TCvElem;
 };
 template<typename TElem, typename Alloc>
 struct IsArrayContainer<const std::vector<TElem, Alloc> > {
 	typedef void Tag;
-	typedef const TElem TOptionalElem;
+	typedef const TElem TCvElem;
 };
 
 template<typename TElem, typename Alloc>
 struct IsArrayContainer<std::deque<TElem, Alloc> > {
 	typedef void Tag;
-	typedef TElem TOptionalElem;
+	typedef TElem TCvElem;
 };
 template<typename TElem, typename Alloc>
 struct IsArrayContainer<const std::deque<TElem, Alloc> > {
 	typedef void Tag;
-	typedef const TElem TOptionalElem;
+	typedef const TElem TCvElem;
 };
 
 
@@ -93,14 +93,14 @@ struct IsMapContainer {
 template<typename TElem, typename CharType, typename Compare, typename Alloc>
 struct IsMapContainer<std::map<std::basic_string<CharType>, TElem, Compare, Alloc> > {
 	typedef void Tag;
-	typedef TElem TOptionalElem;
+	typedef TElem TCvElem;
 	typedef typename std::map<std::basic_string<CharType>, TElem, Compare, Alloc>::iterator TItera;
 };
 
 template<typename TElem, typename CharType, typename Compare, typename Alloc>
 struct IsMapContainer<const std::map<std::basic_string<CharType>, TElem, Compare, Alloc> > {
 	typedef void Tag;
-	typedef const TElem TOptionalElem;
+	typedef const TElem TCvElem;
 	typedef typename std::map<std::basic_string<CharType>, TElem, Compare, Alloc>::const_iterator TItera;
 };
 
@@ -132,15 +132,12 @@ struct T_Member {
 /**
  * Specialization for map type of Optional template.
  * This specialization add operator[] (string key) for getter chaining.
- *
- * @tparam TElem		map value type
- * @tparam CharType		character type of map key
  */
-template <typename MapT>
-class Optional<MapT, /*EnableIf*/ typename detail::IsMapContainer<MapT>::Tag>
+template <typename TMap>
+class Optional<TMap, /*EnableIf*/ typename detail::IsMapContainer<TMap>::Tag>
 {
-	typedef typename detail::IsMapContainer<MapT>::TOptionalElem TElem;
-	IJSTI_OPTIONAL_BASE_DEFINE(MapT)
+	typedef typename detail::IsMapContainer<TMap>::TCvElem TCvElem;
+	IJSTI_OPTIONAL_COMMON_DEFINE(TMap)
 public:
 	/**
 	 * Get element by key
@@ -148,34 +145,62 @@ public:
 	 * @param key 	key
 	 * @return 		Optional(elemInstance) if key is found, Optional(null) else
 	 */
-	Optional<TElem> operator[](const typename MapT::key_type& key) const
+	Optional<TCvElem> operator[](const typename TMap::key_type& key) const
 	{
 		if (m_pVal == NULL) {
-			return Optional<TElem>(NULL);
+			return Optional<TCvElem>(NULL);
 		}
-		typename detail::IsMapContainer<MapT>::TItera it = m_pVal->find(key);
+		typename detail::IsMapContainer<TMap>::TItera it = m_pVal->find(key);
 		if (it == m_pVal->end()){
-			return Optional<TElem>(NULL);
+			return Optional<TCvElem>(NULL);
 		}
 		else {
-			return Optional<TElem>(&it->second);
+			return Optional<TCvElem>(&it->second);
 		}
 	}
 };
 
-template<typename ArrayT>
-class Optional<ArrayT, /*EnableIf*/ typename detail::IsArrayContainer<ArrayT>::Tag>
+/**
+ * Specialization for array type (vector, deque) of Optional template.
+ * This specialization add operator[] (size_t index) for getter chaining.
+ */
+template<typename TArray>
+class Optional<TArray, /*EnableIf*/ typename detail::IsArrayContainer<TArray>::Tag>
 {
-	typedef typename detail::IsArrayContainer<ArrayT>::TOptionalElem TElem;
-	IJSTI_OPTIONAL_BASE_DEFINE(ArrayT)
+	typedef typename detail::IsArrayContainer<TArray>::TCvElem TCvElem;
+	IJSTI_OPTIONAL_COMMON_DEFINE(TArray)
 public:
 	//! return Optional(elemeInstance) if i is valid, Optional(null) else.
-	Optional<TElem> operator[](typename ArrayT::size_type i) const
+	Optional<TCvElem> operator[](typename TArray::size_type i) const
 	{
 		if (m_pVal == NULL || m_pVal->size() <= i) {
-			return Optional<TElem>(NULL);
+			return Optional<TCvElem>(NULL);
 		}
-		return Optional<TElem>(&(*m_pVal)[i]);
+		return Optional<TCvElem>(&(*m_pVal)[i]);
+	}
+};
+
+template <typename TMap, typename TOvr>
+class OvrFieldWrapper<TMap, TOvr, /*EnableIf*/ typename detail::IsMapContainer<TMap>::Tag>
+{
+IJSTI_OVR_FIELD_WRAPPER_COMMON_DEFINE(TMap)
+public:
+	// TODO: add iterator
+//	OvrFieldWrapper<TCvElem, TOvr> find(const typename TMap::key_type& key) const
+//	{
+//		return OvrFieldWrapper<TCvElem, TOvr>(ins[i]);
+//	}
+};
+
+template <typename TArray, typename TOvr>
+class OvrFieldWrapper<TArray, TOvr, /*EnableIf*/ typename detail::IsArrayContainer<TArray>::Tag>
+{
+	typedef typename detail::IsArrayContainer<TArray>::TCvElem TCvElem;
+IJSTI_OVR_FIELD_WRAPPER_COMMON_DEFINE(TArray)
+public:
+	OvrFieldWrapper<TCvElem, TOvr> operator[](typename TArray::size_type i) const
+	{
+		return OvrFieldWrapper<TCvElem, TOvr>(ins[i]);
 	}
 };
 

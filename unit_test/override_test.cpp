@@ -1,5 +1,4 @@
 #include "util.h"
-#include <typeinfo>
 
 using namespace std;
 
@@ -21,6 +20,26 @@ IJST_OVR_DEFINE_STRUCT(
 		(
 		)
 )
+
+void TestOvrStructInsideFunction()
+{
+	IJST_OVR_DEFINE_STRUCT(
+			OvrStInFunction, override_test_ns::SimpleSt,
+			(
+					using _ijst_BaseClass::int_1;
+			),
+			(
+			)
+	)
+
+	OvrStInFunction st;
+	ASSERT_EQ(st.int_1, 0);
+}
+
+TEST(Override, OvrStructInsideFunction)
+{
+	TestOvrStructInsideFunction();
+}
 
 IJST_OVR_DEFINE_STRUCT(
 		OverrideSt, override_test_ns::SimpleSt,
@@ -74,39 +93,8 @@ TEST(Override, SetFieldDesc)
 
 // TODO: override of overrided
 
-template <typename InstanceT, typename OvrStructT , typename SFINAE_TAG = void>
-class OvrStructWrapper{
-public:
-	explicit OvrStructWrapper(InstanceT& _ins) : ins(_ins) {}
-	InstanceT &ins;
-};
-
-template<typename TElem, typename Alloc, typename OvrStructT>
-class OvrStructWrapper<std::vector<TElem, Alloc>, OvrStructT> {
-public:
-	typedef std::vector<TElem, Alloc> InstanceT;
-
-	explicit OvrStructWrapper(InstanceT& _ins) : ins(_ins) {}
-	InstanceT &ins;
-
-	OvrStructWrapper<TElem, OvrStructT> operator[](typename InstanceT::size_type i) const
-	{
-		return OvrStructWrapper<TElem, OvrStructT>(ins[i]);
-	}
-};
 
 
-template <typename InstanceT, typename OvrStructT>
-class OvrStructWrapper<InstanceT, OvrStructT, /*EnableIf*/ typename ijst::detail::HasType<typename InstanceT::_ijst_AccessorType>::Void>
-{
-public:
-	explicit OvrStructWrapper(InstanceT& _ins) : ins(_ins) {}
-	InstanceT &ins;
-	const OvrStructT* operator->() const
-	{
-		return reinterpret_cast<OvrStructT*>(&ins);
-	}
-};
 
 IJST_DEFINE_STRUCT(
 		OutSt
@@ -119,29 +107,31 @@ IJST_DEFINE_STRUCT(
 		, (IJST_TMAP(IJST_TST(SimpleSt)), map)
 )
 
+IJST_OVR_DEFINE_STRUCT(
+		OverrideOutSt, OutSt,
+		(
+				using _ijst_BaseClass::in;
+				using _ijst_BaseClass::in2;
+				using _ijst_BaseClass::list;
+
+#if __cplusplus >= 201103L
+			ijst::OvrFieldWrapper<const decltype(vec), const OverrideSt> wrap_vec() const {return ijst::OvrFieldWrapper<const decltype(vec), const OverrideSt>(vec);}
+#endif
+				using _ijst_BaseClass::deq;
+				using _ijst_BaseClass::map;
+		),
+		(
+				IJST_OVR_SET_FIELD_OVR_TYPE(in, OverrideSt);
+				// keep in2 SimpleSt
+				IJST_OVR_SET_FIELD_OVR_TYPE(vec, OverrideSt);
+				IJST_OVR_SET_FIELD_OVR_TYPE(list, OverrideSt);
+				IJST_OVR_SET_FIELD_OVR_TYPE(deq, OverrideSt);
+				IJST_OVR_SET_FIELD_OVR_TYPE(map, OverrideSt);
+		)
+)
+
 TEST(Override, SetFieldOvrType)
 {
-	IJST_OVR_DEFINE_STRUCT(
-			OverrideOutSt, OutSt,
-			(
-					using _ijst_BaseClass::in;
-					using _ijst_BaseClass::in2;
-					using _ijst_BaseClass::list;
-
-					OvrStructWrapper<decltype(vec), OverrideSt> wrap_vec() {return OvrStructWrapper<decltype(vec), OverrideSt>(vec);}
-					using _ijst_BaseClass::deq;
-					using _ijst_BaseClass::map;
-			),
-			(
-					IJST_OVR_SET_FIELD_OVR_TYPE(in, OverrideSt);
-					// keep in2 SimpleSt
-					IJST_OVR_SET_FIELD_OVR_TYPE(vec, OverrideSt);
-					IJST_OVR_SET_FIELD_OVR_TYPE(list, OverrideSt);
-					IJST_OVR_SET_FIELD_OVR_TYPE(deq, OverrideSt);
-					IJST_OVR_SET_FIELD_OVR_TYPE(map, OverrideSt);
-			)
-	)
-
 	{
 		OverrideOutSt st;
 
@@ -160,7 +150,11 @@ TEST(Override, SetFieldOvrType)
 		string strErrMsg;
 		int iRet = st._.Deserialize(json, strErrMsg);
 		ASSERT_EQ(iRet, 0);
+#if __cplusplus >= 201103L
+		const OverrideOutSt& stRef = st;
 		ASSERT_EQ(st.wrap_vec()[0]->int_2, 1);
+		ASSERT_EQ(stRef.wrap_vec()[0]->int_2, 1);
+#endif
 	}
 
 }

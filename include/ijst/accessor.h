@@ -203,8 +203,9 @@ public:
 	{ return h.EndArray(elementCount); }
 };
 
-#define IJSTI_OPTIONAL_BASE_DEFINE(T)						\
+#define IJSTI_OPTIONAL_COMMON_DEFINE(T)						\
 	public:													\
+		typedef T ValType;									\
 		/** @brief Constructor */ 							\
 		explicit Optional(T* _pVal) : m_pVal(_pVal) {}		\
 		/** @brief Get holding pointer */ 					\
@@ -222,10 +223,28 @@ public:
  * 			which implements operator [].
  */
 template <typename T, typename SfinaeTag = void>
-class Optional
-{
-	typedef T ValType;
-	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
+class Optional {
+	IJSTI_OPTIONAL_COMMON_DEFINE(T)
+};
+
+
+#define IJSTI_OVR_FIELD_WRAPPER_COMMON_DEFINE(T)			\
+	public:													\
+		explicit OvrFieldWrapper(T& _ins) : ins(_ins) {}	\
+		T &ins;
+
+/**
+ * @brief Helper for implementing getter chaining.
+ *
+ * @tparam T 			type
+ * @tparam SfinaeTag	placeholder for SFINAE
+ *
+ * @note	The specialized template for container is declared in "types_container.h",
+ * 			which implements operator [].
+ */
+template <typename TField, typename TOvr , typename SfinaeTag = void>
+class OvrFieldWrapper{
+	IJSTI_OVR_FIELD_WRAPPER_COMMON_DEFINE(TField)
 };
 
 /**
@@ -239,8 +258,7 @@ class Optional
 template <typename T>
 class Optional<T, /*EnableIf*/ typename detail::HasType<typename T::_ijst_AccessorType>::Tag>
 {
-	typedef T ValType;
-	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
+	IJSTI_OPTIONAL_COMMON_DEFINE(T)
 public:
 	/**
 	 * @brief Get pointer
@@ -256,6 +274,17 @@ public:
 		else {
 			return m_pVal;
 		}
+	}
+};
+
+template <typename TField, typename TOvr>
+class OvrFieldWrapper<TField, TOvr, /*EnableIf*/ typename detail::HasType<typename TField::_ijst_AccessorType>::Tag>
+{
+IJSTI_OVR_FIELD_WRAPPER_COMMON_DEFINE(TField)
+public:
+	TOvr* operator->() const
+	{
+		return reinterpret_cast<TOvr*>(&ins);
 	}
 };
 
