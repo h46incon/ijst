@@ -1278,7 +1278,7 @@ private:
 } // namespace ijst
 
 #define IJSTI_STRUCT_META_INITER_DECLARE(stName)	\
-	template void stName::template _ijst_InitMetaInfo<true>(::ijst::MetaClassInfo<_ijst_Ch>&, const stName*);
+	template void stName::template _ijst_InitMetaInfo<bool>(::ijst::MetaClassInfo<_ijst_Ch>&, const stName*, bool unused);
 
 //! IJSTI_STRUCT_EXTERN_TEMPLATE
 #if IJST_EXTERN_TEMPLATE
@@ -1360,11 +1360,12 @@ private:
 	friend class ::ijst::detail::IjstStructMeta< stName >;									\
 	friend class ::ijst::detail::IjstStructOvrMeta< stName >;								\
 	static ::ijst::OverrideMetaInfos* _ijst_NewOvrMetaInfo(const stName*) { return NULL; }	\
-	template<bool DummyTrue>																\
+	template<typename TypeMust_bool>														\
 	static void _ijst_InitMetaInfo(::ijst::MetaClassInfo<_ijst_Ch>& metaInfo, 				\
-								   const stName* stPtr)										\
+								   const stName* stPtr, TypeMust_bool unused)				\
 	{																						\
 		/* Do not call IjstStructMeta<stName>::GetInstance() int this function */			\
+		(void)unused;																		\
 		::ijst::detail::MetaClassInfoSetter<_ijst_Encoding>	mSetter(metaInfo);				\
 		mSetter.InitBegin(#stName, N, IJSTI_OFFSETOF(stPtr, _));
 
@@ -1429,60 +1430,53 @@ private:
 	IJSTI_STRUCT_EXTERN_TEMPLATE(stName)													\
 	IJSTI_STRUCT_EXPLICIT_TEMPLATE(stName)
 
-//! IJSTI_OVR_DEFINE_IMPL
-#define IJSTI_OVR_DEFINE_P1(stName, stBase) \
-	class stName: private stBase { \
-		typedef stBase _ijst_BaseClass; \
-		typedef stName _ijst_ThisClass; \
-		template<bool DummyTrue> \
-		static void _ijst_InitMetaInfo(::ijst::MetaClassInfo<_ijst_Ch>& metaInfo, const _ijst_ThisClass * stPtr) \
-		{ \
-			(void)stPtr; \
-			::ijst::detail::MetaClassInfoSetter<_ijst_Encoding> mSetter(metaInfo); \
-			mSetter.ShadowFrom(::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(), \
-							   #stName, \
-							   ::ijst::detail::IjstStructOvrMeta<_ijst_ThisClass>::Ins() ); \
-		} \
-	public: \
-		stName() \
-		{ \
-			_.UpdateShadowMetaClass(&(::ijst::detail::IjstStructMeta<_ijst_ThisClass>::Ins())); \
-		} \
-		_ijst_BaseClass& _ijst_Base() {return *this;} \
-		const _ijst_BaseClass& _ijst_Base() const {return *this;} \
-		using _ijst_BaseClass::_; \
-		using _ijst_BaseClass::_ijst_Encoding; \
-		using _ijst_BaseClass::_ijst_Ch; \
-		using _ijst_BaseClass::_ijst_AccessorType;
-
-//  	using _ijst_BaseClass::field_1;
-//  	using _ijst_BaseClass::ijst_field_1;
-
-#define IJSTI_OVR_DEFINE_P2() \
-	private: \
-		friend class ::ijst::detail::IjstStructMeta< _ijst_ThisClass >; \
-		friend class ::ijst::detail::IjstStructOvrMeta< _ijst_ThisClass >; \
-		static ::ijst::OverrideMetaInfos* _ijst_NewOvrMetaInfo(const _ijst_ThisClass* stPtr) \
-		{ \
-			/*This function will be called in _ijst_ThisClass::_ijst_InitMetaInfo(), So use meta info in base class */ \
-			const ::ijst::MetaClassInfo<char> &metaInfo = ::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(); \
-			::ijst::OverrideMetaInfos* pOverrideStOvrMeta = ::ijst::OverrideMetaInfos::NewFromSrcOrEmpty( \
-					::ijst::detail::IjstStructOvrMeta<_ijst_BaseClass>::Ins(), metaInfo.GetFieldSize()); \
-
-// 			IJST_OVR_SET_FIELD_DESC(field_1, ijst::FDesc::NotDefault);
-// 			IJST_OVR_SET_FIELD_OVR_TYPE(ijst_field_2, StrictTypeOfIjstField2;
-
-#define IJSTI_OVR_DEFINE_P3() \
-			return pOverrideStOvrMeta; \
-		} \
+//Impl of ijst override struct define
+#define IJSTI_OVR_DEFINE_STRUCT(stName, stBase, using_define, field_setting) 										\
+	class stName: private stBase { 																					\
+		typedef stBase _ijst_BaseClass; 																			\
+		typedef stName _ijst_ThisClass; 																			\
+	public: 																										\
+		stName() 																									\
+		{ _.UpdateShadowMetaClass(&(::ijst::detail::IjstStructMeta<_ijst_ThisClass>::Ins())); } 					\
+		_ijst_BaseClass& _ijst_Base() {return *this;} 																\
+		const _ijst_BaseClass& _ijst_Base() const {return *this;} 													\
+		using _ijst_BaseClass::_; 																					\
+		using _ijst_BaseClass::_ijst_Encoding; 																		\
+		using _ijst_BaseClass::_ijst_Ch; 																			\
+		using _ijst_BaseClass::_ijst_AccessorType;																	\
+																													\
+		IJSTI_ESCAPE_PAR using_define 																				\
+	 	/* using _ijst_BaseClass::field_1; */ 																		\
+	 	/* using _ijst_BaseClass::ijst_field_1; */ 																	\
+	private: 																										\
+		friend class ::ijst::detail::IjstStructMeta< _ijst_ThisClass >; 											\
+		friend class ::ijst::detail::IjstStructOvrMeta< _ijst_ThisClass >; 											\
+		/* Do not declared it as template so user can define override struct inside function */ 					\
+		static void _ijst_InitMetaInfo(::ijst::MetaClassInfo<_ijst_Ch>& metaInfo, 									\
+									   const _ijst_ThisClass * stPtr, bool unused)									\
+		{ 																											\
+			(void)stPtr; 																							\
+			(void)unused;																							\
+			::ijst::detail::MetaClassInfoSetter<_ijst_Encoding> mSetter(metaInfo); 									\
+			mSetter.ShadowFrom(::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(), 								\
+							   #stName,																				\
+							   ::ijst::detail::IjstStructOvrMeta<_ijst_ThisClass>::Ins() ); 						\
+		} 																											\
+		static ::ijst::OverrideMetaInfos* _ijst_NewOvrMetaInfo(const _ijst_ThisClass* stPtr) 						\
+		{ 																											\
+			(void)stPtr; 																							\
+			/* This function will be called in _ijst_ThisClass::_ijst_InitMetaInfo() */ 							\
+			/* So use meta info in base class */ 																	\
+			const ::ijst::MetaClassInfo<char> &metaInfo = ::ijst::detail::IjstStructMeta<_ijst_BaseClass>::Ins(); 	\
+			::ijst::OverrideMetaInfos* pOverrideStOvrMeta = ::ijst::OverrideMetaInfos::NewFromSrcOrEmpty( 			\
+					::ijst::detail::IjstStructOvrMeta<_ijst_BaseClass>::Ins(), metaInfo.GetFieldSize()); 			\
+																													\
+			IJSTI_ESCAPE_PAR field_setting 																			\
+			/* IJST_OVR_SET_FIELD_DESC(field_1, ijst::FDesc::NotDefault); */ 										\
+			/* IJST_OVR_SET_FIELD_OVR_TYPE(ijst_field_2, StrictTypeOfIjstField2; */ 								\
+			return pOverrideStOvrMeta; 																				\
+		} 																											\
  	};
-
-#define IJSTI_OVR_DEFINE_STRUCT(stName, stBase, using_define, field_setting) \
-	IJSTI_OVR_DEFINE_P1(stName, stBase) \
-		IJSTI_ESCAPE_PAR using_define \
-	IJSTI_OVR_DEFINE_P2() \
-		IJSTI_ESCAPE_PAR field_setting \
-	IJSTI_OVR_DEFINE_P3()
 
 //! list of templates could been declared extern
 #define IJSTI_EXTERNAL_TEMPLATE_XLIST														\

@@ -497,7 +497,7 @@ inline SerializerInterface<Encoding>* GetSerializerInterface(const MetaFieldInfo
  *
  * @tparam T 	class. Concept require
  * 					typedef T::_ijst_Ch
- * 					void T::_ijst_InitMetaInfo<bool>(MetaClassInfo&, const T*)
+ * 					void T::_ijst_InitMetaInfo(MetaClassInfo&, const T*, bool)
  */
 template<typename T>
 class IjstStructMeta {
@@ -513,12 +513,12 @@ private:
 
 	IjstStructMeta()
 	{
-		IJST_OFFSET_BUFFER_NEW(dummyBuffer, sizeof(T));
-		const T* stPtr = reinterpret_cast<T*>(dummyBuffer);
+		IJST_OFFSET_BUFFER_NEW(offsetBuf, sizeof(T));
+		const T* stPtr = reinterpret_cast<T*>(offsetBuf);
 
-		T::template _ijst_InitMetaInfo<true>(metaClass, stPtr);
+		T::_ijst_InitMetaInfo(metaClass, stPtr, /*unused*/true);
 
-		IJST_OFFSET_BUFFER_DELETE(dummyBuffer);
+		IJST_OFFSET_BUFFER_DELETE(offsetBuf);
 	}
 };
 
@@ -543,12 +543,12 @@ private:
 	IjstStructOvrMeta() :
 			pOverMetas(NULL)
 	{
-		IJST_OFFSET_BUFFER_NEW(dummyBuffer, sizeof(T));
-		const T* stPtr = reinterpret_cast<T*>(dummyBuffer);
+		IJST_OFFSET_BUFFER_NEW(offsetBuf, sizeof(T));
+		const T* stPtr = reinterpret_cast<T*>(offsetBuf);
 
 		pOverMetas = T::_ijst_NewOvrMetaInfo(stPtr);
 
-		IJST_OFFSET_BUFFER_DELETE(dummyBuffer);
+		IJST_OFFSET_BUFFER_DELETE(offsetBuf);
 	}
 
 	~IjstStructOvrMeta()
