@@ -55,6 +55,59 @@
 #define IJST_TST(T)							T
 
 namespace ijst {
+namespace detail {
+
+//--- trait of IsArrayContainer
+template<typename T>
+struct IsArrayContainer {
+};
+
+template<typename TElem, typename Alloc>
+struct IsArrayContainer<std::vector<TElem, Alloc> > {
+	typedef void Tag;
+	typedef TElem TOptionalElem;
+};
+template<typename TElem, typename Alloc>
+struct IsArrayContainer<const std::vector<TElem, Alloc> > {
+	typedef void Tag;
+	typedef const TElem TOptionalElem;
+};
+
+template<typename TElem, typename Alloc>
+struct IsArrayContainer<std::deque<TElem, Alloc> > {
+	typedef void Tag;
+	typedef TElem TOptionalElem;
+};
+template<typename TElem, typename Alloc>
+struct IsArrayContainer<const std::deque<TElem, Alloc> > {
+	typedef void Tag;
+	typedef const TElem TOptionalElem;
+};
+
+
+//--- trait of IsMapContainer
+template<typename T>
+struct IsMapContainer {
+};
+
+template<typename TElem, typename CharType, typename Compare, typename Alloc>
+struct IsMapContainer<std::map<std::basic_string<CharType>, TElem, Compare, Alloc> > {
+	typedef void Tag;
+	typedef TElem TOptionalElem;
+	typedef typename std::map<std::basic_string<CharType>, TElem, Compare, Alloc>::iterator TItera;
+};
+
+template<typename TElem, typename CharType, typename Compare, typename Alloc>
+struct IsMapContainer<const std::map<std::basic_string<CharType>, TElem, Compare, Alloc> > {
+	typedef void Tag;
+	typedef const TElem TOptionalElem;
+	typedef typename std::map<std::basic_string<CharType>, TElem, Compare, Alloc>::const_iterator TItera;
+};
+
+} // namespace detail
+} // namespace ijst
+
+namespace ijst {
 
 /**
  * @brief Memeber in json object
@@ -83,11 +136,11 @@ struct T_Member {
  * @tparam TElem		map value type
  * @tparam CharType		character type of map key
  */
-template <typename TElem, typename CharType, typename Compare, typename Alloc>
-class Optional <std::map<std::basic_string<CharType>, TElem, Compare, Alloc> >
+template <typename MapT>
+class Optional<MapT, /*EnableIf*/ typename detail::IsMapContainer<MapT>::Tag>
 {
-	typedef std::map<std::basic_string<CharType>, TElem, Compare, Alloc> ValType;
-	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
+	typedef typename detail::IsMapContainer<MapT>::TOptionalElem TElem;
+	IJSTI_OPTIONAL_BASE_DEFINE(MapT)
 public:
 	/**
 	 * Get element by key
@@ -95,12 +148,12 @@ public:
 	 * @param key 	key
 	 * @return 		Optional(elemInstance) if key is found, Optional(null) else
 	 */
-	Optional<TElem> operator[](const std::basic_string<CharType>& key) const
+	Optional<TElem> operator[](const typename MapT::key_type& key) const
 	{
 		if (m_pVal == NULL) {
 			return Optional<TElem>(NULL);
 		}
-		typename ValType::iterator it = m_pVal->find(key);
+		typename detail::IsMapContainer<MapT>::TItera it = m_pVal->find(key);
 		if (it == m_pVal->end()){
 			return Optional<TElem>(NULL);
 		}
@@ -110,67 +163,21 @@ public:
 	}
 };
 
-/**
- * const version Specialization for map type of Optional template.
- * This specialization add operator[] (string key) for getter chaining.
- *
- * @tparam TElem		map value type
- * @tparam CharType		character type of map key
- */
-template <typename TElem, typename CharType, typename Compare, typename Alloc>
-class Optional <const std::map<std::basic_string<CharType>, TElem, Compare, Alloc> >
+template<typename ArrayT>
+class Optional<ArrayT, /*EnableIf*/ typename detail::IsArrayContainer<ArrayT>::Tag>
 {
-	typedef const std::map<std::basic_string<CharType>, TElem, Compare, Alloc> ValType;
-	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
+	typedef typename detail::IsArrayContainer<ArrayT>::TOptionalElem TElem;
+	IJSTI_OPTIONAL_BASE_DEFINE(ArrayT)
 public:
-	/**
-	 * Get element by key
-	 *
-	 * @param key 	key
-	 * @return 		Optional(const elemInstance) if key is found, Optional(null) else
-	 */
-	Optional<const TElem> operator[](const std::basic_string<CharType>& key) const
+	//! return Optional(elemeInstance) if i is valid, Optional(null) else.
+	Optional<TElem> operator[](typename ArrayT::size_type i) const
 	{
-		if (m_pVal == NULL) {
-			return Optional<const TElem>(NULL);
+		if (m_pVal == NULL || m_pVal->size() <= i) {
+			return Optional<TElem>(NULL);
 		}
-		typename ValType::const_iterator it = m_pVal->find(key);
-		if (it == m_pVal->end()){
-			return Optional<const TElem>(NULL);
-		}
-		else {
-			return Optional<const TElem>(&it->second);
-		}
+		return Optional<TElem>(&(*m_pVal)[i]);
 	}
 };
-
-/**
- * Specialization for vector or deque type of Optional template.
- * This specialization add operator[] (size_type i) for getter chaining.
- *
- * @tparam TElem	Element type
- */
-#define IJSTI_OPTIONAL_ARRAY_DEFINE(is_const, Container)													\
-	template<typename TElem, typename Alloc>																\
-	class Optional<is_const Container<TElem, Alloc> >														\
-	{ 																										\
-		typedef is_const Container<TElem, Alloc> ValType;													\
-		IJSTI_OPTIONAL_BASE_DEFINE(ValType)																	\
-	public:																									\
-		/** return Optional(elemeInstance) if i is valid, Optional(null) else. */							\
-		Optional<is_const TElem> operator[](typename Container<TElem, Alloc>::size_type i) const			\
-		{																									\
-			if (m_pVal == NULL || m_pVal->size() <= i) {													\
-				return Optional<is_const TElem>(NULL);														\
-			}																								\
-			return Optional<is_const TElem>(&(*m_pVal)[i]);													\
-		}																									\
-	};
-
-IJSTI_OPTIONAL_ARRAY_DEFINE(, std::vector)
-IJSTI_OPTIONAL_ARRAY_DEFINE(const, std::vector)
-IJSTI_OPTIONAL_ARRAY_DEFINE(, std::deque)
-IJSTI_OPTIONAL_ARRAY_DEFINE(const, std::deque)
 
 }	// namespace ijst
 

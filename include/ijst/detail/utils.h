@@ -61,7 +61,7 @@ inline static T& Singleton()
 
 template <typename T>
 struct HasType {
-	typedef void Void;
+	typedef void Tag;
 };
 
 /**

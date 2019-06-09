@@ -455,11 +455,11 @@ public:
  * Template interface of serialization class
  * This template is unimplemented, and will throw a compile error when use it.
  *
- * @tparam T 		class
- * @tparam Encoding	encoding of json struct
- * @tparam Enable	type for SFINAE
+ * @tparam T 			class
+ * @tparam Encoding		encoding of json struct
+ * @tparam SfinaeTag	placeholder for SFINAE
  */
-template<typename T, typename Encoding, typename Enable = void>
+template<typename T, typename Encoding, typename SfinaeTag = void>
 class FSerializer : public SerializerInterface<Encoding> {
 public:
 	IJSTI_STATIC_ASSERT(!(std::is_same<T, T>::value),	// always failed
@@ -739,7 +739,7 @@ private:
  * @tparam Encoding		encoding of json struct
  */
 template<class T, typename Encoding>
-class FSerializer<T, Encoding, /*EnableIf*/ typename HasType<typename T::_ijst_AccessorType>::Void>
+class FSerializer<T, Encoding, /*EnableIf*/ typename HasType<typename T::_ijst_AccessorType>::Tag>
 		: public SerializerInterface<Encoding>
 {
 public:

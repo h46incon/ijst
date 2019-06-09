@@ -304,7 +304,7 @@ FSerialize<FIELD_TYPE>::VarType var;
 
 ```cpp
 template <typename T>
-struct IfHasType { typedef void Void; };
+struct IfHasType { typedef void Tag; };
 
 // IDL 接口中的数据类型
 #define T_int   int
@@ -314,7 +314,7 @@ struct IfHasType { typedef void Void; };
 template<> class FSerializer<int> : public SerializerInterface { /*...*/};
 
 template<typename T>        // ijst 结构体都会定义 _ijst_AccessorType
-class FSerializer<T, typename IfHasType<typename T::_ijst_AccessorType>::Void>: public SerializerInterface { /*...*/ };
+class FSerializer<T, typename IfHasType<typename T::_ijst_AccessorType>::Tag>: public SerializerInterface { /*...*/ };
 
 // 声明 IDL 对应的数据类型，FIELD_TYPE 是 IDL 中声明的数据类型
 FIELD_TYPE var;
@@ -327,11 +327,11 @@ FIELD_TYPE var;
 ```cpp
 template <typename T, Accessor<void> T::*>
 struct IfIsAccessor {
-	typedef void Void;
+	typedef void Tag;
 };
 
 template<typename T> 
-class FSerializer<T, typename IfIsAccessor<T, T::_>::Void>: public SerializerInterface { /*...*/ };
+class FSerializer<T, typename IfIsAccessor<T, T::_>::Tag>: public SerializerInterface { /*...*/ };
 ```
 
 另外，在实现 `ijst::Optional` 时也需要使用 SFINAE 判断类型是否为 ijst 结构体。

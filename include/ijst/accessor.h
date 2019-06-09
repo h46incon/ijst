@@ -215,13 +215,13 @@ public:
 /**
  * @brief Helper for implementing getter chaining.
  *
- * @tparam T 		type
- * @tparam Enable	type for SFINAE
+ * @tparam T 			type
+ * @tparam SfinaeTag	placeholder for SFINAE
  *
  * @note	The specialized template for container is declared in "types_container.h",
  * 			which implements operator [].
  */
-template <typename T, typename Enable = void>
+template <typename T, typename SfinaeTag = void>
 class Optional
 {
 	typedef T ValType;
@@ -237,7 +237,7 @@ class Optional
  * @tparam T	ijst struct type
  */
 template <typename T>
-class Optional<T, /*EnableIf*/ typename detail::HasType<typename T::_ijst_AccessorType>::Void>
+class Optional<T, /*EnableIf*/ typename detail::HasType<typename T::_ijst_AccessorType>::Tag>
 {
 	typedef T ValType;
 	IJSTI_OPTIONAL_BASE_DEFINE(ValType)
