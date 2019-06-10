@@ -180,18 +180,11 @@ public:
 	}
 };
 
-template <typename TMap, typename TOvr>
-class OvrFieldWrapper<TMap, TOvr, /*EnableIf*/ typename detail::IsMapContainer<TMap>::Tag>
-{
-IJSTI_OVR_FIELD_WRAPPER_COMMON_DEFINE(TMap)
-public:
-	// TODO: add iterator
-//	OvrFieldWrapper<TCvElem, TOvr> find(const typename TMap::key_type& key) const
-//	{
-//		return OvrFieldWrapper<TCvElem, TOvr>(ins[i]);
-//	}
-};
 
+/**
+ * Specialization for array type (vector, deque) of OvrFieldWrapper template.
+ * This specialization add operator[] (size_t index).
+ */
 template <typename TArray, typename TOvr>
 class OvrFieldWrapper<TArray, TOvr, /*EnableIf*/ typename detail::IsArrayContainer<TArray>::Tag>
 {

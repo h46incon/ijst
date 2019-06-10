@@ -88,6 +88,17 @@
 		pOverrideStOvrMeta->metaInfos[idx].ijstFieldMetaInfo = ::ijst::detail::IjstStructOvrMeta< type >::Ins(); \
 	} while (false)
 
+
+// TODO: use typeof, doc
+//! @brief Declare ijst override field wrapper
+//! @ingroup IJST_MACRO_API
+#define IJST_OVR_WRAP_FIELD(ovrType, prefix, field) \
+	::ijst::OvrFieldWrapper<const decltype(field), const ovrType> prefix##field() const \
+	{ return ::ijst::OvrFieldWrapper<const decltype(field), const ovrType>(field); } \
+	::ijst::OvrFieldWrapper<decltype(field), ovrType> prefix##field() \
+	{ return ::ijst::OvrFieldWrapper<decltype(field), ovrType>(field); }
+
+
 /**
  * @example ijst override struct define example:
  *
@@ -236,7 +247,8 @@ class Optional {
 /**
  * @brief Helper for implementing getter chaining.
  *
- * @tparam T 			type
+ * @tparam TField 		field type
+ * @tparam TOvr 		override field type
  * @tparam SfinaeTag	placeholder for SFINAE
  *
  * @note	The specialized template for container is declared in "types_container.h",
@@ -247,13 +259,10 @@ class OvrFieldWrapper{
 	IJSTI_OVR_FIELD_WRAPPER_COMMON_DEFINE(TField)
 };
 
+
 /**
- * @brief Specialization for ijst struct
- *
  * Specialization for ijst struct (defined via IJST_DEFINE_STRUCT and so on) of Optional template.
  * This specialization add operator->() for getter chaining.
- *
- * @tparam T	ijst struct type
  */
 template <typename T>
 class Optional<T, /*EnableIf*/ typename detail::HasType<typename T::_ijst_AccessorType>::Tag>
@@ -277,6 +286,11 @@ public:
 	}
 };
 
+
+/**
+ * Specialization for ijst struct (defined via IJST_DEFINE_STRUCT and so on) of OvrFieldWrapper template.
+ * This specialization add operator->() to access override struct field.
+ */
 template <typename TField, typename TOvr>
 class OvrFieldWrapper<TField, TOvr, /*EnableIf*/ typename detail::HasType<typename TField::_ijst_AccessorType>::Tag>
 {
@@ -1480,7 +1494,7 @@ private:
 	private: 																										\
 		friend class ::ijst::detail::IjstStructMeta< _ijst_ThisClass >; 											\
 		friend class ::ijst::detail::IjstStructOvrMeta< _ijst_ThisClass >; 											\
-		/* Do not declared it as template so user can define override struct inside function */ 					\
+		/* Do not declared it as template so user can define override struct inside function in C++11 */ 			\
 		static void _ijst_InitMetaInfo(::ijst::MetaClassInfo<_ijst_Ch>& metaInfo, 									\
 									   const _ijst_ThisClass * stPtr, bool unused)									\
 		{ 																											\
