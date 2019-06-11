@@ -93,9 +93,6 @@ TEST(Override, SetFieldDesc)
 	}
 }
 
-// TODO: override of overrided
-
-
 
 IJST_DEFINE_STRUCT(
 		OutSt
@@ -114,14 +111,10 @@ IJST_OVR_DEFINE_STRUCT(
 		(
 				using _ijst_BaseClass::in2;
 				using _ijst_BaseClass::list;
-
-#if __cplusplus >= 201103L
-				IJST_OVR_WRAP_FIELD(OverrideSt, wrap_, in)
-				IJST_OVR_WRAP_FIELD(OverrideSt, wrap_, vec)
-				IJST_OVR_WRAP_FIELD(OverrideSt, wrap_, deq)
-				IJST_OVR_WRAP_FIELD(OverrideSt, wrap_, vec_deq)
-#endif
-
+				using _ijst_BaseClass::in;
+				using _ijst_BaseClass::vec;
+				using _ijst_BaseClass::deq;
+				using _ijst_BaseClass::vec_deq;
 				using _ijst_BaseClass::map;
 		),
 		(
@@ -135,46 +128,121 @@ IJST_OVR_DEFINE_STRUCT(
 		)
 )
 
+
 TEST(Override, SetFieldOvrType)
 {
-	{
-		OverrideOutSt st;
+	OverrideOutSt st;
 
-		// {"int_2": 1} is valid for OverrideSt, but not for SimpleSt
-		// use this string to check if the override meta info is effective
-		string json = "{"
-					  "\"in\": {\"int_2\": 1},"		// OverrideSt
-					  "\"in2\": {\"int_1\": 2},"	// SimpleSt
-					  "\"ost\": {\"int_2\": 3},"	// OverrideSt member declared directly
-					  "\"vec\": [{\"int_2\": 4}],"	// OverrideSt
-					  "\"list\": [{\"int_2\": 5}],"	// OverrideSt
-					  "\"deq\": [{\"int_2\": 6}],"	// OverrideSt
-					  "\"map\": {\"key\": {\"int_2\": 7}},"	// OverrideSt
-					  "\"vec_deq\": [[{\"int_2\": 8}]]"	// OverrideSt
-					  "}";
+	// {"int_2": 1} is valid for OverrideSt, but not for SimpleSt
+	// use this string to check if the override meta info is effective
+	string json = "{"
+				  "\"in\": {\"int_2\": 1},"		// OverrideSt
+				  "\"in2\": {\"int_1\": 2},"	// SimpleSt
+				  "\"ost\": {\"int_2\": 3},"	// OverrideSt member declared directly
+				  "\"vec\": [{\"int_2\": 4}],"	// OverrideSt
+				  "\"list\": [{\"int_2\": 5}],"	// OverrideSt
+				  "\"deq\": [{\"int_2\": 6}],"	// OverrideSt
+				  "\"map\": {\"key\": {\"int_2\": 7}},"	// OverrideSt
+				  "\"vec_deq\": [[{\"int_2\": 8}]]"	// OverrideSt
+				  "}";
 
-		string strErrMsg;
-		int iRet = st._.Deserialize(json, strErrMsg);
-		ASSERT_EQ(iRet, 0);
+	string strErrMsg;
+	int iRet = st._.Deserialize(json, strErrMsg);
+	ASSERT_EQ(iRet, 0);
+
+	ASSERT_EQ(st.in.int_2, 1);
+	ASSERT_EQ(st.vec[0].int_2, 4);
+	ASSERT_EQ(st.deq[0].int_2, 6);
+	ASSERT_EQ(st.vec_deq[0][0].int_2, 8);
+}
+
+IJST_OVR_DEFINE_STRUCT(
+		OvrOvrSt, OverrideOutSt,
+		(
+				using _ijst_BaseClass::in;
+		),
+		(
+				// set in back to SimpleSt
+				IJST_OVR_SET_FIELD_OVR_TYPE(in, SimpleSt);
+		)
+)
+
+TEST(Override, OvrOvrSt)
+{
+
+	OvrOvrSt st;
+
+	// {"int_2": 1} is valid for OverrideSt, but not for SimpleSt
+	// use this string to check if the override meta info is effective
+	string json = "{"
+				  "\"in\": {\"int_1\": 1},"		// SimpleSt
+				  "\"in2\": {\"int_1\": 2},"	// SimpleSt
+				  "\"ost\": {\"int_2\": 3},"	// OverrideSt member declared directly
+				  "\"vec\": [{\"int_2\": 4}],"	// OverrideSt
+				  "\"list\": [{\"int_2\": 5}],"	// OverrideSt
+				  "\"deq\": [{\"int_2\": 6}],"	// OverrideSt
+				  "\"map\": {\"key\": {\"int_2\": 7}},"	// OverrideSt
+				  "\"vec_deq\": [[{\"int_2\": 8}]]"	// OverrideSt
+				  "}";
+
+	string strErrMsg;
+	int iRet = st._.Deserialize(json, strErrMsg);
+	ASSERT_EQ(iRet, 0);
+	ASSERT_EQ(st.in.int_1, 1);
+}
+
 
 #if __cplusplus >= 201103L
-		const OverrideOutSt& stRef = st;
 
-		ASSERT_EQ(st.wrap_in()->int_2, 1);
-		ASSERT_EQ(stRef.wrap_in()->int_2, 1);
+IJST_OVR_DEFINE_STRUCT(
+		OvrFieldSt, OverrideOutSt,
+		(
+				IJST_OVR_WRAP_FIELD(OverrideSt, wrap_, in)
+				IJST_OVR_WRAP_FIELD(OverrideSt, wrap_, vec)
+				IJST_OVR_WRAP_FIELD(OverrideSt, wrap_, deq)
+				IJST_OVR_WRAP_FIELD(OverrideSt, wrap_, vec_deq)
+		),
+		(
+		)
+)
 
-		ASSERT_EQ(st.wrap_vec()[0]->int_2, 4);
-		ASSERT_EQ(stRef.wrap_vec()[0]->int_2, 4);
 
-		ASSERT_EQ(st.wrap_deq()[0]->int_2, 6);
-		ASSERT_EQ(stRef.wrap_deq()[0]->int_2, 6);
+TEST(Override, OvrFieldWrapper)
+{
+	OvrFieldSt st;
 
-		ASSERT_EQ(st.wrap_vec_deq()[0][0]->int_2, 8);
-		ASSERT_EQ(stRef.wrap_vec_deq()[0][0]->int_2, 8);
+	// {"int_2": 1} is valid for OverrideSt, but not for SimpleSt
+	// use this string to check if the override meta info is effective
+	string json = "{"
+				  "\"in\": {\"int_2\": 1},"		// OverrideSt
+				  "\"in2\": {\"int_1\": 1},"	// SimpleSt
+				  "\"ost\": {\"int_2\": 3},"	// OverrideSt member declared directly
+				  "\"vec\": [{\"int_2\": 4}],"	// OverrideSt
+				  "\"list\": [{\"int_2\": 5}],"	// OverrideSt
+				  "\"deq\": [{\"int_2\": 6}],"	// OverrideSt
+				  "\"map\": {\"key\": {\"int_2\": 7}},"	// OverrideSt
+				  "\"vec_deq\": [[{\"int_2\": 8}]]"	// OverrideSt
+				  "}";
 
-#endif
-	}
+	string strErrMsg;
+	int iRet = st._.Deserialize(json, strErrMsg);
+	ASSERT_EQ(iRet, 0);
+
+	const OvrFieldSt& stRef = st;
+
+	ASSERT_EQ(st.wrap_in()->int_2, 1);
+	ASSERT_EQ(stRef.wrap_in()->int_2, 1);
+
+	ASSERT_EQ(st.wrap_vec()[0]->int_2, 4);
+	ASSERT_EQ(stRef.wrap_vec()[0]->int_2, 4);
+
+	ASSERT_EQ(st.wrap_deq()[0]->int_2, 6);
+	ASSERT_EQ(stRef.wrap_deq()[0]->int_2, 6);
+
+	ASSERT_EQ(st.wrap_vec_deq()[0][0]->int_2, 8);
+	ASSERT_EQ(stRef.wrap_vec_deq()[0][0]->int_2, 8);
 
 }
 
+#endif
 }
