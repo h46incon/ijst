@@ -2133,7 +2133,7 @@ PREDEFINED             =    __cplusplus=201103L \
 # definition found in the source code.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-EXPAND_AS_DEFINED      =    IJSTI_OPTIONAL_BASE_DEFINE \
+EXPAND_AS_DEFINED      =    IJSTI_OPTIONAL_COMMON_DEFINE \
                             IJSTI_OPTIONAL_ARRAY_DEFINE
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES then doxygen's preprocessor will
