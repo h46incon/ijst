@@ -406,9 +406,6 @@ public:
 		rapidjson::GenericValue<Encoding>& stream;
 		JsonAllocator& allocator;
 
-		// override meta info when deserialize
-		const OverrideMetaInfos* pOvrMetaInfo;
-
 		// true if move context in stream to avoid copy when possible
 		bool canMoveSrc;
 
@@ -419,11 +416,10 @@ public:
 
 		FromJsonReq(rapidjson::GenericValue<Encoding>& _stream, JsonAllocator& _allocator,
 					DeserFlag::Flag _deserFlag, bool _canMoveSrc,
-					void* _pField, const OverrideMetaInfos* _pOvrMetaInfo)
+					void* _pField)
 				: pFieldBuffer(_pField)
 				  , stream(_stream)
 				  , allocator(_allocator)
-				  , pOvrMetaInfo(_pOvrMetaInfo)
 				  , canMoveSrc(_canMoveSrc)
 				  , deserFlag(_deserFlag)
 		{ }
@@ -522,42 +518,6 @@ private:
 	}
 };
 
-/**
- * OverrideMetaInfos of ijst struct
- *
- * @tparam T 	class. Concept require
- * 					const OverrideMetaInfos* T::_ijst_NewOvrMetaInfo(const T*)
- */
-template<typename T>
-class IjstStructOvrMeta {
-public:
-	static const OverrideMetaInfos* Ins()
-	{
-		static IjstStructOvrMeta ins;
-		return ins.pOverMetas;
-	}
-
-private:
-	const OverrideMetaInfos* pOverMetas;
-
-	IjstStructOvrMeta() :
-			pOverMetas(NULL)
-	{
-		IJST_OFFSET_BUFFER_NEW(offsetBuf, sizeof(T));
-		const T* stPtr = reinterpret_cast<T*>(offsetBuf);
-
-		pOverMetas = T::_ijst_NewOvrMetaInfo(stPtr);
-
-		IJST_OFFSET_BUFFER_DELETE(offsetBuf);
-	}
-
-	~IjstStructOvrMeta()
-	{
-		delete pOverMetas;
-		pOverMetas = NULL;
-	}
-};
-
 template<typename Encoding>
 class MetaClassInfoSetter {
 public:
@@ -574,9 +534,9 @@ public:
 		m_maxSize = maxFieldCount;
 	}
 
-	void ShadowFrom(const MetaClassInfo<Ch>& src, const std::string& tag, const OverrideMetaInfos* pOvrMeta)
+	void ShadowFrom(const MetaClassInfo<Ch>& src, const std::string& tag)
 	{
-		d.ShadowFrom(src, tag, pOvrMeta);
+		d.ShadowFrom(src, tag);
 	}
 
 	/// The complete IDL of declaring a field is (type, name, json_name, desc, serialize_intf)

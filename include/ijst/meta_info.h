@@ -16,56 +16,6 @@ namespace detail {
 	template<typename CharType> class MetaClassInfoSetter;
 }
 
-class OverrideMetaInfos {
-public:
-	struct MetaInfo {
-		bool isFieldDescSet;
-		FDesc::Mode fieldDesc;						//! override field desc, available if isFieldDescSet is true
-		const OverrideMetaInfos* ijstFieldMetaInfo;	//! override meta info of ijst field, available if not nullptr
-
-		MetaInfo(): isFieldDescSet(false), fieldDesc(FDesc::NoneFlag), ijstFieldMetaInfo(NULL) {}
-
-		void SetFieldDesc(FDesc::Mode desc)
-		{isFieldDescSet = true; fieldDesc = desc;}
-	};
-
-	explicit OverrideMetaInfos(size_t _fieldSize)
-			: fieldSize(_fieldSize), metaInfos(new MetaInfo[_fieldSize])
-	{ }
-
-	~OverrideMetaInfos()
-	{
-		delete [] metaInfos;
-		const_cast<MetaInfo*&>(metaInfos) = NULL;
-		const_cast<std::size_t&>(fieldSize) = 0;
-	}
-
-	//! Copy from _src if not empty, else new a empty one
-	//! The caller must release the pointer returned
-	static OverrideMetaInfos* NewFromSrcOrEmpty(const OverrideMetaInfos* _src, size_t _fieldSize)
-	{
-		if (_src == NULL) {
-			return new OverrideMetaInfos(_fieldSize);
-		}
-		else {
-			assert(_src->fieldSize == _fieldSize);
-			OverrideMetaInfos *ret = new OverrideMetaInfos(_fieldSize);
-			for (size_t i = 0; i < _fieldSize; ++i) {
-				ret->metaInfos[i] = _src->metaInfos[i];
-			}
-			return ret;
-		}
-
-	}
-
-	const std::size_t fieldSize;		//! size of metaInfos
-	MetaInfo* const metaInfos;			//! array of MetaInfo
-
-private:
-	OverrideMetaInfos(const OverrideMetaInfos&) IJSTI_DELETED;
-	OverrideMetaInfos& operator=(OverrideMetaInfos) IJSTI_DELETED;
-};
-
 /**
  * @brief Meta information of field.
  *
@@ -180,8 +130,6 @@ public:
 	const std::string& GetClassName() const { return m_structName; }
 	//! Get the offset of Accessor object.
 	std::size_t GetAccessorOffset() const { return m_accessorOffset; }
-	//! Get the offset of Accessor object.
-	const OverrideMetaInfos* GetOvrMeta() const { return m_pOvrMetaInfo; }
 
 private:
 	template<typename> friend class detail::MetaClassInfoSetter;
@@ -189,7 +137,6 @@ private:
 	MetaClassInfo() :
 			m_accessorOffset(0),
 			m_fieldSize(0),
-			m_pOvrMetaInfo(NULL),
 			m_fieldsInfo(NULL),
 			m_nameHashVal(NULL),
 			m_hashedFieldPtr(NULL),
@@ -209,7 +156,7 @@ private:
 #undef IJSTIM_DELETE_ARRAY
 	}
 
-	void ShadowFrom(const MetaClassInfo& src, const std::string& structName, const OverrideMetaInfos* pOvrMeta)
+	void ShadowFrom(const MetaClassInfo& src, const std::string& structName)
 	{
 		this->~MetaClassInfo();
 
@@ -227,7 +174,6 @@ private:
 #undef IJSTIM_COPY_FIELD
 
 		m_structName = structName;
-		m_pOvrMetaInfo = pOvrMeta;
 		m_isResourceOwner = false;
 	}
 
@@ -253,7 +199,6 @@ private:
 	std::size_t m_accessorOffset;
 	std::size_t m_fieldSize;
 
-	const OverrideMetaInfos* m_pOvrMetaInfo;
 	MetaFieldInfo<Ch>* m_fieldsInfo;
 	uint32_t* m_nameHashVal;
 	const MetaFieldInfo<Ch>** m_hashedFieldPtr;

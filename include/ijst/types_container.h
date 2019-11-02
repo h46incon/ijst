@@ -181,22 +181,6 @@ public:
 };
 
 
-/**
- * Specialization for array type (vector, deque) of OvrFieldWrapper template.
- * This specialization add operator[] (size_t index).
- */
-template <typename TArray, typename TOvr>
-class OvrFieldWrapper<TArray, TOvr, /*EnableIf*/ typename detail::IsArrayContainer<TArray>::Tag>
-{
-	typedef typename detail::IsArrayContainer<TArray>::TCvElem TCvElem;
-IJSTI_OVR_FIELD_WRAPPER_COMMON_DEFINE(TArray)
-public:
-	OvrFieldWrapper<TCvElem, TOvr> operator[](typename TArray::size_type i) const
-	{
-		return OvrFieldWrapper<TCvElem, TOvr>(ins[i]);
-	}
-};
-
 }	// namespace ijst
 
 
@@ -247,9 +231,7 @@ public:
 		{
 			assert(i < field.size());
 			assert(itField != field.end());
-			FromJsonReq elemReq(*itVal, req.allocator, req.deserFlag, req.canMoveSrc, &*itField,
-								req.pOvrMetaInfo	// handler override meta info in the element of container
-			);
+			FromJsonReq elemReq(*itVal, req.allocator, req.deserFlag, req.canMoveSrc, &*itField);
 			FromJsonResp elemResp(resp.errDoc);
 			// FromJson
 			int ret = intf.FromJson(elemReq, elemResp);
@@ -376,9 +358,7 @@ public:
 
 			// Element FromJson
 			T &elemBuffer = insertRet.first->second;
-			FromJsonReq elemReq(itMember->value, req.allocator, req.deserFlag, req.canMoveSrc, &elemBuffer,
-								req.pOvrMetaInfo	// handler override meta info in the element of container
-			);
+			FromJsonReq elemReq(itMember->value, req.allocator, req.deserFlag, req.canMoveSrc, &elemBuffer);
 			FromJsonResp elemResp(resp.errDoc);
 			int ret = intf.FromJson(elemReq, elemResp);
 			if (ret != 0)
@@ -460,9 +440,7 @@ public:
 			MemberType& memberBuf = field[i];
 			memberBuf.name = GetJsonStr(itMember->name);
 			ValType &elemBuffer = memberBuf.value;
-			FromJsonReq elemReq(itMember->value, req.allocator, req.deserFlag, req.canMoveSrc, &elemBuffer,
-								req.pOvrMetaInfo	// handler override meta info in the element of container
-			);
+			FromJsonReq elemReq(itMember->value, req.allocator, req.deserFlag, req.canMoveSrc, &elemBuffer);
 			FromJsonResp elemResp(resp.errDoc);
 
 			int ret = intf.FromJson(elemReq, elemResp);
